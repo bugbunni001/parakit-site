@@ -2,243 +2,284 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>✏️บันทึกยอดขายประจำวัน</title>
 
 <style>
-  .top-toggle{
-    position:fixed;
-    top:12px;
-    left:12px;
-    z-index:1300;
-    width:44px;
-    height:44px;
-    border-radius:10px;
-    border:none;
-    background:#1e293b;
-    color:#fff;
-    font-size:20px;
-    cursor:pointer;
+  body {
+    margin: 0;
+    font-family: Arial, sans-serif;
   }
 
-  @media(min-width:769px){
-    .top-toggle{display:none;}
+  /* ===== NAVBAR ===== */
+  .navbar {
+    background: #1e293b;
+    display: flex;
+    justify-content: flex-end; /* ⭐ ชิดขวา */
+    padding: 0 20px;
   }
 
-  body{
-    margin:0;
-    font-family:Arial,sans-serif;
-    background:#f2f2ee;
+  .navbar a,
+  .dropdown-btn {
+    color: #fff;
+    padding: 15px 18px;
+    text-decoration: none;
+    font-size: 15px;
+    cursor: pointer;
+    white-space: nowrap;
   }
 
-  /* ===== SIDEBAR ===== */
-  .sidebar{
-    position:fixed;
-    top:0; left:0;
-    width:240px;
-    height:100vh;
-    background:#1e293b;
-    color:#fff;
-    overflow-y:auto;
-    transform:translateX(-240px);
-    transition:.25s;
-    z-index:1000;
-  }
-  .sidebar.show{transform:translateX(0);}
-
-  /* ===== HEADER ===== */
-  .sidebar-header{
-    display:flex;
-    align-items:center;
-    gap:12px;
-    padding:16px;
-    background:#0f172a;
-    font-weight:bold;
-    min-height:56px;
-  }
-
-  .toggle{
-    background:none;
-    border:none;
-    color:#fff;
-    font-size:22px;
-    cursor:pointer;
-  }
-
-  /* ===== MENU ===== */
-  .menu{
-    display:flex;
-    flex-direction:column;
-  }
-
-  .item{
-    border-bottom:1px solid rgba(255,255,255,.08);
-  }
-
-  .menu a,
-  .menu button{
-    width:100%;
-    min-height:52px;               /* ⭐ ความสูงเท่ากันทุกช่อง */
-    padding:0 16px;
-    background:none;
-    border:none;
-    color:#fff;
-    text-align:left;
-    font-size:15px;
-    cursor:pointer;
-    display:flex;                  /* ⭐ จัดแนวให้เสมอกัน */
-    align-items:center;
-    gap:10px;
-  }
-
-  .menu a:hover,
-  .menu button:hover{
-    background:#334155;
+  .navbar a:hover,
+  .dropdown:hover .dropdown-btn {
+    background: #334155;
   }
 
   /* ===== DROPDOWN ===== */
-  .drop-btn{
-    display:grid;
-    grid-template-columns:1fr auto;
-    align-items:center;
+  .dropdown {
+    position: relative;
   }
 
-  .arrow{
-    transition:.2s;
-  }
-  .item.open .arrow{
-    transform:rotate(90deg);
-  }
-
-  .sub{
-    display:none;
-    background:#0f172a;
-  }
-  .item.open .sub{
-    display:block;
+  .dropdown-content {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0; /* ⭐ dropdown ชิดขวาตามเมนู */
+    background: #ffffff;
+    min-width: 240px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    z-index: 99;
+    border-radius: 6px;
+    overflow: hidden;
   }
 
-  .sub a{
-    min-height:48px;               /* ⭐ submenu สูงเท่ากัน */
-    padding:0 16px 0 36px;
-    display:flex;
-    align-items:center;
-    font-size:14px;
-    border-top:1px solid rgba(255,255,255,.06);
+  .dropdown-content a {
+    color: #111;
+    padding: 12px 16px;
+    display: block;
+    text-decoration: none;
+    font-size: 14px;
   }
 
-  /* ===== CONTENT ===== */
-  .content{
-    padding:20px;
+  .dropdown-content a:hover {
+    background: #f1f5f9;
   }
 
-  /* ===== OVERLAY ===== */
-  .overlay{
-    position:fixed;
-    inset:0;
-    background:rgba(0,0,0,.35);
-    display:none;
-    z-index:900;
-  }
-  .overlay.show{display:block;}
-
-  /* ===== DESKTOP ===== */
-  @media(min-width:769px){
-    .sidebar{transform:translateX(0);}
-    .overlay{display:none!important;}
-    .content{margin-left:240px;}
+  .dropdown:hover .dropdown-content {
+    display: block;
   }
 </style>
 </head>
 
 <body>
 
-<button class="top-toggle" onclick="toggleSidebar()">☰</button>
-<div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+<!-- ===== NAVBAR ===== -->
+<div class="navbar">
 
-<aside class="sidebar" id="sidebar">
-  <div class="sidebar-header">
-    <button class="toggle" onclick="toggleSidebar()">☰</button>
-    เมนู
+  <a href="index.html">🏠 หน้าหลัก</a>
+
+  <div class="dropdown">
+    <div class="dropdown-btn">📊 บันทึกสินเชื่อ</div>
+    <div class="dropdown-content">
+      <a href="https://docs.google.com/forms/d/e/1FAIpQLSerK-IQFH4StGmvrOxb8M2DOC9VyrToSycYBxWrzSVOq67SOw/viewform?usp=preview"target="_blank">📈 ลงสินเชื่อส่วนกลาง</a>
+      <a href="https://lookerstudio.google.com/reporting/8eee598b-7f10-4d88-8162-8ac554e50b9e"target="_blank">📑 Report สินเชื่อส่วนกลาง</a>
+    </div>
   </div>
 
-  <div class="menu">
+  <a href="download.html">⬇️ ดาวน์โหลด</a>
 
-    <div class="item">
-      <a href="index.html">🏠 หน้าหลัก</a>
+  <div class="dropdown">
+    <div class="dropdown-btn">📍 เฉพาะประชาอุทิศ</div>
+    <div class="dropdown-content">
+      <a href="schedule_dec25.html">📆 ตารางงาน ธ.ค. 25</a>
+      <a href="schedule_jan26">📆 ตารางงาน ม.ค. 26</a>
+      <a href="">📱 เช็ค Mat เครื่อง</a>
+      <a href="input_sale.html">✏️ ลงยอดขาย</a>
+      <a href="commssion.html">💰 คอมมิชชั่น ก.พ. 26</a>
     </div>
-
-    <div class="item">
-      <button class="drop-btn" onclick="toggleDrop(this,'credit')">
-        📊 บันทึกสินเชื่อ
-        <span class="arrow">▶</span>
-      </button>
-      <div class="sub" id="credit">
-        <a href="https://docs.google.com/forms/d/e/1FAIpQLSerK-IQFH4StGmvrOxb8M2DOC9VyrToSycYBxWrzSVOq67SOw/viewform?usp=preview">📈 ลงสินเชื่อส่วนกลาง</a>
-        <a href="https://lookerstudio.google.com/reporting/8eee598b-7f10-4d88-8162-8ac554e50b9e">📑 Report สินเชื่อส่วนกลาง</a>
-      </div>
-    </div>
-
-    <div class="item">
-      <a href="download.html">⬇️ ดาวน์โหลด</a>
-    </div>
-
-    <div class="item">
-      <button class="drop-btn" onclick="toggleDrop(this,'branch')">
-        📍 เฉพาะประชาอุทิศ
-        <span class="arrow">▶</span>
-      </button>
-      <div class="sub" id="branch">
-        <a href="schedule_dec25.html">📆 ตารางงาน ธ.ค. 25</a>
-        <a href="schedule_jan26">📆 ตารางงาน ม.ค. 26</a>
-        <a href="#">📱 เช็ค Mat เครื่อง</a>
-        <a href="input_sale.html">✏️ ลงยอดขาย</a>
-        <a href="commssion.html">💰 คอมมิชชั่น</a>
-      </div>
-    </div>
-
   </div>
-</aside>
 
-<div class="content">
-  <!-- เนื้อหาเว็บเดิมของยูนิต -->
 </div>
 
-<script>
-const sidebar=document.getElementById("sidebar");
-const overlay=document.getElementById("overlay");
+</body>
+</html>
 
-function toggleSidebar(){
-  sidebar.classList.toggle("show");
-  overlay.classList.toggle("show");
-  localStorage.setItem("sidebar",sidebar.classList.contains("show"));
-}
 
-function toggleDrop(btn,id){
-  const item=btn.parentElement;
-  item.classList.toggle("open");
-  localStorage.setItem("drop-"+id,item.classList.contains("open"));
-}
-
-window.onload=()=>{
-  if(localStorage.getItem("sidebar")==="true"){
-    sidebar.classList.add("show");
-    overlay.classList.add("show");
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>บันทึกยอดขายรายวัน</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #f2f2ee;
+    padding: 20px;
   }
-  document.querySelectorAll(".item").forEach(i=>{
-    const sub=i.querySelector(".sub");
-    if(sub && localStorage.getItem("drop-"+sub.id)==="true"){
-      i.classList.add("open");
-    }
-  });
-};
-</script>
-  
-<!-- ===== CONTENT ===== -->
-<div class="page-content">
+  .box {
+    max-width: 520px;
+    margin: auto;
+    background: #fff;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+  }
+  h3 { margin-bottom: 20px; }
+  .form-row {
+    display: flex;
+    align-items: center;
+    margin-top: 15px;
+    gap: 10px;
+  }
+  .form-row label {
+    width: 170px;
+    font-weight: bold;
+    font-size: 14px;
+  }
+  .form-row input,
+  .form-row select {
+    flex: 1;
+    padding: 10px;
+    font-size: 16px;
+  }
+
+  button {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    margin-top: 25px;
+    background: #5bbf8a;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  button:hover {
+    box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+    transform: translateY(-2px);
+  }
+  button:active {
+    transform: translateY(0);
+    box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+  }
+
+  .loading {
+    position: fixed;
+    inset: 0;
+    background: rgba(255,255,255,0.8);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    z-index: 9999;
+  }
+  .spinner {
+    width: 50px;
+    height: 50px;
+    border: 6px solid #ddd;
+    border-top: 6px solid #5bbf8a;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+  .loading-text {
+    margin-top: 12px;
+    font-size: 16px;
+    font-weight: bold;
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .popup {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+  }
+  .popup-box {
+    background: #fff;
+    padding: 25px;
+    border-radius: 10px;
+    text-align: center;
+    width: 300px;
+  }
+
+  /* ===== SUCCESS CHECK (แก้เฉพาะตรงนี้) ===== */
+  .checkmark {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 10px;
+    display: none;
+  }
+  .popup.success .checkmark {
+    display: block;
+  }
+
+  .checkmark circle {
+    stroke: #5bbf8a;
+    stroke-width: 6;
+    fill: none;
+    stroke-dasharray: 166;
+    stroke-dashoffset: 166;
+    animation: circleLoop 1.8s ease-in-out infinite;
+  }
+
+  .checkmark path {
+    stroke: #5bbf8a;
+    stroke-width: 6;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 48;
+    stroke-dashoffset: 48;
+    animation: checkLoop 1.8s ease-in-out infinite;
+  }
+
+  @keyframes circleLoop {
+    0%   { stroke-dashoffset: 166; opacity: 1; }
+    40%  { stroke-dashoffset: 0; }
+    70%  { stroke-dashoffset: 0; }
+    100% { stroke-dashoffset: -166; opacity: 0; }
+  }
+
+  @keyframes checkLoop {
+    0%   { stroke-dashoffset: 48; opacity: 0; }
+    40%  { stroke-dashoffset: 48; opacity: 1; }
+    60%  { stroke-dashoffset: 0; }
+    100% { stroke-dashoffset: -48; opacity: 0; }
+  }
+
+  /* ===== ⚠️ WARNING ANIMATION ===== */
+  .warning {
+    font-size: 52px;
+    margin-bottom: 10px;
+    display: none;
+    animation: shake 0.6s infinite, pulse 1.2s infinite;
+  }
+  .popup:not(.success) .warning {
+    display: block;
+  }
+  @keyframes shake {
+    0% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    50% { transform: translateX(4px); }
+    75% { transform: translateX(-4px); }
+    100% { transform: translateX(0); }
+  }
+  @keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.6; }
+    100% { opacity: 1; }
+  }
+</style>
+</head>
+
+<body>
 
 <div class="box" id="formBox">
- <h3 style="text-align: center;">📊 บันทึกยอดขายรายวัน</h3>
+  <h3>📊 บันทึกยอดขายรายวัน</h3>
 
   <div class="form-row">
     <label>วันที่ขาย</label>
@@ -330,19 +371,15 @@ window.onload=()=>{
 
 <div class="popup" id="popup">
   <div class="popup-box">
+    <div class="warning">⚠️</div>
 
-    <!-- ⚠️ -->
-    <div class="icon warning">⚠️</div>
-
-    <!-- ✔️ -->
-    <svg class="icon checkmark" viewBox="0 0 52 52">
+    <svg class="checkmark" viewBox="0 0 52 52">
       <circle cx="26" cy="26" r="25"/>
       <path d="M14 27 l7 7 l17 -17"/>
     </svg>
 
     <h3 id="popupText"></h3>
     <button onclick="closePopup()">ตกลง</button>
-
   </div>
 </div>
 
@@ -405,17 +442,9 @@ function resetForm() {
 
 }
 
-function showPopup(type,text){
-  const popup=document.getElementById("popup");
-  popup.className="popup "+type;
-  document.getElementById("popupText").innerText=text;
-  popup.style.display="flex";
-}
-
-function closePopup(){
-  const popup=document.getElementById("popup");
-  popup.style.display="none";
-  popup.className="popup";
+function closePopup() {
+  document.getElementById("popup").style.display = "none";
+  document.getElementById("popup").classList.remove("success");
 }
 
 document.addEventListener("keydown", function(e) {
@@ -426,16 +455,24 @@ document.addEventListener("keydown", function(e) {
   }
 });
 </script>
-</html>
-
-</div>
-</div>
-
-<footer>
-  © 2025 Copy Right By Angerina Frog
-</footer>
-
 </body>
 </html>
 
+<br>
+<br>
 
+<footer style="
+  width: 100%;
+  text-align: center;
+  padding: 15px 0;
+  background: #F5F5F5;
+  color: #000000;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  font-size: 16px;
+  box-shadow: 0 -2px 8px rgba(0,0,0,0.2);
+">
+  © 2025 Copy Right By Angerina Frog
+
+</footer>
