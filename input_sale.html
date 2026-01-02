@@ -5,103 +5,200 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>✏️บันทึกยอดขายประจำวัน</title>
 
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Sidebar Menu</title>
+
 <style>
-  body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-  }
+/* ===== RESET ===== */
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f2f2ee;
+}
 
-  /* ===== NAVBAR ===== */
-  .navbar {
-    background: #1e293b;
-    display: flex;
-    justify-content: flex-end; /* ⭐ ชิดขวา */
-    padding: 0 20px;
-  }
+/* ===== SIDEBAR ===== */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 260px;
+  background: #1e293b;
+  color: #fff;
+  transition: transform 0.3s ease;
+  z-index: 1000;
+  overflow-y: auto;
+}
 
-  .navbar a,
-  .dropdown-btn {
-    color: #fff;
-    padding: 15px 18px;
-    text-decoration: none;
-    font-size: 15px;
-    cursor: pointer;
-    white-space: nowrap;
-  }
+/* ===== COLLAPSED ===== */
+.sidebar.collapsed {
+  transform: translateX(-100%);
+}
 
-  .navbar a:hover,
-  .dropdown:hover .dropdown-btn {
-    background: #334155;
-  }
+/* ===== HEADER ===== */
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 18px;
+  background: #0f172a;
+  font-size: 16px;
+  font-weight: bold;
+}
 
-  /* ===== DROPDOWN ===== */
-  .dropdown {
-    position: relative;
-  }
+/* ===== TOGGLE BTN ===== */
+.toggle-btn {
+  position: fixed;
+  top: 14px;
+  left: 14px;
+  background: #1e293b;
+  color: #fff;
+  border: none;
+  font-size: 20px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  z-index: 1100;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+}
 
-  .dropdown-content {
-    display: none;
-    position: absolute;
-    top: 100%;
-    right: 0; /* ⭐ dropdown ชิดขวาตามเมนู */
-    background: #ffffff;
-    min-width: 240px;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-    z-index: 99;
-    border-radius: 6px;
-    overflow: hidden;
-  }
+/* ===== MENU ===== */
+.menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
 
-  .dropdown-content a {
-    color: #111;
-    padding: 12px 16px;
-    display: block;
-    text-decoration: none;
-    font-size: 14px;
-  }
+.menu li {
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
 
-  .dropdown-content a:hover {
-    background: #f1f5f9;
-  }
+.menu a,
+.menu button {
+  width: 100%;
+  background: none;
+  border: none;
+  color: #fff;
+  text-align: left;
+  padding: 14px 18px;
+  font-size: 15px;
+  cursor: pointer;
+  text-decoration: none;
+}
 
-  .dropdown:hover .dropdown-content {
-    display: block;
+.menu a:hover,
+.menu button:hover {
+  background: #334155;
+}
+
+/* ===== SUBMENU ===== */
+.submenu {
+  display: none;
+  background: #0f172a;
+}
+
+.submenu a {
+  padding-left: 36px;
+  font-size: 14px;
+}
+
+/* ===== ACTIVE ===== */
+.menu li.open .submenu {
+  display: block;
+}
+
+/* ===== CONTENT (ตัวอย่าง) ===== */
+.content {
+  margin-left: 260px;
+  padding: 20px;
+  transition: margin-left 0.3s ease;
+}
+
+.sidebar.collapsed ~ .content {
+  margin-left: 0;
+}
+
+/* ===== MOBILE ===== */
+@media (max-width: 768px) {
+  .content {
+    margin-left: 0;
+    padding-top: 70px;
   }
+}
 </style>
 </head>
 
 <body>
 
-<!-- ===== NAVBAR ===== -->
-<div class="navbar">
+<!-- ☰ Toggle -->
+<button class="toggle-btn" onclick="toggleSidebar()">☰</button>
 
-  <a href="index.html">🏠 หน้าหลัก</a>
+<!-- ===== SIDEBAR ===== -->
+<aside class="sidebar collapsed" id="sidebar">
 
-  <div class="dropdown">
-    <div class="dropdown-btn">📊 บันทึกสินเชื่อ</div>
-    <div class="dropdown-content">
-      <a href="https://docs.google.com/forms/d/e/1FAIpQLSerK-IQFH4StGmvrOxb8M2DOC9VyrToSycYBxWrzSVOq67SOw/viewform?usp=preview"target="_blank">📈 ลงสินเชื่อส่วนกลาง</a>
-      <a href="https://lookerstudio.google.com/reporting/8eee598b-7f10-4d88-8162-8ac554e50b9e"target="_blank">📑 Report สินเชื่อส่วนกลาง</a>
-    </div>
+  <div class="sidebar-header">
+    เมนู
   </div>
 
-  <a href="download.html">⬇️ ดาวน์โหลด</a>
+  <ul class="menu">
 
-  <div class="dropdown">
-    <div class="dropdown-btn">📍 เฉพาะประชาอุทิศ</div>
-    <div class="dropdown-content">
-      <a href="schedule_dec25.html">📆 ตารางงาน ธ.ค. 25</a>
-      <a href="schedule_jan26">📆 ตารางงาน ม.ค. 26</a>
-      <a href="">📱 เช็ค Mat เครื่อง</a>
-      <a href="input_sale.html">✏️ ลงยอดขาย</a>
-      <a href="commssion.html">💰 คอมมิชชั่น ก.พ. 26</a>
-    </div>
-  </div>
+    <li>
+      <a href="index.html">🏠 หน้าหลัก</a>
+    </li>
 
+    <li>
+      <button onclick="toggleSub(this)">📊 บันทึกสินเชื่อ</button>
+      <div class="submenu">
+        <a href="https://docs.google.com/forms/d/e/1FAIpQLSerK-IQFH4StGmvrOxb8M2DOC9VyrToSycYBxWrzSVOq67SOw/viewform?usp=preview" target="_blank">
+          📈 ลงสินเชื่อส่วนกลาง
+        </a>
+        <a href="https://lookerstudio.google.com/reporting/8eee598b-7f10-4d88-8162-8ac554e50b9e" target="_blank">
+          📑 Report สินเชื่อส่วนกลาง
+        </a>
+      </div>
+    </li>
+
+    <li>
+      <a href="download.html">⬇️ ดาวน์โหลด</a>
+    </li>
+
+    <li>
+      <button onclick="toggleSub(this)">📍 เฉพาะประชาอุทิศ</button>
+      <div class="submenu">
+        <a href="schedule_dec25.html">📆 ตารางงาน ธ.ค. 25</a>
+        <a href="schedule_jan26">📆 ตารางงาน ม.ค. 26</a>
+        <a href="#">📱 เช็ค Mat เครื่อง</a>
+        <a href="input_sale.html">✏️ ลงยอดขาย</a>
+        <a href="commssion.html">💰 คอมมิชชั่น ก.พ. 26</a>
+      </div>
+    </li>
+
+  </ul>
+</aside>
+
+<!-- ===== CONTENT (ตัวอย่างพื้นที่เนื้อหา) ===== -->
+<div class="content">
+  <!-- ใส่เนื้อหาเว็บเดิมของยูนิตตรงนี้ -->
 </div>
+
+<script>
+function toggleSidebar() {
+  document.getElementById("sidebar").classList.toggle("collapsed");
+}
+
+function toggleSub(btn) {
+  btn.parentElement.classList.toggle("open");
+}
+</script>
 
 </body>
 </html>
+
 
 
 <title>บันทึกยอดขายรายวัน</title>
@@ -473,4 +570,5 @@ document.addEventListener("keydown", function(e) {
   © 2025 Copy Right By Angerina Frog
 
 </footer>
+
 
