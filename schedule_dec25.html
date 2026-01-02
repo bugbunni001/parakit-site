@@ -1,12 +1,19 @@
-<style>
-        /* ===== SETUP & LAYOUT ===== */
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>บันทึกยอดขายรายวัน & ภารกิจประจำเดือน</title>
+
+    <style>
+        /* CSS พื้นฐาน */
         * { box-sizing: border-box; }
         
         body {
             margin: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif, Arial, sans-serif;
             background: #f2f2ee;
-            padding-bottom: 80px; /* กัน Footer บังปุ่ม */
+            padding-bottom: 60px; /* เผื่อที่ให้ Footer */
         }
 
         /* ===== SIDEBAR NAVIGATION ===== */
@@ -23,7 +30,6 @@
             color: #fff;
             font-size: 20px;
             cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
 
         @media(min-width:769px) { .top-toggle { display: none; } }
@@ -37,8 +43,9 @@
             color: #fff;
             overflow-y: auto;
             transform: translateX(-240px);
-            transition: .25s ease-in-out;
+            transition: .25s;
             z-index: 1000;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
         }
         .sidebar.show { transform: translateX(0); }
 
@@ -53,16 +60,23 @@
         }
 
         .toggle {
-            background: none; border: none; color: #fff; font-size: 22px; cursor: pointer;
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 22px;
+            cursor: pointer;
         }
 
         .menu { display: flex; flex-direction: column; }
+
         .item { border-bottom: 1px solid rgba(255,255,255,.08); }
 
-        .menu a, .menu .drop-btn {
+        /* ปรับปรุงส่วนที่ทำให้ไม่เท่ากัน */
+        .menu a,
+        .menu .drop-btn {
             width: 100%;
             min-height: 52px;
-            padding: 0 16px;
+            padding: 0 16px; /* กำหนด padding ให้เท่ากันทุกด้าน */
             background: none;
             border: none;
             color: #fff;
@@ -73,107 +87,135 @@
             align-items: center;
             text-decoration: none;
             transition: background 0.2s;
+            position: relative;
         }
 
-        .menu a:hover, .menu .drop-btn:hover { background: #334155; }
+        .menu a:hover,
+        .menu .drop-btn:hover { background: #334155; }
 
-        .arrow { margin-left: auto; transition: .2s; font-size: 12px; opacity: 0.7; }
+        /* จัดระเบียบลูกศร Dropdown */
+        .arrow {
+            margin-left: auto; /* ดันลูกศรไปขวาสุด */
+            font-size: 12px;
+            transition: .2s;
+            opacity: 0.7;
+        }
         .item.open .arrow { transform: rotate(90deg); }
 
-        .sub { display: none; background: #0f172a; }
+        .sub {
+            display: none;
+            background: #0f172a;
+        }
         .item.open .sub { display: block; }
+
         .sub a {
             min-height: 48px;
-            padding-left: 42px;
+            padding-left: 42px; /* เว้นระยะเข้ามาสำหรับเมนูย่อยให้ดูเป็นระเบียบ */
             font-size: 14px;
             border-top: 1px solid rgba(255,255,255,.06);
         }
 
-        /* ===== CONTENT AREA ===== */
-        .content { padding: 40px 20px; transition: margin-left .25s; }
+        /* ===== MAIN CONTENT AREA ===== */
+        .content {
+            padding: 40px 20px;
+            transition: margin-left .25s;
+        }
+
         @media(min-width:769px) {
             .sidebar { transform: translateX(0); }
             .content { margin-left: 240px; }
         }
 
-        /* ===== SALES FORM BOX ===== */
+        /* ===== FORM STYLE (บันทึกยอดขาย) ===== */
         .box {
             max-width: 520px;
             margin: auto;
             background: #fff;
             padding: 25px;
             border-radius: 10px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
         }
-        .box h3 { margin: 0 0 25px 0; text-align: center; color: #1e293b; }
+        .box h3 { 
+            margin-top: 0;
+            margin-bottom: 25px; 
+            text-align: center; 
+        }
 
-        .form-row { display: flex; align-items: center; margin-top: 15px; gap: 10px; }
-        .form-row label { width: 150px; font-weight: bold; font-size: 14px; color: #475569; }
-        .form-row input, .form-row select {
-            flex: 1; padding: 10px; font-size: 15px; border: 1px solid #cbd5e1; border-radius: 6px; outline: none;
+        .form-row {
+            display: flex;
+            align-items: center;
+            margin-top: 15px;
+            gap: 10px;
         }
-        .form-row input:focus, .form-row select:focus { border-color: #5bbf8a; }
+        .form-row label {
+            width: 150px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .form-row input,
+        .form-row select {
+            flex: 1;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
 
         .btn-submit {
-            width: 100%; padding: 14px; font-size: 16px; margin-top: 25px;
-            background: #5bbf8a; color: white; border: none; border-radius: 6px;
-            cursor: pointer; font-weight: bold; transition: 0.2s;
+            width: 100%;
+            padding: 14px;
+            font-size: 16px;
+            margin-top: 25px;
+            background: #5bbf8a;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s ease;
         }
-        .btn-submit:hover { background: #4eab7a; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(91, 191, 138, 0.3); }
+        .btn-submit:hover {
+            box-shadow: 0 6px 18px rgba(0,0,0,0.2);
+            transform: translateY(-2px);
+            background: #4eab7a;
+        }
 
-        /* ===== LOADING & OVERLAY ===== */
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.4); display: none; z-index: 900; }
+        /* Loading & Popups */
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: none; z-index: 900; }
         .overlay.show { display: block; }
 
-        .loading { position: fixed; inset: 0; background: rgba(255,255,255,0.85); display: none; align-items: center; justify-content: center; flex-direction: column; z-index: 9999; }
-        .spinner { width: 45px; height: 45px; border: 5px solid #f3f3f3; border-top: 5px solid #5bbf8a; border-radius: 50%; animation: spin 1s linear infinite; }
+        .loading { position: fixed; inset: 0; background: rgba(255,255,255,0.8); display: none; align-items: center; justify-content: center; flex-direction: column; z-index: 9999; }
+        .spinner { width: 50px; height: 50px; border: 6px solid #ddd; border-top: 6px solid #5bbf8a; border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* ===== POPUP & REPAIRED CHECKMARK ===== */
-        .popup { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 10000; }
-        .popup-box { background: #fff; padding: 30px; border-radius: 12px; text-align: center; width: 320px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); }
+        .popup { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: none; align-items: center; justify-content: center; z-index: 10000; }
+        .popup-box { background: #fff; padding: 25px; border-radius: 10px; text-align: center; width: 320px; }
         
-        /* แก้ไขวงกลมตกขอบที่นี่ */
-        .checkmark-wrapper {
-            width: 90px; height: 90px; margin: 0 auto 15px;
-        }
-        .checkmark {
-            width: 100%; height: 100%; display: none; overflow: visible;
-        }
+        /* Success & Warning Animation */
+        .checkmark { width: 80px; height: 80px; margin: 0 auto 10px; display: none; }
         .popup.success .checkmark { display: block; }
-
-        .checkmark circle {
-            stroke: #5bbf8a; stroke-width: 5; fill: none;
-            stroke-dasharray: 180; stroke-dashoffset: 180;
-            transform-origin: center;
-            animation: circleLoop 1.8s ease-in-out infinite;
-        }
-        .checkmark path {
-            stroke: #5bbf8a; stroke-width: 5; fill: none; stroke-linecap: round; stroke-linejoin: round;
-            stroke-dasharray: 50; stroke-dashoffset: 50;
-            animation: checkLoop 1.8s ease-in-out infinite;
-        }
-
-        @keyframes circleLoop {
-            0% { stroke-dashoffset: 180; transform: rotate(-90deg); }
-            40%, 70% { stroke-dashoffset: 0; transform: rotate(-90deg); }
-            100% { stroke-dashoffset: -180; transform: rotate(-90deg); }
-        }
-        @keyframes checkLoop {
-            0%, 40% { stroke-dashoffset: 50; opacity: 0; }
-            60%, 75% { stroke-dashoffset: 0; opacity: 1; }
-            100% { stroke-dashoffset: -50; opacity: 0; }
-        }
-
-        .warning { font-size: 50px; margin-bottom: 10px; display: none; animation: shake 0.5s infinite; }
+        .checkmark circle { stroke: #5bbf8a; stroke-width: 6; fill: none; stroke-dasharray: 166; stroke-dashoffset: 166; animation: circleLoop 1.8s ease-in-out infinite; }
+        .checkmark path { stroke: #5bbf8a; stroke-width: 6; fill: none; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 48; stroke-dashoffset: 48; animation: checkLoop 1.8s ease-in-out infinite; }
+        
+        .warning { font-size: 52px; margin-bottom: 10px; display: none; animation: shake 0.6s infinite; }
         .popup:not(.success) .warning { display: block; }
-        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
 
-        /* ===== FOOTER ===== */
+        @keyframes circleLoop { 0% { stroke-dashoffset: 166; } 40% { stroke-dashoffset: 0; } 70% { stroke-dashoffset: 0; } 100% { stroke-dashoffset: -166; } }
+        @keyframes checkLoop { 0% { stroke-dashoffset: 48; opacity:0; } 40% { stroke-dashoffset: 48; opacity:1; } 60% { stroke-dashoffset: 0; } 100% { stroke-dashoffset: -48; opacity:0; } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+
         footer {
-            width: 100%; text-align: center; padding: 15px 0; background: #F5F5F5;
-            color: #000; position: fixed; bottom: 0; left: 0; font-size: 14px;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.05); z-index: 1100;
+            width: 100%;
+            text-align: center;
+            padding: 15px 0;
+            background: #F5F5F5;
+            color: #000000;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            font-size: 14px;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+            z-index: 1100;
         }
     </style>
 </head>
@@ -190,11 +232,14 @@
     </div>
 
     <div class="menu">
-        <div class="item"><a href="index.html">🏠 หน้าหลัก</a></div>
+        <div class="item">
+            <a href="index.html">🏠 หน้าหลัก</a>
+        </div>
 
         <div class="item">
             <button class="drop-btn" onclick="toggleDrop(this,'credit')">
-                📊 บันทึกสินเชื่อ <span class="arrow">▶</span>
+                <span>📊 บันทึกสินเชื่อ</span>
+                <span class="arrow">▶</span>
             </button>
             <div class="sub" id="credit">
                 <a href="https://docs.google.com/forms/d/e/1FAIpQLSerK-IQFH4StGmvrOxb8M2DOC9VyrToSycYBxWrzSVOq67SOw/viewform?usp=preview">📈 ลงสินเชื่อส่วนกลาง</a>
@@ -202,11 +247,14 @@
             </div>
         </div>
 
-        <div class="item"><a href="download.html">⬇️ ดาวน์โหลด</a></div>
+        <div class="item">
+            <a href="download.html">⬇️ ดาวน์โหลด</a>
+        </div>
 
         <div class="item">
             <button class="drop-btn" onclick="toggleDrop(this,'branch')">
-                📍 เฉพาะประชาอุทิศ <span class="arrow">▶</span>
+                <span>📍 เฉพาะประชาอุทิศ</span>
+                <span class="arrow">▶</span>
             </button>
             <div class="sub" id="branch">
                 <a href="schedule_dec25.html">📆 ตารางงาน ธ.ค. 25</a>
@@ -440,6 +488,7 @@
   © 2025 Copy Right By Angerina Frog
 
 </footer>
+
 
 
 
