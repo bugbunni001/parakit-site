@@ -1,106 +1,223 @@
-<!DOCTYPE html>
-<html lang="th">
-<head>
-<meta charset="UTF-8">
-<title>🔖ภารกิจประจำเดือน</title>
-
 <style>
-  body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-  }
+        /* ===== SETUP & LAYOUT ===== */
+        * { box-sizing: border-box; }
+        
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif, Arial, sans-serif;
+            background: #f2f2ee;
+            padding-bottom: 80px; /* กัน Footer บังปุ่ม */
+        }
 
-  /* ===== NAVBAR ===== */
-  .navbar {
-    background: #1e293b;
-    display: flex;
-    justify-content: flex-end; /* ⭐ ชิดขวา */
-    padding: 0 20px;
-  }
+        /* ===== SIDEBAR NAVIGATION ===== */
+        .top-toggle {
+            position: fixed;
+            top: 12px;
+            left: 12px;
+            z-index: 1300;
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            border: none;
+            background: #1e293b;
+            color: #fff;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
 
-  .navbar a,
-  .dropdown-btn {
-    color: #fff;
-    padding: 15px 18px;
-    text-decoration: none;
-    font-size: 15px;
-    cursor: pointer;
-    white-space: nowrap;
-  }
+        @media(min-width:769px) { .top-toggle { display: none; } }
 
-  .navbar a:hover,
-  .dropdown:hover .dropdown-btn {
-    background: #334155;
-  }
+        .sidebar {
+            position: fixed;
+            top: 0; left: 0;
+            width: 240px;
+            height: 100vh;
+            background: #1e293b;
+            color: #fff;
+            overflow-y: auto;
+            transform: translateX(-240px);
+            transition: .25s ease-in-out;
+            z-index: 1000;
+        }
+        .sidebar.show { transform: translateX(0); }
 
-  /* ===== DROPDOWN ===== */
-  .dropdown {
-    position: relative;
-  }
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+            background: #0f172a;
+            font-weight: bold;
+            min-height: 56px;
+        }
 
-  .dropdown-content {
-    display: none;
-    position: absolute;
-    top: 100%;
-    right: 0; /* ⭐ dropdown ชิดขวาตามเมนู */
-    background: #ffffff;
-    min-width: 240px;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-    z-index: 99;
-    border-radius: 6px;
-    overflow: hidden;
-  }
+        .toggle {
+            background: none; border: none; color: #fff; font-size: 22px; cursor: pointer;
+        }
 
-  .dropdown-content a {
-    color: #111;
-    padding: 12px 16px;
-    display: block;
-    text-decoration: none;
-    font-size: 14px;
-  }
+        .menu { display: flex; flex-direction: column; }
+        .item { border-bottom: 1px solid rgba(255,255,255,.08); }
 
-  .dropdown-content a:hover {
-    background: #f1f5f9;
-  }
+        .menu a, .menu .drop-btn {
+            width: 100%;
+            min-height: 52px;
+            padding: 0 16px;
+            background: none;
+            border: none;
+            color: #fff;
+            text-align: left;
+            font-size: 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            transition: background 0.2s;
+        }
 
-  .dropdown:hover .dropdown-content {
-    display: block;
-  }
-</style>
+        .menu a:hover, .menu .drop-btn:hover { background: #334155; }
+
+        .arrow { margin-left: auto; transition: .2s; font-size: 12px; opacity: 0.7; }
+        .item.open .arrow { transform: rotate(90deg); }
+
+        .sub { display: none; background: #0f172a; }
+        .item.open .sub { display: block; }
+        .sub a {
+            min-height: 48px;
+            padding-left: 42px;
+            font-size: 14px;
+            border-top: 1px solid rgba(255,255,255,.06);
+        }
+
+        /* ===== CONTENT AREA ===== */
+        .content { padding: 40px 20px; transition: margin-left .25s; }
+        @media(min-width:769px) {
+            .sidebar { transform: translateX(0); }
+            .content { margin-left: 240px; }
+        }
+
+        /* ===== SALES FORM BOX ===== */
+        .box {
+            max-width: 520px;
+            margin: auto;
+            background: #fff;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        .box h3 { margin: 0 0 25px 0; text-align: center; color: #1e293b; }
+
+        .form-row { display: flex; align-items: center; margin-top: 15px; gap: 10px; }
+        .form-row label { width: 150px; font-weight: bold; font-size: 14px; color: #475569; }
+        .form-row input, .form-row select {
+            flex: 1; padding: 10px; font-size: 15px; border: 1px solid #cbd5e1; border-radius: 6px; outline: none;
+        }
+        .form-row input:focus, .form-row select:focus { border-color: #5bbf8a; }
+
+        .btn-submit {
+            width: 100%; padding: 14px; font-size: 16px; margin-top: 25px;
+            background: #5bbf8a; color: white; border: none; border-radius: 6px;
+            cursor: pointer; font-weight: bold; transition: 0.2s;
+        }
+        .btn-submit:hover { background: #4eab7a; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(91, 191, 138, 0.3); }
+
+        /* ===== LOADING & OVERLAY ===== */
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.4); display: none; z-index: 900; }
+        .overlay.show { display: block; }
+
+        .loading { position: fixed; inset: 0; background: rgba(255,255,255,0.85); display: none; align-items: center; justify-content: center; flex-direction: column; z-index: 9999; }
+        .spinner { width: 45px; height: 45px; border: 5px solid #f3f3f3; border-top: 5px solid #5bbf8a; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ===== POPUP & REPAIRED CHECKMARK ===== */
+        .popup { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 10000; }
+        .popup-box { background: #fff; padding: 30px; border-radius: 12px; text-align: center; width: 320px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); }
+        
+        /* แก้ไขวงกลมตกขอบที่นี่ */
+        .checkmark-wrapper {
+            width: 90px; height: 90px; margin: 0 auto 15px;
+        }
+        .checkmark {
+            width: 100%; height: 100%; display: none; overflow: visible;
+        }
+        .popup.success .checkmark { display: block; }
+
+        .checkmark circle {
+            stroke: #5bbf8a; stroke-width: 5; fill: none;
+            stroke-dasharray: 180; stroke-dashoffset: 180;
+            transform-origin: center;
+            animation: circleLoop 1.8s ease-in-out infinite;
+        }
+        .checkmark path {
+            stroke: #5bbf8a; stroke-width: 5; fill: none; stroke-linecap: round; stroke-linejoin: round;
+            stroke-dasharray: 50; stroke-dashoffset: 50;
+            animation: checkLoop 1.8s ease-in-out infinite;
+        }
+
+        @keyframes circleLoop {
+            0% { stroke-dashoffset: 180; transform: rotate(-90deg); }
+            40%, 70% { stroke-dashoffset: 0; transform: rotate(-90deg); }
+            100% { stroke-dashoffset: -180; transform: rotate(-90deg); }
+        }
+        @keyframes checkLoop {
+            0%, 40% { stroke-dashoffset: 50; opacity: 0; }
+            60%, 75% { stroke-dashoffset: 0; opacity: 1; }
+            100% { stroke-dashoffset: -50; opacity: 0; }
+        }
+
+        .warning { font-size: 50px; margin-bottom: 10px; display: none; animation: shake 0.5s infinite; }
+        .popup:not(.success) .warning { display: block; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+
+        /* ===== FOOTER ===== */
+        footer {
+            width: 100%; text-align: center; padding: 15px 0; background: #F5F5F5;
+            color: #000; position: fixed; bottom: 0; left: 0; font-size: 14px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05); z-index: 1100;
+        }
+    </style>
 </head>
 
 <body>
 
-<!-- ===== NAVBAR ===== -->
-<div class="navbar">
+<button class="top-toggle" onclick="toggleSidebar()">☰</button>
+<div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 
-  <a href="index.html">🏠 หน้าหลัก</a>
-
-  <div class="dropdown">
-    <div class="dropdown-btn">📊 บันทึกสินเชื่อ</div>
-    <div class="dropdown-content">
-      <a href="https://docs.google.com/forms/d/e/1FAIpQLSerK-IQFH4StGmvrOxb8M2DOC9VyrToSycYBxWrzSVOq67SOw/viewform?usp=preview"target="_blank">📈 ลงสินเชื่อส่วนกลาง</a>
-      <a href="https://lookerstudio.google.com/reporting/8eee598b-7f10-4d88-8162-8ac554e50b9e"target="_blank">📑 Report สินเชื่อส่วนกลาง</a>
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <button class="toggle" onclick="toggleSidebar()">☰</button>
+        เมนู
     </div>
-  </div>
 
-  <a href="download.html">⬇️ ดาวน์โหลด</a>
+    <div class="menu">
+        <div class="item"><a href="index.html">🏠 หน้าหลัก</a></div>
 
-  <div class="dropdown">
-    <div class="dropdown-btn">📍 เฉพาะประชาอุทิศ</div>
-    <div class="dropdown-content">
-      <a href="schedule_dec25.html">📆 ตารางงาน ธ.ค. 25</a>
-      <a href="schedule_jan26">📆 ตารางงาน ม.ค. 26</a>
-      <a href="">📱 เช็ค Mat เครื่อง</a>
-      <a href="input_sale.html">✏️ ลงยอดขาย</a>
-      <a href="commssion.html">💰 คอมมิชชั่น ก.พ. 26</a>
+        <div class="item">
+            <button class="drop-btn" onclick="toggleDrop(this,'credit')">
+                📊 บันทึกสินเชื่อ <span class="arrow">▶</span>
+            </button>
+            <div class="sub" id="credit">
+                <a href="https://docs.google.com/forms/d/e/1FAIpQLSerK-IQFH4StGmvrOxb8M2DOC9VyrToSycYBxWrzSVOq67SOw/viewform?usp=preview">📈 ลงสินเชื่อส่วนกลาง</a>
+                <a href="https://lookerstudio.google.com/reporting/8eee598b-7f10-4d88-8162-8ac554e50b9e">📑 Report สินเชื่อส่วนกลาง</a>
+            </div>
+        </div>
+
+        <div class="item"><a href="download.html">⬇️ ดาวน์โหลด</a></div>
+
+        <div class="item">
+            <button class="drop-btn" onclick="toggleDrop(this,'branch')">
+                📍 เฉพาะประชาอุทิศ <span class="arrow">▶</span>
+            </button>
+            <div class="sub" id="branch">
+                <a href="schedule_dec25.html">📆 ตารางงาน ธ.ค. 25</a>
+                <a href="schedule_jan26">📆 ตารางงาน ม.ค. 26</a>
+                <a href="#">📱 เช็ค Mat เครื่อง</a>
+                <a href="input_sale.html">✏️ ลงยอดขาย</a>
+                <a href="commssion.html">💰 คอมมิชชั่น</a>
+            </div>
+        </div>
     </div>
-  </div>
-
-</div>
-
-</body>
-</html>
+</aside>
 
 
 <!DOCTYPE html>
@@ -323,5 +440,6 @@
   © 2025 Copy Right By Angerina Frog
 
 </footer>
+
 
 
