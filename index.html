@@ -15,48 +15,53 @@ body {
 /* ===== SIDEBAR ===== */
 .sidebar {
   position: fixed;
-  left: 0;
   top: 0;
+  left: 0;
   width: 240px;
   height: 100vh;
   background: #1e293b;
   color: #fff;
+  overflow-x: hidden;
+  overflow-y: auto;
+  transform: translateX(-240px);
   transition: transform .25s ease;
   z-index: 1000;
 }
 
-.sidebar.hide {
-  transform: translateX(-240px);
+.sidebar.show {
+  transform: translateX(0);
+}
+
+/* ===== HEADER ===== */
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  background: #0f172a;
+  font-weight: bold;
 }
 
 /* ===== TOGGLE ===== */
 .toggle {
-  position: fixed;
-  left: 12px;
-  top: 12px;
-  background: #1e293b;
-  color: #fff;
+  background: none;
   border: none;
-  padding: 10px 14px;
-  font-size: 18px;
-  border-radius: 8px;
+  color: #fff;
+  font-size: 22px;
   cursor: pointer;
-  z-index: 1100;
 }
 
 /* ===== MENU ===== */
 .menu a,
 .menu button {
-  display: block;
   width: 100%;
-  padding: 14px 16px;
   background: none;
   border: none;
   color: #fff;
+  padding: 14px 16px;
   text-align: left;
   font-size: 15px;
   cursor: pointer;
-  text-decoration: none;
 }
 
 .menu a:hover,
@@ -65,12 +70,30 @@ body {
 }
 
 /* ===== DROPDOWN ===== */
+.item {
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+
+.drop-btn {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.arrow {
+  transition: transform .2s ease;
+}
+
+.item.open .arrow {
+  transform: rotate(90deg);
+}
+
 .sub {
   display: none;
   background: #0f172a;
 }
 
-.open .sub {
+.item.open .sub {
   display: block;
 }
 
@@ -81,21 +104,16 @@ body {
 
 /* ===== CONTENT ===== */
 .content {
-  margin-left: 240px;
   padding: 20px;
 }
 
-/* ===== MOBILE ===== */
-@media (max-width: 768px) {
+/* ===== DESKTOP ===== */
+@media (min-width: 769px) {
   .sidebar {
-    transform: translateX(-240px);
-  }
-  .sidebar.show {
     transform: translateX(0);
   }
   .content {
-    margin-left: 0;
-    padding-top: 60px;
+    margin-left: 240px;
   }
 }
 </style>
@@ -103,25 +121,40 @@ body {
 
 <body>
 
-<button class="toggle" onclick="toggleMenu()">☰</button>
+<!-- ===== SIDEBAR ===== -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <button class="toggle" onclick="toggleSidebar()">☰</button>
+    หน้าหลัก
+  </div>
 
-<div class="sidebar hide" id="sidebar">
   <div class="menu">
-    <a href="index.html">🏠 หน้าหลัก</a>
 
-    <div>
-      <button onclick="toggleSub(this)">📊 บันทึกสินเชื่อ</button>
-      <div class="sub">
+    <div class="item">
+      <a href="index.html">🏠 หน้าหลัก</a>
+    </div>
+
+    <div class="item">
+      <button class="drop-btn" onclick="toggleDrop(this,'credit')">
+        📊 บันทึกสินเชื่อ
+        <span class="arrow">▶</span>
+      </button>
+      <div class="sub" id="credit">
         <a href="https://docs.google.com/forms/d/e/1FAIpQLSerK-IQFH4StGmvrOxb8M2DOC9VyrToSycYBxWrzSVOq67SOw/viewform?usp=preview">📈 ลงสินเชื่อส่วนกลาง</a>
-        <a href="https://lookerstudio.google.com/reporting/8eee598b-7f10-4d88-8162-8ac554e50b9e">📑 Report สินเชื่อ</a>
+        <a href="https://lookerstudio.google.com/reporting/8eee598b-7f10-4d88-8162-8ac554e50b9e">📑 Report สินเชื่อส่วนกลาง</a>
       </div>
     </div>
 
-    <a href="download.html">⬇️ ดาวน์โหลด</a>
+    <div class="item">
+      <a href="download.html">⬇️ ดาวน์โหลด</a>
+    </div>
 
-    <div>
-      <button onclick="toggleSub(this)">📍 เฉพาะประชาอุทิศ</button>
-      <div class="sub">
+    <div class="item">
+      <button class="drop-btn" onclick="toggleDrop(this,'branch')">
+        📍 เฉพาะประชาอุทิศ
+        <span class="arrow">▶</span>
+      </button>
+      <div class="sub" id="branch">
         <a href="schedule_dec25.html">📆 ตารางงาน ธ.ค. 25</a>
         <a href="schedule_jan26">📆 ตารางงาน ม.ค. 26</a>
         <a href="">📱 เช็ค Mat เครื่อง</a>
@@ -129,22 +162,46 @@ body {
         <a href="commssion.html">💰 คอมมิชชั่น</a>
       </div>
     </div>
+      </div>
   </div>
 </div>
+</aside>
 
 <div class="content">
-  <!-- กเิหเกหเหกเหกเหกเหกเหกเหกเหกเหกเหกเหกเหกเหกเ -->
+  <!-- เนื้อหาเว็บของยูนิต -->
 </div>
 
 <script>
-function toggleMenu() {
-  document.getElementById("sidebar").classList.toggle("show");
-  document.getElementById("sidebar").classList.toggle("hide");
+const sidebar = document.getElementById("sidebar");
+
+/* ===== Sidebar Toggle ===== */
+function toggleSidebar() {
+  sidebar.classList.toggle("show");
+  localStorage.setItem("sidebar", sidebar.classList.contains("show"));
 }
 
-function toggleSub(btn) {
-  btn.parentElement.classList.toggle("open");
+/* ===== Dropdown ===== */
+function toggleDrop(btn, id) {
+  const item = btn.parentElement;
+  item.classList.toggle("open");
+  localStorage.setItem("drop-" + id, item.classList.contains("open"));
 }
+
+/* ===== Restore State ===== */
+window.onload = () => {
+  if (localStorage.getItem("sidebar") === "true") {
+    sidebar.classList.add("show");
+  }
+
+  document.querySelectorAll(".item").forEach(item => {
+    const sub = item.querySelector(".sub");
+    if (!sub) return;
+    const id = sub.id;
+    if (localStorage.getItem("drop-" + id) === "true") {
+      item.classList.add("open");
+    }
+  });
+};
 </script>
 
 </body>
@@ -295,4 +352,5 @@ function toggleSub(btn) {
 ">
   © 2025 Copy Right By Angerina Frog
 </footer>
+
 
