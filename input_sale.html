@@ -5,102 +5,203 @@
 <title>✏️บันทึกยอดขายประจำวัน</title>
 
 <style>
-  body {
-    margin: 0;
-    font-family: Arial, sans-serif;
+  .top-toggle{
+    position:fixed;
+    top:12px;
+    left:12px;
+    z-index:1300;
+    width:44px;
+    height:44px;
+    border-radius:10px;
+    border:none;
+    background:#1e293b;
+    color:#fff;
+    font-size:20px;
+    cursor:pointer;
   }
 
-  /* ===== NAVBAR ===== */
-  .navbar {
-    background: #1e293b;
-    display: flex;
-    justify-content: flex-end; /* ⭐ ชิดขวา */
-    padding: 0 20px;
+  @media(min-width:769px){
+    .top-toggle{display:none;}
   }
 
-  .navbar a,
-  .dropdown-btn {
-    color: #fff;
-    padding: 15px 18px;
-    text-decoration: none;
-    font-size: 15px;
-    cursor: pointer;
-    white-space: nowrap;
+  body{
+    margin:0;
+    font-family:Arial,sans-serif;
+    background:#f2f2ee;
   }
 
-  .navbar a:hover,
-  .dropdown:hover .dropdown-btn {
-    background: #334155;
+  /* ===== SIDEBAR ===== */
+  .sidebar{
+    position:fixed;
+    top:0; left:0;
+    width:240px;
+    height:100vh;
+    background:#1e293b;
+    color:#fff;
+    overflow-y:auto;
+    transform:translateX(-240px);
+    transition:.25s;
+    z-index:1000;
+  }
+  .sidebar.show{transform:translateX(0);}
+
+  /* ===== HEADER ===== */
+  .sidebar-header{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:16px;
+    background:#0f172a;
+    font-weight:bold;
+    min-height:56px;
+  }
+
+  .toggle{
+    background:none;
+    border:none;
+    color:#fff;
+    font-size:22px;
+    cursor:pointer;
+  }
+
+  /* ===== MENU ===== */
+  .menu{
+    display:flex;
+    flex-direction:column;
+  }
+
+  .item{
+    border-bottom:1px solid rgba(255,255,255,.08);
+  }
+
+  .menu a,
+  .menu button{
+    width:100%;
+    min-height:52px;               /* ⭐ ความสูงเท่ากันทุกช่อง */
+    padding:0 16px;
+    background:none;
+    border:none;
+    color:#fff;
+    text-align:left;
+    font-size:15px;
+    cursor:pointer;
+    display:flex;                  /* ⭐ จัดแนวให้เสมอกัน */
+    align-items:center;
+    gap:10px;
+  }
+
+  .menu a:hover,
+  .menu button:hover{
+    background:#334155;
   }
 
   /* ===== DROPDOWN ===== */
-  .dropdown {
-    position: relative;
+  .drop-btn{
+    display:grid;
+    grid-template-columns:1fr auto;
+    align-items:center;
   }
 
-  .dropdown-content {
-    display: none;
-    position: absolute;
-    top: 100%;
-    right: 0; /* ⭐ dropdown ชิดขวาตามเมนู */
-    background: #ffffff;
-    min-width: 240px;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-    z-index: 99;
-    border-radius: 6px;
-    overflow: hidden;
+  .arrow{
+    transition:.2s;
+  }
+  .item.open .arrow{
+    transform:rotate(90deg);
   }
 
-  .dropdown-content a {
-    color: #111;
-    padding: 12px 16px;
-    display: block;
-    text-decoration: none;
-    font-size: 14px;
+  .sub{
+    display:none;
+    background:#0f172a;
+  }
+  .item.open .sub{
+    display:block;
   }
 
-  .dropdown-content a:hover {
-    background: #f1f5f9;
+  .sub a{
+    min-height:48px;               /* ⭐ submenu สูงเท่ากัน */
+    padding:0 16px 0 36px;
+    display:flex;
+    align-items:center;
+    font-size:14px;
+    border-top:1px solid rgba(255,255,255,.06);
   }
 
-  .dropdown:hover .dropdown-content {
-    display: block;
+  /* ===== CONTENT ===== */
+  .content{
+    padding:20px;
+  }
+
+  /* ===== OVERLAY ===== */
+  .overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.35);
+    display:none;
+    z-index:900;
+  }
+  .overlay.show{display:block;}
+
+  /* ===== DESKTOP ===== */
+  @media(min-width:769px){
+    .sidebar{transform:translateX(0);}
+    .overlay{display:none!important;}
+    .content{margin-left:240px;}
   }
 </style>
 </head>
 
 <body>
 
-<!-- ===== NAVBAR ===== -->
-<div class="navbar">
+<button class="top-toggle" onclick="toggleSidebar()">☰</button>
+<div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 
-  <a href="index.html">🏠 หน้าหลัก</a>
-
-  <div class="dropdown">
-    <div class="dropdown-btn">📊 บันทึกสินเชื่อ</div>
-    <div class="dropdown-content">
-      <a href="https://docs.google.com/forms/d/e/1FAIpQLSerK-IQFH4StGmvrOxb8M2DOC9VyrToSycYBxWrzSVOq67SOw/viewform?usp=preview"target="_blank">📈 ลงสินเชื่อส่วนกลาง</a>
-      <a href="https://lookerstudio.google.com/reporting/8eee598b-7f10-4d88-8162-8ac554e50b9e"target="_blank">📑 Report สินเชื่อส่วนกลาง</a>
-    </div>
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <button class="toggle" onclick="toggleSidebar()">☰</button>
+    เมนู
   </div>
 
-  <a href="download.html">⬇️ ดาวน์โหลด</a>
+  <div class="menu">
 
-  <div class="dropdown">
-    <div class="dropdown-btn">📍 เฉพาะประชาอุทิศ</div>
-    <div class="dropdown-content">
-      <a href="schedule_dec25.html">📆 ตารางงาน ธ.ค. 25</a>
-      <a href="schedule_jan26">📆 ตารางงาน ม.ค. 26</a>
-      <a href="">📱 เช็ค Mat เครื่อง</a>
-      <a href="input_sale.html">✏️ ลงยอดขาย</a>
-      <a href="commssion.html">💰 คอมมิชชั่น ก.พ. 26</a>
+    <div class="item">
+      <a href="index.html">🏠 หน้าหลัก</a>
     </div>
-  </div>
 
+    <div class="item">
+      <button class="drop-btn" onclick="toggleDrop(this,'credit')">
+        📊 บันทึกสินเชื่อ
+        <span class="arrow">▶</span>
+      </button>
+      <div class="sub" id="credit">
+        <a href="https://docs.google.com/forms/d/e/1FAIpQLSerK-IQFH4StGmvrOxb8M2DOC9VyrToSycYBxWrzSVOq67SOw/viewform?usp=preview">📈 ลงสินเชื่อส่วนกลาง</a>
+        <a href="https://lookerstudio.google.com/reporting/8eee598b-7f10-4d88-8162-8ac554e50b9e">📑 Report สินเชื่อส่วนกลาง</a>
+      </div>
+    </div>
+
+    <div class="item">
+      <a href="download.html">⬇️ ดาวน์โหลด</a>
+    </div>
+
+    <div class="item">
+      <button class="drop-btn" onclick="toggleDrop(this,'branch')">
+        📍 เฉพาะประชาอุทิศ
+        <span class="arrow">▶</span>
+      </button>
+      <div class="sub" id="branch">
+        <a href="schedule_dec25.html">📆 ตารางงาน ธ.ค. 25</a>
+        <a href="schedule_jan26">📆 ตารางงาน ม.ค. 26</a>
+        <a href="#">📱 เช็ค Mat เครื่อง</a>
+        <a href="input_sale.html">✏️ ลงยอดขาย</a>
+        <a href="commssion.html">💰 คอมมิชชั่น</a>
+      </div>
+    </div>
+
+  </div>
+</aside>
+
+<div class="content">
+  <!-- เนื้อหาเว็บเดิมของยูนิต -->
 </div>
-
-</body>
-</html>
 
 
 <!DOCTYPE html>
@@ -476,3 +577,4 @@ document.addEventListener("keydown", function(e) {
   © 2025 Copy Right By Angerina Frog
 
 </footer>
+
