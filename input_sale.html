@@ -142,7 +142,7 @@ button:hover{
 .popup{
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,.4);
+  background:rgba(0,0,0,.45);
   display:none;
   align-items:center;
   justify-content:center;
@@ -151,12 +151,68 @@ button:hover{
 
 .popup-box{
   background:#fff;
-  padding:25px;
-  border-radius:10px;
-  text-align:center;
+  padding:26px;
+  border-radius:12px;
   width:300px;
+  text-align:center;
 }
 
+/* ===== ICONS ===== */
+.icon{
+  width:90px;
+  height:90px;
+  margin:0 auto 10px;
+  display:none;
+}
+
+/* ✔️ SUCCESS */
+.popup.success .checkmark{display:block;}
+
+.checkmark circle{
+  stroke:#5bbf8a;
+  stroke-width:6;
+  fill:none;
+  stroke-dasharray:166;
+  stroke-dashoffset:166;
+  animation:circle 0.8s ease forwards;
+}
+
+.checkmark path{
+  stroke:#5bbf8a;
+  stroke-width:6;
+  fill:none;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  stroke-dasharray:48;
+  stroke-dashoffset:48;
+  animation:check 0.5s ease forwards 0.8s;
+}
+
+/* ⚠️ WARNING */
+.popup.error .warning{display:block;}
+
+.warning{
+  font-size:64px;
+  animation:shake .6s infinite,pulse 1.2s infinite;
+}
+
+/* ===== ANIMATION ===== */
+@keyframes circle{
+  to{stroke-dashoffset:0;}
+}
+@keyframes check{
+  to{stroke-dashoffset:0;}
+}
+@keyframes shake{
+  0%,100%{transform:translateX(0)}
+  25%{transform:translateX(-4px)}
+  75%{transform:translateX(4px)}
+}
+@keyframes pulse{
+  0%,100%{opacity:1}
+  50%{opacity:.5}
+}
+  
 /* ===== FOOTER ===== */
 footer{
   width:100%;
@@ -203,9 +259,9 @@ footer{
 <div class="page-content">
 
 <div class="box" id="formBox">
-  <h3>📊 บันทึกยอดขายรายวัน</h3>
+ <h3 style="text-align: center;">📊 บันทึกยอดขายรายวัน</h3>
 
-  <<div class="form-row">
+  <div class="form-row">
     <label>วันที่ขาย</label>
     <input type="date" id="date">
   </div>
@@ -295,15 +351,19 @@ footer{
 
 <div class="popup" id="popup">
   <div class="popup-box">
-    <div class="warning">⚠️</div>
 
-    <svg class="checkmark" viewBox="0 0 52 52">
+    <!-- ⚠️ -->
+    <div class="icon warning">⚠️</div>
+
+    <!-- ✔️ -->
+    <svg class="icon checkmark" viewBox="0 0 52 52">
       <circle cx="26" cy="26" r="25"/>
       <path d="M14 27 l7 7 l17 -17"/>
     </svg>
 
     <h3 id="popupText"></h3>
     <button onclick="closePopup()">ตกลง</button>
+
   </div>
 </div>
 
@@ -366,9 +426,17 @@ function resetForm() {
 
 }
 
-function closePopup() {
-  document.getElementById("popup").style.display = "none";
-  document.getElementById("popup").classList.remove("success");
+function showPopup(type,text){
+  const popup=document.getElementById("popup");
+  popup.className="popup "+type;
+  document.getElementById("popupText").innerText=text;
+  popup.style.display="flex";
+}
+
+function closePopup(){
+  const popup=document.getElementById("popup");
+  popup.style.display="none";
+  popup.className="popup";
 }
 
 document.addEventListener("keydown", function(e) {
@@ -390,3 +458,4 @@ document.addEventListener("keydown", function(e) {
 
 </body>
 </html>
+
