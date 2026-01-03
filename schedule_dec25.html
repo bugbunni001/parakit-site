@@ -13,7 +13,7 @@
             margin: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif, Arial, sans-serif;
             background: #f2f2ee;
-            padding-bottom: 60px;
+            padding-bottom: 80px; /* เพิ่มพื้นที่ด้านล่างกัน footer บังเนื้อหา */
             overflow-x: hidden;
         }
 
@@ -22,7 +22,7 @@
             position: fixed;
             top: 12px;
             left: 12px;
-            z-index: 1300;
+            z-index: 1400; /* อยู่หน้า content ปกติ */
             width: 44px;
             height: 44px;
             border-radius: 10px;
@@ -34,6 +34,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
 
         .sidebar {
@@ -46,7 +47,7 @@
             overflow-y: auto;
             transform: translateX(-240px);
             transition: transform 0.3s ease;
-            z-index: 1500;
+            z-index: 1600; /* ปรับให้สูงกว่า Footer */
             box-shadow: 2px 0 10px rgba(0,0,0,0.1);
         }
         .sidebar.show { transform: translateX(0); }
@@ -141,14 +142,24 @@
             margin: 0 auto;
         }
 
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.4); display: none; z-index: 1400; }
+        /* ฉากหลังเมื่อเปิดเมนู */
+        .overlay { 
+            position: fixed; 
+            inset: 0; 
+            background: rgba(0,0,0,.4); 
+            display: none; 
+            z-index: 1550; /* อยู่ระหว่าง Footer และ Sidebar */
+        }
         .overlay.show { display: block; }
 
+        /* ===== FOOTER ===== */
         footer {
             width: 100%; text-align: center; padding: 15px 0;
             background: #fff; color: #666; position: fixed;
-            bottom: 0; left: 0; font-size: 13px; z-index: 1000;
+            bottom: 0; left: 0; font-size: 13px; 
+            z-index: 1000; /* ปรับให้ค่าต่ำกว่าเมนู */
             border-top: 1px solid #eee;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
         }
     </style>
 </head>
@@ -229,14 +240,13 @@
         overlay.classList.toggle("show");
     }
 
-    // 2. ระบบ Dropdown ในเมนู (แก้ไขให้บันทึกสถานะ)
+    // 2. ระบบ Dropdown ในเมนู (บันทึกสถานะลง localStorage)
     function toggleDrop(btn) {
         const item = btn.parentElement;
         const sub = item.querySelector(".sub");
         
         item.classList.toggle("open");
         
-        // บันทึกค่าลง localStorage
         if (sub && sub.id) {
             const isOpen = item.classList.contains("open");
             localStorage.setItem("drop-" + sub.id, isOpen);
@@ -276,7 +286,6 @@
         document.querySelectorAll(".item").forEach(item => {
             const sub = item.querySelector(".sub");
             if (sub && sub.id) {
-                // ดึงค่าสถานะที่เคยเก็บไว้
                 const storedState = localStorage.getItem("drop-" + sub.id);
                 if (storedState === "true") {
                     item.classList.add("open");
@@ -288,4 +297,3 @@
 
 </body>
 </html>
-        
