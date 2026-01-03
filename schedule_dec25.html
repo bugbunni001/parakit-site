@@ -78,7 +78,7 @@
         .item.open .sub { display: block; }
         .sub a { padding-left: 42px; font-size: 14px; }
 
-        /* ===== MAIN CONTENT AREA (เอา display: none ออกเพื่อให้แสดงทันที) ===== */
+        /* ===== MAIN CONTENT AREA ===== */
         .content {
             padding: 20px;
             padding-top: 70px;
@@ -116,7 +116,6 @@
             background: #f8f9fa; border: 1px solid #ddd; border-radius: 8px;
             transition: 0.2s;
         }
-        .zoom-controls button:active { background: #e9ecef; }
 
         .zoom-wrapper {
             width: 100%;
@@ -172,7 +171,7 @@
                 <span>📊 บันทึกสินเชื่อ</span>
                 <span class="arrow">▶</span>
             </button>
-            <div class="sub">
+            <div class="sub" id="sub-loans">
                 <a href="https://docs.google.com/forms/d/e/1FAIpQLSerK-IQFH4StGmvrOxb8M2DOC9VyrToSycYBxWrzSVOq67SOw/viewform?usp=preview">📈 ลงสินเชื่อส่วนกลาง</a>
                 <a href="https://lookerstudio.google.com/reporting/8eee598b-7f10-4d88-8162-8ac554e50b9e">📑 Report สินเชื่อส่วนกลาง</a>
             </div>
@@ -185,7 +184,7 @@
                 <span>📍 เฉพาะประชาอุทิศ</span>
                 <span class="arrow">▶</span>
             </button>
-            <div class="sub">
+            <div class="sub" id="sub-pru">
                 <a href="schedule_dec25.html">📆 ตารางงาน ธ.ค. 25</a>
                 <a href="schedule_jan26.html">📆 ตารางงาน ม.ค. 26</a>
                 <a href="#">📱 เช็ค Mat เครื่อง</a>
@@ -199,7 +198,7 @@
 <main class="content" id="mainContent">
     <div class="box-container">
         <h3 style="color: #1e293b; margin-top: 0;">📅 ตารางงานประจำเดือน</h3>
-        <p style="font-size: 14px; color: #666;">มกราคม 2569 (สามารถใช้ปุ่มขยายเพื่อดูรายละเอียดได้)</p>
+        <p style="font-size: 14px; color: #666;">ธันวาคม 2025</p>
         
         <div class="zoom-controls">
             <button onclick="zoomIn()">ขยาย ➕</button>
@@ -230,10 +229,18 @@
         overlay.classList.toggle("show");
     }
 
-    // 2. ระบบ Dropdown ในเมนู
+    // 2. ระบบ Dropdown ในเมนู (แก้ไขให้บันทึกสถานะ)
     function toggleDrop(btn) {
         const item = btn.parentElement;
+        const sub = item.querySelector(".sub");
+        
         item.classList.toggle("open");
+        
+        // บันทึกค่าลง localStorage
+        if (sub && sub.id) {
+            const isOpen = item.classList.contains("open");
+            localStorage.setItem("drop-" + sub.id, isOpen);
+        }
     }
 
     // 3. ระบบ Zoom รูปภาพ
@@ -257,20 +264,23 @@
     function applyZoom() {
         const content = document.getElementById("zoomContent");
         content.style.transform = `scale(${scale})`;
-        
-        // ถ้าขยายจนใหญ่กว่ากรอบ ปรับตำแหน่งเพื่อให้เลื่อนดูได้ง่าย
         if (scale > 1) {
             content.style.transformOrigin = "top left";
         } else {
             content.style.transformOrigin = "top center";
         }
     }
-     // เมื่อโหลดหน้าเว็บ ให้เช็คสถานะเมนูที่เคยเปิดค้างไว้
+
+    // 4. เมื่อโหลดหน้าเว็บ ให้เช็คสถานะเมนูที่เคยเปิดค้างไว้
     window.onload = () => {
-        document.querySelectorAll(".item").forEach(i => {
-            const sub = i.querySelector(".sub");
-            if (sub && localStorage.getItem("drop-" + sub.id) === "true") {
-                i.classList.add("open");
+        document.querySelectorAll(".item").forEach(item => {
+            const sub = item.querySelector(".sub");
+            if (sub && sub.id) {
+                // ดึงค่าสถานะที่เคยเก็บไว้
+                const storedState = localStorage.getItem("drop-" + sub.id);
+                if (storedState === "true") {
+                    item.classList.add("open");
+                }
             }
         });
     };
@@ -278,5 +288,4 @@
 
 </body>
 </html>
-      
-
+        
