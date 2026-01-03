@@ -5,70 +5,92 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>บันทึกยอดขายรายวัน & ภารกิจประจำเดือน</title>
 
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
+
     <style>
-        /* CSS พื้นฐาน */
-        * { box-sizing: border-box; }
+        /* ===== SETUP & LAYOUT ===== */
+        * { 
+            box-sizing: border-box; 
+            font-family: 'Kanit', sans-serif !important; 
+        }
         
         body {
             margin: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif, Arial, sans-serif;
-            background: #f2f2ee;
-            padding-bottom: 80px; 
+            background: #f8fafc;
+            padding-bottom: 100px;
+            color: #334155;
+            -webkit-font-smoothing: antialiased;
         }
 
         /* ===== LOCK FULL PAGE ===== */
         .lock-page {
             position: fixed;
             inset: 0;
-            background: #f2f2ee;
+            background: #1e293b;
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 9999; /* อยู่หน้าสุดของทุกอย่าง */
+            z-index: 9999;
         }
         .lock-box {
             background: #ffffff;
-            padding: 30px;
-            border-radius: 10px;
+            padding: 40px 30px;
+            border-radius: 24px;
             text-align: center;
-            width: 280px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+            width: 320px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
         }
-        .lock-box h3 { margin-bottom: 15px; }
+        .lock-box h3 { 
+            margin: 0 0 20px 0; 
+            color: #1e293b;
+            font-weight: 600;
+        }
         .lock-box input {
             width: 100%;
-            padding: 10px;
-            font-size: 16px;
-            margin-bottom: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
+            padding: 12px 16px;
+            font-size: 18px;
+            margin-bottom: 15px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 12px;
+            text-align: center;
+            letter-spacing: 4px;
+            outline: none;
+            transition: 0.3s;
         }
+        .lock-box input:focus { border-color: #5bbf8a; box-shadow: 0 0 0 4px rgba(91, 191, 138, 0.1); }
         .lock-box button {
             width: 100%;
-            padding: 10px;
+            padding: 14px;
             background: #5bbf8a;
             color: white;
             border: none;
             font-size: 16px;
-            border-radius: 6px;
+            font-weight: 600;
+            border-radius: 12px;
             cursor: pointer;
+            transition: 0.3s;
         }
-        .error { color: red; font-size: 14px; margin-top: 8px; }
+        .lock-box button:hover { background: #4eab7a; transform: translateY(-2px); }
+        .error { color: #ef4444; font-size: 14px; margin-top: 10px; font-weight: 400; }
 
         /* ===== SIDEBAR NAVIGATION ===== */
         .top-toggle {
             position: fixed;
-            top: 12px;
-            left: 12px;
-            z-index: 1300;
-            width: 44px;
-            height: 44px;
-            border-radius: 10px;
+            top: 15px;
+            left: 15px;
+            z-index: 1400;
+            width: 45px;
+            height: 45px;
+            border-radius: 12px;
             border: none;
             background: #1e293b;
             color: #fff;
             font-size: 20px;
             cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         @media(min-width:769px) { .top-toggle { display: none; } }
@@ -76,15 +98,14 @@
         .sidebar {
             position: fixed;
             top: 0; left: 0;
-            width: 240px;
+            width: 260px;
             height: 100vh;
             background: #1e293b;
             color: #fff;
             overflow-y: auto;
-            transform: translateX(-240px);
-            transition: .25s;
-            z-index: 2000; /* สูงกว่า Footer แน่นอน */
-            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            transform: translateX(-260px);
+            transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 2000;
         }
         .sidebar.show { transform: translateX(0); }
 
@@ -92,121 +113,112 @@
             display: flex;
             align-items: center;
             gap: 12px;
-            padding: 16px;
+            padding: 20px;
             background: #0f172a;
-            font-weight: bold;
-            min-height: 56px;
+            font-weight: 600;
+            font-size: 18px;
         }
 
-        .toggle {
-            background: none;
-            border: none;
-            color: #fff;
-            font-size: 22px;
-            cursor: pointer;
-        }
+        .toggle { background: none; border: none; color: #fff; font-size: 22px; cursor: pointer; }
 
-        .menu { display: flex; flex-direction: column; }
-        .item { border-bottom: 1px solid rgba(255,255,255,.08); }
+        .menu { display: flex; flex-direction: column; padding: 10px 0; }
+        .item { border-bottom: 1px solid rgba(255,255,255,.05); }
 
         .menu a, .menu .drop-btn {
             width: 100%;
-            min-height: 52px;
-            padding: 0 16px;
+            min-height: 55px;
+            padding: 0 20px;
             background: none;
             border: none;
-            color: #fff;
+            color: #cbd5e1;
             text-align: left;
             font-size: 15px;
             cursor: pointer;
             display: flex;
             align-items: center;
             text-decoration: none;
-            transition: background 0.2s;
+            transition: all 0.2s;
         }
 
-        .menu a:hover, .menu .drop-btn:hover { background: #334155; }
+        .menu a:hover, .menu .drop-btn:hover { background: #334155; color: #fff; }
 
-        .arrow {
-            margin-left: auto;
-            font-size: 12px;
-            transition: .2s;
-            opacity: 0.7;
-        }
+        .arrow { margin-left: auto; font-size: 12px; transition: .3s; opacity: 0.5; }
         .item.open .arrow { transform: rotate(90deg); }
 
-        .sub {
-            display: none;
-            background: #0f172a;
-        }
+        .sub { display: none; background: #0f172a; }
         .item.open .sub { display: block; }
-
-        .sub a {
-            min-height: 48px;
-            padding-left: 42px;
-            font-size: 14px;
-            border-top: 1px solid rgba(255,255,255,.06);
-        }
+        .sub a { min-height: 48px; padding-left: 45px; font-size: 14px; color: #94a3b8; border-top: 1px solid rgba(255,255,255,.03); }
 
         /* ===== MAIN CONTENT AREA ===== */
         .content {
-            padding: 60px 20px;
-            transition: margin-left .25s;
+            padding: 80px 20px;
+            transition: margin-left .3s;
         }
 
         @media(min-width:769px) {
             .sidebar { transform: translateX(0); }
-            .content { margin-left: 240px; }
+            .content { margin-left: 260px; }
         }
 
         /* ===== BUTTON MENU ===== */
         .container {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 18px;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 20px;
             max-width: 1000px;
             margin: 20px auto;
         }
 
         .btn {
-            background: #5bbf8a;
-            color: white;
-            padding: 14px;
-            border-radius: 8px;
+            background: #fff;
+            color: #1e293b;
+            padding: 24px 20px;
+            border-radius: 20px;
             text-align: center;
             font-size: 16px;
             text-decoration: none;
-            transition: box-shadow 0.3s ease, transform 0.2s ease;
-            font-weight: bold;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            border: 1px solid #f1f5f9;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
 
         .btn:hover {
-            box-shadow: 0 8px 20px rgba(0,0,0,0.25);
-            transform: translateY(-2px);
+            background: #5bbf8a;
+            color: #fff;
+            box-shadow: 0 20px 25px -5px rgba(91, 191, 138, 0.3);
+            transform: translateY(-5px);
+            border-color: #5bbf8a;
         }
 
         /* ===== FOOTER ===== */
         footer {
             width: 100%;
             text-align: center;
-            padding: 15px 0;
-            background: #F5F5F5;
-            color: #000000;
+            padding: 20px 0;
+            background: #fff;
+            color: #94a3b8;
             position: fixed;
             bottom: 0;
             left: 0;
-            font-size: 16px;
-            box-shadow: 0 -2px 8px rgba(0,0,0,0.2);
-            z-index: 1100; /* ต่ำกว่าระดับ Sidebar */
+            font-size: 12px;
+            box-shadow: 0 -1px 10px rgba(0,0,0,0.02);
+            z-index: 1100;
+            border-top: 1px solid #f1f5f9;
         }
 
-        /* ฉากหลังเมื่อเปิดเมนู */
         .overlay { 
             position: fixed; 
             inset: 0; 
-            background: rgba(0,0,0,.35); 
+            background: rgba(15, 23, 42, 0.6); 
             display: none; 
-            z-index: 1500; /* อยู่หน้า Footer แต่หลัง Sidebar */
+            backdrop-filter: blur(4px);
+            z-index: 1500; 
         }
         .overlay.show { display: block; }
     </style>
@@ -217,7 +229,7 @@
 <div class="lock-page" id="lockPage">
     <div class="lock-box">
         <h3>🔒 ใส่รหัสเข้าใช้งาน</h3>
-        <input type="password" id="password" placeholder="รหัสผ่าน" autofocus onkeydown="if(event.key==='Enter') checkPass()">
+        <input type="password" id="password" placeholder="••••" autofocus onkeydown="if(event.key==='Enter') checkPass()">
         <button onclick="checkPass()">เข้าสู่ระบบ</button>
         <div class="error" id="error"></div>
     </div>
@@ -237,8 +249,7 @@
 
         <div class="item">
             <button class="drop-btn" onclick="toggleDrop(this, 'sub-loans')">
-                <span>📊 บันทึกสินเชื่อ</span>
-                <span class="arrow">▶</span>
+                📊 บันทึกสินเชื่อ <span class="arrow">▶</span>
             </button>
             <div class="sub" id="sub-loans">
                 <a href="https://docs.google.com/forms/d/e/1FAIpQLSerK-IQFH4StGmvrOxb8M2DOC9VyrToSycYBxWrzSVOq67SOw/viewform?usp=preview" target="_blank">📈 ลงสินเชื่อส่วนกลาง</a>
@@ -250,8 +261,7 @@
 
         <div class="item">
             <button class="drop-btn" onclick="toggleDrop(this, 'sub-pru')">
-                <span>📍 เฉพาะประชาอุทิศ</span>
-                <span class="arrow">▶</span>
+                📍 เฉพาะประชาอุทิศ <span class="arrow">▶</span>
             </button>
             <div class="sub" id="sub-pru">
                 <a href="schedule_dec25.html">📆 ตารางงาน ธ.ค. 25</a>
@@ -266,10 +276,18 @@
 
 <div class="content">
     <div class="container">
-        <a class="btn" href="https://drive.usercontent.google.com/download?id=1G-pjJW6nrpi6NWiw7N52p4iYa5i6qsqG&export=download" target="_blank">‼️ ใบเตือน HRM 003</a>
-        <a class="btn" href="https://drive.usercontent.google.com/download?id=1kRlJsp2TXV9cfnBITiLRnAZSQ3z-nBrl&export=download" target="_blank">‼️ ใบเตือน HRM 004</a>
-        <a class="btn" href="https://url.in.th/KDMww" target="_blank">QR CODE UMAY+ (1)</a>
-        <a class="btn" href="https://url.in.th/lELFu" target="_blank">QR CODE UMAY+ (2)</a>
+        <a class="btn" href="https://drive.usercontent.google.com/download?id=1G-pjJW6nrpi6NWiw7N52p4iYa5i6qsqG&export=download" target="_blank">
+            <span>📄</span> ใบเตือน HRM 003
+        </a>
+        <a class="btn" href="https://drive.usercontent.google.com/download?id=1kRlJsp2TXV9cfnBITiLRnAZSQ3z-nBrl&export=download" target="_blank">
+            <span>📄</span> ใบเตือน HRM 004
+        </a>
+        <a class="btn" href="https://url.in.th/KDMww" target="_blank">
+            <span>🔳</span> QR CODE UMAY+ (1)
+        </a>
+        <a class="btn" href="https://url.in.th/lELFu" target="_blank">
+            <span>🔳</span> QR CODE UMAY+ (2)
+        </a>
     </div>
 </div>
 
@@ -316,4 +334,3 @@
 
 </body>
 </html>
-
