@@ -222,18 +222,18 @@
 <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
         <button class="toggle" onclick="toggleSidebar()">☰</button>
-        เมนู
+        MENU
     </div>
 
     <div class="menu">
         <div class="item"><a href="index.html">🏠 หน้าหลัก</a></div>
 
         <div class="item">
-            <button class="drop-btn" onclick="toggleDrop(this)">
+            <button class="drop-btn" onclick="toggleDrop(this, 'sub-loans')">
                 <span>📊 บันทึกสินเชื่อ</span>
                 <span class="arrow">▶</span>
             </button>
-            <div class="sub">
+            <div class="sub" id="sub-loans">
                 <a href="https://docs.google.com/forms/d/e/1FAIpQLSerK-IQFH4StGmvrOxb8M2DOC9VyrToSycYBxWrzSVOq67SOw/viewform?usp=preview" target="_blank">📈 ลงสินเชื่อส่วนกลาง</a>
                 <a href="https://lookerstudio.google.com/reporting/8eee598b-7f10-4d88-8162-8ac554e50b9e" target="_blank">📑 Report สินเชื่อส่วนกลาง</a>
             </div>
@@ -242,11 +242,11 @@
         <div class="item"><a href="download.html">⬇️ ดาวน์โหลด</a></div>
 
         <div class="item">
-            <button class="drop-btn" onclick="toggleDrop(this)">
+            <button class="drop-btn" onclick="toggleDrop(this, 'sub-pru')">
                 <span>📍 เฉพาะประชาอุทิศ</span>
                 <span class="arrow">▶</span>
             </button>
-            <div class="sub">
+            <div class="sub" id="sub-pru">
                 <a href="schedule_dec25.html">📆 ตารางงาน ธ.ค. 25</a>
                 <a href="schedule_jan26.html">📆 ตารางงาน ม.ค. 26</a>
                 <a href="#">📱 เช็ค Mat เครื่อง</a>
@@ -289,31 +289,27 @@
         document.getElementById("overlay").classList.toggle("show");
     }
 
-    // ฟังก์ชันสำหรับ Dropdown เมนูข้าง
-    function toggleDrop(btn) {
-        // หาตัวแม่ (.item) แล้วสลับคลาส open
-        const parent = btn.parentElement;
-        parent.classList.toggle("open");
-    }
-
-    // โฟกัสช่องรหัสเมื่อเปิดหน้าเว็บ
-    window.onload = function () {
-        document.getElementById("password").focus();
-    }
-    // ฟังก์ชันสั่งกาง Dropdown ใน Sidebar
+    // ฟังก์ชันสั่งกาง Dropdown และบันทึกค่าลง localStorage
     function toggleDrop(btn, id) {
         const item = btn.parentElement;
         item.classList.toggle("open");
-        // บันทึกสถานะไว้ในเครื่อง (เผื่อรีเฟรชหน้าแล้วไม่อยากให้มันหุบ)
+        // บันทึกสถานะไว้ในเครื่องตาม ID ของเมนู
         localStorage.setItem("drop-" + id, item.classList.contains("open"));
     }
 
-    // เมื่อโหลดหน้าเว็บ ให้เช็คสถานะเมนูที่เคยเปิดค้างไว้
-    window.onload = () => {
+    // เมื่อโหลดหน้าเว็บ
+    window.onload = function () {
+        // 1. โฟกัสช่องรหัส
+        document.getElementById("password").focus();
+
+        // 2. เช็คสถานะเมนูที่เคยเปิดค้างไว้
         document.querySelectorAll(".item").forEach(i => {
             const sub = i.querySelector(".sub");
-            if (sub && localStorage.getItem("drop-" + sub.id) === "true") {
-                i.classList.add("open");
+            if (sub && sub.id) {
+                const storedState = localStorage.getItem("drop-" + sub.id);
+                if (storedState === "true") {
+                    i.classList.add("open");
+                }
             }
         });
     };
