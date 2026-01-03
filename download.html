@@ -24,7 +24,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 9999;
+            z-index: 9999; /* อยู่หน้าสุดของทุกอย่าง */
         }
         .lock-box {
             background: #ffffff;
@@ -83,7 +83,7 @@
             overflow-y: auto;
             transform: translateX(-240px);
             transition: .25s;
-            z-index: 1000;
+            z-index: 2000; /* สูงกว่า Footer แน่นอน */
             box-shadow: 2px 0 10px rgba(0,0,0,0.1);
         }
         .sidebar.show { transform: translateX(0); }
@@ -197,10 +197,17 @@
             left: 0;
             font-size: 16px;
             box-shadow: 0 -2px 8px rgba(0,0,0,0.2);
-            z-index: 1100;
+            z-index: 1100; /* ต่ำกว่าระดับ Sidebar */
         }
 
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: none; z-index: 900; }
+        /* ฉากหลังเมื่อเปิดเมนู */
+        .overlay { 
+            position: fixed; 
+            inset: 0; 
+            background: rgba(0,0,0,.35); 
+            display: none; 
+            z-index: 1500; /* อยู่หน้า Footer แต่หลัง Sidebar */
+        }
         .overlay.show { display: block; }
     </style>
 </head>
@@ -271,7 +278,6 @@
 </footer>
 
 <script>
-    // ฟังก์ชันตรวจสอบรหัสผ่าน
     function checkPass() {
         const pass = document.getElementById("password").value;
         if (pass === "0285") {
@@ -283,26 +289,19 @@
         }
     }
 
-    // ฟังก์ชันเปิด-ปิด Sidebar (มือถือ)
     function toggleSidebar() {
         document.getElementById("sidebar").classList.toggle("show");
         document.getElementById("overlay").classList.toggle("show");
     }
 
-    // ฟังก์ชันสั่งกาง Dropdown และบันทึกค่าลง localStorage
     function toggleDrop(btn, id) {
         const item = btn.parentElement;
         item.classList.toggle("open");
-        // บันทึกสถานะไว้ในเครื่องตาม ID ของเมนู
         localStorage.setItem("drop-" + id, item.classList.contains("open"));
     }
 
-    // เมื่อโหลดหน้าเว็บ
     window.onload = function () {
-        // 1. โฟกัสช่องรหัส
         document.getElementById("password").focus();
-
-        // 2. เช็คสถานะเมนูที่เคยเปิดค้างไว้
         document.querySelectorAll(".item").forEach(i => {
             const sub = i.querySelector(".sub");
             if (sub && sub.id) {
