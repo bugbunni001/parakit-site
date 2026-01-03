@@ -13,7 +13,8 @@
             margin: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif, Arial, sans-serif;
             background: #f2f2ee;
-            padding-bottom: 80px; /* พื้นที่สำหรับ Footer */
+            padding-bottom: 60px;
+            overflow-x: hidden; /* ป้องกันหน้าจอเลื่อนซ้ายขวาในระดับ Body */
         }
 
         /* ===== LOCK FULL PAGE ===== */
@@ -31,7 +32,8 @@
             padding: 30px;
             border-radius: 14px;
             text-align: center;
-            width: 280px;
+            width: 90%;
+            max-width: 300px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.25);
         }
         .lock-box input {
@@ -41,6 +43,7 @@
             margin-bottom: 10px;
             border: 1px solid #ddd;
             border-radius: 6px;
+            outline: none;
         }
         .lock-box button {
             width: 100%;
@@ -68,9 +71,10 @@
             color: #fff;
             font-size: 20px;
             cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-
-        @media(min-width:769px) { .top-toggle { display: none; } }
 
         .sidebar {
             position: fixed;
@@ -81,8 +85,8 @@
             color: #fff;
             overflow-y: auto;
             transform: translateX(-240px);
-            transition: .25s;
-            z-index: 1000;
+            transition: transform 0.3s ease;
+            z-index: 1500;
             box-shadow: 2px 0 10px rgba(0,0,0,0.1);
         }
         .sidebar.show { transform: translateX(0); }
@@ -94,11 +98,7 @@
             padding: 16px;
             background: #0f172a;
             font-weight: bold;
-            min-height: 56px;
-        }
-
-        .toggle {
-            background: none; border: none; color: #fff; font-size: 22px; cursor: pointer;
+            font-size: 18px;
         }
 
         .menu { display: flex; flex-direction: column; }
@@ -112,70 +112,85 @@
         }
 
         .menu a:hover, .menu .drop-btn:hover { background: #334155; }
-
         .arrow { margin-left: auto; font-size: 12px; transition: .2s; opacity: 0.7; }
         .item.open .arrow { transform: rotate(90deg); }
-
         .sub { display: none; background: #0f172a; }
         .item.open .sub { display: block; }
         .sub a { padding-left: 42px; font-size: 14px; }
 
-         /* ===== MAIN CONTENT AREA (ปรับให้ใหญ่พอดีจอ) ===== */
+        /* ===== MAIN CONTENT AREA ===== */
         .content {
             padding: 20px;
-            padding-top: 60px; /* เว้นที่ให้ปุ่มแฮมเบอร์เกอร์ในมือถือ */
-            transition: margin-left .25s;
-            display: none; /* ซ่อนจนกว่าจะใส่รหัส */
-            min-height: 100vh;
+            padding-top: 70px; /* เว้นที่ให้ปุ่มเมนูในมือถือ */
+            transition: margin-left 0.3s ease;
+            display: none; 
+            width: 100%;
         }
 
         @media(min-width:769px) {
             .sidebar { transform: translateX(0); }
-            .content { margin-left: 240px; padding-top: 20px; }
+            .content { margin-left: 240px; width: calc(100% - 240px); padding-top: 20px; }
+            .top-toggle { display: none; }
         }
 
         .box-container {
             width: 100%;
-            max-width: 1400px; /* ขยายให้กว้างขึ้น */
+            max-width: 1200px;
             margin: 0 auto;
             background: #fff;
             padding: 15px;
             border-radius: 14px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
             text-align: center;
         }
 
-        .sheet-container {
-            width: 100%;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            overflow: hidden;
-            background: #fff;
-            margin-top: 15px;
+        /* ===== ZOOM SYSTEM (ป้องกันรูปหล่นขอบ) ===== */
+        .zoom-controls { 
+            margin-bottom: 15px; 
+            display: flex; 
+            justify-content: center; 
+            gap: 10px;
         }
-
-        iframe {
-            width: 100%;
-            height: 75vh; /* ปรับความสูงตามความสูงหน้าจอ */
-            border: none;
-            display: block;
-        }
-
-        /* Zoom Controls (ถ้าต้องการใช้) */
-        .zoom-controls { margin-bottom: 10px; }
         .zoom-controls button {
-            padding: 8px 15px; font-size: 16px; cursor: pointer; margin: 0 5px;
-            background: #eee; border: 1px solid #ccc; border-radius: 5px;
+            padding: 10px 20px; font-size: 18px; cursor: pointer;
+            background: #f8f9fa; border: 1px solid #ddd; border-radius: 8px;
+            transition: 0.2s;
+        }
+        .zoom-controls button:active { background: #e9ecef; }
+
+        .zoom-wrapper {
+            width: 100%;
+            overflow: auto; /* ให้เลื่อนในกรอบได้ถ้าขยายใหญ่ */
+            border: 1px solid #eee;
+            border-radius: 8px;
+            background: #fafafa;
+            position: relative;
+            min-height: 300px;
         }
 
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: none; z-index: 900; }
+        .zoom-content {
+            transform-origin: top center;
+            transition: transform 0.2s ease;
+            display: inline-block;
+            min-width: 100%;
+        }
+
+        .zoom-content img {
+            max-width: 100%; /* เริ่มต้นให้พอดีจอ */
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }
+
+        /* Footer */
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.4); display: none; z-index: 1400; }
         .overlay.show { display: block; }
 
         footer {
             width: 100%; text-align: center; padding: 15px 0;
-            background: #F5F5F5; color: #000; position: fixed;
-            bottom: 0; left: 0; font-size: 14px; z-index: 1100;
-            box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+            background: #fff; color: #666; position: fixed;
+            bottom: 0; left: 0; font-size: 13px; z-index: 1000;
+            border-top: 1px solid #eee;
         }
     </style>
 </head>
@@ -184,10 +199,11 @@
 
 <div class="lock-page" id="lockPage">
     <div class="lock-box">
-        <h3>🔒 ใส่รหัสเข้าใช้งาน</h3>
-        <input type="password" id="password" placeholder="รหัสผ่าน" autofocus 
+        <div style="font-size: 40px; margin-bottom: 10px;">🔒</div>
+        <h3 style="margin-top: 0;">กรุณาใส่รหัสผ่าน</h3>
+        <input type="password" id="password" placeholder="รหัสผ่าน 4 หลัก" autofocus 
                onkeydown="if(event.key==='Enter') checkPass()">
-        <button onclick="checkPass()">เข้าสู่ระบบ</button>
+        <button onclick="checkPass()">ตกลง</button>
         <div class="error" id="error"></div>
     </div>
 </div>
@@ -197,8 +213,7 @@
 
 <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
-        <button class="toggle" onclick="toggleSidebar()">☰</button>
-        เมนู
+        <span>MENU</span>
     </div>
 
     <div class="menu">
@@ -235,11 +250,15 @@
 
 <main class="content" id="mainContent">
     <div class="box-container">
-        <h3>✔ เข้าสู่ระบบสำเร็จ</h3>
+        <h3 style="color: #5bbf8a; margin-top: 0;">✔ เข้าสู่ระบบสำเร็จ</h3>
+        <p style="font-size: 14px; color: #666;">ตารางงานประจำเดือน (ปรับขนาดได้ด้านล่าง)</p>
+        
         <div class="zoom-controls">
-            <button onclick="zoomIn()">➕</button>
-            <button onclick="zoomOut()">➖</button>
+            <button onclick="zoomIn()">ขยาย ➕</button>
+            <button onclick="zoomOut()">ย่อ ➖</button>
+            <button onclick="resetZoom()">รีเซ็ต 🔄</button>
         </div>
+
         <div class="zoom-wrapper">
             <div class="zoom-content" id="zoomContent">
                 <img src="https://i.postimg.cc/wgNm74Pv/tarang-ngan.png" alt="Work Schedule">
@@ -247,12 +266,9 @@
         </div>
     </div>
 
-    <div style="width:100%; text-align:right; padding-right:10px; margin-top: 20px;">
-        <div id="sfcf9zkmy7wg2cln1z9qdeebg51qbywawnp"></div>
+    <div style="width:100%; text-align:center; margin-top: 30px; opacity: 0.6;">
+        <div id="sfcf9zkmy7wg2cln1z9qdeebg51qbywawnp" style="display:inline-block;"></div>
         <script type="text/javascript" src="https://counter1.optistats.ovh/private/counter.js?c=f9zkmy7wg2cln1z9qdeebg51qbywawnp&down=async" async></script>
-        <noscript>
-            <a href="https://www.freecounterstat.com"><img src="https://counter1.optistats.ovh/private/freecounterstat.php?c=f9zkmy7wg2cln1z9qdeebg51qbywawnp" alt="free counter"></a>
-        </noscript>
     </div>
 </main>
 
@@ -264,7 +280,7 @@
     const PASS = "0285";
     let scale = 1;
 
-    // ระบบรหัสผ่าน
+    // 1. ระบบตรวจสอบรหัสผ่าน
     function checkPass() {
         const input = document.getElementById("password");
         if (input.value === PASS) {
@@ -277,33 +293,51 @@
         }
     }
 
-    // ระบบ Sidebar
+    // 2. ระบบ Sidebar
     function toggleSidebar() {
-        document.getElementById("sidebar").classList.toggle("show");
-        document.getElementById("overlay").classList.toggle("show");
+        const sidebar = document.getElementById("sidebar");
+        const overlay = document.getElementById("overlay");
+        sidebar.classList.toggle("show");
+        overlay.classList.toggle("show");
     }
 
-    // ระบบ Dropdown (แก้ไขให้ทำงานได้)
+    // 3. ระบบ Dropdown
     function toggleDrop(btn) {
         const item = btn.parentElement;
         item.classList.toggle("open");
     }
 
-    // ระบบ Zoom
+    // 4. ระบบ Zoom
     function zoomIn() {
-        scale += 0.1;
+        scale += 0.15;
         applyZoom();
     }
 
     function zoomOut() {
-        scale = Math.max(0.5, scale - 0.1);
+        if (scale > 0.4) {
+            scale -= 0.15;
+            applyZoom();
+        }
+    }
+
+    function resetZoom() {
+        scale = 1;
         applyZoom();
     }
 
     function applyZoom() {
-        document.getElementById("zoomContent").style.transform = `scale(${scale})`;
+        const content = document.getElementById("zoomContent");
+        content.style.transform = `scale(${scale})`;
+        
+        // ถ้าขยายจนใหญ่เกินกรอบ ให้จัดเป็นกึ่งกลางซ้ายเพื่อให้เลื่อนได้ทั่วถึง
+        if (scale > 1) {
+            content.style.transformOrigin = "top left";
+        } else {
+            content.style.transformOrigin = "top center";
+        }
     }
 
+    // โฟกัสรหัสผ่านเมื่อเข้าเว็บ
     window.onload = function () {
         document.getElementById("password").focus();
     };
@@ -311,4 +345,3 @@
 
 </body>
 </html>
-
