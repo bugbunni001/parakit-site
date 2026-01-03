@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Target Edit | BigC Prachauthit</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
+        body { margin: 0; background: #f1f5f9; padding-bottom: 80px; color: #334155; }
+
+        /* ===== SIDEBAR NAVIGATION ===== */
+        .top-toggle { position: fixed; top: 15px; left: 15px; z-index: 1400; width: 45px; height: 45px; border-radius: 12px; border: none; background: #1e293b; color: #fff; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .sidebar { position: fixed; top: 0; left: 0; width: 260px; height: 100vh; background: #1e293b; color: #fff; overflow-y: auto; transform: translateX(-260px); transition: all .3s ease; z-index: 2000; }
+        .sidebar.show { transform: translateX(0); }
+        .sidebar-header { display: flex; align-items: center; gap: 12px; padding: 20px; background: #0f172a; font-weight: 600; font-size: 18px; }
+        .menu a, .menu .drop-btn { width: 100%; min-height: 55px; padding: 0 20px; background: none; border: none; color: #cbd5e1; text-align: left; font-size: 15px; cursor: pointer; display: flex; align-items: center; text-decoration: none; border-bottom: 1px solid rgba(255,255,255,.05); }
+        .menu a:hover, .menu .drop-btn:hover { background: #334155; color: #fff; }
+        .sub { display: none; background: #0f172a; }
+        .item.open .sub { display: block; }
+        .sub a { min-height: 48px; padding-left: 45px; font-size: 14px; color: #94a3b8; }
+
+        /* ===== MAIN CONTENT ===== */
+        .content { padding: 80px 15px 20px; transition: margin-left .3s; }
+        @media(min-width:769px) { .sidebar { transform: translateX(0); } .content { margin-left: 260px; padding-top: 30px; } .top-toggle { display: none; } }
+        .container { max-width: 1100px; margin: 0 auto; }
+        
+        .header-section { margin-bottom: 30px; position: relative; }
+        .header-text { text-align: center; margin-bottom: 10px; }
+        .header-text h2 { margin: 0; font-size: 28px; color: #1e293b; }
+        .header-text p { margin: 5px 0 0; font-size: 14px; color: #64748b; }
+        
+        .action-row { display: flex; justify-content: flex-end; margin-top: 10px; gap: 10px; }
+        .btn-reset { background: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 10px; cursor: pointer; font-size: 13px; transition: 0.2s; font-weight: 500; display: flex; align-items: center; gap: 8px; }
+        .btn-reset:hover { background: #dc2626; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15); }
+        .btn-return { background: #10b981; color: white; border: none; padding: 8px 16px; border-radius: 10px; cursor: pointer; font-size: 13px; transition: 0.2s; font-weight: 500; display: flex; align-items: center; gap: 8px; }
+        .btn-return:hover { background: #059669; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15); }
+
+        /* ===== CARDS & INPUTS ===== */
+        .grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 25px; }
+        .target-card { background: #fff; border-radius: 24px; padding: 25px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); border: 1px solid #f1f5f9; position: relative; }
+        .card-postpay { border-top: 5px solid #3b82f6; }
+        .card-device { border-top: 5px solid #8b5cf6; }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #f8fafc; }
+        .card-header .title { font-weight: 600; font-size: 20px; color: #1e293b; }
+
+        input { border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px 12px; width: 115px; text-align: right; color: #1e293b; font-weight: 600; background: #fff; transition: 0.2s; }
+        input:focus { border-color: #3b82f6; outline: none; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+        
+        .bg-input-blue { background: #dbeafe !important; color: #1e40af !important; border: 1px solid #bfdbfe !important; }
+        .bg-input-purple { background: #f3e8ff !important; color: #6b21a8 !important; border: 1px solid #e9d5ff !important; }
+        .total-black { background: #1e293b !important; color: #fff !important; border: none !important; }
+
+        .unit-label { display: flex; justify-content: space-between; background: #f8fafc; padding: 10px 15px; border-radius: 12px; font-size: 14px; font-weight: 600; margin-bottom: 10px; align-items: center; }
+        .staff-item { display: flex; justify-content: space-between; padding: 8px 15px; font-size: 14px; border-bottom: 1px solid #f1f5f9; align-items: center; }
+        .staff-item:last-child { border-bottom: none; margin-bottom: 15px; }
+
+        .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: none; z-index: 1500; }
+        .overlay.show { display: block; }
+        footer { width: 100%; text-align: center; padding: 25px 0; background: #fff; color: #94a3b8; font-size: 12px; border-top: 1px solid #f1f5f9; margin-top: 40px; }
+    </style>
+</head>
+<body>
+
+<button class="top-toggle" onclick="toggleSidebar()">☰</button>
+<div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-header"><span>MENU</span></div>
+    <div class="menu">
+        <a href="index.html">🏠 หน้าหลัก</a>
+        <div class="item">
+            <button class="drop-btn" onclick="toggleDrop(this, 'sub-loans')">📊 บันทึกสินเชื่อ</button>
+            <div class="sub" id="sub-loans">
+                <a href="loan_entry.html">📈 ลงสินเชื่อส่วนกลาง</a>
+                <a href="loan_report.html">📑 Report สินเชื่อส่วนกลาง</a>
+            </div>
+        </div>
+        <a href="download.html">⬇️ ดาวน์โหลด</a>
+        <div class="item">
+            <button class="drop-btn" onclick="toggleDrop(this, 'sub-pru')">📍 เฉพาะประชาอุทิศ</button>
+            <div class="sub" id="sub-pru">
+                <a href="schedule_dec25.html">📆 ตารางงาน ธ.ค. 25</a>
+                <a href="schedule_jan26.html">📆 ตารางงาน ม.ค. 26</a>
+                <a href="check_mat.html">📱 เช็ค Mat เครื่อง</a>
+                <a href="input_sale.html">✏️ ลงยอดขาย</a>
+                <a href="commission.html">💰 คำนวณค่าคอม</a>
+            </div>
+        </div>
+    </div>
+</aside>
+
+<main class="content">
+    <div class="container">
+        <div class="header-section">
+            <div class="header-text">
+                <h2>Target BigC Prachauthit (Editable)</h2>
+                <p>สรุปเป้าหมายยอดขายประจำเดือน</p>
+            </div>
+            <div class="action-row">
+                <button class="btn-return" onclick="returnValues()">🔙 เรียกคืนข้อมูล</button>
+                <button class="btn-reset" onclick="confirmReset()">🔄 Reset ข้อมูล (เป็น 0)</button>
+            </div>
+        </div>
+
+        <div class="grid-container">
+            <div class="target-card card-postpay">
+                <div class="card-header">
+                    <span class="title">Postpay</span>
+                    <input type="text" class="total-black" id="postpay_total" value="115,200" onfocus="clearComma(this)" onblur="formatComma(this)">
+                </div>
+                <div class="unit-label" style="color:#3b82f6;"><span>NEW</span><input type="text" class="bg-input-blue" id="pp_new_total" value="57,600" onfocus="clearComma(this)" onblur="formatComma(this)"></div>
+                <div class="staff-item"><span>นวพล</span><input type="text" id="pp_nawa_n" value="19,100" onfocus="clearComma(this)" onblur="formatComma(this)"></div>
+                <div class="staff-item"><span>กรทักษ์</span><input type="text" id="pp_korn_n" value="19,200" onfocus="clearComma(this)" onblur="formatComma(this)"></div>
+                <div class="staff-item"><span>ปิยะพร</span><input type="text" id="pp_piya_n" value="19,300" onfocus="clearComma(this)" onblur="formatComma(this)"></div>
+                
+                <div class="unit-label" style="color:#3b82f6;"><span>EXT</span><input type="text" class="bg-input-blue" id="pp_ext_total" value="57,600" onfocus="clearComma(this)" onblur="formatComma(this)"></div>
+                <div class="staff-item"><span>นวพล</span><input type="text" id="pp_nawa_e" value="19,100" onfocus="clearComma(this)" onblur="formatComma(this)"></div>
+                <div class="staff-item"><span>กรทักษ์</span><input type="text" id="pp_korn_e" value="19,200" onfocus="clearComma(this)" onblur="formatComma(this)"></div>
+                <div class="staff-item"><span>ปิยะพร</span><input type="text" id="pp_piya_e" value="19,300" onfocus="clearComma(this)" onblur="formatComma(this)"></div>
+            </div>
+
+            <div class="target-card card-device">
+                <div class="card-header">
+                    <span class="title">Device Total</span>
+                    <input type="text" class="total-black" style="background:#8b5cf6 !important;" id="device_total" value="1,343,900" onfocus="clearComma(this)" onblur="formatComma(this)">
+                </div>
+                
+                <div class="unit-label" style="color:#8b5cf6;"><span>APPLE</span><input type="text" class="bg-input-purple" id="dev_apple_total" value="849,900" onfocus="clearComma(this)" onblur="formatComma(this)"></div>
+                <div class="staff-item"><span>นวพล</span><input type="text" id="dev_nawa_a" value="280,900" onfocus="clearComma(this)" onblur="formatComma(this)"></div>
+                <div class="staff-item"><span>กรทักษ์</span><input type="text" id="dev_korn_a" value="280,000" onfocus="clearComma(this)" onblur="formatComma(this)"></div>
+                <div class="staff-item"><span>ปิยะพร</span><input type="text" id="dev_piya_a" value="289,000" onfocus="clearComma(this)" onblur="formatComma(this)"></div>
+                
+                <div class="unit-label" style="color:#8b5cf6;"><span>SMARTPHONE</span><input type="text" class="bg-input-purple" id="dev_smart_total" value="494,000" onfocus="clearComma(this)" onblur="formatComma(this)"></div>
+                <div class="staff-item"><span>นวพล</span><input type="text" id="dev_nawa_s" value="129,000" onfocus="clearComma(this)" onblur="formatComma(this)"></div>
+                <div class="staff-item"><span>กรทักษ์</span><input type="text" id="dev_korn_s" value="180,000" onfocus="clearComma(this)" onblur="formatComma(this)"></div>
+                <div class="staff-item"><span>ปิยะพร</span><input type="text" id="dev_piya_s" value="185,000" onfocus="clearComma(this)" onblur="formatComma(this)"></div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer>© 2025 Copy Right By Angerina Frog</footer>
+
+<script>
+    function formatComma(el) {
+        let val = el.value.replace(/,/g, '');
+        if(!isNaN(val) && val !== "") {
+            el.value = Number(val).toLocaleString('en-US');
+            localStorage.setItem(el.id, el.value);
+        }
+    }
+
+    function clearComma(el) { el.value = el.value.replace(/,/g, ''); }
+
+    function confirmReset() {
+        if(confirm("คุณยืนยันจะ reset ข้อมูล ใช่หรือไม่?\n(ค่าทุกช่องจะกลายเป็น 0 และกด Enter ยืนยันได้)")) {
+            const inputs = document.querySelectorAll('input');
+            let backup = {};
+            inputs.forEach(input => {
+                backup[input.id] = localStorage.getItem(input.id) || input.value;
+                input.value = "0";
+                localStorage.setItem(input.id, "0");
+            });
+            localStorage.setItem('reset_backup', JSON.stringify(backup));
+            alert("รีเซ็ตค่าเป็น 0 เรียบร้อยครับ");
+        }
+    }
+
+    function returnValues() {
+        const backup = JSON.parse(localStorage.getItem('reset_backup'));
+        if (backup) {
+            Object.keys(backup).forEach(id => {
+                localStorage.setItem(id, backup[id]);
+            });
+            alert("เรียกคืนข้อมูลสำเร็จ!");
+            location.reload();
+        } else {
+            alert("ไม่พบข้อมูลเดิมให้เรียกคืน");
+        }
+    }
+
+    function loadValues() {
+        const inputs = document.querySelectorAll('input');
+        inputs.forEach(input => {
+            const saved = localStorage.getItem(input.id);
+            if (saved !== null) input.value = saved;
+        });
+    }
+
+    function toggleSidebar() {
+        document.getElementById("sidebar").classList.toggle("show");
+        document.getElementById("overlay").classList.toggle("show");
+    }
+    
+    function toggleDrop(btn, id) {
+        const item = btn.parentElement;
+        item.classList.toggle("open");
+        localStorage.setItem("drop-" + id, item.classList.contains("open"));
+    }
+
+    window.onload = function () {
+        loadValues();
+        document.querySelectorAll(".item").forEach(i => {
+            const sub = i.querySelector(".sub");
+            if (sub && sub.id && localStorage.getItem("drop-" + sub.id) === "true") {
+                i.classList.add("open");
+            }
+        });
+    }
+</script>
+</body>
+</html>
