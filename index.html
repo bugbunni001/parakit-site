@@ -5,32 +5,42 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🔖 ภารกิจประจำเดือน & บันทึกยอดขาย</title>
 
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
+
     <style>
-        /* ===== SETUP & LAYOUT ===== */
-        * { box-sizing: border-box; }
+        /* ===== GLOBAL RESET FOR FONT ===== */
+        /* บังคับให้ทุก Element ในหน้าเว็บใช้ฟอนต์ Kanit */
+        * { 
+            box-sizing: border-box; 
+            font-family: 'Kanit', sans-serif !important; 
+        }
         
         body {
             margin: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif, Arial, sans-serif;
-            background: #f2f2ee;
-            padding-bottom: 100px; /* เพิ่มพื้นที่กัน Footer บังเนื้อหาด้านล่าง */
+            background: #f8fafc;
+            padding-bottom: 80px;
+            color: #334155;
+            -webkit-font-smoothing: antialiased; /* ทำให้ฟอนต์ดูคมชัดขึ้น */
         }
 
         /* ===== SIDEBAR NAVIGATION ===== */
         .top-toggle {
             position: fixed;
-            top: 12px;
-            left: 12px;
-            z-index: 1400; /* ให้อยู่สูงสุดเพื่อกดง่าย */
-            width: 44px;
-            height: 44px;
-            border-radius: 10px;
+            top: 15px;
+            left: 15px;
+            z-index: 1400;
+            width: 45px;
+            height: 45px;
+            border-radius: 12px;
             border: none;
             background: #1e293b;
             color: #fff;
             font-size: 20px;
             cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         @media(min-width:769px) { .top-toggle { display: none; } }
@@ -38,14 +48,14 @@
         .sidebar {
             position: fixed;
             top: 0; left: 0;
-            width: 240px;
+            width: 260px;
             height: 100vh;
             background: #1e293b;
             color: #fff;
             overflow-y: auto;
-            transform: translateX(-240px);
-            transition: .25s ease-in-out;
-            z-index: 1300; /* สูงกว่า Overlay และ Footer */
+            transform: translateX(-260px);
+            transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1300;
         }
         .sidebar.show { transform: translateX(0); }
 
@@ -53,115 +63,146 @@
             display: flex;
             align-items: center;
             gap: 12px;
-            padding: 16px;
+            padding: 20px;
             background: #0f172a;
-            font-weight: bold;
-            min-height: 56px;
+            font-weight: 600; /* ใช้ความหนาของ Kanit */
+            letter-spacing: 1px;
         }
 
         .toggle { background: none; border: none; color: #fff; font-size: 22px; cursor: pointer; }
 
-        .menu { display: flex; flex-direction: column; }
-        .item { border-bottom: 1px solid rgba(255,255,255,.08); }
+        .menu { display: flex; flex-direction: column; padding: 10px 0; }
+        .item { border-bottom: 1px solid rgba(255,255,255,.05); }
 
         .menu a, .menu .drop-btn {
             width: 100%;
-            min-height: 52px;
-            padding: 0 16px;
+            min-height: 55px;
+            padding: 0 20px;
             background: none;
             border: none;
-            color: #fff;
+            color: #cbd5e1;
             text-align: left;
             font-size: 15px;
             cursor: pointer;
             display: flex;
             align-items: center;
             text-decoration: none;
-            transition: background 0.2s;
+            transition: all 0.2s;
+            font-weight: 400;
         }
 
-        .menu a:hover, .menu .drop-btn:hover { background: #334155; }
-        .arrow { margin-left: auto; transition: .2s; font-size: 12px; opacity: 0.7; }
+        .menu a:hover, .menu .drop-btn:hover { background: #334155; color: #fff; }
+        .arrow { margin-left: auto; transition: .3s; font-size: 12px; opacity: 0.5; }
         .item.open .arrow { transform: rotate(90deg); }
 
         .sub { display: none; background: #0f172a; }
         .item.open .sub { display: block; }
         .sub a {
             min-height: 48px;
-            padding-left: 42px;
+            padding-left: 45px;
             font-size: 14px;
-            border-top: 1px solid rgba(255,255,255,.06);
+            color: #94a3b8;
+            border-top: 1px solid rgba(255,255,255,.03);
         }
 
         /* ===== CONTENT AREA ===== */
-        .content { padding: 60px 20px 40px; transition: margin-left .25s; }
+        .content { padding: 80px 20px 40px; transition: margin-left .3s; }
         @media(min-width:769px) {
             .sidebar { transform: translateX(0); }
-            .content { margin-left: 240px; }
+            .content { margin-left: 260px; }
         }
 
         /* ===== BUTTON MENU GRID ===== */
         .container {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 18px;
-            max-width: 1000px;
-            margin: 20px auto;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 20px;
+            max-width: 1100px;
+            margin: 0 auto;
         }
         .btn {
-            background: #5bbf8a;
-            color: white;
-            padding: 14px;
-            border-radius: 8px;
+            background: #ffffff;
+            color: #334155;
+            padding: 18px;
+            border-radius: 16px;
             text-align: center;
-            font-size: 16px;
+            font-size: 15px;
             text-decoration: none;
-            transition: 0.3s;
-            font-weight: bold;
+            transition: all 0.3s ease;
+            font-weight: 600;
             display: flex;
             align-items: center;
             justify-content: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            border: 1px solid #f1f5f9;
         }
-        .btn:hover { box-shadow: 0 8px 20px rgba(0,0,0,0.2); transform: translateY(-2px); background: #4eab7a; }
+        .btn:hover { 
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            transform: translateY(-3px); 
+            border-color: #5bbf8a;
+            color: #5bbf8a;
+        }
 
         /* ===== PROMO CARDS ===== */
         .card-container {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 24px;
-            max-width: 1000px;
-            margin: 40px auto;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            max-width: 1100px;
+            margin: 50px auto;
         }
         .card {
             background: #ffffff;
-            border-radius: 12px;
+            border-radius: 20px;
             overflow: hidden;
             text-align: center;
             text-decoration: none;
-            color: #000;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            transition: 0.2s;
+            color: #1e293b;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid #f1f5f9;
         }
-        .card:hover { transform: translateY(-4px); box-shadow: 0 10px 24px rgba(0,0,0,0.2); }
-        .card-box { width: 100%; height: 160px; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: bold; padding: 15px; }
-        .blue { background: #05a0e8; color: white; }
-        .yellow { background: #fff200; color: #333; }
-        .card-title { padding: 12px; font-size: 15px; border-top: 1px solid #eee; font-weight: bold; }
+        .card:hover { 
+            transform: scale(1.03);
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+        }
+        .card-box { 
+            width: 100%; 
+            height: 180px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 24px; 
+            font-weight: 600; 
+            padding: 30px; 
+            line-height: 1.2;
+        }
+        .blue { background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%); color: white; }
+        .yellow { background: linear-gradient(135deg, #fde047 0%, #eab308 100%); color: #854d0e; }
+        .card-title { 
+            padding: 20px; 
+            font-size: 14px; 
+            background: #fff;
+            font-weight: 400; 
+            color: #64748b;
+        }
 
         /* ===== FOOTER ===== */
         footer {
-            width: 100%; text-align: center; padding: 15px 0; background: #F5F5F5;
-            color: #000; position: fixed; bottom: 0; left: 0; font-size: 14px;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.05); 
-            z-index: 1100; /* อยู่ต่ำกว่า Sidebar และ Overlay */
+            width: 100%; text-align: center; padding: 20px 0; background: #fff;
+            color: #94a3b8; position: fixed; bottom: 0; left: 0; font-size: 12px;
+            box-shadow: 0 -1px 10px rgba(0,0,0,0.02); 
+            z-index: 1100;
+            border-top: 1px solid #f1f5f9;
         }
         
         .overlay { 
             position: fixed; 
             inset: 0; 
-            background: rgba(0,0,0,.4); 
+            background: rgba(15, 23, 42, 0.6); 
             display: none; 
-            z-index: 1200; /* อยู่ระหว่าง Footer และ Sidebar */
+            backdrop-filter: blur(4px);
+            z-index: 1200; 
         }
         .overlay.show { display: block; }
     </style>
