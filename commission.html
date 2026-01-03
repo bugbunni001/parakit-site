@@ -3,88 +3,104 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>บันทึกยอดขายรายวัน & ภารกิจประจำเดือน</title>
+    <title>เช็คค่าคอมมิชชั่น | Commission Check</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
 
     <style>
-        /* CSS พื้นฐาน */
-        * { box-sizing: border-box; }
+        /* ===== SETUP & LAYOUT ===== */
+        * { 
+            box-sizing: border-box; 
+            font-family: 'Kanit', sans-serif !important; 
+        }
         
         body {
             margin: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif, Arial, sans-serif;
-            background: #f2f2ee;
-            padding-bottom: 60px; 
+            background: #f8fafc;
+            padding-bottom: 50px;
+            color: #334155;
+            -webkit-font-smoothing: antialiased;
             overflow-x: hidden;
         }
 
-        /* ===== LOCK FULL PAGE ===== */
+        /* ===== LOCK FULL PAGE (สไตล์ใหม่) ===== */
         .lock-page {
             position: fixed;
             inset: 0;
-            background: #f2f2ee;
+            background: #1e293b;
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 9999; /* อยู่หน้าสุดเสมอจนกว่าจะปลดล็อค */
+            z-index: 9999;
         }
         .lock-box {
             background: #ffffff;
-            padding: 30px;
-            border-radius: 14px;
+            padding: 40px 30px;
+            border-radius: 24px;
             text-align: center;
-            width: 280px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+            width: 90%;
+            max-width: 350px;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3);
         }
+        .lock-box h3 { margin-top: 0; color: #1e293b; margin-bottom: 20px; }
         .lock-box input {
             width: 100%;
-            padding: 12px;
-            font-size: 16px;
-            margin-bottom: 10px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
+            padding: 14px;
+            font-size: 18px;
+            margin-bottom: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            text-align: center;
+            outline: none;
+            transition: 0.2s;
         }
+        .lock-box input:focus { border-color: #5bbf8a; }
         .lock-box button {
             width: 100%;
-            padding: 12px;
-            background: #5bbf8a;
+            padding: 14px;
+            background: #1e293b;
             color: white;
             border: none;
             font-size: 16px;
-            border-radius: 6px;
+            font-weight: 600;
+            border-radius: 12px;
             cursor: pointer;
+            transition: 0.2s;
         }
-        .error { color: red; font-size: 14px; margin-top: 8px; }
+        .lock-box button:hover { background: #334155; }
+        .error { color: #ef4444; font-size: 14px; margin-top: 10px; }
 
         /* ===== SIDEBAR NAVIGATION ===== */
         .top-toggle {
             position: fixed;
-            top: 12px;
-            left: 12px;
-            z-index: 1300;
-            width: 44px;
-            height: 44px;
-            border-radius: 10px;
+            top: 15px;
+            left: 15px;
+            z-index: 1400;
+            width: 45px;
+            height: 45px;
+            border-radius: 12px;
             border: none;
             background: #1e293b;
             color: #fff;
             font-size: 20px;
             cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-
-        @media(min-width:769px) { .top-toggle { display: none; } }
 
         .sidebar {
             position: fixed;
             top: 0; left: 0;
-            width: 240px;
+            width: 260px;
             height: 100vh;
             background: #1e293b;
             color: #fff;
             overflow-y: auto;
-            transform: translateX(-240px);
-            transition: .25s;
-            z-index: 2000; /* ปรับให้สูงกว่า Footer */
-            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            transform: translateX(-260px);
+            transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 2000;
         }
         .sidebar.show { transform: translateX(0); }
 
@@ -92,91 +108,85 @@
             display: flex;
             align-items: center;
             gap: 12px;
-            padding: 16px;
+            padding: 20px;
             background: #0f172a;
-            font-weight: bold;
-            min-height: 56px;
+            font-weight: 600;
+            font-size: 18px;
         }
 
-        .toggle { background: none; border: none; color: #fff; font-size: 22px; cursor: pointer; }
-
-        .menu { display: flex; flex-direction: column; }
-        .item { border-bottom: 1px solid rgba(255,255,255,.08); }
+        .menu { display: flex; flex-direction: column; padding: 10px 0; }
+        .item { border-bottom: 1px solid rgba(255,255,255,.05); }
 
         .menu a, .menu .drop-btn {
-            width: 100%; min-height: 52px; padding: 0 16px;
-            background: none; border: none; color: #fff;
+            width: 100%; min-height: 55px; padding: 0 20px;
+            background: none; border: none; color: #cbd5e1;
             text-align: left; font-size: 15px; cursor: pointer;
             display: flex; align-items: center; text-decoration: none;
         }
+        .menu a:hover, .menu .drop-btn:hover { background: #334155; color: #fff; }
 
-        .menu a:hover, .menu .drop-btn:hover { background: #334155; }
-
-        .arrow { margin-left: auto; font-size: 12px; transition: .2s; opacity: 0.7; }
+        .arrow { margin-left: auto; font-size: 12px; transition: .3s; opacity: 0.5; }
         .item.open .arrow { transform: rotate(90deg); }
-
         .sub { display: none; background: #0f172a; }
         .item.open .sub { display: block; }
-        .sub a { padding-left: 42px; font-size: 14px; border-top: 1px solid rgba(255,255,255,0.05); }
+        .sub a { min-height: 48px; padding-left: 45px; font-size: 14px; color: #94a3b8; }
 
         /* ===== MAIN CONTENT AREA ===== */
         .content {
-            padding: 20px;
-            padding-top: 60px;
-            transition: margin-left .25s;
-            display: none;
+            padding: 10px;
+            padding-top: 70px;
+            transition: margin-left .3s;
+            display: none; /* ซ่อนไว้จนกว่าจะกรอกรหัส */
             min-height: 100vh;
         }
 
         @media(min-width:769px) {
             .sidebar { transform: translateX(0); }
-            .content { margin-left: 240px; padding-top: 20px; }
+            .content { margin-left: 260px; padding-top: 20px; padding-bottom: 20px; }
+            .top-toggle { display: none; }
         }
 
         .box-container {
             width: 100%;
-            max-width: 1400px;
+            max-width: 100%;
             margin: 0 auto;
             background: #fff;
-            padding: 15px;
-            border-radius: 14px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-            text-align: center;
+            padding: 10px;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            height: calc(100vh - 100px); /* ให้ความสูงพอดีหน้าจอ */
+            display: flex;
+            flex-direction: column;
         }
 
         .sheet-container {
+            flex-grow: 1;
             width: 100%;
-            border: 1px solid #ddd;
-            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
             overflow: hidden;
-            background: #fff;
-            margin-top: 15px;
         }
 
         iframe {
             width: 100%;
-            height: 75vh;
+            height: 100%;
             border: none;
             display: block;
         }
 
-        /* ฉากหลังเมื่อเปิดเมนู */
+        /* Overlay */
         .overlay { 
-            position: fixed; 
-            inset: 0; 
-            background: rgba(0,0,0,.35); 
-            display: none; 
-            z-index: 1500; /* สูงกว่า Footer แต่ต่ำกว่า Sidebar */
+            position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); 
+            display: none; backdrop-filter: blur(4px); z-index: 1500; 
         }
         .overlay.show { display: block; }
 
         /* ===== FOOTER ===== */
         footer {
             width: 100%; text-align: center; padding: 15px 0;
-            background: #F5F5F5; color: #000; position: fixed;
-            bottom: 0; left: 0; font-size: 14px; 
-            z-index: 1100; /* ต่ำกว่าระดับ Sidebar */
-            box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+            background: #fff; color: #94a3b8; position: fixed;
+            bottom: 0; left: 0; font-size: 12px; z-index: 1000;
+            border-top: 1px solid #f1f5f9;
         }
     </style>
 </head>
@@ -185,8 +195,8 @@
 
 <div class="lock-page" id="lockPage">
     <div class="lock-box">
-        <h3>🔒 ใส่รหัสเข้าใช้งาน</h3>
-        <input type="password" id="password" placeholder="รหัสผ่าน" autofocus 
+        <h3>🔒 รหัสเข้าใช้งาน</h3>
+        <input type="password" id="password" placeholder="ระบุรหัสผ่าน" autofocus 
                onkeydown="if(event.key==='Enter') checkPass()">
         <button onclick="checkPass()">เข้าสู่ระบบ</button>
         <div class="error" id="error"></div>
@@ -198,8 +208,7 @@
 
 <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
-        <button class="toggle" onclick="toggleSidebar()">☰</button>
-        เมนู
+        <span>MENU</span>
     </div>
 
     <div class="menu">
@@ -207,8 +216,7 @@
 
         <div class="item">
             <button class="drop-btn" onclick="toggleDrop(this, 'sub-loans')">
-                <span>📊 บันทึกสินเชื่อ</span>
-                <span class="arrow">▶</span>
+                📊 บันทึกสินเชื่อ <span class="arrow">▶</span>
             </button>
             <div class="sub" id="sub-loans">
                 <a href="https://docs.google.com/forms/d/e/1FAIpQLSerK-IQFH4StGmvrOxb8M2DOC9VyrToSycYBxWrzSVOq67SOw/viewform?usp=preview">📈 ลงสินเชื่อส่วนกลาง</a>
@@ -220,8 +228,7 @@
 
         <div class="item">
             <button class="drop-btn" onclick="toggleDrop(this, 'sub-pru')">
-                <span>📍 เฉพาะประชาอุทิศ</span>
-                <span class="arrow">▶</span>
+                📍 เฉพาะประชาอุทิศ <span class="arrow">▶</span>
             </button>
             <div class="sub" id="sub-pru">
                 <a href="schedule_dec25.html">📆 ตารางงาน ธ.ค. 25</a>
@@ -236,11 +243,8 @@
 
 <main class="content" id="mainContent">
     <div class="box-container">
-        <h3 id="statusMsg">✔ เข้าสู่ระบบสำเร็จ</h3>
-        <p style="font-weight: bold; color: #1e293b;">เช็คค่าคอมมิชชั่น จ่ายเดือน กุมภาพันธ์ 2026</p>
-        
         <div class="sheet-container">
-            <iframe src="https://docs.google.com/spreadsheets/d/1z-gI0C8Nur9KMJqCSdBxTaY6gF2zNBkcL1xSeHgLIv4/edit?gid=990579738#gid=990579738=false"></iframe>
+            <iframe src="https://docs.google.com/spreadsheets/d/1z-gI0C8Nur9KMJqCSdBxTaY6gF2zNBkcL1xSeHgLIv4/edit?gid=990579738#gid=990579738"></iframe>
         </div>
     </div>
 </main>
@@ -258,7 +262,7 @@
             document.getElementById("lockPage").style.display = "none";
             document.getElementById("mainContent").style.display = "block";
         } else {
-            document.getElementById("error").innerText = "❌ รหัสไม่ถูกต้อง";
+            document.getElementById("error").innerText = "❌ รหัสไม่ถูกต้อง กรุณาลองใหม่";
             input.value = "";
             input.focus();
         }
@@ -272,15 +276,12 @@
     function toggleDrop(btn, id) {
         const item = btn.parentElement;
         item.classList.toggle("open");
-        if(id) {
-            localStorage.setItem("drop-" + id, item.classList.contains("open"));
-        }
+        localStorage.setItem("drop-" + id, item.classList.contains("open"));
     }
 
     window.onload = function () {
         document.getElementById("password").focus();
         
-        // เช็คสถานะเมนูที่เคยเปิดค้างไว้
         document.querySelectorAll(".item").forEach(i => {
             const sub = i.querySelector(".sub");
             if (sub && sub.id) {
@@ -294,4 +295,3 @@
 
 </body>
 </html>
-
