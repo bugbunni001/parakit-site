@@ -13,7 +13,7 @@
             margin: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif, Arial, sans-serif;
             background: #f2f2ee;
-            padding-bottom: 60px; /* พื้นที่สำหรับ Footer */
+            padding-bottom: 60px; 
             overflow-x: hidden;
         }
 
@@ -25,7 +25,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 9999;
+            z-index: 9999; /* อยู่หน้าสุดเสมอจนกว่าจะปลดล็อค */
         }
         .lock-box {
             background: #ffffff;
@@ -83,7 +83,7 @@
             overflow-y: auto;
             transform: translateX(-240px);
             transition: .25s;
-            z-index: 1000;
+            z-index: 2000; /* ปรับให้สูงกว่า Footer */
             box-shadow: 2px 0 10px rgba(0,0,0,0.1);
         }
         .sidebar.show { transform: translateX(0); }
@@ -119,12 +119,12 @@
         .item.open .sub { display: block; }
         .sub a { padding-left: 42px; font-size: 14px; border-top: 1px solid rgba(255,255,255,0.05); }
 
-        /* ===== MAIN CONTENT AREA (ปรับให้ใหญ่พอดีจอ) ===== */
+        /* ===== MAIN CONTENT AREA ===== */
         .content {
             padding: 20px;
-            padding-top: 60px; /* เว้นที่ให้ปุ่มแฮมเบอร์เกอร์ในมือถือ */
+            padding-top: 60px;
             transition: margin-left .25s;
-            display: none; /* ซ่อนจนกว่าจะใส่รหัส */
+            display: none;
             min-height: 100vh;
         }
 
@@ -135,7 +135,7 @@
 
         .box-container {
             width: 100%;
-            max-width: 1400px; /* ขยายให้กว้างขึ้น */
+            max-width: 1400px;
             margin: 0 auto;
             background: #fff;
             padding: 15px;
@@ -155,25 +155,27 @@
 
         iframe {
             width: 100%;
-            height: 75vh; /* ปรับความสูงตามความสูงหน้าจอ */
+            height: 75vh;
             border: none;
             display: block;
         }
 
-        /* Zoom Controls (ถ้าต้องการใช้) */
-        .zoom-controls { margin-bottom: 10px; }
-        .zoom-controls button {
-            padding: 8px 15px; font-size: 16px; cursor: pointer; margin: 0 5px;
-            background: #eee; border: 1px solid #ccc; border-radius: 5px;
+        /* ฉากหลังเมื่อเปิดเมนู */
+        .overlay { 
+            position: fixed; 
+            inset: 0; 
+            background: rgba(0,0,0,.35); 
+            display: none; 
+            z-index: 1500; /* สูงกว่า Footer แต่ต่ำกว่า Sidebar */
         }
-
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: none; z-index: 900; }
         .overlay.show { display: block; }
 
+        /* ===== FOOTER ===== */
         footer {
             width: 100%; text-align: center; padding: 15px 0;
             background: #F5F5F5; color: #000; position: fixed;
-            bottom: 0; left: 0; font-size: 14px; z-index: 1100;
+            bottom: 0; left: 0; font-size: 14px; 
+            z-index: 1100; /* ต่ำกว่าระดับ Sidebar */
             box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
         }
     </style>
@@ -204,11 +206,11 @@
         <div class="item"><a href="index.html">🏠 หน้าหลัก</a></div>
 
         <div class="item">
-            <button class="drop-btn" onclick="toggleDrop(this)">
+            <button class="drop-btn" onclick="toggleDrop(this, 'sub-loans')">
                 <span>📊 บันทึกสินเชื่อ</span>
                 <span class="arrow">▶</span>
             </button>
-            <div class="sub">
+            <div class="sub" id="sub-loans">
                 <a href="https://docs.google.com/forms/d/e/1FAIpQLSerK-IQFH4StGmvrOxb8M2DOC9VyrToSycYBxWrzSVOq67SOw/viewform?usp=preview">📈 ลงสินเชื่อส่วนกลาง</a>
                 <a href="https://lookerstudio.google.com/reporting/8eee598b-7f10-4d88-8162-8ac554e50b9e">📑 Report สินเชื่อส่วนกลาง</a>
             </div>
@@ -217,11 +219,11 @@
         <div class="item"><a href="download.html">⬇️ ดาวน์โหลด</a></div>
 
         <div class="item">
-            <button class="drop-btn" onclick="toggleDrop(this)">
+            <button class="drop-btn" onclick="toggleDrop(this, 'sub-pru')">
                 <span>📍 เฉพาะประชาอุทิศ</span>
                 <span class="arrow">▶</span>
             </button>
-            <div class="sub">
+            <div class="sub" id="sub-pru">
                 <a href="schedule_dec25.html">📆 ตารางงาน ธ.ค. 25</a>
                 <a href="schedule_jan26.html">📆 ตารางงาน ม.ค. 26</a>
                 <a href="#">📱 เช็ค Mat เครื่อง</a>
@@ -237,10 +239,8 @@
         <h3 id="statusMsg">✔ เข้าสู่ระบบสำเร็จ</h3>
         <p style="font-weight: bold; color: #1e293b;">เช็คค่าคอมมิชชั่น จ่ายเดือน กุมภาพันธ์ 2026</p>
         
-        <div class="sheet-container" id="zoomWrapper">
-            <div id="zoomContent">
-                <iframe src="https://docs.google.com/spreadsheets/d/1z-gI0C8Nur9KMJqCSdBxTaY6gF2zNBkcL1xSeHgLIv4/edit?gid=990579738#gid=990579738=false"></iframe>
-            </div>
+        <div class="sheet-container">
+            <iframe src="https://docs.google.com/spreadsheets/d/1z-gI0C8Nur9KMJqCSdBxTaY6gF2zNBkcL1xSeHgLIv4/edit?gid=990579738#gid=990579738=false"></iframe>
         </div>
     </div>
 </main>
@@ -251,9 +251,7 @@
 
 <script>
     const PASS = "0285";
-    let scale = 1;
 
-    // ฟังก์ชันตรวจสอบรหัสผ่าน
     function checkPass() {
         const input = document.getElementById("password");
         if (input.value === PASS) {
@@ -266,50 +264,32 @@
         }
     }
 
-    // ฟังก์ชัน Sidebar
     function toggleSidebar() {
         document.getElementById("sidebar").classList.toggle("show");
         document.getElementById("overlay").classList.toggle("show");
     }
 
-    // ฟังก์ชัน Dropdown
-    function toggleDrop(btn) {
+    function toggleDrop(btn, id) {
         const item = btn.parentElement;
         item.classList.toggle("open");
-    }
-
-    // ฟังก์ชัน Zoom (คงไว้ตามข้อมูลเดิม)
-    function zoomIn() {
-        scale += 0.1;
-        applyZoom();
-    }
-
-    function zoomOut() {
-        scale = Math.max(0.5, scale - 0.1);
-        applyZoom();
-    }
-
-    function applyZoom() {
-        const zoomContent = document.getElementById("zoomContent");
-        if(zoomContent) {
-            zoomContent.style.transform = `scale(${scale})`;
-            zoomContent.style.transformOrigin = "top center";
+        if(id) {
+            localStorage.setItem("drop-" + id, item.classList.contains("open"));
         }
     }
 
-    // โฟกัสช่องรหัสทันทีที่โหลด
     window.onload = function () {
         document.getElementById("password").focus();
-    }
-// เมื่อโหลดหน้าเว็บ ให้เช็คสถานะเมนูที่เคยเปิดค้างไว้
-    window.onload = () => {
+        
+        // เช็คสถานะเมนูที่เคยเปิดค้างไว้
         document.querySelectorAll(".item").forEach(i => {
             const sub = i.querySelector(".sub");
-            if (sub && localStorage.getItem("drop-" + sub.id) === "true") {
-                i.classList.add("open");
+            if (sub && sub.id) {
+                if (localStorage.getItem("drop-" + sub.id) === "true") {
+                    i.classList.add("open");
+                }
             }
-        });    
-     };
+        });
+    }
 </script>
 
 </body>
