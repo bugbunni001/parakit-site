@@ -14,7 +14,7 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif, Arial, sans-serif;
             background: #f2f2ee;
             padding-bottom: 60px;
-            overflow-x: hidden; /* ป้องกันหน้าจอเลื่อนซ้ายขวาในระดับ Body */
+            overflow-x: hidden;
         }
 
         /* ===== SIDEBAR NAVIGATION ===== */
@@ -78,12 +78,12 @@
         .item.open .sub { display: block; }
         .sub a { padding-left: 42px; font-size: 14px; }
 
-        /* ===== MAIN CONTENT AREA ===== */
+        /* ===== MAIN CONTENT AREA (เอา display: none ออกเพื่อให้แสดงทันที) ===== */
         .content {
             padding: 20px;
-            padding-top: 70px; /* เว้นที่ให้ปุ่มเมนูในมือถือ */
+            padding-top: 70px;
             transition: margin-left 0.3s ease;
-            display: none; 
+            display: block; 
             width: 100%;
         }
 
@@ -104,7 +104,7 @@
             text-align: center;
         }
 
-        /* ===== ZOOM SYSTEM (ป้องกันรูปหล่นขอบ) ===== */
+        /* ===== ZOOM SYSTEM ===== */
         .zoom-controls { 
             margin-bottom: 15px; 
             display: flex; 
@@ -120,7 +120,7 @@
 
         .zoom-wrapper {
             width: 100%;
-            overflow: auto; /* ให้เลื่อนในกรอบได้ถ้าขยายใหญ่ */
+            overflow: auto;
             border: 1px solid #eee;
             border-radius: 8px;
             background: #fafafa;
@@ -136,13 +136,12 @@
         }
 
         .zoom-content img {
-            max-width: 100%; /* เริ่มต้นให้พอดีจอ */
+            max-width: 100%;
             height: auto;
             display: block;
             margin: 0 auto;
         }
 
-        /* Footer */
         .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.4); display: none; z-index: 1400; }
         .overlay.show { display: block; }
 
@@ -156,6 +155,7 @@
 </head>
 
 <body>
+
 <button class="top-toggle" onclick="toggleSidebar()">☰</button>
 <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 
@@ -198,8 +198,8 @@
 
 <main class="content" id="mainContent">
     <div class="box-container">
-        <h3 style="color: #5bbf8a; margin-top: 0;">✔ เข้าสู่ระบบสำเร็จ</h3>
-        <p style="font-size: 14px; color: #666;">ตารางงานประจำเดือน (ปรับขนาดได้ด้านล่าง)</p>
+        <h3 style="color: #1e293b; margin-top: 0;">📅 ตารางงานประจำเดือน</h3>
+        <p style="font-size: 14px; color: #666;">มกราคม 2569 (สามารถใช้ปุ่มขยายเพื่อดูรายละเอียดได้)</p>
         
         <div class="zoom-controls">
             <button onclick="zoomIn()">ขยาย ➕</button>
@@ -220,23 +220,9 @@
 </footer>
 
 <script>
-    const PASS = "0285";
     let scale = 1;
 
-    // 1. ระบบตรวจสอบรหัสผ่าน
-    function checkPass() {
-        const input = document.getElementById("password");
-        if (input.value === PASS) {
-            document.getElementById("lockPage").style.display = "none";
-            document.getElementById("mainContent").style.display = "block";
-        } else {
-            document.getElementById("error").innerText = "❌ รหัสไม่ถูกต้อง";
-            input.value = "";
-            input.focus();
-        }
-    }
-
-    // 2. ระบบ Sidebar
+    // 1. ระบบ Sidebar
     function toggleSidebar() {
         const sidebar = document.getElementById("sidebar");
         const overlay = document.getElementById("overlay");
@@ -244,13 +230,13 @@
         overlay.classList.toggle("show");
     }
 
-    // 3. ระบบ Dropdown
+    // 2. ระบบ Dropdown ในเมนู
     function toggleDrop(btn) {
         const item = btn.parentElement;
         item.classList.toggle("open");
     }
 
-    // 4. ระบบ Zoom
+    // 3. ระบบ Zoom รูปภาพ
     function zoomIn() {
         scale += 0.15;
         applyZoom();
@@ -272,7 +258,7 @@
         const content = document.getElementById("zoomContent");
         content.style.transform = `scale(${scale})`;
         
-        // ถ้าขยายจนใหญ่เกินกรอบ ให้จัดเป็นกึ่งกลางซ้ายเพื่อให้เลื่อนได้ทั่วถึง
+        // ถ้าขยายจนใหญ่กว่ากรอบ ปรับตำแหน่งเพื่อให้เลื่อนดูได้ง่าย
         if (scale > 1) {
             content.style.transformOrigin = "top left";
         } else {
