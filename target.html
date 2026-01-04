@@ -1,88 +1,246 @@
-<!DOCTYPE html>
+<<!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Target Edit | BigC Prachauthit</title>
+    <title>🔖 ภารกิจประจำเดือน & บันทึกยอดขาย</title>
+
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
+
     <style>
-        * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
-        body { margin: 0; background: #f1f5f9; padding-bottom: 80px; color: #334155; }
+        /* ===== GLOBAL RESET FOR FONT ===== */
+        /* บังคับให้ทุก Element ในหน้าเว็บใช้ฟอนต์ Kanit */
+        * { 
+            box-sizing: border-box; 
+            font-family: 'Kanit', sans-serif !important; 
+        }
+        
+        body {
+            margin: 0;
+            background: #f8fafc;
+            padding-bottom: 80px;
+            color: #334155;
+            -webkit-font-smoothing: antialiased; /* ทำให้ฟอนต์ดูคมชัดขึ้น */
+        }
 
         /* ===== SIDEBAR NAVIGATION ===== */
-        .top-toggle { position: fixed; top: 15px; left: 15px; z-index: 1400; width: 45px; height: 45px; border-radius: 12px; border: none; background: #1e293b; color: #fff; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .sidebar { position: fixed; top: 0; left: 0; width: 260px; height: 100vh; background: #1e293b; color: #fff; overflow-y: auto; transform: translateX(-260px); transition: all .3s ease; z-index: 2000; }
+        .top-toggle {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            z-index: 1400;
+            width: 45px;
+            height: 45px;
+            border-radius: 12px;
+            border: none;
+            background: #1e293b;
+            color: #fff;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @media(min-width:769px) { .top-toggle { display: none; } }
+
+        .sidebar {
+            position: fixed;
+            top: 0; left: 0;
+            width: 260px;
+            height: 100vh;
+            background: #1e293b;
+            color: #fff;
+            overflow-y: auto;
+            transform: translateX(-260px);
+            transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1300;
+        }
         .sidebar.show { transform: translateX(0); }
-        .sidebar-header { display: flex; align-items: center; gap: 12px; padding: 20px; background: #0f172a; font-weight: 600; font-size: 18px; }
-        .menu a, .menu .drop-btn { width: 100%; min-height: 55px; padding: 0 20px; background: none; border: none; color: #cbd5e1; text-align: left; font-size: 15px; cursor: pointer; display: flex; align-items: center; text-decoration: none; border-bottom: 1px solid rgba(255,255,255,.05); }
+
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 20px;
+            background: #0f172a;
+            font-weight: 600; /* ใช้ความหนาของ Kanit */
+            letter-spacing: 1px;
+        }
+
+        .toggle { background: none; border: none; color: #fff; font-size: 22px; cursor: pointer; }
+
+        .menu { display: flex; flex-direction: column; padding: 10px 0; }
+        .item { border-bottom: 1px solid rgba(255,255,255,.05); }
+
+        .menu a, .menu .drop-btn {
+            width: 100%;
+            min-height: 55px;
+            padding: 0 20px;
+            background: none;
+            border: none;
+            color: #cbd5e1;
+            text-align: left;
+            font-size: 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            transition: all 0.2s;
+            font-weight: 400;
+        }
+
         .menu a:hover, .menu .drop-btn:hover { background: #334155; color: #fff; }
+        .arrow { margin-left: auto; transition: .3s; font-size: 12px; opacity: 0.5; }
+        .item.open .arrow { transform: rotate(90deg); }
+
         .sub { display: none; background: #0f172a; }
         .item.open .sub { display: block; }
-        .sub a { min-height: 48px; padding-left: 45px; font-size: 14px; color: #94a3b8; }
+        .sub a {
+            min-height: 48px;
+            padding-left: 45px;
+            font-size: 14px;
+            color: #94a3b8;
+            border-top: 1px solid rgba(255,255,255,.03);
+        }
 
-        /* ===== MAIN CONTENT ===== */
-        .content { padding: 80px 15px 20px; transition: margin-left .3s; }
-        @media(min-width:769px) { .sidebar { transform: translateX(0); } .content { margin-left: 260px; padding-top: 30px; } .top-toggle { display: none; } }
-        .container { max-width: 1100px; margin: 0 auto; }
+        /* ===== CONTENT AREA ===== */
+        .content { padding: 80px 20px 40px; transition: margin-left .3s; }
+        @media(min-width:769px) {
+            .sidebar { transform: translateX(0); }
+            .content { margin-left: 260px; }
+        }
+
+        /* ===== BUTTON MENU GRID ===== */
+        .container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 20px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        .btn {
+            background: #ffffff;
+            color: #334155;
+            padding: 18px;
+            border-radius: 16px;
+            text-align: center;
+            font-size: 15px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            border: 1px solid #f1f5f9;
+        }
+        .btn:hover { 
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            transform: translateY(-3px); 
+            border-color: #5bbf8a;
+            color: #5bbf8a;
+        }
+
+        /* ===== PROMO CARDS ===== */
+        .card-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            max-width: 1100px;
+            margin: 50px auto;
+        }
+        .card {
+            background: #ffffff;
+            border-radius: 20px;
+            overflow: hidden;
+            text-align: center;
+            text-decoration: none;
+            color: #1e293b;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid #f1f5f9;
+        }
+        .card:hover { 
+            transform: scale(1.03);
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+        }
+        .card-box { 
+            width: 100%; 
+            height: 180px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 24px; 
+            font-weight: 600; 
+            padding: 30px; 
+            line-height: 1.2;
+        }
+        .blue { background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%); color: white; }
+        .yellow { background: linear-gradient(135deg, #fde047 0%, #eab308 100%); color: #854d0e; }
+        .card-title { 
+            padding: 20px; 
+            font-size: 14px; 
+            background: #fff;
+            font-weight: 400; 
+            color: #64748b;
+        }
+
+        /* ===== FOOTER ===== */
+        footer {
+            width: 100%; text-align: center; padding: 20px 0; background: #fff;
+            color: #94a3b8; position: fixed; bottom: 0; left: 0; font-size: 12px;
+            box-shadow: 0 -1px 10px rgba(0,0,0,0.02); 
+            z-index: 1100;
+            border-top: 1px solid #f1f5f9;
+        }
         
-        .header-section { margin-bottom: 30px; position: relative; }
-        .header-text { text-align: center; margin-bottom: 10px; }
-        .header-text h2 { margin: 0; font-size: 28px; color: #1e293b; }
-        .header-text p { margin: 5px 0 0; font-size: 14px; color: #64748b; }
-        
-        .action-row { display: flex; justify-content: flex-end; margin-top: 10px; gap: 10px; }
-        .btn-reset { background: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 10px; cursor: pointer; font-size: 13px; transition: 0.2s; font-weight: 500; display: flex; align-items: center; gap: 8px; }
-        .btn-reset:hover { background: #dc2626; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15); }
-        .btn-return { background: #10b981; color: white; border: none; padding: 8px 16px; border-radius: 10px; cursor: pointer; font-size: 13px; transition: 0.2s; font-weight: 500; display: flex; align-items: center; gap: 8px; }
-        .btn-return:hover { background: #059669; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15); }
-
-        /* ===== CARDS & INPUTS ===== */
-        .grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 25px; }
-        .target-card { background: #fff; border-radius: 24px; padding: 25px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); border: 1px solid #f1f5f9; position: relative; }
-        .card-postpay { border-top: 5px solid #3b82f6; }
-        .card-device { border-top: 5px solid #8b5cf6; }
-        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #f8fafc; }
-        .card-header .title { font-weight: 600; font-size: 20px; color: #1e293b; }
-
-        input { border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px 12px; width: 115px; text-align: right; color: #1e293b; font-weight: 600; background: #fff; transition: 0.2s; }
-        input:focus { border-color: #3b82f6; outline: none; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
-        
-        .bg-input-blue { background: #dbeafe !important; color: #1e40af !important; border: 1px solid #bfdbfe !important; }
-        .bg-input-purple { background: #f3e8ff !important; color: #6b21a8 !important; border: 1px solid #e9d5ff !important; }
-        .total-black { background: #1e293b !important; color: #fff !important; border: none !important; }
-
-        .unit-label { display: flex; justify-content: space-between; background: #f8fafc; padding: 10px 15px; border-radius: 12px; font-size: 14px; font-weight: 600; margin-bottom: 10px; align-items: center; }
-        .staff-item { display: flex; justify-content: space-between; padding: 8px 15px; font-size: 14px; border-bottom: 1px solid #f1f5f9; align-items: center; }
-        .staff-item:last-child { border-bottom: none; margin-bottom: 15px; }
-
-        .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: none; z-index: 1500; }
+        .overlay { 
+            position: fixed; 
+            inset: 0; 
+            background: rgba(15, 23, 42, 0.6); 
+            display: none; 
+            backdrop-filter: blur(4px);
+            z-index: 1200; 
+        }
         .overlay.show { display: block; }
-        footer { width: 100%; text-align: center; padding: 25px 0; background: #fff; color: #94a3b8; font-size: 12px; border-top: 1px solid #f1f5f9; margin-top: 40px; }
     </style>
 </head>
+
 <body>
 
 <button class="top-toggle" onclick="toggleSidebar()">☰</button>
 <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 
 <aside class="sidebar" id="sidebar">
-    <div class="sidebar-header"><span>MENU</span></div>
+    <div class="sidebar-header">
+        <button class="toggle" onclick="toggleSidebar()">MENU</button>
+    </div>
+
     <div class="menu">
-        <a href="index.html">🏠 หน้าหลัก</a>
+        <div class="item"><a href="index.html">🏠 หน้าหลัก</a></div>
+
         <div class="item">
-            <button class="drop-btn" onclick="toggleDrop(this, 'sub-loans')">📊 บันทึกสินเชื่อ</button>
-            <div class="sub" id="sub-loans">
-                <a href="loan_entry.html">📈 ลงสินเชื่อส่วนกลาง</a>
-                <a href="loan_report.html">📑 Report สินเชื่อส่วนกลาง</a>
+            <button class="drop-btn" onclick="toggleDrop(this,'credit')">
+                📊 บันทึกสินเชื่อ <span class="arrow">▶</span>
+            </button>
+            <div class="sub" id="credit">
+                <a href="https://docs.google.com/forms/d/e/1FAIpQLSerK-IQFH4StGmvrOxb8M2DOC9VyrToSycYBxWrzSVOq67SOw/viewform?usp=preview" target="_blank">📈 ลงสินเชื่อส่วนกลาง</a>
+                <a href="https://lookerstudio.google.com/reporting/8eee598b-7f10-4d88-8162-8ac554e50b9e" target="_blank">📑 Report สินเชื่อส่วนกลาง</a>
             </div>
         </div>
-        <a href="download.html">⬇️ ดาวน์โหลด</a>
+
+        <div class="item"><a href="download.html">⬇️ ดาวน์โหลด</a></div>
+
         <div class="item">
-            <button class="drop-btn" onclick="toggleDrop(this, 'sub-pru')">📍 เฉพาะประชาอุทิศ</button>
-            <div class="sub" id="sub-pru">
+            <button class="drop-btn" onclick="toggleDrop(this,'branch')">
+                📍 เฉพาะประชาอุทิศ <span class="arrow">▶</span>
+            </button>
+            <div class="sub" id="branch">
                 <a href="schedule_dec25.html">📆 ตารางงาน ธ.ค. 25</a>
                 <a href="schedule_jan26.html">📆 ตารางงาน ม.ค. 26</a>
-                <a href="check_mat.html">📱 เช็ค Mat เครื่อง</a>
+                <a href="#">📱 เช็ค Mat เครื่อง</a>
                 <a href="input_sale.html">✏️ ลงยอดขาย</a>
                 <a href="commission.html">💰 คำนวณค่าคอม</a>
                 <a href="target.html">🆚 Target รายบุคคล</a>
@@ -90,6 +248,7 @@
         </div>
     </div>
 </aside>
+
 
 <main class="content">
     <div class="container">
@@ -213,3 +372,4 @@
 </body>
 
 </html>
+
