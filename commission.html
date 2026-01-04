@@ -4,200 +4,37 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>เช็คค่าคอมมิชชั่น | Commission Check</title>
-
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
-
     <style>
-        /* ===== SETUP & LAYOUT ===== */
-        * { 
-            box-sizing: border-box; 
-            font-family: 'Kanit', sans-serif !important; 
-        }
-        
-        body {
-            margin: 0;
-            background: #f8fafc;
-            padding-bottom: 50px;
-            color: #334155;
-            -webkit-font-smoothing: antialiased;
-            overflow-x: hidden;
-        }
-
-        /* ===== LOCK FULL PAGE (สไตล์ใหม่) ===== */
-        .lock-page {
-            position: fixed;
-            inset: 0;
-            background: #1e293b;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-        }
-        .lock-box {
-            background: #ffffff;
-            padding: 40px 30px;
-            border-radius: 24px;
-            text-align: center;
-            width: 90%;
-            max-width: 350px;
-            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3);
-        }
+        /* CSS ส่วนใหญ่คงเดิมตามที่คุณส่งมา */
+        * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
+        body { margin: 0; background: #f8fafc; padding-bottom: 50px; color: #334155; overflow-x: hidden; }
+        .lock-page { position: fixed; inset: 0; background: #1e293b; display: flex; align-items: center; justify-content: center; z-index: 9999; }
+        .lock-box { background: #ffffff; padding: 40px 30px; border-radius: 24px; text-align: center; width: 90%; max-width: 350px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3); }
         .lock-box h3 { margin-top: 0; color: #1e293b; margin-bottom: 20px; }
-        .lock-box input {
-            width: 100%;
-            padding: 14px;
-            font-size: 18px;
-            margin-bottom: 15px;
-            border: 2px solid #e2e8f0;
-            border-radius: 12px;
-            text-align: center;
-            outline: none;
-            transition: 0.2s;
-        }
+        .lock-box input { width: 100%; padding: 14px; font-size: 18px; margin-bottom: 15px; border: 2px solid #e2e8f0; border-radius: 12px; text-align: center; outline: none; transition: 0.2s; }
         .lock-box input:focus { border-color: #5bbf8a; }
-        .lock-box button {
-            width: 100%;
-            padding: 14px;
-            background: #1e293b;
-            color: white;
-            border: none;
-            font-size: 16px;
-            font-weight: 600;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        .lock-box button:hover { background: #334155; }
+        .lock-box button { width: 100%; padding: 14px; background: #1e293b; color: white; border: none; font-size: 16px; font-weight: 600; border-radius: 12px; cursor: pointer; transition: 0.2s; }
         .error { color: #ef4444; font-size: 14px; margin-top: 10px; }
-
-        /* ===== SIDEBAR NAVIGATION ===== */
-        .top-toggle {
-            position: fixed;
-            top: 15px;
-            left: 15px;
-            z-index: 1400;
-            width: 45px;
-            height: 45px;
-            border-radius: 12px;
-            border: none;
-            background: #1e293b;
-            color: #fff;
-            font-size: 20px;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .sidebar {
-            position: fixed;
-            top: 0; left: 0;
-            width: 260px;
-            height: 100vh;
-            background: #1e293b;
-            color: #fff;
-            overflow-y: auto;
-            transform: translateX(-260px);
-            transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 2000;
-        }
+        .top-toggle { position: fixed; top: 15px; left: 15px; z-index: 1400; width: 45px; height: 45px; border-radius: 12px; border: none; background: #1e293b; color: #fff; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .sidebar { position: fixed; top: 0; left: 0; width: 260px; height: 100vh; background: #1e293b; color: #fff; overflow-y: auto; transform: translateX(-260px); transition: all .3s ease; z-index: 2000; }
         .sidebar.show { transform: translateX(0); }
-
-        .sidebar-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 20px;
-            background: #0f172a;
-            font-weight: 600;
-            font-size: 18px;
-        }
-
-        .menu { display: flex; flex-direction: column; padding: 10px 0; }
-        .item { border-bottom: 1px solid rgba(255,255,255,.05); }
-
-        .menu a, .menu .drop-btn {
-            width: 100%; min-height: 55px; padding: 0 20px;
-            background: none; border: none; color: #cbd5e1;
-            text-align: left; font-size: 15px; cursor: pointer;
-            display: flex; align-items: center; text-decoration: none;
-        }
-        .menu a:hover, .menu .drop-btn:hover { background: #334155; color: #fff; }
-
-        .arrow { margin-left: auto; font-size: 12px; transition: .3s; opacity: 0.5; }
-        .item.open .arrow { transform: rotate(90deg); }
-        .sub { display: none; background: #0f172a; }
-        .item.open .sub { display: block; }
-        .sub a { min-height: 48px; padding-left: 45px; font-size: 14px; color: #94a3b8; }
-
-        /* ===== MAIN CONTENT AREA ===== */
-        .content {
-            padding: 10px;
-            padding-top: 70px;
-            transition: margin-left .3s;
-            display: none; /* ซ่อนไว้จนกว่าจะกรอกรหัส */
-            min-height: 100vh;
-        }
-
-        @media(min-width:769px) {
-            .sidebar { transform: translateX(0); }
-            .content { margin-left: 260px; padding-top: 20px; padding-bottom: 20px; }
-            .top-toggle { display: none; }
-        }
-
-        .box-container {
-            width: 100%;
-            max-width: 100%;
-            margin: 0 auto;
-            background: #fff;
-            padding: 10px;
-            border-radius: 16px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            height: calc(100vh - 100px); /* ให้ความสูงพอดีหน้าจอ */
-            display: flex;
-            flex-direction: column;
-        }
-
-        .sheet-container {
-            flex-grow: 1;
-            width: 100%;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            overflow: hidden;
-        }
-
-        iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-            display: block;
-        }
-
-        /* Overlay */
-        .overlay { 
-            position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); 
-            display: none; backdrop-filter: blur(4px); z-index: 1500; 
-        }
+        .content { padding: 10px; padding-top: 70px; display: none; min-height: 100vh; }
+        @media(min-width:769px) { .sidebar { transform: translateX(0); } .content { margin-left: 260px; padding-top: 20px; } .top-toggle { display: none; } }
+        .box-container { width: 100%; background: #fff; padding: 10px; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); height: calc(100vh - 100px); display: flex; flex-direction: column; }
+        .sheet-container { flex-grow: 1; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; }
+        iframe { width: 100%; height: 100%; border: none; }
+        .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: none; backdrop-filter: blur(4px); z-index: 1500; }
         .overlay.show { display: block; }
-
-        /* ===== FOOTER ===== */
-        footer {
-            width: 100%; text-align: center; padding: 15px 0;
-            background: #fff; color: #94a3b8; position: fixed;
-            bottom: 0; left: 0; font-size: 12px; z-index: 1000;
-            border-top: 1px solid #f1f5f9;
-        }
+        footer { width: 100%; text-align: center; padding: 15px 0; background: #fff; color: #94a3b8; position: fixed; bottom: 0; font-size: 12px; border-top: 1px solid #f1f5f9; }
     </style>
 </head>
-
 <body>
 
 <div class="lock-page" id="lockPage">
     <div class="lock-box">
         <h3>🔒 รหัสเข้าใช้งาน</h3>
-        <input type="password" id="password" placeholder="ระบุรหัสผ่าน" autofocus 
-               onkeydown="if(event.key==='Enter') checkPass()">
+        <input type="password" id="password" placeholder="ระบุรหัสผ่าน" autofocus onkeydown="if(event.key==='Enter') checkPass()">
         <button onclick="checkPass()">เข้าสู่ระบบ</button>
         <div class="error" id="error"></div>
     </div>
@@ -206,8 +43,8 @@
 <button class="top-toggle" onclick="toggleSidebar()">☰</button>
 <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 
-<aside class="sidebar" id="sidebar">       
-</aside>
+<aside class="sidebar" id="sidebar">
+    </aside>
 
 <main class="content" id="mainContent">
     <div class="box-container">
@@ -217,18 +54,19 @@
     </div>
 </main>
 
-<footer>
-    © 2025 Copy Right By Angerina Frog
-</footer>
+<footer>© 2026 Copy Right By Angerina Frog</footer>
 
 <script>
     const PASS = "0285";
 
+    // 1. ตรวจสอบรหัสผ่าน
     function checkPass() {
         const input = document.getElementById("password");
         if (input.value === PASS) {
             document.getElementById("lockPage").style.display = "none";
             document.getElementById("mainContent").style.display = "block";
+            // โหลด Sidebar เมื่อเข้าสู่ระบบสำเร็จ
+            includeSidebar();
         } else {
             document.getElementById("error").innerText = "❌ รหัสไม่ถูกต้อง กรุณาลองใหม่";
             input.value = "";
@@ -236,46 +74,36 @@
         }
     }
 
+    // 2. ดึง Sidebar จากไฟล์ภายนอก
+    function includeSidebar() {
+        fetch('sidebar.html')
+            .then(response => {
+                if (!response.ok) throw new Error('ไม่พบไฟล์ sidebar.html');
+                return response.text();
+            })
+            .then(data => {
+                document.getElementById('sidebar').innerHTML = data;
+                restoreMenuState(); // คืนค่าสถานะการกางเมนูย่อย
+            })
+            .catch(err => {
+                console.warn("Sidebar Error:", err);
+            });
+    }
+
+    // 3. ควบคุมการแสดงผล Sidebar (Mobile)
     function toggleSidebar() {
         document.getElementById("sidebar").classList.toggle("show");
         document.getElementById("overlay").classList.toggle("show");
     }
 
+    // 4. ควบคุมเมนูย่อย (Dropdown)
     function toggleDrop(btn, id) {
         const item = btn.parentElement;
         item.classList.toggle("open");
-        localStorage.setItem("drop-" + id, item.classList.contains("open"));
+        localStorage.setItem("menu-" + id, item.classList.contains("open"));
     }
 
-    window.onload = function () {
-        document.getElementById("password").focus();
-        
-        document.querySelectorAll(".item").forEach(i => {
-            const sub = i.querySelector(".sub");
-            if (sub && sub.id) {
-                if (localStorage.getItem("drop-" + sub.id) === "true") {
-                    i.classList.add("open");
-                }
-            }
-        });
-    }
-    // 1. ฟังก์ชันดึง Sidebar (ต้องรันผ่าน Server เท่านั้นถึงจะเห็นเมนู)
-    function includeSidebar() {
-        fetch('sidebar.html')
-            .then(response => {
-                if (!response.ok) throw new Error('Network response was not ok');
-                return response.text();
-            })
-            .then(data => {
-                document.getElementById('sidebar').innerHTML = data;
-                restoreMenuState(); 
-            })
-            .catch(err => {
-                console.warn("ไม่สามารถโหลด sidebar.html ได้ (อาจเพราะเปิดไฟล์โดยตรงในคอม):", err);
-                // ถ้าโหลดไม่ได้ ให้แสดงข้อความแจ้งเตือนใน Console
-            });
-    }
-
+    // 5. คืนค่าสถานะเมนูที่เคยเปิดไว้
     function restoreMenuState() {
         ['credit', 'branch'].forEach(m => {
             if (localStorage.getItem('menu-' + m) === 'true') {
@@ -284,7 +112,13 @@
             }
         });
     }
-</script>
 
+    // รันเมื่อโหลดหน้าเว็บ
+    window.onload = function () {
+        document.getElementById("password").focus();
+        // ถ้าต้องการให้เมนูโหลดรอไว้ก่อนเลย ให้เอา includeSidebar(); มาวางตรงนี้
+        includeSidebar(); 
+    }
+</script>
 </body>
 </html>
