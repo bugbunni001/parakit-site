@@ -6,7 +6,7 @@
     <title>เช็คค่าคอมมิชชั่น | Commission Check</title>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        /* CSS ส่วนใหญ่คงเดิมตามที่คุณส่งมา */
+        /* CSS ทั้งหมดคงเดิมตามโครงสร้างของคุณ */
         * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
         body { margin: 0; background: #f8fafc; padding-bottom: 50px; color: #334155; overflow-x: hidden; }
         .lock-page { position: fixed; inset: 0; background: #1e293b; display: flex; align-items: center; justify-content: center; z-index: 9999; }
@@ -18,28 +18,18 @@
         .error { color: #ef4444; font-size: 14px; margin-top: 10px; }
         .top-toggle { position: fixed; top: 15px; left: 15px; z-index: 1400; width: 45px; height: 45px; border-radius: 12px; border: none; background: #1e293b; color: #fff; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         
-        /* ===== SIDEBAR STYLES (เพิ่มกลับเข้ามาเพื่อแก้ปัญหาเมนูเละ) ===== */
         .sidebar { position: fixed; top: 0; left: 0; width: 260px; height: 100vh; background: #1e293b; color: #fff; overflow-y: auto; transform: translateX(-260px); transition: all .3s ease; z-index: 2000; }
         .sidebar.show { transform: translateX(0); }
         .sidebar-header { display: flex; align-items: center; gap: 12px; padding: 20px; background: #0f172a; font-weight: 600; font-size: 18px; color: #fff; }
         .menu { display: flex; flex-direction: column; padding: 10px 0; }
         .item { border-bottom: 1px solid rgba(255,255,255,.05); }
-        .menu a, .menu .drop-btn { 
-            width: 100%; min-height: 55px; padding: 0 20px; 
-            background: none; border: none; color: #cbd5e1; 
-            text-align: left; font-size: 15px; cursor: pointer; 
-            display: flex; align-items: center; text-decoration: none; 
-            transition: all 0.3s ease; 
-        }
-        /* เอฟเฟกต์เมนูขยับที่ต้องการ */
+        .menu a, .menu .drop-btn { width: 100%; min-height: 55px; padding: 0 20px; background: none; border: none; color: #cbd5e1; text-align: left; font-size: 15px; cursor: pointer; display: flex; align-items: center; text-decoration: none; transition: all 0.3s ease; }
         .menu a:hover, .menu .drop-btn:hover { background: #334155; color: #fff; padding-left: 30px; }
-        
         .arrow { margin-left: auto; font-size: 12px; transition: .3s; opacity: 0.5; }
         .item.open .arrow { transform: rotate(90deg); }
         .sub { display: none; background: #0f172a; }
         .item.open .sub { display: block; }
         .sub a { min-height: 48px; padding-left: 45px; font-size: 14px; color: #94a3b8; }
-        /* ========================================================== */
 
         .content { padding: 10px; padding-top: 70px; display: none; min-height: 100vh; }
         @media(min-width:769px) { .sidebar { transform: translateX(0); } .content { margin-left: 260px; padding-top: 20px; } .top-toggle { display: none; } }
@@ -65,8 +55,7 @@
 <button class="top-toggle" onclick="toggleSidebar()">☰</button>
 <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 
-<aside class="sidebar" id="sidebar">
-    </aside>
+<aside class="sidebar" id="sidebar"></aside>
 
 <main class="content" id="mainContent">
     <div class="box-container">
@@ -87,7 +76,7 @@
         if (input.value === PASS) {
             document.getElementById("lockPage").style.display = "none";
             document.getElementById("mainContent").style.display = "block";
-            // เรียกโหลด Sidebar ทันทีที่ปลดล็อค
+            // เรียกดึง Sidebar หลังจากปลดล็อคสำเร็จ
             includeSidebar();
         } else {
             document.getElementById("error").innerText = "❌ รหัสไม่ถูกต้อง กรุณาลองใหม่";
@@ -96,19 +85,22 @@
         }
     }
 
-    // 2. ดึง Sidebar จากไฟล์ภายนอก
+    // 2. ดึง Sidebar พร้อม Timestamp Versioning เพื่อป้องกัน Cache
     function includeSidebar() {
-        fetch('sidebar.html')
+        // สร้างเลข Version จากเวลาปัจจุบัน (มิลลิวินาที)
+        const v = new Date().getTime();
+        
+        fetch(`sidebar.html?v=${v}`)
             .then(response => {
                 if (!response.ok) throw new Error('ไม่พบไฟล์ sidebar.html');
                 return response.text();
             })
             .then(data => {
                 document.getElementById('sidebar').innerHTML = data;
-                restoreMenuState(); // คืนค่าสถานะการกางเมนูย่อย
+                restoreMenuState(); // คืนค่าสถานะกางเมนู
             })
             .catch(err => {
-                console.warn("Sidebar Error:", err);
+                console.error("Sidebar Error:", err);
             });
     }
 
@@ -119,22 +111,18 @@
     }
 
     // 4. ควบคุมเมนูย่อย (Dropdown)
-    // ฟังก์ชันใหม่ที่รองรับการคลิกจาก sidebar.html
-function toggleDrop(btn, id) {
-    // กางเมนูย่อย
-    const item = btn.parentElement;
-    item.classList.toggle("open");
-    
-    // บันทึกสถานะไว้ในเครื่อง (เพื่อให้เวลาเปลี่ยนหน้า เมนูยังกางอยู่เหมือนเดิม)
-    if (id) {
-        localStorage.setItem('menu-' + id, item.classList.contains("open"));
+    function toggleDrop(btn, id) {
+        const item = btn.parentElement;
+        const isOpen = item.classList.toggle("open");
+        if (id) {
+            localStorage.setItem('menu-' + id, isOpen);
+        }
     }
-}
 
     // 5. คืนค่าสถานะเมนูที่เคยเปิดไว้
     function restoreMenuState() {
-        // กู้คืนสถานะจาก LocalStorage เพื่อให้เมนูคงสถานะเดิมตอนเปลี่ยนหน้า
-        ['credit', 'branch'].forEach(m => {
+        const menuIds = ['credit', 'branch']; 
+        menuIds.forEach(m => {
             if (localStorage.getItem('menu-' + m) === 'true') {
                 const menuEl = document.getElementById('menu-' + m);
                 if (menuEl) menuEl.classList.add('open');
@@ -145,30 +133,9 @@ function toggleDrop(btn, id) {
     // รันเมื่อโหลดหน้าเว็บ
     window.onload = function () {
         document.getElementById("password").focus();
-        // โหลด Sidebar ทันทีที่หน้าเว็บพร้อม
+        // โหลด Sidebar ทันที เพื่อให้ผู้ที่เคยปลดล็อคแล้ว (ถ้ามีการแก้โค้ดจำ session) เห็นเมนู
         includeSidebar(); 
     }
-    function restoreMenuState() {
-    // เช็คว่าเคยเปิดเมนูไหนค้างไว้ไหม
-    ['credit', 'branch'].forEach(m => {
-        if (localStorage.getItem('menu-' + m) === 'true') {
-            // ถ้าใน sidebar.html มี id="menu-branch" หรือ id="menu-credit" มันจะกางให้อัตโนมัติ
-            const menuEl = document.getElementById('menu-' + m);
-            if (menuEl) menuEl.classList.add('open');
-        }
-    });
-}
-
-// แก้ไขฟังก์ชันโหลด sidebar ให้เรียกใช้ restoreMenuState ด้วย
-function includeSidebar() {
-    fetch('sidebar.html')
-        .then(response => response.text())
-        .then(data => {
-            document.getElementById('sidebar').innerHTML = data;
-            restoreMenuState(); // เพิ่มบรรทัดนี้เข้าไปครับ
-        });
-}
 </script>
 </body>
 </html>
-
