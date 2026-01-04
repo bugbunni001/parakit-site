@@ -11,7 +11,7 @@
         * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
         body { margin: 0; background: #f8fafc; padding-bottom: 100px; color: #334155; overflow-x: hidden; }
         
-        /* SIDEBAR (สไตล์เดิมของคุณ) */
+        /* SIDEBAR (สไตล์ที่รวมการจัดการภายในและ Rollover) */
         .sidebar { 
             position: fixed; top: 0; left: 0; width: 260px; height: 100vh; 
             background: #1e293b; color: #fff; overflow-y: auto; 
@@ -20,22 +20,35 @@
             z-index: 2000; 
         }
         .sidebar.show { transform: translateX(0); }
-        .sidebar-header { display: flex; align-items: center; gap: 12px; padding: 20px; background: #0f172a; font-weight: 600; font-size: 18px; }
+        .sidebar-header { display: flex; align-items: center; gap: 12px; padding: 25px 20px; background: #0f172a; font-weight: 600; font-size: 18px; border-bottom: 1px solid rgba(255,255,255,0.05); }
         
         .menu { display: flex; flex-direction: column; padding: 10px 0; }
         .item { border-bottom: 1px solid rgba(255,255,255,.05); }
+        
+        /* สไตล์ปุ่มเมนูหลัก + Rollover ขยับได้ */
         .menu a, .menu .drop-btn { 
             width: 100%; min-height: 55px; padding: 0 20px; background: none; 
             border: none; color: #cbd5e1; text-align: left; font-size: 15px; 
             cursor: pointer; display: flex; align-items: center; text-decoration: none; 
-            transition: all 0.3s;
+            transition: all 0.3s ease; /* ทำให้ขยับลื่นไหล */
         }
-        .menu a:hover, .menu .drop-btn:hover { background: #334155; color: #fff; padding-left: 35px; }
+        .menu a:hover, .menu .drop-btn:hover { 
+            background: #334155; color: #fff; 
+            padding-left: 35px; /* Effect ขยับตอนชี้ */
+        }
         
+        /* เมนูย่อย */
         .sub { display: none; background: #0f172a; }
         .item.open .sub { display: block; }
-        .sub a { min-height: 48px; padding-left: 45px; font-size: 14px; color: #94a3b8; border-top: 1px solid rgba(255,255,255,.03); }
-        .sub a:hover { padding-left: 55px; color: #5bbf8a; }
+        .sub a { 
+            min-height: 48px; padding-left: 45px; font-size: 14px; 
+            color: #94a3b8; border-top: 1px solid rgba(255,255,255,.03); 
+            transition: all 0.3s ease;
+        }
+        .sub a:hover { 
+            padding-left: 55px; /* Effect ขยับตอนชี้สำหรับเมนูย่อย */
+            color: #5bbf8a; 
+        }
 
         .arrow { margin-left: auto; transition: .3s; font-size: 12px; opacity: 0.5; }
         .item.open .arrow { transform: rotate(90deg); }
@@ -108,20 +121,20 @@
         includeSidebar();
     });
 
-    /* --- 1. ระบบ Sidebar (สไตล์ดั้งเดิม) --- */
+    /* --- 1. ระบบ Sidebar พร้อม Timestamp --- */
     function toggleSidebar() {
         document.getElementById("sidebar").classList.toggle("show");
         document.getElementById("overlay").classList.toggle("show");
     }
 
-    function toggleDrop(btn, id) {
+    window.toggleDrop = function(btn, id) {
         const item = btn.parentElement;
         const isOpen = item.classList.toggle("open");
         if (id) { localStorage.setItem('menu-' + id, isOpen); }
     }
 
     function restoreMenuState() {
-        ['credit', 'branch'].forEach(m => {
+        ['credit', 'branch', 'sales'].forEach(m => {
             if (localStorage.getItem('menu-' + m) === 'true') {
                 const el = document.getElementById('menu-' + m);
                 if (el) el.classList.add('open');
@@ -130,13 +143,16 @@
     }
 
     function includeSidebar() {
-        fetch('sidebar.html').then(res => res.text()).then(data => { 
-            document.getElementById('sidebar').innerHTML = data; 
-            restoreMenuState(); 
-        }).catch(err => console.warn("Sidebar fail"));
+        const timestamp = new Date().getTime();
+        fetch('sidebar.html?v=' + timestamp) // บังคับดึงไฟล์สดใหม่
+            .then(res => res.text())
+            .then(data => { 
+                document.getElementById('sidebar').innerHTML = data; 
+                restoreMenuState(); 
+            }).catch(err => console.warn("Sidebar fail"));
     }
 
-    /* --- 2. ระบบดึงข้อมูล (แก้ไขให้รองรับ Redirect) --- */
+    /* --- 2. ระบบ Editor & Data พร้อม Timestamp --- */
     let quill;
     function initEditor() {
         quill = new Quill('#editor-container', {
@@ -146,9 +162,9 @@
     }
 
     async function loadData() {
+        const ts = new Date().getTime();
         try {
-            // ใช้เทคนิคดึงข้อมูลแบบ JSONP หรือจัดการ Redirect อัตโนมัติด้วยเบราว์เซอร์
-            const response = await fetch(scriptURL);
+            const response = await fetch(scriptURL + "?t=" + ts); // บังคับดึงข้อมูลล่าสุดจาก Sheets
             if (!response.ok) throw new Error('Network response was not ok');
             const data = await response.text();
             
@@ -159,7 +175,7 @@
             }
         } catch (error) {
             console.error(error);
-            quill.root.innerHTML = "<p style='color:red;'>❌ โหลดไม่สำเร็จ: กรุณาตรวจสอบ URL ของสคริปต์หรือสิทธิ์การเข้าถึง</p>";
+            quill.root.innerHTML = "<p style='color:red;'>❌ โหลดไม่สำเร็จ: กรุณาตรวจสอบ URL หรือสิทธิ์การเข้าถึง</p>";
         }
     }
 
@@ -169,10 +185,9 @@
         btnSave.disabled = true;
 
         try {
-            // การบันทึกข้อมูลแบบ POST ไปยัง Google Apps Script
             await fetch(scriptURL, {
                 method: 'POST',
-                mode: 'no-cors', // สำคัญมากสำหรับ Google Apps Script
+                mode: 'no-cors', 
                 headers: { 'Content-Type': 'text/plain' },
                 body: quill.root.innerHTML
             });
@@ -201,6 +216,3 @@
 </script>
 </body>
 </html>
-
-
-
