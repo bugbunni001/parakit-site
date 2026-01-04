@@ -37,17 +37,17 @@
         .card-postpay { border-top: 6px solid #3b82f6; }
         .card-device { border-top: 6px solid #8b5cf6; }
         .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .total-black { background: #1e293b; color: #fff; border: none; padding: 8px 15px; border-radius: 10px; font-weight: 600; text-align: right; width: 130px; font-size: 16px; }
+        .total-black { background: #1e293b; color: #fff; border: none; padding: 8px 15px; border-radius: 10px; font-weight: 600; text-align: right; width: 140px; font-size: 16px; }
 
-        /* แถบสีคาดหัวข้อ */
+        /* แถบสีคาดหัวข้อ - ปรับให้ช่อง Input เท่ากัน */
         .unit-label { display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 14px; margin-top: 20px; margin-bottom: 10px; padding: 8px 12px; border-radius: 12px; }
         .bg-label-blue { background: #eff6ff; border-left: 4px solid #3b82f6; }
         .bg-label-purple { background: #f5f3ff; border-left: 4px solid #8b5cf6; }
-        .unit-label input { border: none; border-radius: 8px; padding: 4px 10px; width: 110px; text-align: right; font-weight: 600; background: #ffffff; border: 1px solid #e2e8f0; }
+        .unit-label input { border: none; border-radius: 8px; padding: 4px 10px; width: 140px; text-align: right; font-weight: 600; background: #ffffff; border: 1px solid #e2e8f0; }
 
-        /* รายชื่อพนักงาน */
+        /* รายชื่อพนักงาน - ปรับให้ช่อง Input เท่ากัน */
         .staff-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-bottom: 1px solid #f8fafc; }
-        .staff-item input { border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px 12px; width: 120px; text-align: right; font-size: 14px; }
+        .staff-item input { border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px 12px; width: 140px; text-align: right; font-size: 14px; }
 
         .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; background: #ccc; margin-right: 5px; }
         .online { background: #22c55e; box-shadow: 0 0 5px #22c55e; }
@@ -141,13 +141,35 @@
 
 <script>
     // 1. ใส่ URL จาก Google Apps Script ที่คุณ Deploy ตรงนี้
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwGdLdJelhJOpQL6b8Cp975SkvZM-5zIt0d3NT_gEP0006u8Do-LHX_qrGH9hRh1P_E/exec";
+    const SCRIPT_URL = "YOUR_APPS_SCRIPT_WEB_APP_URL_HERE";
+
+    // ฟังก์ชันดึงข้อมูลจาก Sheet มาแสดง (เพื่อให้เห็นเหมือนกันทุกคน)
+    function loadDataFromSheet() {
+        const dot = document.getElementById('sync-status');
+        if (SCRIPT_URL === "https://script.google.com/macros/s/AKfycbw_o7PP3YOOAUdqcpdVcUzjLNs_I-SY5GtUnAXdFOaockMMNJYhxdkjHOgRqOhn5-Q4tg/exec") return;
+        
+        dot.style.background = "orange"; 
+
+        fetch(`${SCRIPT_URL}?action=read`)
+            .then(res => res.json())
+            .then(data => {
+                for (let id in data) {
+                    const el = document.getElementById(id);
+                    if (el) el.value = data[id];
+                }
+                dot.style.background = "#22c55e"; 
+            })
+            .catch(err => {
+                console.log("Load Error");
+                dot.style.background = "red";
+            });
+    }
 
     function formatComma(el) {
         let val = el.value.replace(/,/g, '');
         if(!isNaN(val) && val !== "") {
             el.value = Number(val).toLocaleString('en-US');
-            localStorage.setItem(el.id, el.value);
+            localStorage.setItem(el.id, el.value); 
             return el.value;
         }
         return el.value;
@@ -158,10 +180,11 @@
         const dot = document.getElementById('sync-status');
         dot.classList.remove('online');
 
-        // ส่งข้อมูลไปยัง Google Sheets
-        fetch(`${SCRIPT_URL}?id=${el.id}&val=${val}`)
-            .then(res => { if(res.ok) dot.classList.add('online'); })
-            .catch(e => console.log("Sync Error"));
+        if (SCRIPT_URL !== "YOUR_APPS_SCRIPT_WEB_APP_URL_HERE") {
+            fetch(`${SCRIPT_URL}?id=${el.id}&val=${val}`)
+                .then(res => { if(res.ok) dot.classList.add('online'); })
+                .catch(e => console.log("Sync Error"));
+        }
     }
 
     function confirmReset() {
@@ -169,6 +192,8 @@
             document.querySelectorAll('input[type="text"]').forEach(input => {
                 input.value = "0";
                 localStorage.setItem(input.id, "0");
+                // ส่งค่า 0 ไปที่ Sheet ด้วยเพื่อให้ทุกคนเห็น 0 เหมือนกัน
+                sendToSheet(input);
             });
         }
     }
@@ -185,16 +210,14 @@
     }
 
     window.onload = function() {
-        // โหลดตัวเลขจาก LocalStorage
-        document.querySelectorAll('input[type="text"]').forEach(input => {
-            const saved = localStorage.getItem(input.id);
-            if (saved !== null) input.value = saved;
-        });
+        // ดึงยอดจาก Sheet มาแสดงเป็นอันดับแรกเพื่อให้เห็นข้อมูลล่าสุดเหมือนกันทุกคน
+        loadDataFromSheet();
 
         // โหลดสถานะเมนู
         ['credit', 'branch'].forEach(m => {
             if (localStorage.getItem('menu-' + m) === 'true') {
-                document.getElementById('menu-' + m).classList.add('open');
+                const menuEl = document.getElementById('menu-' + m);
+                if (menuEl) menuEl.classList.add('open');
             }
         });
     }
