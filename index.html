@@ -6,58 +6,77 @@
     <title>🔖 ภารกิจประจำเดือน & บันทึกยอดขาย</title>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        /* ===== GLOBAL RESET & SIDEBAR STYLE ===== */
+        /* ===== GLOBAL RESET & LAYOUT ===== */
         * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
         body { margin: 0; background: #f8fafc; padding-bottom: 80px; color: #334155; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
-        
-        /* ปุ่ม Toggle สำหรับมือถือ */
-        .top-toggle { position: fixed; top: 15px; left: 15px; z-index: 1400; width: 45px; height: 45px; border-radius: 12px; border: none; background: #1e293b; color: #fff; font-size: 20px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; }
-        @media(min-width:769px) { .top-toggle { display: none; } }
 
-        /* Sidebar Style: แก้ปัญหาเมนูเพี้ยนโดยการกำหนดพื้นฐานไว้ก่อนโหลดไฟล์ */
-        .sidebar { position: fixed; top: 0; left: 0; width: 260px; height: 100vh; background: #1e293b; color: #fff; overflow-y: auto; transform: translateX(-260px); transition: all .3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 2000; }
+        /* ===== SIDEBAR UI (ล็อคค่าเริ่มต้นป้องกันเพี้ยน) ===== */
+        .sidebar { 
+            position: fixed; top: 0; left: 0; width: 260px; height: 100vh; 
+            background: #1e293b; color: #fff; overflow-y: auto; 
+            transform: translateX(-260px); 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+            z-index: 2000; 
+            box-shadow: 4px 0 10px rgba(0,0,0,0.1);
+        }
         .sidebar.show { transform: translateX(0); }
-        
-        .content { padding: 80px 20px 40px; transition: margin-left .3s; min-height: 100vh; }
-        
-        /* Desktop Mode */
-        @media(min-width:769px) { 
-            .sidebar { transform: translateX(0); } 
-            .content { margin-left: 260px; padding-top: 40px; } 
+
+        .top-toggle { 
+            position: fixed; top: 15px; left: 15px; z-index: 1400; 
+            width: 45px; height: 45px; border-radius: 12px; border: none; 
+            background: #1e293b; color: #fff; font-size: 20px; cursor: pointer; 
+            display: flex; align-items: center; justify-content: center;
         }
 
-        .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: none; backdrop-filter: blur(4px); z-index: 1500; }
+        .content { padding: 80px 20px 40px; transition: margin-left 0.3s; }
+
+        @media(min-width: 769px) {
+            .sidebar { transform: translateX(0); }
+            .content { margin-left: 260px; padding-top: 40px; }
+            .top-toggle { display: none; }
+        }
+
+        .overlay { 
+            position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); 
+            display: none; backdrop-filter: blur(4px); z-index: 1500; 
+        }
         .overlay.show { display: block; }
 
         /* ===== BUTTONS & CARDS ===== */
         .container { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 15px; max-width: 1100px; margin: 0 auto; }
-        .btn { background: #ffffff; color: #334155; padding: 16px; border-radius: 16px; text-align: center; font-size: 14px; text-decoration: none; transition: 0.3s; font-weight: 600; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #f1f5f9; }
+        .btn { 
+            background: #ffffff; color: #334155; padding: 16px; border-radius: 16px; 
+            text-align: center; font-size: 14px; text-decoration: none; transition: 0.3s; 
+            font-weight: 600; display: flex; align-items: center; justify-content: center; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #f1f5f9; 
+        }
         .btn:hover { box-shadow: 0 10px 15px rgba(0,0,0,0.1); transform: translateY(-3px); border-color: #5bbf8a; color: #5bbf8a; }
 
-        /* Card Mission Section */
         .card-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; max-width: 1100px; margin: 40px auto; }
-        .card { background: #ffffff; border-radius: 20px; overflow: hidden; text-align: center; text-decoration: none; color: #1e293b; box-shadow: 0 10px 25px rgba(0,0,0,0.05); transition: 0.4s; border: 1px solid #f1f5f9; display: flex; flex-direction: column; }
-        .card:hover { transform: scale(1.02); box-shadow: 0 15px 35px rgba(0,0,0,0.1); }
-        .card-box { width: 100%; height: 160px; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 600; padding: 20px; line-height: 1.2; text-align: center; }
+        .card { 
+            background: #ffffff; border-radius: 20px; overflow: hidden; 
+            text-decoration: none; color: #1e293b; box-shadow: 0 10px 25px rgba(0,0,0,0.05); 
+            transition: 0.4s; border: 1px solid #f1f5f9; display: flex; flex-direction: column;
+        }
+        .card:hover { transform: scale(1.02); }
+        .card-box { width: 100%; height: 160px; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 600; padding: 20px; text-align: center; line-height: 1.2; }
         .blue { background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%); color: white; }
         .yellow { background: linear-gradient(135deg, #fde047 0%, #eab308 100%); color: #854d0e; }
-        .card-title { padding: 15px; font-size: 13px; background: #fff; color: #64748b; font-weight: 400; }
+        .card-title { padding: 15px; font-size: 13px; background: #fff; color: #64748b; text-align: center; border-top: 1px solid #f1f5f9; }
 
         footer { width: 100%; text-align: center; padding: 20px 0; background: #fff; color: #94a3b8; position: fixed; bottom: 0; left: 0; font-size: 11px; z-index: 1100; border-top: 1px solid #f1f5f9; }
-        
-        /* สไตล์พื้นฐานของเมนู (ป้องกันเพี้ยนก่อน Sidebar โหลด) */
-        .sidebar a, .sidebar button { white-space: nowrap; overflow: hidden; }
     </style>
 </head>
 
 <body>
 
-<button class="top-toggle" onclick="toggleSidebar()">☰</button>
-<div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+<button class="top-toggle" id="mobileToggle">☰</button>
+<div class="overlay" id="overlay"></div>
 
-<aside class="sidebar" id="sidebar"></aside>
+<aside class="sidebar" id="sidebar">
+    </aside>
 
-<main class="content">
+<div class="content">
     <div class="container">
         <a class="btn" href="https://dtaclearn.com/dclick/login/index.php" target="_blank">🔴 OneClick</a>
         <a class="btn" href="https://double7.co.th" target="_blank">🟢 TabTab</a>
@@ -68,7 +87,7 @@
         <a class="btn" href="https://url.in.th/owjmI" target="_blank">🪙 TMN KIMS</a>
         <a class="btn" href="https://url.in.th/beEsq" target="_blank">🚚 ลิงก์โยกสินค้า</a>
         <a class="btn" href="https://url.in.th/lVQLl" target="_blank">📦 เบิกใบส่งของ DHL</a>
-        <a class="btn" href="https://url.in.th/aUoPS" target="_blank">🔄 คืน TOL+TVS</a>
+        <a class="btn" href="https://url.in.th/aUoPS" target="_blank">🔄 ทำคืน TOL+TVS</a>
         <a class="btn" href="commission.html" target="_blank">💰 คำนวณค่าคอม</a>
         <a class="btn" href="input_sale.html">✏️ ลงยอดขาย</a>
         <a class="btn" href="check_sale.html">🔎 เช็คยอดขาย</a> 
@@ -85,83 +104,72 @@
         </a>
         <a class="card" href="https://url.in.th/ChnGC" target="_blank">
             <div class="card-box yellow">SPEC CARD</div>
-            <div class="card-title">SPEC CARD (ข้อมูลสเปกตัวเครื่อง)</div>
+            <div class="card-title">SPEC CARD (ข้อมูลตัวเครื่อง)</div>
         </a>
     </div>
-</main>
+</div>
 
 <footer>© 2026 Copy Right By Angerina Frog</footer>
 
 <script>
     /**
-     * 1. ดึง Sidebar แบบป้องกัน Cache (อัปเดตข้อมูลใหม่ทันที)
+     * 1. ดึง Sidebar แบบ Real-time (Timestamp Versioning)
      */
-    function includeSidebar() {
-        const version = new Date().getTime(); 
-        fetch('sidebar.html?v=' + version)
-            .then(response => {
-                if (!response.ok) throw new Error('ไม่พบไฟล์ sidebar.html');
-                return response.text();
-            })
-            .then(data => {
-                const sidebarEl = document.getElementById('sidebar');
-                sidebarEl.innerHTML = data;
-                
-                // หลังจากใส่ HTML แล้ว ให้คืนค่าการกางเมนูทันที
-                restoreMenuState();
-            })
-            .catch(err => {
-                console.warn("Sidebar Load Error:", err);
-                // กรณีโหลดไม่สำเร็จ ให้แสดงข้อความเตือนใน Sidebar
-                document.getElementById('sidebar').innerHTML = '<div style="padding:20px; color:#ef4444;">❌ โหลดเมนูไม่สำเร็จ กรุณารีเฟรช</div>';
-            });
-    }
-
-    /**
-     * 2. ควบคุม Sidebar (Mobile)
-     */
-    function toggleSidebar() {
-        const sb = document.getElementById("sidebar");
-        const ov = document.getElementById("overlay");
-        sb.classList.toggle("show");
-        ov.classList.toggle("show");
-    }
-
-    /**
-     * 3. ฟังก์ชันกางเมนูย่อย (เรียกจากปุ่มใน sidebar.html)
-     */
-    function toggleDrop(btn, id) {
-        const item = btn.parentElement; // .item
-        const isOpen = item.classList.toggle("open");
-        
-        if (id) {
-            localStorage.setItem('menu-' + id, isOpen);
+    async function includeSidebar() {
+        const v = new Date().getTime();
+        try {
+            const response = await fetch(`sidebar.html?v=${v}`);
+            if (!response.ok) throw new Error();
+            const data = await response.text();
+            document.getElementById('sidebar').innerHTML = data;
+            restoreMenuState(); 
+        } catch (err) {
+            console.warn("Sidebar Error");
+            document.getElementById('sidebar').innerHTML = '<p style="color:white; padding:20px;">❌ ไม่สามารถโหลดเมนูได้</p>';
         }
     }
 
     /**
-     * 4. คืนค่าสถานะเมนูย่อยจาก LocalStorage
+     * 2. ระบบดักจับการคลิก (Event Delegation)
+     * แก้ปัญหาปุ่มที่โหลดมาทีหลังคลิกไม่ได้
+     */
+    document.addEventListener('click', function (e) {
+        // กาง/หุบ Sidebar (Mobile)
+        if (e.target.closest('#mobileToggle') || e.target.closest('#overlay')) {
+            document.getElementById('sidebar').classList.toggle('show');
+            document.getElementById('overlay').classList.toggle('show');
+        }
+
+        // กาง/หุบ เมนูย่อย (Dropdown) ใน Sidebar
+        // ตรวจสอบว่าสิ่งที่คลิกมี class "drop-btn" หรืออยู่ข้างในปุ่มนั้น
+        const dropBtn = e.target.closest('.drop-btn');
+        if (dropBtn) {
+            const item = dropBtn.parentElement;
+            const isOpen = item.classList.toggle('open');
+            
+            // เก็บสถานะลงเครื่อง (Local Storage)
+            const menuId = item.id.replace('menu-', '');
+            if (menuId) {
+                localStorage.setItem('menu-' + menuId, isOpen);
+            }
+        }
+    });
+
+    /**
+     * 3. คืนค่าสถานะเมนูที่เคยเปิดไว้
      */
     function restoreMenuState() {
-        // เพิ่ม ID ของเมนูย่อยที่คุณมีใน sidebar.html ตรงนี้
-        const menus = ['credit', 'branch', 'sales', 'report']; 
-        
+        const menus = ['credit', 'branch', 'sales']; 
         menus.forEach(id => {
-            const state = localStorage.getItem('menu-' + id);
-            if (state === 'true') {
-                const menuEl = document.getElementById('menu-' + id);
-                if (menuEl) {
-                    menuEl.classList.add('open');
-                }
+            if (localStorage.getItem('menu-' + id) === 'true') {
+                const el = document.getElementById('menu-' + id);
+                if (el) el.classList.add('open');
             }
         });
     }
 
-    // เริ่มทำงานเมื่อ DOM พร้อม
-    document.addEventListener("DOMContentLoaded", includeSidebar);
-    
-    // ปิด Sidebar เมื่อกด Overlay (สำหรับมือถือ)
-    document.getElementById("overlay").addEventListener("click", toggleSidebar);
+    // เริ่มทำงานเมื่อโหลดหน้า
+    document.addEventListener('DOMContentLoaded', includeSidebar);
 </script>
 
 </body>
