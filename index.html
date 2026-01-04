@@ -6,22 +6,49 @@
     <title>🔖 ภารกิจประจำเดือน & บันทึกยอดขาย</title>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        /* ===== GLOBAL RESET & SIDEBAR STYLE (คงเดิมทุกประการ) ===== */
+        /* ===== GLOBAL RESET & SIDEBAR STRUCTURE ===== */
         * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
         body { margin: 0; background: #f8fafc; padding-bottom: 80px; color: #334155; -webkit-font-smoothing: antialiased; }
+        
         .top-toggle { position: fixed; top: 15px; left: 15px; z-index: 1400; width: 45px; height: 45px; border-radius: 12px; border: none; background: #1e293b; color: #fff; font-size: 20px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; }
         @media(min-width:769px) { .top-toggle { display: none; } }
+        
         .sidebar { position: fixed; top: 0; left: 0; width: 260px; height: 100vh; background: #1e293b; color: #fff; overflow-y: auto; transform: translateX(-260px); transition: all .3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 2000; }
         .sidebar.show { transform: translateX(0); }
         .content { padding: 80px 20px 40px; transition: margin-left .3s; }
         @media(min-width:769px) { .sidebar { transform: translateX(0); } .content { margin-left: 260px; } }
+        
         .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: none; backdrop-filter: blur(4px); z-index: 1500; }
         .overlay.show { display: block; }
 
-        /* ===== BUTTONS & CARDS (คงเดิม) ===== */
+        /* ===== [FIXED] SIDEBAR INTERNAL MENU STYLE ===== */
+        .sidebar-header { padding: 25px 20px; font-size: 18px; font-weight: 600; background: #0f172a; color: #fff; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .menu { display: flex; flex-direction: column; padding: 10px 0; }
+        .item { border-bottom: 1px solid rgba(255,255,255,0.03); }
+        
+        /* สไตล์ปุ่มเมนูหลัก */
+        .menu a, .menu .drop-btn { 
+            width: 100%; min-height: 50px; padding: 12px 20px; background: none; border: none; 
+            color: #cbd5e1; text-align: left; font-size: 15px; cursor: pointer; display: flex; 
+            align-items: center; text-decoration: none; transition: 0.2s; 
+        }
+        .menu a:hover, .menu .drop-btn:hover { background: #334155; color: #fff; }
+        
+        /* เมนูย่อย */
+        .sub { display: none; background: #0f172a; padding: 5px 0; }
+        .item.open .sub { display: block; }
+        .sub a { padding-left: 45px; font-size: 14px; color: #94a3b8; min-height: 40px; }
+        .sub a:hover { color: #5bbf8a; }
+
+        /* ลูกศร */
+        .arrow { margin-left: auto; transition: 0.3s; font-size: 10px; opacity: 0.6; }
+        .item.open .arrow { transform: rotate(90deg); }
+
+        /* ===== BUTTONS & CARDS ===== */
         .container { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; max-width: 1100px; margin: 0 auto; }
         .btn { background: #ffffff; color: #334155; padding: 18px; border-radius: 16px; text-align: center; font-size: 15px; text-decoration: none; transition: 0.3s; font-weight: 600; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #f1f5f9; }
         .btn:hover { box-shadow: 0 10px 15px rgba(0,0,0,0.1); transform: translateY(-3px); border-color: #5bbf8a; color: #5bbf8a; }
+        
         .card-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; max-width: 1100px; margin: 50px auto; }
         .card { background: #ffffff; border-radius: 20px; overflow: hidden; text-align: center; text-decoration: none; color: #1e293b; box-shadow: 0 10px 25px rgba(0,0,0,0.05); transition: 0.4s; border: 1px solid #f1f5f9; }
         .card:hover { transform: scale(1.03); }
@@ -29,6 +56,7 @@
         .blue { background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%); color: white; }
         .yellow { background: linear-gradient(135deg, #fde047 0%, #eab308 100%); color: #854d0e; }
         .card-title { padding: 20px; font-size: 14px; background: #fff; color: #64748b; }
+        
         footer { width: 100%; text-align: center; padding: 20px 0; background: #fff; color: #94a3b8; position: fixed; bottom: 0; left: 0; font-size: 12px; z-index: 1100; border-top: 1px solid #f1f5f9; }
     </style>
 </head>
@@ -76,9 +104,6 @@
 <footer>© 2026 Copy Right By Angerina Frog</footer>
 
 <script>
-    /**
-     * 1. ดึง Sidebar แบบป้องกัน Cache
-     */
     function includeSidebar() {
         const version = new Date().getTime(); 
         fetch('sidebar.html?v=' + version)
@@ -88,23 +113,16 @@
             })
             .then(data => {
                 document.getElementById('sidebar').innerHTML = data;
-                // สำคัญ: ต้องรัน restoreMenuState หลังจากใส่ข้อมูล Sidebar เสร็จแล้ว
                 restoreMenuState();
             })
             .catch(err => console.warn("Sidebar Load Error:", err));
     }
 
-    /**
-     * 2. ควบคุม Sidebar (Mobile)
-     */
     function toggleSidebar() {
         document.getElementById("sidebar").classList.toggle("show");
         document.getElementById("overlay").classList.toggle("show");
     }
 
-    /**
-     * 3. ฟังก์ชันกางเมนูย่อย (ต้องให้ฟังก์ชันนี้อยู่นอกสุดเพื่อให้ไฟล์ sidebar.html เรียกใช้ได้)
-     */
     window.toggleDrop = function(btn, id) {
         const item = btn.parentElement;
         const isOpen = item.classList.toggle("open");
@@ -113,9 +131,6 @@
         }
     }
 
-    /**
-     * 4. คืนค่าสถานะเมนูย่อยที่เปิดค้างไว้
-     */
     function restoreMenuState() {
         const menus = ['credit', 'branch', 'sales']; 
         menus.forEach(id => {
@@ -126,7 +141,6 @@
         });
     }
 
-    // โหลด Sidebar ทันทีที่เปิดหน้า
     window.onload = includeSidebar;
 </script>
 
