@@ -147,127 +147,20 @@
     const dot = document.getElementById('sync-status');
     const statusText = document.getElementById('status-text');
 
-    function loadData() {
-        if (!SCRIPT_URL || SCRIPT_URL.includes("YOUR_APPS_SCRIPT")) return;
-        dot.style.background = "orange";
-        statusText.innerText = "กำลังดึงข้อมูล...";
-        fetch(`${SCRIPT_URL}?action=read`)
-            .then(res => res.json())
-            .then(data => {
-                for (let id in data) {
-                    const el = document.getElementById(id);
-                    if (el) el.value = data[id];
-                }
-                dot.classList.add('online');
-                statusText.innerText = "ข้อมูลเป็นปัจจุบัน (Locked)";
-            }).catch(() => { dot.style.background = "red"; statusText.innerText = "ดึงข้อมูลล้มเหลว"; });
-    }
-
-    // Modal Control
-    function openModal(mode) {
-        currentMode = mode;
-        const modal = document.getElementById('pwdModal');
-        modal.style.display = 'flex';
-        setTimeout(() => modal.classList.add('show-modal'), 10);
-        document.getElementById('pwdInput').focus();
-    }
-
-    function closeModal() {
-        const modal = document.getElementById('pwdModal');
-        modal.classList.remove('show-modal');
-        setTimeout(() => { modal.style.display = 'none'; document.getElementById('pwdInput').value = ''; }, 200);
-    }
-
-    // กด Enter ในช่องรหัสผ่าน
-    document.getElementById('pwdInput').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') checkPassword();
-    });
-
-    function checkPassword() {
-        if (document.getElementById('pwdInput').value === "Bbb#%0285134679") {
-            if (currentMode === 'edit') enableEdit();
-            else if (currentMode === 'reset') resetSystem();
-            closeModal();
-        } else { alert("รหัสผ่านไม่ถูกต้อง!"); }
-    }
-
-    function enableEdit() {
-        document.querySelectorAll('input[type="text"]').forEach(input => {
-            input.classList.add('editable');
-            // ให้กด Enter ในช่องกรอกเพื่อ Save ได้เลย
-            input.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') saveAll();
-            });
-        });
-        document.getElementById('btn-edit').style.display = 'none';
-        document.getElementById('btn-save').style.display = 'inline-block';
-        statusText.innerText = "🔓 กำลังแก้ไข... (กด Enter เพื่อบันทึก)";
-    }
-
-    function saveAll() {
-        const btnSave = document.getElementById('btn-save');
-        if (btnSave.disabled) return;
-        btnSave.innerText = "⏳ กำลังบันทึก...";
-        btnSave.disabled = true;
-
-        const inputs = document.querySelectorAll('input[type="text"]');
-        let completed = 0;
-        inputs.forEach(input => {
-            let rawVal = input.value.replace(/,/g, '');
-            if (!isNaN(rawVal) && rawVal !== "") input.value = Number(rawVal).toLocaleString('en-US');
-            
-            fetch(`${SCRIPT_URL}?id=${input.id}&val=${encodeURIComponent(input.value)}`)
-                .then(() => {
-                    completed++;
-                    if (completed === inputs.length) {
-                        alert("✅ บันทึกเรียบร้อย!");
-                        location.reload();
-                    }
-                });
-        });
-    }
-
-    function resetSystem() {
-        if (confirm("ยืนยัน Reset เป็น 0 ทั้งหมด?")) {
-            document.querySelectorAll('input[type="text"]').forEach(input => {
-                input.value = "0";
-                fetch(`${SCRIPT_URL}?id=${input.id}&val=0`);
-            });
-            alert("รีเซ็ตเรียบร้อย");
-            location.reload();
-        }
-    }
-
-    function toggleSidebar() {
-        document.getElementById("sidebar").classList.toggle("show");
-        document.getElementById("overlay").classList.toggle("show");
-    }
-
-    function toggleDrop(btn, id) {
-        const item = btn.parentElement;
-        item.classList.toggle("open");
-        localStorage.setItem('menu-' + id, item.classList.contains("open"));
-    }
-
-    window.onload = function() {
-        loadData();
-        ['credit', 'branch'].forEach(m => {
-            if (localStorage.getItem('menu-' + m) === 'true') {
-                const menuEl = document.getElementById('menu-' + m);
-                if (menuEl) menuEl.classList.add('open');
-            }
-        });
-    }
-    <script>
-    // ฟังก์ชันดึงเมนูจากไฟล์อื่นมาแสดง
+    // 1. ฟังก์ชันดึง Sidebar (ต้องรันผ่าน Server เท่านั้นถึงจะเห็นเมนู)
     function includeSidebar() {
         fetch('sidebar.html')
-            .then(response => response.text())
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.text();
+            })
             .then(data => {
                 document.getElementById('sidebar').innerHTML = data;
-                
-                // หลังจากโหลดเมนูเสร็จ ให้เรียกฟังก์ชันเปิดเมนูย่อยที่ค้างไว้ (ถ้ามี)
                 restoreMenuState(); 
+            })
+            .catch(err => {
+                console.warn("ไม่สามารถโหลด sidebar.html ได้ (อาจเพราะเปิดไฟล์โดยตรงในคอม):", err);
+                // ถ้าโหลดไม่ได้ ให้แสดงข้อความแจ้งเตือนใน Console
             });
     }
 
@@ -280,9 +173,102 @@
         });
     }
 
-    // เรียกใช้งานตอนโหลดหน้าเว็บ
-    includeSidebar();
-</script>
+    // 2. ฟังก์ชันโหลดข้อมูลจาก Google Sheet
+    function loadData() {
+        dot.style.background = "orange";
+        statusText.innerText = "กำลังดึงข้อมูล...";
+        fetch(`${SCRIPT_URL}?action=read`)
+            .then(res => res.json())
+            .then(data => {
+                for (let id in data) {
+                    const el = document.getElementById(id);
+                    if (el) el.value = data[id];
+                }
+                dot.classList.add('online');
+                statusText.innerText = "ข้อมูลเป็นปัจจุบัน (Locked)";
+            })
+            .catch(err => { 
+                dot.style.background = "red"; 
+                statusText.innerText = "ดึงข้อมูลล้มเหลว (เช็คอินเทอร์เน็ต)"; 
+            });
+    }
+
+    // --- ส่วนของฟังก์ชันอื่นๆ (OpenModal, Save, Toggle) ให้คงไว้เหมือนเดิม ---
+    function openModal(mode) {
+        currentMode = mode;
+        const modal = document.getElementById('pwdModal');
+        modal.style.display = 'flex';
+        setTimeout(() => modal.classList.add('show-modal'), 10);
+        document.getElementById('pwdInput').focus();
+    }
+    function closeModal() {
+        const modal = document.getElementById('pwdModal');
+        modal.classList.remove('show-modal');
+        setTimeout(() => { modal.style.display = 'none'; document.getElementById('pwdInput').value = ''; }, 200);
+    }
+    document.getElementById('pwdInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') checkPassword(); });
+    function checkPassword() {
+        if (document.getElementById('pwdInput').value === "Bbb#%0285134679") {
+            if (currentMode === 'edit') enableEdit();
+            else if (currentMode === 'reset') resetSystem();
+            closeModal();
+        } else { alert("รหัสผ่านไม่ถูกต้อง!"); }
+    }
+    function enableEdit() {
+        document.querySelectorAll('input[type="text"]').forEach(input => {
+            input.classList.add('editable');
+            input.addEventListener('keypress', (e) => { if (e.key === 'Enter') saveAll(); });
+        });
+        document.getElementById('btn-edit').style.display = 'none';
+        document.getElementById('btn-save').style.display = 'inline-block';
+        statusText.innerText = "🔓 กำลังแก้ไข... (กด Enter เพื่อบันทึก)";
+    }
+    function saveAll() {
+        const btnSave = document.getElementById('btn-save');
+        if (btnSave.disabled) return;
+        btnSave.innerText = "⏳ กำลังบันทึก...";
+        btnSave.disabled = true;
+        const inputs = document.querySelectorAll('input[type="text"]');
+        let completed = 0;
+        inputs.forEach(input => {
+            let rawVal = input.value.replace(/,/g, '');
+            if (!isNaN(rawVal) && rawVal !== "") input.value = Number(rawVal).toLocaleString('en-US');
+            fetch(`${SCRIPT_URL}?id=${input.id}&val=${encodeURIComponent(input.value)}`)
+                .then(() => {
+                    completed++;
+                    if (completed === inputs.length) {
+                        alert("✅ บันทึกเรียบร้อย!");
+                        location.reload();
+                    }
+                });
+        });
+    }
+    function resetSystem() {
+        if (confirm("ยืนยัน Reset เป็น 0 ทั้งหมด?")) {
+            document.querySelectorAll('input[type="text"]').forEach(input => {
+                input.value = "0";
+                fetch(`${SCRIPT_URL}?id=${input.id}&val=0`);
+            });
+            alert("รีเซ็ตเรียบร้อย");
+            location.reload();
+        }
+    }
+    function toggleSidebar() {
+        document.getElementById("sidebar").classList.toggle("show");
+        document.getElementById("overlay").classList.toggle("show");
+    }
+    function toggleDrop(btn, id) {
+        const item = btn.parentElement;
+        item.classList.toggle("open");
+        localStorage.setItem('menu-' + id, item.classList.contains("open"));
+    }
+
+    // สั่งรันเมื่อโหลดหน้าเว็บ
+    window.onload = function() {
+        includeSidebar(); // โหลดเมนู
+        loadData();       // โหลดข้อมูลจาก Sheet
+    }
 </script>
 </body>
 </html>
+
