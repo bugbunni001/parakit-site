@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Material Code - Rich Editor</title>
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        /* ===== SETUP & LAYOUT ===== */
+        * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
+        body { margin: 0; background: #f8fafc; padding-bottom: 100px; color: #334155; overflow-x: hidden; }
+        
+        /* ===== SIDEBAR NAVIGATION (รอรับจาก sidebar.html) ===== */
+        .top-toggle { 
+            position: fixed; top: 15px; left: 15px; z-index: 1400; 
+            width: 45px; height: 45px; border-radius: 12px; border: none; 
+            background: #1e293b; color: #fff; font-size: 20px; cursor: pointer; 
+            display: flex; align-items: center; justify-content: center; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: 0.2s; 
+        }
+        .top-toggle:hover { background: #334155; }
+
+        .sidebar { 
+            position: fixed; top: 0; left: 0; width: 260px; height: 100vh; 
+            background: #1e293b; color: #fff; overflow-y: auto; 
+            transform: translateX(-260px); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 2000; 
+        }
+        .sidebar.show { transform: translateX(0); }
+
+        /* สไตล์ Hover สำหรับเมนู (Hollover Effect) */
+        .sidebar a, .sidebar .drop-btn { 
+            transition: all 0.3s !important; 
+        }
+        /* เมนูหลัก: ไม่เอา Font เขียว เปลี่ยนแค่ BG และ Padding */
+        .sidebar a:hover, .sidebar .drop-btn:hover { 
+            background: #334155 !important; 
+            color: #ffffff !important; 
+            padding-left: 35px !important; 
+        }
+        /* เมนูย่อย: ถ้ามี ให้ใช้สีเขียวตามหน้าอื่น */
+        .sidebar .sub a:hover { 
+            color: #5bbf8a !important; 
+            padding-left: 45px !important; 
+        }
+
+        .overlay { 
+            position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); 
+            display: none; backdrop-filter: blur(4px); z-index: 1500; 
+        }
+        .overlay.show { display: block; }
+
+        /* ===== MAIN CONTENT ===== */
+        .content { padding: 80px 20px; transition: margin-left .3s; }
+        @media(min-width:769px) { 
+            .sidebar { transform: translateX(0); } 
+            .content { margin-left: 260px; padding-top: 40px; } 
+            .top-toggle { display: none; } 
+        }
+
+        .header-section { text-align: center; margin-bottom: 30px; }
+        .header-section h2 { color: #1e293b; font-size: 28px; }
+
+        /* ===== EDITOR WRAPPER ===== */
+        .editor-card { background: white; border-radius: 24px; padding: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); max-width: 1000px; margin: 0 auto; }
+        #editor-container { height: 600px; font-size: 16px; border-bottom-left-radius: 15px; border-bottom-right-radius: 15px; }
+        .ql-toolbar { border-top-left-radius: 15px; border-top-right-radius: 15px; background: #f1f5f9; border-color: #e2e8f0; }
+        
+        /* สภาพตอนล็อคการแก้ไข */
+        .locked .ql-editor { background: #f8fafc; pointer-events: none; color: #64748b; }
+        .locked .ql-toolbar { opacity: 0.5; pointer-events: none; }
+
+        .btn-group { display: flex; justify-content: center; gap: 12px; margin-top: 25px; }
+        .btn { padding: 12px 35px; border-radius: 12px; border: none; font-weight: 600; cursor: pointer; transition: 0.2s; font-size: 16px; display: flex; align-items: center; gap: 8px; }
+        .btn-edit { background: #1e293b; color: white; }
+        .btn-save { background: #22c55e; color: white; display: none; }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+
+        /* MODAL */
+        .modal { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.8); display: none; align-items: center; justify-content: center; z-index: 3000; backdrop-filter: blur(8px); }
+        .modal-content { background: white; padding: 30px; border-radius: 24px; text-align: center; width: 340px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+        .modal-content h3 { margin-top: 0; color: #1e293b; }
+        .modal-content input { width: 100%; padding: 14px; margin: 20px 0; border: 2px solid #e2e8f0; border-radius: 12px; text-align: center; font-size: 20px; outline: none; }
+        .modal-content input:focus { border-color: #3b82f6; }
+
+        footer { text-align: center; padding: 40px 0; color: #94a3b8; font-size: 13px; }
+    </style>
+</head>
+<body>
+
+<div id="pwdModal" class="modal">
+    <div class="modal-content">
+        <h3>🔑 ยืนยันรหัสผ่าน</h3>
+        <input type="password" id="pwdInput" placeholder="••••••••">
+        <button class="btn btn-edit" style="width: 100%; justify-content: center;" onclick="checkPassword()">ยืนยัน</button>
+        <button onclick="closeModal()" style="margin-top:15px; background:none; border:none; color:gray; cursor:pointer;">ยกเลิก</button>
+    </div>
+</div>
+
+<button class="top-toggle" onclick="toggleSidebar()">☰</button>
+<div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+<aside class="sidebar" id="sidebar"></aside>
+
+<main class="content">
+    <div class="header-section">
+        <h2>📦 รหัสวัสดุ (Material Code)</h2>
+        <p>แก้ไขข้อมูล SAMSUNG & APPLE พร้อมจัดรูปแบบตัวอักษร</p>
+    </div>
+
+    <div class="editor-card locked" id="editor-wrapper">
+        <div id="editor-container">
+            <h1><strong>SAMSUNG</strong></h1>
+            <p><strong>A06 5G (4/64)</strong></p>
+            <p><span style="color: #22c55e;">GREEN</span> = <strong>3000115678</strong></p>
+            <p><span style="color: #000000;">BLACK</span> = <strong>3000115679</strong></p>
+            <hr>
+            <h1><strong>APPLE</strong></h1>
+            <p><strong>iPhone 16 (128)</strong></p>
+            <p><span style="color: #000000;">BLACK</span> = <strong>3000112510</strong></p>
+            <p><em>(คลุมดำข้อความเพื่อปรับสไตล์ หนา/เอียง/ขนาด ได้ที่แถบเครื่องมือด้านบน)</em></p>
+        </div>
+        
+        <div class="btn-group">
+            <button id="btnEdit" class="btn btn-edit" onclick="openModal()">✏️ แก้ไขข้อมูล</button>
+            <button id="btnSave" class="btn btn-save" onclick="saveData()">💾 บันทึกข้อมูล</button>
+        </div>
+    </div>
+
+    <footer>© 2026 Copy Right By Angerina Frog</footer>
+</main>
+
+<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+<script>
+    // 1. ฟังก์ชันดึง Sidebar (เหมือนหน้าอื่น)
+    function includeSidebar() {
+        fetch('sidebar.html')
+            .then(response => response.ok ? response.text() : Promise.reject())
+            .then(data => {
+                document.getElementById('sidebar').innerHTML = data;
+                // หลังจากโหลดเสร็จ ให้แสดงสถานะ Active หรือใส่ Listener ถ้าจำเป็น
+            })
+            .catch(() => {
+                // กรณีทดสอบแบบเปิดไฟล์ตรงๆ (ไม่มี Server) ให้สร้างเมนูหลอกไว้ดูสไตล์
+                document.getElementById('sidebar').innerHTML = '<div class="sidebar-header">MENU</div><div class="menu"><a href="#">เมนูหลัก (Hover ดูสไตล์)</a></div>';
+            });
+    }
+
+    // 2. ตั้งค่า Quill Editor
+    var quill = new Quill('#editor-container', {
+        modules: {
+            toolbar: [
+                [{ 'header': [1, 2, 3, false] }],
+                [{ 'size': ['small', false, 'large', 'huge'] }],
+                ['bold', 'italic', 'underline'],
+                [{ 'color': [] }, { 'background': [] }],
+                [{ 'align': [] }],
+                ['clean']
+            ]
+        },
+        theme: 'snow'
+    });
+
+    // 3. ระบบ Sidebar Toggle
+    function toggleSidebar() {
+        document.getElementById("sidebar").classList.toggle("show");
+        document.getElementById("overlay").classList.toggle("show");
+    }
+
+    // 4. ระบบ Password & Edit
+    function openModal() {
+        document.getElementById('pwdModal').style.display = 'flex';
+        document.getElementById('pwdInput').focus();
+    }
+
+    function closeModal() {
+        document.getElementById('pwdModal').style.display = 'none';
+        document.getElementById('pwdInput').value = '';
+    }
+
+    function checkPassword() {
+        if (document.getElementById('pwdInput').value === "Bbb#%0285134679") {
+            document.getElementById('editor-wrapper').classList.remove('locked');
+            document.getElementById('btnEdit').style.display = 'none';
+            document.getElementById('btnSave').style.display = 'inline-block';
+            closeModal();
+        } else {
+            alert("รหัสผ่านไม่ถูกต้อง!");
+        }
+    }
+
+    function saveData() {
+        // ดึงโค้ด HTML จาก Editor เพื่อไปเซฟลง Google Sheets (ต้องใช้ Fetch ต่อ)
+        var htmlData = quill.root.innerHTML;
+        
+        alert("✅ บันทึกรูปแบบข้อมูลเรียบร้อย!");
+        document.getElementById('editor-wrapper').classList.add('locked');
+        document.getElementById('btnEdit').style.display = 'inline-block';
+        document.getElementById('btnSave').style.display = 'none';
+    }
+
+    // เริ่มทำงานเมื่อโหลดหน้าเว็บ
+    window.onload = includeSidebar;
+</script>
+
+</body>
+</html>
