@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Material Code - Rich Editor</title>
+    <title>Material Code - Google Sheets Sync</title>
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
@@ -11,7 +11,7 @@
         * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
         body { margin: 0; background: #f8fafc; padding-bottom: 100px; color: #334155; overflow-x: hidden; }
         
-        /* ===== SIDEBAR STYLES ===== */
+        /* ===== SIDEBAR STYLES (Fixed) ===== */
         .top-toggle { 
             position: fixed; top: 15px; left: 15px; z-index: 1400; 
             width: 45px; height: 45px; border-radius: 12px; border: none; 
@@ -19,7 +19,6 @@
             display: flex; align-items: center; justify-content: center; 
             box-shadow: 0 4px 12px rgba(0,0,0,0.2); transition: 0.2s; 
         }
-
         .sidebar { 
             position: fixed; top: 0; left: 0; width: 260px; height: 100vh; 
             background: #1e293b; color: #fff; overflow-y: auto; 
@@ -28,68 +27,45 @@
         .sidebar.show { transform: translateX(0); }
         .sidebar .sidebar-header { padding: 25px 20px; font-weight: 600; font-size: 20px; background: #0f172a; letter-spacing: 1px; }
         .sidebar .menu { display: flex; flex-direction: column; width: 100%; }
-        
         .sidebar a, .sidebar .drop-btn { 
             width: 100%; min-height: 50px; padding: 12px 20px; 
             background: none; border: none; color: #cbd5e1; 
             text-align: left; font-size: 15px; cursor: pointer; 
             display: flex; align-items: center; text-decoration: none; 
             transition: all 0.2s; border-bottom: 1px solid rgba(255,255,255,0.03);
-            white-space: normal; gap: 10px; position: relative;
+            white-space: normal; gap: 10px;
         }
-
-        .sidebar a:hover, .sidebar .drop-btn:hover { 
-            background: #334155 !important; color: #ffffff !important; padding-left: 25px !important; 
-        }
-
+        .sidebar a:hover, .sidebar .drop-btn:hover { background: #334155 !important; color: #ffffff !important; padding-left: 25px !important; }
         .sidebar .sub { display: none; background: #0f172a; width: 100%; }
         .sidebar .item.open .sub { display: block; }
         .sidebar .sub a { padding-left: 45px !important; font-size: 14px; color: #94a3b8; }
-        
         .arrow { margin-left: auto; font-size: 10px; transition: 0.3s; }
         .item.open .arrow { transform: rotate(90deg); }
-
         .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: none; backdrop-filter: blur(4px); z-index: 1500; }
         .overlay.show { display: block; }
 
-        /* ===== MAIN CONTENT ===== */
+        /* ===== MAIN CONTENT & BUTTONS ===== */
         .content { padding: 80px 20px; transition: margin-left .3s; }
-        @media(min-width:769px) { 
-            .sidebar { transform: translateX(0); } 
-            .content { margin-left: 260px; padding-top: 40px; } 
-            .top-toggle { display: none; } 
-        }
-
+        @media(min-width:769px) { .sidebar { transform: translateX(0); } .content { margin-left: 260px; padding-top: 40px; } .top-toggle { display: none; } }
         .header-section { text-align: center; margin-bottom: 30px; }
-        .header-section h2 { color: #1e293b; font-size: 28px; }
-
-        /* ===== EDITOR SYSTEM ===== */
         .editor-card { background: white; border-radius: 24px; padding: 25px; box-shadow: 0 10px 40px rgba(0,0,0,0.08); max-width: 1000px; margin: 0 auto; }
         #editor-container { height: 600px; font-size: 16px; border: 1px solid #e2e8f0; border-radius: 0 0 12px 12px; }
-        
         .locked .ql-toolbar { display: none; }
         .locked #editor-container { border-radius: 12px; border-top: 1px solid #e2e8f0; background: #ffffff; }
-
         .btn-group { display: flex; justify-content: center; gap: 15px; margin-top: 25px; }
         .btn { 
             padding: 12px 35px; border-radius: 12px; border: none; font-weight: 600; cursor: pointer; 
             transition: all 0.3s ease; font-size: 16px; display: flex; align-items: center; gap: 8px; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1); /* เพิ่มเงาเริ่มต้น */
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
         }
-        
-        .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.15); } /* เอฟเฟกต์ยกตัวและเงาเมื่อชี้ */
-        .btn:active { transform: translateY(0); }
-
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
         .btn-edit { background: #1e293b; color: white; }
         .btn-save { background: #22c55e; color: white; display: none; }
 
         /* MODAL */
         .modal { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.8); display: none; align-items: center; justify-content: center; z-index: 3000; backdrop-filter: blur(8px); }
         .modal-content { background: white; padding: 30px; border-radius: 24px; text-align: center; width: 340px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
-        .modal-content input { width: 100%; padding: 14px; margin: 20px 0; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 20px; text-align: center; outline: none; transition: 0.2s; }
-        .modal-content input:focus { border-color: #1e293b; box-shadow: 0 0 0 4px rgba(30, 41, 59, 0.1); }
-
-        footer { text-align: center; padding: 40px 0; color: #94a3b8; font-size: 13px; }
+        .modal-content input { width: 100%; padding: 14px; margin: 20px 0; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 20px; text-align: center; outline: none; }
     </style>
 </head>
 <body>
@@ -110,34 +86,26 @@
 
 <main class="content">
     <div class="header-section">
-        <h2>📦 Material Code</h2>
-        <p>SAMSUNG & APPLE</p>
+        <h2>📦 รหัสวัสดุ (Material Code)</h2>
+        <p>แก้ไขข้อมูล SAMSUNG & APPLE ระบบซิงค์ Google Sheets</p>
     </div>
 
     <div class="editor-card locked" id="editor-wrapper">
         <div id="editor-container">
-            <h1><strong>SAMSUNG</strong></h1>
-            <p><strong>A06 5G (4/64)</strong></p>
-            <p><span style="color: #22c55e;">GREEN</span> = <strong>3000115678</strong></p>
-            <p><span style="color: #000000;">BLACK</span> = <strong>3000115679</strong></p>
-            <hr>
-            <h1><strong>APPLE</strong></h1>
-            <p><strong>iPhone 16 (128)</strong></p>
-            <p><span style="color: #000000;">BLACK</span> = <strong>3000112510</strong></p>
-            <p><em>(คลุมดำข้อความเพื่อปรับสไตล์ หนา/เอียง/ขนาด ได้ที่แถบเครื่องมือด้านบน)</em></p>
+            <p>⏳ กำลังโหลดข้อมูลล่าสุด...</p>
         </div>
-        
         <div class="btn-group">
             <button id="btnEdit" class="btn btn-edit" onclick="openModal()">✏️ แก้ไขข้อมูล</button>
             <button id="btnSave" class="btn btn-save" onclick="saveData()">💾 บันทึกข้อมูล</button>
         </div>
     </div>
-    <footer>© 2026 Copy Right By Angerina Frog</footer>
 </main>
 
 <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 <script>
-    /* --- ระบบ Sidebar & จำสถานะ --- */
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbyB4E2w8svP1N33ln9akd6fRK_x91FRoanU4Ad7mAbiMwfPUPhLRVMgDIarcANBlJurGQ/exec'; // อย่าลืมใส่ URL นะครับ
+
+    /* --- 1. ระบบ Sidebar & จำสถานะ --- */
     function toggleSidebar() {
         document.getElementById("sidebar").classList.toggle("show");
         document.getElementById("overlay").classList.toggle("show");
@@ -146,9 +114,7 @@
     function toggleDrop(btn, id) {
         const item = btn.closest('.item');
         const isOpen = item.classList.toggle("open");
-        if (id) {
-            localStorage.setItem('menu-' + id, isOpen ? 'true' : 'false');
-        }
+        if (id) { localStorage.setItem('menu-' + id, isOpen ? 'true' : 'false'); }
     }
 
     function restoreMenuState() {
@@ -166,26 +132,36 @@
             .then(data => { 
                 document.getElementById('sidebar').innerHTML = data; 
                 restoreMenuState(); 
-            })
-            .catch(err => console.error("Sidebar Load Error:", err));
+            });
     }
 
-    /* --- ระบบ Editor --- */
+    /* --- 2. ระบบ Editor & Google Sheets --- */
     var quill = new Quill('#editor-container', {
         modules: { toolbar: [[{header:[1,2,3,false]}],[{size:['small',false,'large','huge']}],['bold','italic','underline'],[{color:[]},{background:[]}],['clean']] },
-        theme: 'snow',
-        readOnly: true
+        theme: 'snow', readOnly: true
     });
 
-    function openModal() { 
-        document.getElementById('pwdModal').style.display = 'flex'; 
-        document.getElementById('pwdInput').focus(); 
+    function loadData() {
+        fetch(scriptURL).then(res => res.text()).then(data => {
+            if (data) quill.root.innerHTML = data;
+        }).catch(() => { quill.root.innerHTML = "<p>❌ โหลดไม่สำเร็จ</p>"; });
     }
-    
-    function closeModal() { 
-        document.getElementById('pwdModal').style.display = 'none'; 
-        document.getElementById('pwdInput').value = ''; 
+
+    function saveData() {
+        const btnSave = document.getElementById('btnSave');
+        btnSave.innerText = "⏳ กำลังบันทึก...";
+        btnSave.disabled = true;
+
+        fetch(scriptURL, { method: 'POST', mode: 'no-cors', body: quill.root.innerHTML })
+        .then(() => {
+            alert("✅ บันทึกขึ้น Google Sheets แล้ว!");
+            location.reload(); // รีโหลดเพื่อให้ทุกคนเห็นค่าใหม่
+        });
     }
+
+    /* --- 3. รหัสผ่าน & การควบคุม --- */
+    function openModal() { document.getElementById('pwdModal').style.display = 'flex'; document.getElementById('pwdInput').focus(); }
+    function closeModal() { document.getElementById('pwdModal').style.display = 'none'; document.getElementById('pwdInput').value = ''; }
 
     function checkPassword() {
         if (document.getElementById('pwdInput').value === "Bbb#%0285134679") {
@@ -194,22 +170,10 @@
             document.getElementById('btnEdit').style.display = 'none';
             document.getElementById('btnSave').style.display = 'inline-block';
             closeModal();
-        } else { 
-            alert("รหัสผ่านไม่ถูกต้อง!"); 
-            document.getElementById('pwdInput').value = '';
-            document.getElementById('pwdInput').focus();
-        }
+        } else { alert("รหัสผ่านไม่ถูกต้อง!"); }
     }
 
-    function saveData() {
-        quill.enable(false);
-        document.getElementById('editor-wrapper').classList.add('locked');
-        document.getElementById('btnEdit').style.display = 'inline-block';
-        document.getElementById('btnSave').style.display = 'none';
-        alert("✅ บันทึกข้อมูลเรียบร้อย!");
-    }
-
-    window.onload = includeSidebar;
+    window.onload = () => { includeSidebar(); loadData(); };
 </script>
 </body>
 </html>
