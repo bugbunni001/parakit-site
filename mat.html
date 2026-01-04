@@ -11,13 +11,13 @@
         * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
         body { margin: 0; background: #f8fafc; padding-bottom: 100px; color: #334155; overflow-x: hidden; }
         
-        /* ===== SIDEBAR STYLES (แก้ปัญหาเมนูทับกัน) ===== */
+        /* ===== SIDEBAR STYLES ===== */
         .top-toggle { 
             position: fixed; top: 15px; left: 15px; z-index: 1400; 
             width: 45px; height: 45px; border-radius: 12px; border: none; 
             background: #1e293b; color: #fff; font-size: 20px; cursor: pointer; 
             display: flex; align-items: center; justify-content: center; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: 0.2s; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2); transition: 0.2s; 
         }
 
         .sidebar { 
@@ -27,8 +27,6 @@
         }
         .sidebar.show { transform: translateX(0); }
         .sidebar .sidebar-header { padding: 25px 20px; font-weight: 600; font-size: 20px; background: #0f172a; letter-spacing: 1px; }
-        
-        /* จัดการรายการเมนูให้เป็น Block ไม่ให้ซ้อนทับ */
         .sidebar .menu { display: flex; flex-direction: column; width: 100%; }
         
         .sidebar a, .sidebar .drop-btn { 
@@ -44,7 +42,6 @@
             background: #334155 !important; color: #ffffff !important; padding-left: 25px !important; 
         }
 
-        /* เมนูย่อย */
         .sidebar .sub { display: none; background: #0f172a; width: 100%; }
         .sidebar .item.open .sub { display: block; }
         .sidebar .sub a { padding-left: 45px !important; font-size: 14px; color: #94a3b8; }
@@ -66,8 +63,8 @@
         .header-section { text-align: center; margin-bottom: 30px; }
         .header-section h2 { color: #1e293b; font-size: 28px; }
 
-        /* ===== EDITOR SYSTEM (ก๊อปปี้ได้) ===== */
-        .editor-card { background: white; border-radius: 24px; padding: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); max-width: 1000px; margin: 0 auto; }
+        /* ===== EDITOR SYSTEM ===== */
+        .editor-card { background: white; border-radius: 24px; padding: 25px; box-shadow: 0 10px 40px rgba(0,0,0,0.08); max-width: 1000px; margin: 0 auto; }
         #editor-container { height: 600px; font-size: 16px; border: 1px solid #e2e8f0; border-radius: 0 0 12px 12px; }
         
         .locked .ql-toolbar { display: none; }
@@ -76,15 +73,21 @@
         .btn-group { display: flex; justify-content: center; gap: 15px; margin-top: 25px; }
         .btn { 
             padding: 12px 35px; border-radius: 12px; border: none; font-weight: 600; cursor: pointer; 
-            transition: 0.3s; font-size: 16px; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.3s ease; font-size: 16px; display: flex; align-items: center; gap: 8px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); /* เพิ่มเงาเริ่มต้น */
         }
+        
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.15); } /* เอฟเฟกต์ยกตัวและเงาเมื่อชี้ */
+        .btn:active { transform: translateY(0); }
+
         .btn-edit { background: #1e293b; color: white; }
         .btn-save { background: #22c55e; color: white; display: none; }
 
         /* MODAL */
         .modal { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.8); display: none; align-items: center; justify-content: center; z-index: 3000; backdrop-filter: blur(8px); }
-        .modal-content { background: white; padding: 30px; border-radius: 24px; text-align: center; width: 340px; }
-        .modal-content input { width: 100%; padding: 14px; margin: 20px 0; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 20px; text-align: center; outline: none; }
+        .modal-content { background: white; padding: 30px; border-radius: 24px; text-align: center; width: 340px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
+        .modal-content input { width: 100%; padding: 14px; margin: 20px 0; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 20px; text-align: center; outline: none; transition: 0.2s; }
+        .modal-content input:focus { border-color: #1e293b; box-shadow: 0 0 0 4px rgba(30, 41, 59, 0.1); }
 
         footer { text-align: center; padding: 40px 0; color: #94a3b8; font-size: 13px; }
     </style>
@@ -94,7 +97,7 @@
 <div id="pwdModal" class="modal">
     <div class="modal-content">
         <h3>🔑 ยืนยันรหัสผ่าน</h3>
-        <input type="password" id="pwdInput" placeholder="••••••••">
+        <input type="password" id="pwdInput" placeholder="••••••••" onkeydown="if(event.key==='Enter') checkPassword()">
         <button class="btn btn-edit" style="width: 100%; justify-content: center;" onclick="checkPassword()">ยืนยัน</button>
         <button onclick="closeModal()" style="margin-top:15px; background:none; border:none; color:gray; cursor:pointer;">ยกเลิก</button>
     </div>
@@ -107,8 +110,8 @@
 
 <main class="content">
     <div class="header-section">
-        <h2>📦 รหัสวัสดุ (Material Code)</h2>
-        <p>แก้ไขข้อมูล SAMSUNG & APPLE พร้อมจัดรูปแบบตัวอักษร</p>
+        <h2>📦 Material Code</h2>
+        <p>SAMSUNG & APPLE</p>
     </div>
 
     <div class="editor-card locked" id="editor-wrapper">
@@ -167,15 +170,22 @@
             .catch(err => console.error("Sidebar Load Error:", err));
     }
 
-    /* --- ระบบ Editor (Copy ได้) --- */
+    /* --- ระบบ Editor --- */
     var quill = new Quill('#editor-container', {
         modules: { toolbar: [[{header:[1,2,3,false]}],[{size:['small',false,'large','huge']}],['bold','italic','underline'],[{color:[]},{background:[]}],['clean']] },
         theme: 'snow',
         readOnly: true
     });
 
-    function openModal() { document.getElementById('pwdModal').style.display = 'flex'; document.getElementById('pwdInput').focus(); }
-    function closeModal() { document.getElementById('pwdModal').style.display = 'none'; document.getElementById('pwdInput').value = ''; }
+    function openModal() { 
+        document.getElementById('pwdModal').style.display = 'flex'; 
+        document.getElementById('pwdInput').focus(); 
+    }
+    
+    function closeModal() { 
+        document.getElementById('pwdModal').style.display = 'none'; 
+        document.getElementById('pwdInput').value = ''; 
+    }
 
     function checkPassword() {
         if (document.getElementById('pwdInput').value === "Bbb#%0285134679") {
@@ -184,7 +194,11 @@
             document.getElementById('btnEdit').style.display = 'none';
             document.getElementById('btnSave').style.display = 'inline-block';
             closeModal();
-        } else { alert("รหัสผ่านไม่ถูกต้อง!"); }
+        } else { 
+            alert("รหัสผ่านไม่ถูกต้อง!"); 
+            document.getElementById('pwdInput').value = '';
+            document.getElementById('pwdInput').focus();
+        }
     }
 
     function saveData() {
