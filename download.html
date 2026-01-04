@@ -263,57 +263,55 @@
 </footer>
 
 <script>
+    const PASS = "0285";
+
+    // 1. ตรวจสอบรหัสผ่าน
     function checkPass() {
-        const pass = document.getElementById("password").value;
-        if (pass === "0285") {
+        const input = document.getElementById("password");
+        if (input.value === PASS) {
             document.getElementById("lockPage").style.display = "none";
+            document.getElementById("mainContent").style.display = "block";
+            // เรียกโหลด Sidebar ทันทีที่ปลดล็อค
+            includeSidebar();
         } else {
-            document.getElementById("error").innerText = "รหัสไม่ถูกต้อง";
-            document.getElementById("password").value = "";
-            document.getElementById("password").focus();
+            document.getElementById("error").innerText = "❌ รหัสไม่ถูกต้อง กรุณาลองใหม่";
+            input.value = "";
+            input.focus();
         }
     }
 
+    // 2. ดึง Sidebar จากไฟล์ภายนอก
+    function includeSidebar() {
+        fetch('sidebar.html')
+            .then(response => {
+                if (!response.ok) throw new Error('ไม่พบไฟล์ sidebar.html');
+                return response.text();
+            })
+            .then(data => {
+                document.getElementById('sidebar').innerHTML = data;
+                restoreMenuState(); // คืนค่าสถานะการกางเมนูย่อย
+            })
+            .catch(err => {
+                console.warn("Sidebar Error:", err);
+            });
+    }
+
+    // 3. ควบคุมการแสดงผล Sidebar (Mobile)
     function toggleSidebar() {
         document.getElementById("sidebar").classList.toggle("show");
         document.getElementById("overlay").classList.toggle("show");
     }
 
+    // 4. ควบคุมเมนูย่อย (Dropdown)
     function toggleDrop(btn, id) {
         const item = btn.parentElement;
         item.classList.toggle("open");
-        localStorage.setItem("drop-" + id, item.classList.contains("open"));
+        localStorage.setItem("menu-" + id, item.classList.contains("open"));
     }
 
-    window.onload = function () {
-        document.getElementById("password").focus();
-        document.querySelectorAll(".item").forEach(i => {
-            const sub = i.querySelector(".sub");
-            if (sub && sub.id) {
-                const storedState = localStorage.getItem("drop-" + sub.id);
-                if (storedState === "true") {
-                    i.classList.add("open");
-                }
-            }
-        });
-    };
-    function includeSidebar() {
-        fetch('sidebar.html')
-            .then(response => {
-                if (!response.ok) throw new Error('Network response was not ok');
-                return response.text();
-            })
-            .then(data => {
-                document.getElementById('sidebar').innerHTML = data;
-                restoreMenuState(); 
-            })
-            .catch(err => {
-                console.warn("ไม่สามารถโหลด sidebar.html ได้ (อาจเพราะเปิดไฟล์โดยตรงในคอม):", err);
-                // ถ้าโหลดไม่ได้ ให้แสดงข้อความแจ้งเตือนใน Console
-            });
-    }
-
+    // 5. คืนค่าสถานะเมนูที่เคยเปิดไว้
     function restoreMenuState() {
+        // กู้คืนสถานะจาก LocalStorage เพื่อให้เมนูคงสถานะเดิมตอนเปลี่ยนหน้า
         ['credit', 'branch'].forEach(m => {
             if (localStorage.getItem('menu-' + m) === 'true') {
                 const menuEl = document.getElementById('menu-' + m);
@@ -321,7 +319,15 @@
             }
         });
     }
+
+    // รันเมื่อโหลดหน้าเว็บ
+    window.onload = function () {
+        document.getElementById("password").focus();
+        // โหลด Sidebar ทันทีที่หน้าเว็บพร้อม
+        includeSidebar(); 
+    }
 </script>
 
 </body>
 </html>
+
