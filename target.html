@@ -6,77 +6,131 @@
     <title>Target BigC Prachauthit</title>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
+        /* ===== SETUP & LAYOUT ===== */
         * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
-        body { margin: 0; background: #f1f5f9; padding-bottom: 80px; color: #334155; }
+        body { margin: 0; background: #f8fafc; padding-bottom: 100px; color: #334155; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
         
-        /* ===== SIDEBAR & MENU ===== */
-        .top-toggle { position: fixed; top: 15px; left: 15px; z-index: 1400; width: 45px; height: 45px; border-radius: 12px; border: none; background: #1e293b; color: #fff; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1); transition: all 0.2s; }
-        .top-toggle:hover { transform: scale(1.05); background: #334155; box-shadow: 0 6px 15px rgba(0,0,0,0.2); }
+        /* ===== SIDEBAR NAVIGATION (PREMIUM STYLE) ===== */
+        .top-toggle { 
+            position: fixed; top: 15px; left: 15px; z-index: 1400; 
+            width: 45px; height: 45px; border-radius: 12px; border: none; 
+            background: #1e293b; color: #fff; font-size: 20px; cursor: pointer; 
+            display: flex; align-items: center; justify-content: center; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: all 0.2s; 
+        }
+        .top-toggle:hover { transform: scale(1.05); background: #334155; }
 
-        .sidebar { position: fixed; top: 0; left: 0; width: 260px; height: 100vh; background: #1e293b; color: #fff; overflow-y: auto; transform: translateX(-260px); transition: all .3s ease; z-index: 2000; }
+        .sidebar { 
+            position: fixed; top: 0; left: 0; width: 260px; height: 100vh; 
+            background: #1e293b; color: #fff; overflow-y: auto; 
+            transform: translateX(-260px); transition: all .3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 2000; 
+        }
         .sidebar.show { transform: translateX(0); }
-        .sidebar-header { display: flex; align-items: center; gap: 12px; padding: 20px; background: #0f172a; font-weight: 600; font-size: 18px; }
-        .menu a, .menu .drop-btn { width: 100%; min-height: 55px; padding: 0 20px; background: none; border: none; color: #cbd5e1; text-align: left; font-size: 15px; cursor: pointer; display: flex; align-items: center; text-decoration: none; border-bottom: 1px solid rgba(255,255,255,.05); transition: 0.2s; }
-        .menu a:hover, .menu .drop-btn:hover { background: #334155; color: #fff; padding-left: 25px; }
+        .sidebar-header { 
+            display: flex; align-items: center; gap: 12px; padding: 20px; 
+            background: #0f172a; font-weight: 600; font-size: 18px; letter-spacing: 1px; 
+        }
+
+        .menu { display: flex; flex-direction: column; padding: 10px 0; }
+        .item { border-bottom: 1px solid rgba(255,255,255,.05); }
+
+        .menu a, .menu .drop-btn { 
+            width: 100%; min-height: 55px; padding: 0 20px; background: none; 
+            border: none; color: #cbd5e1; text-align: left; font-size: 15px; 
+            cursor: pointer; display: flex; align-items: center; text-decoration: none; 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+        }
+        
+        /* Hover Effect: เลื่อนขวา */
+        .menu a:hover, .menu .drop-btn:hover { 
+            background: #334155; color: #fff; padding-left: 35px; 
+        }
+
         .arrow { margin-left: auto; transition: .3s; font-size: 12px; opacity: 0.5; }
         .item.open .arrow { transform: rotate(90deg); }
+        
         .sub { display: none; background: #0f172a; }
         .item.open .sub { display: block; }
-        .sub a { min-height: 48px; padding-left: 45px; font-size: 14px; color: #94a3b8; }
-        .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: none; z-index: 1500; }
+        .sub a { 
+            min-height: 48px; padding-left: 45px; font-size: 14px; 
+            color: #94a3b8; border-top: 1px solid rgba(255,255,255,.03); transition: all 0.3s;
+        }
+        .sub a:hover { padding-left: 55px; color: #5bbf8a; }
+
+        .overlay { 
+            position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); 
+            display: none; backdrop-filter: blur(4px); z-index: 1500; 
+        }
         .overlay.show { display: block; }
 
         /* ===== MAIN CONTENT ===== */
-        .content { padding: 80px 15px 20px; transition: margin-left .3s; }
-        @media(min-width:769px) { .sidebar { transform: translateX(0); } .content { margin-left: 260px; padding-top: 40px; } .top-toggle { display: none; } }
+        .content { padding: 80px 20px; transition: margin-left .3s; }
+        @media(min-width:769px) { 
+            .sidebar { transform: translateX(0); } 
+            .content { margin-left: 260px; padding-top: 40px; } 
+            .top-toggle { display: none; } 
+        }
+
         .header-section { text-align: center; margin-bottom: 40px; }
+        .header-section h2 { color: #1e293b; margin-bottom: 5px; font-size: 28px; }
+        .header-section p { color: #64748b; font-size: 15px; display: flex; align-items: center; justify-content: center; }
         
-        /* BUTTONS WITH HOVER SHADOW */
-        .btn-group { display: flex; justify-content: center; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
+        /* BUTTONS */
+        .btn-group { display: flex; justify-content: center; gap: 12px; margin-top: 20px; flex-wrap: wrap; }
         button { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; }
         
-        .btn-edit { background: #1e293b; color: white; border: none; padding: 10px 25px; border-radius: 8px; font-weight: 500; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .btn-edit:hover { background: #334155; transform: translateY(-2px); box-shadow: 0 8px 15px rgba(30, 41, 59, 0.3); }
+        .btn-edit { background: #1e293b; color: white; border: none; padding: 12px 28px; border-radius: 12px; font-weight: 500; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .btn-edit:hover { background: #334155; transform: translateY(-2px); box-shadow: 0 8px 15px rgba(30, 41, 59, 0.2); }
 
-        .btn-save { background: #22c55e; color: white; border: none; padding: 10px 25px; border-radius: 8px; font-weight: 500; display: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .btn-save:hover { background: #16a34a; transform: translateY(-2px); box-shadow: 0 8px 15px rgba(34, 197, 94, 0.3); }
+        .btn-save { background: #22c55e; color: white; border: none; padding: 12px 28px; border-radius: 12px; font-weight: 500; display: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .btn-save:hover { background: #16a34a; transform: translateY(-2px); box-shadow: 0 8px 15px rgba(34, 197, 94, 0.2); }
 
-        .btn-reset { border: none; padding: 10px 25px; border-radius: 8px; background: #fee2e2; color: #dc2626; font-weight: 500; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        .btn-reset:hover { background: #fecaca; transform: translateY(-2px); box-shadow: 0 8px 15px rgba(220, 38, 38, 0.2); }
+        .btn-reset { border: none; padding: 12px 28px; border-radius: 12px; background: #fee2e2; color: #dc2626; font-weight: 500; }
+        .btn-reset:hover { background: #fecaca; transform: translateY(-2px); }
 
         /* INPUTS */
-        input[type="text"] { border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px 12px; width: 140px; text-align: right; font-size: 14px; background: #e2e8f0; color: #64748b; pointer-events: none; transition: all 0.2s; }
-        input.editable { background: #ffffff !important; color: #334155 !important; pointer-events: auto !important; border: 2px solid #3b82f6 !important; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); }
+        input[type="text"] { 
+            border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 6px 12px; 
+            width: 140px; text-align: right; font-size: 14px; background: #f8fafc; 
+            color: #64748b; pointer-events: none; transition: all 0.2s; 
+        }
+        input.editable { background: #ffffff !important; color: #334155 !important; pointer-events: auto !important; border: 2px solid #3b82f6 !important; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); }
         
         .total-black { background: #334155 !important; color: #fff !important; border: none !important; width: 140px; font-size: 16px; padding: 8px 15px !important; }
         .total-black.editable { background: #1e293b !important; border: 2px solid #60a5fa !important; }
 
         /* CARDS */
         .grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 25px; max-width: 1200px; margin: 0 auto; }
-        .target-card { background: #fff; border-radius: 24px; padding: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+        .target-card { background: #fff; border-radius: 24px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); transition: 0.3s; }
+        .target-card:hover { transform: translateY(-5px); box-shadow: 0 20px 30px rgba(0,0,0,0.08); }
+        
         .card-postpay { border-top: 6px solid #3b82f6; }
         .card-device { border-top: 6px solid #8b5cf6; }
-        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .unit-label { display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 14px; margin-top: 20px; margin-bottom: 10px; padding: 8px 12px; border-radius: 12px; }
+        
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .unit-label { display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 14px; margin-top: 20px; margin-bottom: 10px; padding: 10px 15px; border-radius: 12px; }
         .bg-label-blue { background: #eff6ff; border-left: 4px solid #3b82f6; }
         .bg-label-purple { background: #f5f3ff; border-left: 4px solid #8b5cf6; }
-        .staff-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-bottom: 1px solid #f8fafc; }
+        .staff-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border-bottom: 1px solid #f1f5f9; }
+        .staff-item span { color: #475569; font-weight: 400; }
 
         /* CUSTOM MODAL */
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.75); display: none; align-items: center; justify-content: center; z-index: 3000; padding: 20px; backdrop-filter: blur(4px); }
-        .modal-content { background: white; padding: 30px; border-radius: 24px; width: 100%; max-width: 350px; text-align: center; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); transform: scale(0.9); transition: 0.3s; }
-        .modal.show-modal .modal-content { transform: scale(1); }
-        .modal-content h3 { margin: 0 0 20px 0; color: #1e293b; }
-        .modal-content input { width: 100%; padding: 14px; margin-bottom: 20px; border: 2px solid #e2e8f0; border-radius: 12px; text-align: center; font-size: 20px; outline: none; transition: 0.2s; }
-        .modal-content input:focus { border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); }
-        .modal-btn { background: #1e293b; color: white; border: none; padding: 14px; border-radius: 12px; width: 100%; cursor: pointer; font-size: 16px; font-weight: 600; margin-bottom: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .modal-btn:hover { background: #0f172a; box-shadow: 0 6px 12px rgba(0,0,0,0.2); }
-        .modal-btn.cancel { background: #f1f5f9; color: #64748b; box-shadow: none; }
-        .modal-btn.cancel:hover { background: #e2e8f0; color: #334155; }
+        .modal { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.8); display: none; align-items: center; justify-content: center; z-index: 3000; padding: 20px; backdrop-filter: blur(8px); }
+        .modal-content { background: white; padding: 35px; border-radius: 28px; width: 100%; max-width: 380px; text-align: center; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); transform: translateY(20px); opacity: 0; transition: 0.3s; }
+        .modal.show-modal .modal-content { transform: translateY(0); opacity: 1; }
+        
+        .modal-content h3 { margin: 0 0 25px 0; color: #1e293b; font-size: 22px; }
+        .modal-content input { width: 100%; padding: 16px; margin-bottom: 20px; border: 2px solid #e2e8f0; border-radius: 15px; text-align: center; font-size: 22px; outline: none; transition: 0.2s; background: #f8fafc; }
+        .modal-content input:focus { border-color: #3b82f6; background: #fff; }
+        
+        .modal-btn { background: #1e293b; color: white; border: none; padding: 16px; border-radius: 15px; width: 100%; cursor: pointer; font-size: 16px; font-weight: 600; margin-bottom: 12px; }
+        .modal-btn:hover { background: #0f172a; }
+        .modal-btn.cancel { background: #f1f5f9; color: #64748b; }
 
-        .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; background: #ccc; margin-right: 8px; }
-        .online { background: #22c55e !important; box-shadow: 0 0 8px #22c55e; }
-        footer { text-align: center; margin-top: 50px; color: #94a3b8; font-size: 13px; }
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; background: #cbd5e1; margin-right: 10px; }
+        .online { background: #22c55e !important; box-shadow: 0 0 10px rgba(34, 197, 94, 0.5); }
+        
+        footer { text-align: center; padding: 30px 0; color: #94a3b8; font-size: 13px; border-top: 1px solid #f1f5f9; background: #fff; position: relative; bottom: -50px; }
     </style>
 </head>
 <body>
@@ -84,8 +138,8 @@
 <div id="pwdModal" class="modal">
     <div class="modal-content">
         <h3>🔑 ยืนยันรหัสผ่าน</h3>
-        <input type="password" id="pwdInput" placeholder="รหัสผ่าน..." autofocus>
-        <button class="modal-btn" onclick="checkPassword()">ยืนยัน (Enter)</button>
+        <input type="password" id="pwdInput" placeholder="••••••••" autofocus>
+        <button class="modal-btn" onclick="checkPassword()">ยืนยันความปลอดภัย</button>
         <button class="modal-btn cancel" onclick="closeModal()">ยกเลิก</button>
     </div>
 </div>
@@ -101,16 +155,16 @@
         <h2>Target BigC Prachauthit</h2>
         <p><span id="sync-status" class="status-dot"></span> <span id="status-text">โหมดดูอย่างเดียว</span></p>
         <div class="btn-group">
-            <button class="btn-edit" id="btn-edit" onclick="openModal('edit')">✏️ แก้ไขข้อมูล</button>
+            <button class="btn-edit" id="btn-edit" onclick="openModal('edit')">✏️ แก้ไขเป้าหมาย</button>
             <button class="btn-save" id="btn-save" onclick="saveAll()">💾 บันทึกข้อมูล (Enter)</button>
-            <button class="btn-reset" onclick="openModal('reset')">🔄 Reset</button>
+            <button class="btn-reset" onclick="openModal('reset')">🔄 รีเซ็ตข้อมูล</button>
         </div>
     </div>
 
     <div class="grid-container">
         <div class="target-card card-postpay">
             <div class="card-header">
-                <span style="font-weight: 600;">Postpay</span>
+                <span style="font-weight: 600; font-size: 18px;">Postpay</span>
                 <input type="text" class="total-black" id="postpay_total">
             </div>
             <div class="unit-label bg-label-blue" style="color:#1d4ed8;"><span>NEW</span><input type="text" id="pp_new_total"></div>
@@ -125,7 +179,7 @@
 
         <div class="target-card card-device">
             <div class="card-header">
-                <span style="font-weight: 600;">Device Total</span>
+                <span style="font-weight: 600; font-size: 18px;">Device Total</span>
                 <input type="text" class="total-black" style="background:#8b5cf6;" id="device_total">
             </div>
             <div class="unit-label bg-label-purple" style="color:#6d28d9;"><span>APPLE</span><input type="text" id="dev_apple_total"></div>
@@ -138,6 +192,7 @@
             <div class="staff-item"><span>กรทักษ์</span><input type="text" id="dev_korn_s"></div>
         </div>
     </div>
+    
     <footer>© 2026 Copy Right By Angerina Frog</footer>
 </main>
 
@@ -147,11 +202,11 @@
     const dot = document.getElementById('sync-status');
     const statusText = document.getElementById('status-text');
 
-    // 1. ฟังก์ชันดึง Sidebar (ต้องรันผ่าน Server เท่านั้นถึงจะเห็นเมนู)
+    // 1. Sidebar Management
     function includeSidebar() {
         fetch('sidebar.html')
             .then(response => {
-                if (!response.ok) throw new Error('Network response was not ok');
+                if (!response.ok) throw new Error('Not found');
                 return response.text();
             })
             .then(data => {
@@ -159,8 +214,7 @@
                 restoreMenuState(); 
             })
             .catch(err => {
-                console.warn("ไม่สามารถโหลด sidebar.html ได้ (อาจเพราะเปิดไฟล์โดยตรงในคอม):", err);
-                // ถ้าโหลดไม่ได้ ให้แสดงข้อความแจ้งเตือนใน Console
+                console.warn("Sidebar Load Fail: Running on local or missing file.");
             });
     }
 
@@ -173,10 +227,10 @@
         });
     }
 
-    // 2. ฟังก์ชันโหลดข้อมูลจาก Google Sheet
+    // 2. Data Synchronization
     function loadData() {
         dot.style.background = "orange";
-        statusText.innerText = "กำลังดึงข้อมูล...";
+        statusText.innerText = "กำลังดึงข้อมูลล่าสุด...";
         fetch(`${SCRIPT_URL}?action=read`)
             .then(res => res.json())
             .then(data => {
@@ -189,11 +243,11 @@
             })
             .catch(err => { 
                 dot.style.background = "red"; 
-                statusText.innerText = "ดึงข้อมูลล้มเหลว (เช็คอินเทอร์เน็ต)"; 
+                statusText.innerText = "การเชื่อมต่อผิดพลาด"; 
             });
     }
 
-    // --- ส่วนของฟังก์ชันอื่นๆ (OpenModal, Save, Toggle) ให้คงไว้เหมือนเดิม ---
+    // 3. Password & Modal
     function openModal(mode) {
         currentMode = mode;
         const modal = document.getElementById('pwdModal');
@@ -201,19 +255,31 @@
         setTimeout(() => modal.classList.add('show-modal'), 10);
         document.getElementById('pwdInput').focus();
     }
+    
     function closeModal() {
         const modal = document.getElementById('pwdModal');
         modal.classList.remove('show-modal');
-        setTimeout(() => { modal.style.display = 'none'; document.getElementById('pwdInput').value = ''; }, 200);
+        setTimeout(() => { 
+            modal.style.display = 'none'; 
+            document.getElementById('pwdInput').value = ''; 
+        }, 200);
     }
-    document.getElementById('pwdInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') checkPassword(); });
+
+    document.getElementById('pwdInput').addEventListener('keypress', (e) => { 
+        if (e.key === 'Enter') checkPassword(); 
+    });
+
     function checkPassword() {
         if (document.getElementById('pwdInput').value === "Bbb#%0285134679") {
             if (currentMode === 'edit') enableEdit();
             else if (currentMode === 'reset') resetSystem();
             closeModal();
-        } else { alert("รหัสผ่านไม่ถูกต้อง!"); }
+        } else { 
+            alert("รหัสผ่านไม่ถูกต้อง!"); 
+        }
     }
+
+    // 4. Edit & Save Functions
     function enableEdit() {
         document.querySelectorAll('input[type="text"]').forEach(input => {
             input.classList.add('editable');
@@ -221,31 +287,38 @@
         });
         document.getElementById('btn-edit').style.display = 'none';
         document.getElementById('btn-save').style.display = 'inline-block';
-        statusText.innerText = "🔓 กำลังแก้ไข... (กด Enter เพื่อบันทึก)";
+        statusText.innerText = "🔓 กำลังแก้ไข... (Enter เพื่อบันทึก)";
     }
+
     function saveAll() {
         const btnSave = document.getElementById('btn-save');
         if (btnSave.disabled) return;
+        
         btnSave.innerText = "⏳ กำลังบันทึก...";
         btnSave.disabled = true;
+        
         const inputs = document.querySelectorAll('input[type="text"]');
         let completed = 0;
+        
         inputs.forEach(input => {
             let rawVal = input.value.replace(/,/g, '');
             if (!isNaN(rawVal) && rawVal !== "") input.value = Number(rawVal).toLocaleString('en-US');
+            
             fetch(`${SCRIPT_URL}?id=${input.id}&val=${encodeURIComponent(input.value)}`)
                 .then(() => {
                     completed++;
                     if (completed === inputs.length) {
-                        alert("✅ บันทึกเรียบร้อย!");
+                        alert("✅ บันทึกข้อมูลเรียบร้อย!");
                         location.reload();
                     }
                 });
         });
     }
+
     function resetSystem() {
-        if (confirm("ยืนยัน Reset เป็น 0 ทั้งหมด?")) {
-            document.querySelectorAll('input[type="text"]').forEach(input => {
+        if (confirm("ยืนยันการล้างข้อมูลเป็น 0 ทั้งหมด?")) {
+            const inputs = document.querySelectorAll('input[type="text"]');
+            inputs.forEach(input => {
                 input.value = "0";
                 fetch(`${SCRIPT_URL}?id=${input.id}&val=0`);
             });
@@ -253,22 +326,22 @@
             location.reload();
         }
     }
+
     function toggleSidebar() {
         document.getElementById("sidebar").classList.toggle("show");
         document.getElementById("overlay").classList.toggle("show");
     }
+
     function toggleDrop(btn, id) {
         const item = btn.parentElement;
         item.classList.toggle("open");
         localStorage.setItem('menu-' + id, item.classList.contains("open"));
     }
 
-    // สั่งรันเมื่อโหลดหน้าเว็บ
     window.onload = function() {
-        includeSidebar(); // โหลดเมนู
-        loadData();       // โหลดข้อมูลจาก Sheet
+        includeSidebar(); 
+        loadData();       
     }
 </script>
 </body>
 </html>
-
