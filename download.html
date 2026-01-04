@@ -4,233 +4,51 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>บันทึกยอดขายรายวัน & ภารกิจประจำเดือน</title>
-
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
-
     <style>
         /* ===== SETUP & LAYOUT ===== */
-        * { 
-            box-sizing: border-box; 
-            font-family: 'Kanit', sans-serif !important; 
-        }
-        
-        body {
-            margin: 0;
-            background: #f8fafc;
-            padding-bottom: 100px;
-            color: #334155;
-            -webkit-font-smoothing: antialiased;
-        }
+        * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
+        body { margin: 0; background: #f8fafc; padding-bottom: 100px; color: #334155; -webkit-font-smoothing: antialiased; }
 
         /* ===== LOCK FULL PAGE ===== */
-        .lock-page {
-            position: fixed;
-            inset: 0;
-            background: #1e293b;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-        }
-        .lock-box {
-            background: #ffffff;
-            padding: 40px 30px;
-            border-radius: 24px;
-            text-align: center;
-            width: 320px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-        }
-        .lock-box h3 { 
-            margin: 0 0 20px 0; 
-            color: #1e293b;
-            font-weight: 600;
-        }
-        .lock-box input {
-            width: 100%;
-            padding: 12px 16px;
-            font-size: 18px;
-            margin-bottom: 15px;
-            border: 1.5px solid #e2e8f0;
-            border-radius: 12px;
-            text-align: center;
-            letter-spacing: 4px;
-            outline: none;
-            transition: 0.3s;
-        }
+        .lock-page { position: fixed; inset: 0; background: #1e293b; display: flex; align-items: center; justify-content: center; z-index: 9999; }
+        .lock-box { background: #ffffff; padding: 40px 30px; border-radius: 24px; text-align: center; width: 320px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
+        .lock-box h3 { margin: 0 0 20px 0; color: #1e293b; font-weight: 600; }
+        .lock-box input { width: 100%; padding: 12px 16px; font-size: 18px; margin-bottom: 15px; border: 1.5px solid #e2e8f0; border-radius: 12px; text-align: center; letter-spacing: 4px; outline: none; transition: 0.3s; }
         .lock-box input:focus { border-color: #5bbf8a; box-shadow: 0 0 0 4px rgba(91, 191, 138, 0.1); }
-        .lock-box button {
-            width: 100%;
-            padding: 14px;
-            background: #5bbf8a;
-            color: white;
-            border: none;
-            font-size: 16px;
-            font-weight: 600;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: 0.3s;
-        }
+        .lock-box button { width: 100%; padding: 14px; background: #5bbf8a; color: white; border: none; font-size: 16px; font-weight: 600; border-radius: 12px; cursor: pointer; transition: 0.3s; }
         .lock-box button:hover { background: #4eab7a; transform: translateY(-2px); }
         .error { color: #ef4444; font-size: 14px; margin-top: 10px; font-weight: 400; }
 
         /* ===== SIDEBAR NAVIGATION ===== */
-        .top-toggle {
-            position: fixed;
-            top: 15px;
-            left: 15px;
-            z-index: 1400;
-            width: 45px;
-            height: 45px;
-            border-radius: 12px;
-            border: none;
-            background: #1e293b;
-            color: #fff;
-            font-size: 20px;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
+        .top-toggle { position: fixed; top: 15px; left: 15px; z-index: 1400; width: 45px; height: 45px; border-radius: 12px; border: none; background: #1e293b; color: #fff; font-size: 20px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; }
         @media(min-width:769px) { .top-toggle { display: none; } }
-
-        .sidebar {
-            position: fixed;
-            top: 0; left: 0;
-            width: 260px;
-            height: 100vh;
-            background: #1e293b;
-            color: #fff;
-            overflow-y: auto;
-            transform: translateX(-260px);
-            transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 2000;
-        }
+        .sidebar { position: fixed; top: 0; left: 0; width: 260px; height: 100vh; background: #1e293b; color: #fff; overflow-y: auto; transform: translateX(-260px); transition: all .3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 2000; }
         .sidebar.show { transform: translateX(0); }
-
-        .sidebar-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 20px;
-            background: #0f172a;
-            font-weight: 600;
-            font-size: 18px;
-        }
-
+        .sidebar-header { display: flex; align-items: center; gap: 12px; padding: 20px; background: #0f172a; font-weight: 600; font-size: 18px; }
         .menu { display: flex; flex-direction: column; padding: 10px 0; }
         .item { border-bottom: 1px solid rgba(255,255,255,.05); }
-
-        /* ปรับปรุงตรงนี้ให้เมนูขยับ (Hover Effect) */
-        .menu a, .menu .drop-btn {
-            width: 100%;
-            min-height: 55px;
-            padding: 0 20px;
-            background: none;
-            border: none;
-            color: #cbd5e1;
-            text-align: left;
-            font-size: 15px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            text-decoration: none;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .menu a:hover, .menu .drop-btn:hover { 
-            background: #334155; 
-            color: #fff; 
-            padding-left: 35px; /* ทำให้เมนูขยับไปทางขวาเวลาชี้ */
-        }
-
+        .menu a, .menu .drop-btn { width: 100%; min-height: 55px; padding: 0 20px; background: none; border: none; color: #cbd5e1; text-align: left; font-size: 15px; cursor: pointer; display: flex; align-items: center; text-decoration: none; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .menu a:hover, .menu .drop-btn:hover { background: #334155; color: #fff; padding-left: 35px; }
         .arrow { margin-left: auto; font-size: 12px; transition: .3s; opacity: 0.5; }
         .item.open .arrow { transform: rotate(90deg); }
-
         .sub { display: none; background: #0f172a; }
         .item.open .sub { display: block; }
-        .sub a { 
-            min-height: 48px; 
-            padding-left: 45px; 
-            font-size: 14px; 
-            color: #94a3b8; 
-            border-top: 1px solid rgba(255,255,255,.03); 
-        }
+        .sub a { min-height: 48px; padding-left: 45px; font-size: 14px; color: #94a3b8; border-top: 1px solid rgba(255,255,255,.03); }
         .sub a:hover { padding-left: 55px; color: #5bbf8a; }
 
         /* ===== MAIN CONTENT AREA ===== */
-        .content {
-            padding: 80px 20px;
-            transition: margin-left .3s;
-            display: none; /* ซ่อนไว้รอรหัสผ่าน */
-        }
-
-        @media(min-width:769px) {
-            .sidebar { transform: translateX(0); }
-            .content { margin-left: 260px; }
-        }
+        .content { padding: 80px 20px; transition: margin-left .3s; display: none; }
+        @media(min-width:769px) { .sidebar { transform: translateX(0); } .content { margin-left: 260px; } }
 
         /* ===== BUTTON MENU ===== */
-        .container {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-            gap: 20px;
-            max-width: 1000px;
-            margin: 20px auto;
-        }
+        .container { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; max-width: 1000px; margin: 20px auto; }
+        .btn { background: #fff; color: #1e293b; padding: 24px 20px; border-radius: 20px; text-align: center; font-size: 16px; text-decoration: none; transition: all 0.3s ease; font-weight: 600; border: 1px solid #f1f5f9; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; }
+        .btn:hover { background: #5bbf8a; color: #fff; box-shadow: 0 20px 25px -5px rgba(91, 191, 138, 0.3); transform: translateY(-5px); border-color: #5bbf8a; }
 
-        .btn {
-            background: #fff;
-            color: #1e293b;
-            padding: 24px 20px;
-            border-radius: 20px;
-            text-align: center;
-            font-size: 16px;
-            text-decoration: none;
-            transition: all 0.3s ease;
-            font-weight: 600;
-            border: 1px solid #f1f5f9;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .btn:hover {
-            background: #5bbf8a;
-            color: #fff;
-            box-shadow: 0 20px 25px -5px rgba(91, 191, 138, 0.3);
-            transform: translateY(-5px);
-            border-color: #5bbf8a;
-        }
-
-        /* ===== FOOTER ===== */
-        footer {
-            width: 100%;
-            text-align: center;
-            padding: 20px 0;
-            background: #fff;
-            color: #94a3b8;
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            font-size: 12px;
-            box-shadow: 0 -1px 10px rgba(0,0,0,0.02);
-            z-index: 1100;
-            border-top: 1px solid #f1f5f9;
-        }
-
-        .overlay { 
-            position: fixed; 
-            inset: 0; 
-            background: rgba(15, 23, 42, 0.6); 
-            display: none; 
-            backdrop-filter: blur(4px);
-            z-index: 1500; 
-        }
+        /* ===== FOOTER & OVERLAY ===== */
+        footer { width: 100%; text-align: center; padding: 20px 0; background: #fff; color: #94a3b8; position: fixed; bottom: 0; left: 0; font-size: 12px; z-index: 1100; border-top: 1px solid #f1f5f9; }
+        .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: none; backdrop-filter: blur(4px); z-index: 1500; }
         .overlay.show { display: block; }
     </style>
 </head>
@@ -249,8 +67,7 @@
 <button class="top-toggle" onclick="toggleSidebar()">☰</button>
 <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 
-<aside class="sidebar" id="sidebar">
-</aside>
+<aside class="sidebar" id="sidebar"></aside>
 
 <div class="content" id="mainContent">
     <div class="container">
@@ -269,9 +86,7 @@
     </div>
 </div>
 
-<footer>
-    © 2026 Copy Right By Angerina Frog
-</footer>
+<footer>© 2026 Copy Right By Angerina Frog</footer>
 
 <script>
     const PASS = "0285";
@@ -282,7 +97,7 @@
         if (input.value === PASS) {
             document.getElementById("lockPage").style.display = "none";
             document.getElementById("mainContent").style.display = "block";
-            // เรียกโหลด Sidebar ทันทีที่ปลดล็อค
+            // เรียกดึง Sidebar ทันทีที่ปลดล็อคสำเร็จ
             includeSidebar();
         } else {
             document.getElementById("error").innerText = "❌ รหัสไม่ถูกต้อง กรุณาลองใหม่";
@@ -291,9 +106,12 @@
         }
     }
 
-    // 2. ดึง Sidebar จากไฟล์ภายนอก
+    // 2. ดึง Sidebar จากไฟล์ภายนอก พร้อมระบบ Timestamp กัน Cache
     function includeSidebar() {
-        fetch('sidebar.html')
+        // สร้างเลข Version จากเวลาปัจจุบัน (มิลลิวินาที) เพื่อบังคับดึงไฟล์ใหม่เสมอ
+        const version = new Date().getTime();
+        
+        fetch(`sidebar.html?v=${version}`)
             .then(response => {
                 if (!response.ok) throw new Error('ไม่พบไฟล์ sidebar.html');
                 return response.text();
@@ -314,17 +132,13 @@
     }
 
     // 4. ควบคุมเมนูย่อย (Dropdown)
-   // ฟังก์ชันใหม่ที่รองรับการคลิกจาก sidebar.html
-function toggleDrop(btn, id) {
-    // กางเมนูย่อย
-    const item = btn.parentElement;
-    item.classList.toggle("open");
-    
-    // บันทึกสถานะไว้ในเครื่อง (เพื่อให้เวลาเปลี่ยนหน้า เมนูยังกางอยู่เหมือนเดิม)
-    if (id) {
-        localStorage.setItem('menu-' + id, item.classList.contains("open"));
+    function toggleDrop(btn, id) {
+        const item = btn.parentElement;
+        const isOpen = item.classList.toggle("open");
+        if (id) {
+            localStorage.setItem('menu-' + id, isOpen);
+        }
     }
-}
 
     // 5. คืนค่าสถานะเมนูที่เคยเปิดไว้
     function restoreMenuState() {
@@ -339,31 +153,10 @@ function toggleDrop(btn, id) {
     // รันเมื่อโหลดหน้าเว็บ
     window.onload = function () {
         document.getElementById("password").focus();
-        // โหลด Sidebar รอไว้เลย (แต่จะมองไม่เห็นถ้ายังไม่ปลดล็อค)
+        // โหลด Sidebar รอไว้แบบ Anti-Cache
         includeSidebar(); 
     }
-    function restoreMenuState() {
-    // เช็คว่าเคยเปิดเมนูไหนค้างไว้ไหม
-    ['credit', 'branch'].forEach(m => {
-        if (localStorage.getItem('menu-' + m) === 'true') {
-            // ถ้าใน sidebar.html มี id="menu-branch" หรือ id="menu-credit" มันจะกางให้อัตโนมัติ
-            const menuEl = document.getElementById('menu-' + m);
-            if (menuEl) menuEl.classList.add('open');
-        }
-    });
-}
-
-// แก้ไขฟังก์ชันโหลด sidebar ให้เรียกใช้ restoreMenuState ด้วย
-function includeSidebar() {
-    fetch('sidebar.html')
-        .then(response => response.text())
-        .then(data => {
-            document.getElementById('sidebar').innerHTML = data;
-            restoreMenuState(); // เพิ่มบรรทัดนี้เข้าไปครับ
-        });
-}
 </script>
 
 </body>
 </html>
-
