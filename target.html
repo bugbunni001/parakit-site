@@ -34,6 +34,7 @@
         .menu { display: flex; flex-direction: column; padding: 10px 0; }
         .item { border-bottom: 1px solid rgba(255,255,255,.05); }
 
+        /* แก้ไขส่วน Hover ของเมนูหลักให้เป็นสีเขียว */
         .menu a, .menu .drop-btn { 
             width: 100%; min-height: 55px; padding: 0 20px; background: none; 
             border: none; color: #cbd5e1; text-align: left; font-size: 15px; 
@@ -41,13 +42,14 @@
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
         }
         
-        /* Hover Effect: เลื่อนขวา */
+        /* Hover Effect: เปลี่ยนสีตัวหนังสือเป็นสีเขียว และขยับขวา */
         .menu a:hover, .menu .drop-btn:hover { 
-            background: #334155; color: #fff; padding-left: 35px; 
+            background: #273142; color: #5bbf8a; padding-left: 35px; 
         }
 
         .arrow { margin-left: auto; transition: .3s; font-size: 12px; opacity: 0.5; }
         .item.open .arrow { transform: rotate(90deg); }
+        .item.open .drop-btn { color: #5bbf8a; } /* เมื่อเมนูเปิดอยู่ให้ตัวหนังสือเป็นสีเขียวค้างไว้ */
         
         .sub { display: none; background: #0f172a; }
         .item.open .sub { display: block; }
@@ -148,7 +150,7 @@
 <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 
 <aside class="sidebar" id="sidebar">
-    </aside>
+</aside>
 
 <main class="content">
     <div class="header-section">
@@ -202,7 +204,6 @@
     const dot = document.getElementById('sync-status');
     const statusText = document.getElementById('status-text');
 
-    // 1. Sidebar Management
     function includeSidebar() {
         fetch('sidebar.html')
             .then(response => {
@@ -214,7 +215,7 @@
                 restoreMenuState(); 
             })
             .catch(err => {
-                console.warn("Sidebar Load Fail: Running on local or missing file.");
+                console.warn("Sidebar Load Fail");
             });
     }
 
@@ -227,7 +228,6 @@
         });
     }
 
-    // 2. Data Synchronization
     function loadData() {
         dot.style.background = "orange";
         statusText.innerText = "กำลังดึงข้อมูลล่าสุด...";
@@ -247,7 +247,6 @@
             });
     }
 
-    // 3. Password & Modal
     function openModal(mode) {
         currentMode = mode;
         const modal = document.getElementById('pwdModal');
@@ -279,7 +278,6 @@
         }
     }
 
-    // 4. Edit & Save Functions
     function enableEdit() {
         document.querySelectorAll('input[type="text"]').forEach(input => {
             input.classList.add('editable');
@@ -293,17 +291,13 @@
     function saveAll() {
         const btnSave = document.getElementById('btn-save');
         if (btnSave.disabled) return;
-        
         btnSave.innerText = "⏳ กำลังบันทึก...";
         btnSave.disabled = true;
-        
         const inputs = document.querySelectorAll('input[type="text"]');
         let completed = 0;
-        
         inputs.forEach(input => {
             let rawVal = input.value.replace(/,/g, '');
             if (!isNaN(rawVal) && rawVal !== "") input.value = Number(rawVal).toLocaleString('en-US');
-            
             fetch(`${SCRIPT_URL}?id=${input.id}&val=${encodeURIComponent(input.value)}`)
                 .then(() => {
                     completed++;
