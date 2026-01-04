@@ -282,11 +282,17 @@
     }
 
     // 3. ควบคุมเมนูย่อย (Dropdown)
-    function toggleDrop(btn, id) {
-        const item = btn.parentElement;
-        item.classList.toggle("open");
-        localStorage.setItem("menu-" + id, item.classList.contains("open"));
+    // ฟังก์ชันใหม่ที่รองรับการคลิกจาก sidebar.html
+function toggleDrop(btn, id) {
+    // กางเมนูย่อย
+    const item = btn.parentElement;
+    item.classList.toggle("open");
+    
+    // บันทึกสถานะไว้ในเครื่อง (เพื่อให้เวลาเปลี่ยนหน้า เมนูยังกางอยู่เหมือนเดิม)
+    if (id) {
+        localStorage.setItem('menu-' + id, item.classList.contains("open"));
     }
+}
 
     // 4. คืนค่าสถานะเมนูที่เคยเปิดไว้
     function restoreMenuState() {
@@ -302,7 +308,28 @@
     window.onload = function () {
         includeSidebar(); 
     }
+    function restoreMenuState() {
+    // เช็คว่าเคยเปิดเมนูไหนค้างไว้ไหม
+    ['credit', 'branch'].forEach(m => {
+        if (localStorage.getItem('menu-' + m) === 'true') {
+            // ถ้าใน sidebar.html มี id="menu-branch" หรือ id="menu-credit" มันจะกางให้อัตโนมัติ
+            const menuEl = document.getElementById('menu-' + m);
+            if (menuEl) menuEl.classList.add('open');
+        }
+    });
+}
+
+// แก้ไขฟังก์ชันโหลด sidebar ให้เรียกใช้ restoreMenuState ด้วย
+function includeSidebar() {
+    fetch('sidebar.html')
+        .then(response => response.text())
+        .then(data => {
+            document.getElementById('sidebar').innerHTML = data;
+            restoreMenuState(); // เพิ่มบรรทัดนี้เข้าไปครับ
+        });
+}
 </script>
 
 </body>
 </html>
+
