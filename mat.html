@@ -11,7 +11,7 @@
         * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
         body { margin: 0; background: #f8fafc; padding-bottom: 100px; color: #334155; overflow-x: hidden; }
         
-        /* ===== SIDEBAR STYLES ===== */
+        /* ===== SIDEBAR STYLES (แก้ปัญหาเมนูทับกัน) ===== */
         .top-toggle { 
             position: fixed; top: 15px; left: 15px; z-index: 1400; 
             width: 45px; height: 45px; border-radius: 12px; border: none; 
@@ -28,14 +28,29 @@
         .sidebar.show { transform: translateX(0); }
         .sidebar .sidebar-header { padding: 25px 20px; font-weight: 600; font-size: 20px; background: #0f172a; letter-spacing: 1px; }
         
-        /* Hover Sidebar Effect */
-        .sidebar a:hover, .sidebar .drop-btn:hover { 
-            background: #334155 !important; color: #ffffff !important; padding-left: 30px !important; 
+        /* จัดการรายการเมนูให้เป็น Block ไม่ให้ซ้อนทับ */
+        .sidebar .menu { display: flex; flex-direction: column; width: 100%; }
+        
+        .sidebar a, .sidebar .drop-btn { 
+            width: 100%; min-height: 50px; padding: 12px 20px; 
+            background: none; border: none; color: #cbd5e1; 
+            text-align: left; font-size: 15px; cursor: pointer; 
+            display: flex; align-items: center; text-decoration: none; 
+            transition: all 0.2s; border-bottom: 1px solid rgba(255,255,255,0.03);
+            white-space: normal; gap: 10px; position: relative;
         }
 
-        .sidebar .sub { display: none; background: #0f172a; overflow: hidden; }
+        .sidebar a:hover, .sidebar .drop-btn:hover { 
+            background: #334155 !important; color: #ffffff !important; padding-left: 25px !important; 
+        }
+
+        /* เมนูย่อย */
+        .sidebar .sub { display: none; background: #0f172a; width: 100%; }
         .sidebar .item.open .sub { display: block; }
-        .sidebar .item.open .arrow { transform: rotate(90deg); }
+        .sidebar .sub a { padding-left: 45px !important; font-size: 14px; color: #94a3b8; }
+        
+        .arrow { margin-left: auto; font-size: 10px; transition: 0.3s; }
+        .item.open .arrow { transform: rotate(90deg); }
 
         .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: none; backdrop-filter: blur(4px); z-index: 1500; }
         .overlay.show { display: block; }
@@ -51,32 +66,25 @@
         .header-section { text-align: center; margin-bottom: 30px; }
         .header-section h2 { color: #1e293b; font-size: 28px; }
 
-        /* ===== EDITOR & LOCK SYSTEM (FIXED) ===== */
+        /* ===== EDITOR SYSTEM (ก๊อปปี้ได้) ===== */
         .editor-card { background: white; border-radius: 24px; padding: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); max-width: 1000px; margin: 0 auto; }
         #editor-container { height: 600px; font-size: 16px; border: 1px solid #e2e8f0; border-radius: 0 0 12px 12px; }
         
-        /* แก้ไขตรงนี้: ให้ลากคลุมได้แต่ห้ามพิมพ์ (Locked State) */
         .locked .ql-toolbar { display: none; }
-        .locked #editor-container { border-radius: 12px; border-top: 1px solid #e2e8f0; background: #ffffff; cursor: text; }
-        .locked .ql-editor { color: #334155; }
+        .locked #editor-container { border-radius: 12px; border-top: 1px solid #e2e8f0; background: #ffffff; }
 
         .btn-group { display: flex; justify-content: center; gap: 15px; margin-top: 25px; }
         .btn { 
-            padding: 12px 35px; border-radius: 12px; border: none; 
-            font-weight: 600; cursor: pointer; transition: all 0.3s; 
-            font-size: 16px; display: flex; align-items: center; gap: 8px; 
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 12px 35px; border-radius: 12px; border: none; font-weight: 600; cursor: pointer; 
+            transition: 0.3s; font-size: 16px; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
-        
         .btn-edit { background: #1e293b; color: white; }
-        .btn-edit:hover { background: #334155; transform: scale(1.05); }
         .btn-save { background: #22c55e; color: white; display: none; }
-        .btn-save:hover { background: #16a34a; transform: scale(1.05); }
 
         /* MODAL */
         .modal { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.8); display: none; align-items: center; justify-content: center; z-index: 3000; backdrop-filter: blur(8px); }
         .modal-content { background: white; padding: 30px; border-radius: 24px; text-align: center; width: 340px; }
-        .modal-content input { width: 100%; padding: 14px; margin: 20px 0; border: 2px solid #e2e8f0; border-radius: 12px; text-align: center; font-size: 20px; outline: none; }
+        .modal-content input { width: 100%; padding: 14px; margin: 20px 0; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 20px; text-align: center; outline: none; }
 
         footer { text-align: center; padding: 40px 0; color: #94a3b8; font-size: 13px; }
     </style>
@@ -88,7 +96,7 @@
         <h3>🔑 ยืนยันรหัสผ่าน</h3>
         <input type="password" id="pwdInput" placeholder="••••••••">
         <button class="btn btn-edit" style="width: 100%; justify-content: center;" onclick="checkPassword()">ยืนยัน</button>
-        <button onclick="closeModal()" style="margin-top:15px; background:none; border:none; color:gray; cursor:pointer; font-weight: 500;">ยกเลิก</button>
+        <button onclick="closeModal()" style="margin-top:15px; background:none; border:none; color:gray; cursor:pointer;">ยกเลิก</button>
     </div>
 </div>
 
@@ -99,8 +107,8 @@
 
 <main class="content">
     <div class="header-section">
-        <h2>📱 Material Code</h2>
-        <p>SAMSUNG & APPLE</p>
+        <h2>📦 รหัสวัสดุ (Material Code)</h2>
+        <p>แก้ไขข้อมูล SAMSUNG & APPLE พร้อมจัดรูปแบบตัวอักษร</p>
     </div>
 
     <div class="editor-card locked" id="editor-wrapper">
@@ -113,6 +121,7 @@
             <h1><strong>APPLE</strong></h1>
             <p><strong>iPhone 16 (128)</strong></p>
             <p><span style="color: #000000;">BLACK</span> = <strong>3000112510</strong></p>
+            <p><em>(คลุมดำข้อความเพื่อปรับสไตล์ หนา/เอียง/ขนาด ได้ที่แถบเครื่องมือด้านบน)</em></p>
         </div>
         
         <div class="btn-group">
@@ -125,16 +134,14 @@
 
 <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 <script>
-    /* --- ระบบ Sidebar & เมนูจำค่า (FIXED) --- */
-    
+    /* --- ระบบ Sidebar & จำสถานะ --- */
     function toggleSidebar() {
         document.getElementById("sidebar").classList.toggle("show");
         document.getElementById("overlay").classList.toggle("show");
     }
 
-    // ฟังก์ชันนี้จะถูกเรียกจากใน sidebar.html
     function toggleDrop(btn, id) {
-        const item = btn.parentElement;
+        const item = btn.closest('.item');
         const isOpen = item.classList.toggle("open");
         if (id) {
             localStorage.setItem('menu-' + id, isOpen ? 'true' : 'false');
@@ -142,15 +149,10 @@
     }
 
     function restoreMenuState() {
-        // รายการ ID เมนูที่ต้องเช็ค
         ['credit', 'branch'].forEach(id => {
-            const savedState = localStorage.getItem('menu-' + id);
-            if (savedState === 'true') {
-                // หา element ใน sidebar (ต้องหาหลังจาก fetch sidebar เสร็จแล้ว)
-                const menuElement = document.getElementById('menu-' + id);
-                if (menuElement) {
-                    menuElement.classList.add('open');
-                }
+            if (localStorage.getItem('menu-' + id) === 'true') {
+                const el = document.getElementById('menu-' + id);
+                if (el) el.classList.add('open');
             }
         });
     }
@@ -160,17 +162,16 @@
             .then(res => res.text())
             .then(data => { 
                 document.getElementById('sidebar').innerHTML = data; 
-                restoreMenuState(); // คืนค่าทันทีที่โหลด sidebar เสร็จ
+                restoreMenuState(); 
             })
-            .catch(err => console.error("Error loading sidebar:", err));
+            .catch(err => console.error("Sidebar Load Error:", err));
     }
 
-    /* --- ระบบ Editor (FIXED: ให้ Copy ได้) --- */
-
+    /* --- ระบบ Editor (Copy ได้) --- */
     var quill = new Quill('#editor-container', {
         modules: { toolbar: [[{header:[1,2,3,false]}],[{size:['small',false,'large','huge']}],['bold','italic','underline'],[{color:[]},{background:[]}],['clean']] },
         theme: 'snow',
-        readOnly: true // เริ่มต้นให้ลากคลุมได้อย่างเดียว แก้ไขไม่ได้
+        readOnly: true
     });
 
     function openModal() { document.getElementById('pwdModal').style.display = 'flex'; document.getElementById('pwdInput').focus(); }
@@ -179,7 +180,7 @@
     function checkPassword() {
         if (document.getElementById('pwdInput').value === "Bbb#%0285134679") {
             document.getElementById('editor-wrapper').classList.remove('locked');
-            quill.enable(true); // อนุญาตให้พิมพ์แก้ไข
+            quill.enable(true);
             document.getElementById('btnEdit').style.display = 'none';
             document.getElementById('btnSave').style.display = 'inline-block';
             closeModal();
@@ -187,11 +188,11 @@
     }
 
     function saveData() {
-        quill.enable(false); // กลับไปโหมดอ่าน/ก๊อปปี้อย่างเดียว
+        quill.enable(false);
         document.getElementById('editor-wrapper').classList.add('locked');
         document.getElementById('btnEdit').style.display = 'inline-block';
         document.getElementById('btnSave').style.display = 'none';
-        alert("✅ บันทึกรูปแบบข้อมูลเรียบร้อย!");
+        alert("✅ บันทึกข้อมูลเรียบร้อย!");
     }
 
     window.onload = includeSidebar;
