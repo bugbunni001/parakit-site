@@ -11,33 +11,38 @@
         * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
         body { margin: 0; background: #f8fafc; padding-bottom: 100px; color: #334155; overflow-x: hidden; }
         
-        /* SIDEBAR MOTION & STYLES */
+        /* SIDEBAR (สไตล์เดิมของคุณ) */
         .sidebar { 
             position: fixed; top: 0; left: 0; width: 260px; height: 100vh; 
             background: #1e293b; color: #fff; overflow-y: auto; 
             transform: translateX(-260px); 
-            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 2000; 
         }
         .sidebar.show { transform: translateX(0); }
-        .sidebar a, .sidebar .drop-btn { 
-            width: 100%; min-height: 50px; padding: 12px 20px; 
-            background: none; border: none; color: #cbd5e1; 
-            text-align: left; font-size: 15px; cursor: pointer; 
-            display: flex; align-items: center; text-decoration: none; 
-            transition: all 0.3s ease; border-bottom: 1px solid rgba(255,255,255,0.03); gap: 10px;
+        .sidebar-header { display: flex; align-items: center; gap: 12px; padding: 20px; background: #0f172a; font-weight: 600; font-size: 18px; }
+        
+        .menu { display: flex; flex-direction: column; padding: 10px 0; }
+        .item { border-bottom: 1px solid rgba(255,255,255,.05); }
+        .menu a, .menu .drop-btn { 
+            width: 100%; min-height: 55px; padding: 0 20px; background: none; 
+            border: none; color: #cbd5e1; text-align: left; font-size: 15px; 
+            cursor: pointer; display: flex; align-items: center; text-decoration: none; 
+            transition: all 0.3s;
         }
-        .sidebar a:hover, .sidebar .drop-btn:hover { 
-            background: rgba(51, 65, 85, 0.8) !important; color: #38bdf8 !important; padding-left: 28px !important;
-        }
-        .sidebar .sub { max-height: 0; overflow: hidden; background: #0f172a; transition: max-height 0.4s ease-out; }
-        .item.open .sub { max-height: 500px; }
-        .arrow { margin-left: auto; font-size: 10px; transition: transform 0.3s; }
-        .item.open .arrow { transform: rotate(90deg); color: #38bdf8; }
+        .menu a:hover, .menu .drop-btn:hover { background: #334155; color: #fff; padding-left: 35px; }
+        
+        .sub { display: none; background: #0f172a; }
+        .item.open .sub { display: block; }
+        .sub a { min-height: 48px; padding-left: 45px; font-size: 14px; color: #94a3b8; border-top: 1px solid rgba(255,255,255,.03); }
+        .sub a:hover { padding-left: 55px; color: #5bbf8a; }
+
+        .arrow { margin-left: auto; transition: .3s; font-size: 12px; opacity: 0.5; }
+        .item.open .arrow { transform: rotate(90deg); }
 
         .top-toggle { position: fixed; top: 15px; left: 15px; z-index: 1400; width: 45px; height: 45px; border-radius: 12px; border: none; background: #1e293b; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0); display: none; z-index: 1500; transition: 0.3s; }
-        .overlay.show { display: block; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); }
+        .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: none; z-index: 1500; backdrop-filter: blur(4px); }
+        .overlay.show { display: block; }
 
         /* MAIN CONTENT */
         .content { padding: 80px 20px; transition: margin-left .3s; }
@@ -53,12 +58,11 @@
         .btn { padding: 12px 35px; border-radius: 12px; border: none; font-weight: 600; cursor: pointer; transition: 0.3s; font-size: 16px; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         .btn-edit { background: #1e293b; color: white; }
         .btn-save { background: #22c55e; color: white; display: none; }
-        .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
 
         /* MODAL */
         .modal { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.8); display: none; align-items: center; justify-content: center; z-index: 3000; backdrop-filter: blur(8px); }
-        .modal-content { background: white; padding: 30px; border-radius: 24px; text-align: center; width: 340px; }
-        .modal-content input { width: 100%; padding: 14px; margin: 20px 0; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 20px; text-align: center; outline: none; }
+        .modal-content { background: white; padding: 35px; border-radius: 28px; text-align: center; width: 380px; }
+        .modal-content input { width: 100%; padding: 16px; margin: 20px 0; border: 2px solid #e2e8f0; border-radius: 15px; font-size: 22px; text-align: center; outline: none; }
     </style>
 </head>
 <body>
@@ -67,7 +71,7 @@
     <div class="modal-content">
         <h3>🔑 ยืนยันรหัสผ่าน</h3>
         <input type="password" id="pwdInput" placeholder="••••••••" onkeydown="if(event.key==='Enter') checkPassword()">
-        <button class="btn btn-edit" style="width: 100%; justify-content: center;" onclick="checkPassword()">ยืนยัน</button>
+        <button class="btn btn-edit" style="width: 100%; justify-content: center;" onclick="checkPassword()">ยืนยันความปลอดภัย</button>
         <button onclick="closeModal()" style="margin-top:15px; background:none; border:none; color:gray; cursor:pointer;">ยกเลิก</button>
     </div>
 </div>
@@ -85,7 +89,7 @@
 
     <div class="editor-card locked" id="editor-wrapper">
         <div id="editor-container">
-            <p>⏳ กำลังดึงข้อมูลด่วน...</p>
+            <p id="loading-text">⏳ กำลังดึงข้อมูลจาก Google Sheets...</p>
         </div>
         <div class="btn-group">
             <button id="btnEdit" class="btn btn-edit" onclick="openModal()">✏️ แก้ไขข้อมูล</button>
@@ -96,32 +100,30 @@
 
 <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 <script>
-    // ใส่ URL ของคุณตรงนี้
     const scriptURL = 'https://script.google.com/macros/s/AKfycbyK0fWm61v4_czUonYPCnIqCR_nnwg_2R54tYDsMh3iytlfITa90xhhWehaj22DSeSajw/exec'; 
 
-    // เริ่มทำงานทันทีที่โครงสร้าง HTML พร้อม (ไม่ต้องรอรูปภาพหรือ Sidebar)
     document.addEventListener("DOMContentLoaded", () => {
         initEditor();
         loadData();
         includeSidebar();
     });
 
-    /* --- 1. ระบบ Sidebar & ความจำสถานะ --- */
+    /* --- 1. ระบบ Sidebar (สไตล์ดั้งเดิม) --- */
     function toggleSidebar() {
         document.getElementById("sidebar").classList.toggle("show");
         document.getElementById("overlay").classList.toggle("show");
     }
 
     function toggleDrop(btn, id) {
-        const item = btn.closest('.item');
+        const item = btn.parentElement;
         const isOpen = item.classList.toggle("open");
-        if (id) { localStorage.setItem('menu-' + id, isOpen ? 'true' : 'false'); }
+        if (id) { localStorage.setItem('menu-' + id, isOpen); }
     }
 
     function restoreMenuState() {
-        ['credit', 'branch'].forEach(id => {
-            if (localStorage.getItem('menu-' + id) === 'true') {
-                const el = document.getElementById('menu-' + id);
+        ['credit', 'branch'].forEach(m => {
+            if (localStorage.getItem('menu-' + m) === 'true') {
+                const el = document.getElementById('menu-' + m);
                 if (el) el.classList.add('open');
             }
         });
@@ -131,10 +133,10 @@
         fetch('sidebar.html').then(res => res.text()).then(data => { 
             document.getElementById('sidebar').innerHTML = data; 
             restoreMenuState(); 
-        }).catch(err => console.log("Sidebar error:", err));
+        }).catch(err => console.warn("Sidebar fail"));
     }
 
-    /* --- 2. ระบบ Editor (โหลดเร็วพิเศษ) --- */
+    /* --- 2. ระบบดึงข้อมูล (แก้ไขให้รองรับ Redirect) --- */
     let quill;
     function initEditor() {
         quill = new Quill('#editor-container', {
@@ -145,30 +147,40 @@
 
     async function loadData() {
         try {
-            // ดึงข้อมูลแบบเร่งด่วน
+            // ใช้เทคนิคดึงข้อมูลแบบ JSONP หรือจัดการ Redirect อัตโนมัติด้วยเบราว์เซอร์
             const response = await fetch(scriptURL);
+            if (!response.ok) throw new Error('Network response was not ok');
             const data = await response.text();
+            
             if (data) {
                 quill.root.innerHTML = data;
+            } else {
+                quill.root.innerHTML = "<p>ไม่มีข้อมูลในระบบ</p>";
             }
         } catch (error) {
-            quill.root.innerHTML = "<p>❌ โหลดไม่สำเร็จ กรุณารีเฟรชหน้าเว็บ</p>";
+            console.error(error);
+            quill.root.innerHTML = "<p style='color:red;'>❌ โหลดไม่สำเร็จ: กรุณาตรวจสอบ URL ของสคริปต์หรือสิทธิ์การเข้าถึง</p>";
         }
     }
 
     async function saveData() {
         const btnSave = document.getElementById('btnSave');
-        const oldText = btnSave.innerHTML;
         btnSave.innerHTML = "⏳ กำลังบันทึก...";
         btnSave.disabled = true;
 
         try {
-            await fetch(scriptURL, { method: 'POST', mode: 'no-cors', body: quill.root.innerHTML });
-            alert("✅ บันทึกสำเร็จ!");
+            // การบันทึกข้อมูลแบบ POST ไปยัง Google Apps Script
+            await fetch(scriptURL, {
+                method: 'POST',
+                mode: 'no-cors', // สำคัญมากสำหรับ Google Apps Script
+                headers: { 'Content-Type': 'text/plain' },
+                body: quill.root.innerHTML
+            });
+            alert("✅ บันทึกข้อมูลลง Google Sheets เรียบร้อย!");
             location.reload();
         } catch (e) {
             alert("❌ เกิดข้อผิดพลาดในการบันทึก");
-            btnSave.innerHTML = oldText;
+            btnSave.innerHTML = "💾 บันทึกข้อมูล";
             btnSave.disabled = false;
         }
     }
@@ -178,7 +190,6 @@
     function closeModal() { document.getElementById('pwdModal').style.display = 'none'; document.getElementById('pwdInput').value = ''; }
 
     function checkPassword() {
-        // รหัสผ่านของคุณ Bbb#%0285134679
         if (document.getElementById('pwdInput').value === "Bbb#%0285134679") {
             document.getElementById('editor-wrapper').classList.remove('locked');
             quill.enable(true);
