@@ -235,39 +235,6 @@
 <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 
 <aside class="sidebar" id="sidebar">
-    <div class="sidebar-header">
-        <span>MENU SYSTEM</span>
-    </div>
-
-    <div class="menu">
-        <div class="item"><a href="index.html">🏠 หน้าหลัก</a></div>
-
-        <div class="item">
-            <button class="drop-btn" onclick="toggleDrop(this, 'sub-loans')">
-                📊 บันทึกสินเชื่อ <span class="arrow">▶</span>
-            </button>
-            <div class="sub" id="sub-loans">
-                <a href="https://docs.google.com/forms/d/e/1FAIpQLSerK-IQFH4StGmvrOxb8M2DOC9VyrToSycYBxWrzSVOq67SOw/viewform?usp=preview">📈 ลงสินเชื่อส่วนกลาง</a>
-                <a href="https://lookerstudio.google.com/reporting/8eee598b-7f10-4d88-8162-8ac554e50b9e">📑 Report สินเชื่อส่วนกลาง</a>
-            </div>
-        </div>
-
-        <div class="item"><a href="download.html">⬇️ ดาวน์โหลด</a></div>
-
-        <div class="item">
-            <button class="drop-btn" onclick="toggleDrop(this, 'sub-pru')">
-                📍 เฉพาะประชาอุทิศ <span class="arrow">▶</span>
-            </button>
-            <div class="sub" id="sub-pru">
-                <a href="schedule_dec25.html">📆 ตารางงาน ธ.ค. 25</a>
-                <a href="schedule_jan26.html">📆 ตารางงาน ม.ค. 26</a>
-                <a href="#">📱 เช็ค Mat เครื่อง</a>
-                <a href="input_sale.html">✏️ ลงยอดขาย</a>
-                <a href="commission.html">💰 คำนวณค่าคอม</a>
-                <a href="target.html">🆚 Target รายบุคคล</a>
-            </div>
-        </div>
-    </div>
 </aside>
 
 <main class="content">
@@ -373,8 +340,51 @@ function includeSidebar() {
             restoreMenuState(); // เพิ่มบรรทัดนี้เข้าไปครับ
         });
 }
+    /* 1. ฟังก์ชันโหลด Sidebar */
+function includeSidebar() {
+    fetch('sidebar.html')
+        .then(res => res.text())
+        .then(data => {
+            // วาง HTML จากไฟล์ sidebar.html ลงไปใน <aside id="sidebar">
+            document.getElementById('sidebar').innerHTML = data;
+            
+            // หลังจากวางเสร็จแล้ว ให้เรียกฟังก์ชันคืนค่าเมนูทันที
+            restoreMenuState(); 
+        })
+        .catch(err => console.warn("ไม่สามารถโหลด Sidebar ได้:", err));
+}
+
+/* 2. ฟังก์ชันกางเมนูและบันทึกค่าลงเครื่อง (localStorage) */
+function toggleDrop(btn, id) {
+    const item = btn.parentElement;
+    const isOpen = item.classList.toggle("open");
+    
+    // บันทึกว่าเมนู ID นี้ (เช่น branch) มีสถานะเป็น true หรือ false
+    if (id) {
+        localStorage.setItem('menu-' + id, isOpen);
+    }
+}
+
+/* 3. ฟังก์ชันเช็คค่าที่บันทึกไว้ แล้วสั่งเปิดเมนู */
+function restoreMenuState() {
+    const menuIds = ['credit', 'branch']; // รายชื่อ ID ที่เราตั้งไว้ใน sidebar.html
+    
+    menuIds.forEach(id => {
+        const savedState = localStorage.getItem('menu-' + id);
+        if (savedState === 'true') {
+            const menuElement = document.getElementById('menu-' + id);
+            if (menuElement) {
+                menuElement.classList.add('open');
+            }
+        }
+    });
+}
+
+// เรียกใช้ฟังก์ชันตอนโหลดหน้าเว็บ
+window.onload = includeSidebar;
 </script>
 
 </body>
 </html>
+
 
