@@ -113,7 +113,7 @@
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwMxGbkc76z0_uaPPxqEhXDDTze4MklQqjvePVaSk9BSymCJAXhBdLE6VbhAqFxkfp11w/exec";
 
-    // โหลด Sidebar ทันทีพร้อมเทคนิค Timestamp ป้องกันไฟล์ค้าง
+    // โหลด Sidebar พร้อม Timestamp ป้องกัน Cache
     document.addEventListener("DOMContentLoaded", () => {
         const timestamp = new Date().getTime();
         fetch(`sidebar.html?v=${timestamp}`)
@@ -129,7 +129,7 @@
         document.getElementById("overlay").classList.toggle("show");
     }
 
-    // ฟังก์ชัน global สำหรับ sidebar
+    // ฟังก์ชันสำหรับ sidebar
     window.toggleDrop = function(btn, id) {
         const item = btn.parentElement;
         const isOpen = item.classList.toggle("open");
@@ -152,7 +152,7 @@
         const body = document.getElementById('salesBody');
         const loader = document.getElementById('loader');
         
-        // เพิ่ม Timestamp ให้กับ URL ข้อมูล เพื่อบังคับดึงค่าล่าสุดจาก Sheets เสมอ
+        // Timestamp เพื่อดึงค่าล่าสุดเสมอ
         const ts = new Date().getTime();
 
         loader.style.display = 'block';
@@ -165,10 +165,13 @@
             document.getElementById('empTitle').innerText = `สรุปยอด ${empName}`;
             body.innerHTML = "";
 
-            data.forEach((row) => {
+            // ตัด 2 แถวแรกที่เกินมาออกตามที่ระบุ
+            const cleanData = data.slice(2); 
+
+            cleanData.forEach((row) => {
                 const tr = document.createElement('tr');
-                if (row[0] && row[0].includes("รวมยอด New")) tr.className = 'bg-new';
-                if (row[0] && row[0].includes("รวมยอด BDBC")) tr.className = 'bg-bdbc';
+                if (row[0] && row[0].toString().includes("รวมยอด New")) tr.className = 'bg-new';
+                if (row[0] && row[0].toString().includes("รวมยอด BDBC")) tr.className = 'bg-bdbc';
 
                 row.forEach(cell => {
                     const td = document.createElement('td');
