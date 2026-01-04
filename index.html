@@ -9,7 +9,6 @@
 
     <style>
         /* ===== GLOBAL RESET FOR FONT ===== */
-        /* บังคับให้ทุก Element ในหน้าเว็บใช้ฟอนต์ Kanit */
         * { 
             box-sizing: border-box; 
             font-family: 'Kanit', sans-serif !important; 
@@ -20,7 +19,7 @@
             background: #f8fafc;
             padding-bottom: 80px;
             color: #334155;
-            -webkit-font-smoothing: antialiased; /* ทำให้ฟอนต์ดูคมชัดขึ้น */
+            -webkit-font-smoothing: antialiased;
         }
 
         /* ===== SIDEBAR NAVIGATION ===== */
@@ -55,7 +54,7 @@
             overflow-y: auto;
             transform: translateX(-260px);
             transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 1300;
+            z-index: 2000;
         }
         .sidebar.show { transform: translateX(0); }
 
@@ -65,15 +64,14 @@
             gap: 12px;
             padding: 20px;
             background: #0f172a;
-            font-weight: 600; /* ใช้ความหนาของ Kanit */
+            font-weight: 600;
             letter-spacing: 1px;
         }
-
-        .toggle { background: none; border: none; color: #fff; font-size: 22px; cursor: pointer; }
 
         .menu { display: flex; flex-direction: column; padding: 10px 0; }
         .item { border-bottom: 1px solid rgba(255,255,255,.05); }
 
+        /* ปรับปรุงตรงนี้ให้เมนูขยับ (Hover Effect) เหมือนกันทุกหน้า */
         .menu a, .menu .drop-btn {
             width: 100%;
             min-height: 55px;
@@ -87,11 +85,16 @@
             display: flex;
             align-items: center;
             text-decoration: none;
-            transition: all 0.2s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             font-weight: 400;
         }
 
-        .menu a:hover, .menu .drop-btn:hover { background: #334155; color: #fff; }
+        .menu a:hover, .menu .drop-btn:hover { 
+            background: #334155; 
+            color: #fff; 
+            padding-left: 35px; /* เอฟเฟกต์เมนูขยับที่ต้องการ */
+        }
+
         .arrow { margin-left: auto; transition: .3s; font-size: 12px; opacity: 0.5; }
         .item.open .arrow { transform: rotate(90deg); }
 
@@ -103,7 +106,9 @@
             font-size: 14px;
             color: #94a3b8;
             border-top: 1px solid rgba(255,255,255,.03);
+            transition: all 0.3s;
         }
+        .sub a:hover { padding-left: 55px; color: #5bbf8a; }
 
         /* ===== CONTENT AREA ===== */
         .content { padding: 80px 20px 40px; transition: margin-left .3s; }
@@ -202,7 +207,7 @@
             background: rgba(15, 23, 42, 0.6); 
             display: none; 
             backdrop-filter: blur(4px);
-            z-index: 1200; 
+            z-index: 1500; 
         }
         .overlay.show { display: block; }
     </style>
@@ -250,11 +255,11 @@
 </div>
 
 <footer>
-    © 2025 Copy Right By Angerina Frog
+    © 2026 Copy Right By Angerina Frog
 </footer>
 
 <script>
- // 2. ดึง Sidebar จากไฟล์ภายนอก
+    // 1. ดึง Sidebar จากไฟล์ภายนอก
     function includeSidebar() {
         fetch('sidebar.html')
             .then(response => {
@@ -270,22 +275,21 @@
             });
     }
 
-    // 3. ควบคุมการแสดงผล Sidebar (Mobile)
+    // 2. ควบคุมการแสดงผล Sidebar (Mobile)
     function toggleSidebar() {
         document.getElementById("sidebar").classList.toggle("show");
         document.getElementById("overlay").classList.toggle("show");
     }
 
-    // 4. ควบคุมเมนูย่อย (Dropdown)
+    // 3. ควบคุมเมนูย่อย (Dropdown)
     function toggleDrop(btn, id) {
         const item = btn.parentElement;
         item.classList.toggle("open");
         localStorage.setItem("menu-" + id, item.classList.contains("open"));
     }
 
-    // 5. คืนค่าสถานะเมนูที่เคยเปิดไว้
+    // 4. คืนค่าสถานะเมนูที่เคยเปิดไว้
     function restoreMenuState() {
-        // กู้คืนสถานะจาก LocalStorage เพื่อให้เมนูคงสถานะเดิมตอนเปลี่ยนหน้า
         ['credit', 'branch'].forEach(m => {
             if (localStorage.getItem('menu-' + m) === 'true') {
                 const menuEl = document.getElementById('menu-' + m);
@@ -294,15 +298,11 @@
         });
     }
 
-    // รันเมื่อโหลดหน้าเว็บ
+    // โหลด Sidebar ทันทีที่หน้าเว็บพร้อม (ไม่ต้องรอใส่รหัสเพราะหน้านี้ไม่มีฟิลด์รหัส)
     window.onload = function () {
-        document.getElementById("password").focus();
-        // โหลด Sidebar ทันทีที่หน้าเว็บพร้อม
         includeSidebar(); 
     }
 </script>
 
 </body>
 </html>
-
-
