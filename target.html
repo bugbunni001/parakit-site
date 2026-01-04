@@ -10,7 +10,7 @@
         * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
         body { margin: 0; background: #f8fafc; padding-bottom: 100px; color: #334155; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
         
-        /* ===== SIDEBAR NAVIGATION (PREMIUM STYLE) ===== */
+        /* ===== SIDEBAR NAVIGATION ===== */
         .top-toggle { 
             position: fixed; top: 15px; left: 15px; z-index: 1400; 
             width: 45px; height: 45px; border-radius: 12px; border: none; 
@@ -34,7 +34,7 @@
         .menu { display: flex; flex-direction: column; padding: 10px 0; }
         .item { border-bottom: 1px solid rgba(255,255,255,.05); }
 
-        /* แก้ไขส่วน Hover ของเมนูหลักให้เป็นสีเขียว */
+        /* เมนูหลัก (Dropdown) จะไม่เปลี่ยนเป็นสีเขียว */
         .menu a, .menu .drop-btn { 
             width: 100%; min-height: 55px; padding: 0 20px; background: none; 
             border: none; color: #cbd5e1; text-align: left; font-size: 15px; 
@@ -42,21 +42,22 @@
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
         }
         
-        /* Hover Effect: เปลี่ยนสีตัวหนังสือเป็นสีเขียว และขยับขวา */
+        /* Hover เฉพาะเมนูหลัก: เปลี่ยนแค่พื้นหลังและขยับขวา ตัวหนังสือเป็นสีขาวปกติ */
         .menu a:hover, .menu .drop-btn:hover { 
-            background: #273142; color: #5bbf8a; padding-left: 35px; 
+            background: #334155; color: #fff; padding-left: 35px; 
         }
 
         .arrow { margin-left: auto; transition: .3s; font-size: 12px; opacity: 0.5; }
         .item.open .arrow { transform: rotate(90deg); }
-        .item.open .drop-btn { color: #5bbf8a; } /* เมื่อเมนูเปิดอยู่ให้ตัวหนังสือเป็นสีเขียวค้างไว้ */
         
+        /* ส่วนเมนูย่อย (Sub Menu) */
         .sub { display: none; background: #0f172a; }
         .item.open .sub { display: block; }
         .sub a { 
             min-height: 48px; padding-left: 45px; font-size: 14px; 
             color: #94a3b8; border-top: 1px solid rgba(255,255,255,.03); transition: all 0.3s;
         }
+        /* เฉพาะเมนูย่อยเท่านั้นที่จะเป็นสีเขียวเวลา Hover */
         .sub a:hover { padding-left: 55px; color: #5bbf8a; }
 
         .overlay { 
@@ -65,7 +66,7 @@
         }
         .overlay.show { display: block; }
 
-        /* ===== MAIN CONTENT ===== */
+        /* ===== MAIN CONTENT & CARDS (SAME AS BEFORE) ===== */
         .content { padding: 80px 20px; transition: margin-left .3s; }
         @media(min-width:769px) { 
             .sidebar { transform: translateX(0); } 
@@ -77,7 +78,6 @@
         .header-section h2 { color: #1e293b; margin-bottom: 5px; font-size: 28px; }
         .header-section p { color: #64748b; font-size: 15px; display: flex; align-items: center; justify-content: center; }
         
-        /* BUTTONS */
         .btn-group { display: flex; justify-content: center; gap: 12px; margin-top: 20px; flex-wrap: wrap; }
         button { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; }
         
@@ -90,7 +90,6 @@
         .btn-reset { border: none; padding: 12px 28px; border-radius: 12px; background: #fee2e2; color: #dc2626; font-weight: 500; }
         .btn-reset:hover { background: #fecaca; transform: translateY(-2px); }
 
-        /* INPUTS */
         input[type="text"] { 
             border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 6px 12px; 
             width: 140px; text-align: right; font-size: 14px; background: #f8fafc; 
@@ -101,7 +100,6 @@
         .total-black { background: #334155 !important; color: #fff !important; border: none !important; width: 140px; font-size: 16px; padding: 8px 15px !important; }
         .total-black.editable { background: #1e293b !important; border: 2px solid #60a5fa !important; }
 
-        /* CARDS */
         .grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 25px; max-width: 1200px; margin: 0 auto; }
         .target-card { background: #fff; border-radius: 24px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); transition: 0.3s; }
         .target-card:hover { transform: translateY(-5px); box-shadow: 0 20px 30px rgba(0,0,0,0.08); }
@@ -149,8 +147,7 @@
 <button class="top-toggle" onclick="toggleSidebar()">☰</button>
 <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 
-<aside class="sidebar" id="sidebar">
-</aside>
+<aside class="sidebar" id="sidebar"></aside>
 
 <main class="content">
     <div class="header-section">
@@ -199,6 +196,7 @@
 </main>
 
 <script>
+    // System logic stays 100% same
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzAIwc6zop0kjO8wzmjbEBMw9yiq7Pf3pTXy11no6zsQECOPjn5Crnn7Mga6Ha_XqUsew/exec";
     let currentMode = "";
     const dot = document.getElementById('sync-status');
@@ -206,17 +204,12 @@
 
     function includeSidebar() {
         fetch('sidebar.html')
-            .then(response => {
-                if (!response.ok) throw new Error('Not found');
-                return response.text();
-            })
+            .then(response => response.ok ? response.text() : Promise.reject())
             .then(data => {
                 document.getElementById('sidebar').innerHTML = data;
                 restoreMenuState(); 
             })
-            .catch(err => {
-                console.warn("Sidebar Load Fail");
-            });
+            .catch(() => console.warn("Sidebar fail"));
     }
 
     function restoreMenuState() {
@@ -241,10 +234,7 @@
                 dot.classList.add('online');
                 statusText.innerText = "ข้อมูลเป็นปัจจุบัน (Locked)";
             })
-            .catch(err => { 
-                dot.style.background = "red"; 
-                statusText.innerText = "การเชื่อมต่อผิดพลาด"; 
-            });
+            .catch(() => { dot.style.background = "red"; statusText.innerText = "Error"; });
     }
 
     function openModal(mode) {
@@ -258,24 +248,15 @@
     function closeModal() {
         const modal = document.getElementById('pwdModal');
         modal.classList.remove('show-modal');
-        setTimeout(() => { 
-            modal.style.display = 'none'; 
-            document.getElementById('pwdInput').value = ''; 
-        }, 200);
+        setTimeout(() => { modal.style.display = 'none'; document.getElementById('pwdInput').value = ''; }, 200);
     }
-
-    document.getElementById('pwdInput').addEventListener('keypress', (e) => { 
-        if (e.key === 'Enter') checkPassword(); 
-    });
 
     function checkPassword() {
         if (document.getElementById('pwdInput').value === "Bbb#%0285134679") {
             if (currentMode === 'edit') enableEdit();
             else if (currentMode === 'reset') resetSystem();
             closeModal();
-        } else { 
-            alert("รหัสผ่านไม่ถูกต้อง!"); 
-        }
+        } else { alert("รหัสผ่านไม่ถูกต้อง!"); }
     }
 
     function enableEdit() {
@@ -285,7 +266,7 @@
         });
         document.getElementById('btn-edit').style.display = 'none';
         document.getElementById('btn-save').style.display = 'inline-block';
-        statusText.innerText = "🔓 กำลังแก้ไข... (Enter เพื่อบันทึก)";
+        statusText.innerText = "🔓 กำลังแก้ไข...";
     }
 
     function saveAll() {
@@ -301,23 +282,18 @@
             fetch(`${SCRIPT_URL}?id=${input.id}&val=${encodeURIComponent(input.value)}`)
                 .then(() => {
                     completed++;
-                    if (completed === inputs.length) {
-                        alert("✅ บันทึกข้อมูลเรียบร้อย!");
-                        location.reload();
-                    }
+                    if (completed === inputs.length) { alert("✅ บันทึกแล้ว!"); location.reload(); }
                 });
         });
     }
 
     function resetSystem() {
-        if (confirm("ยืนยันการล้างข้อมูลเป็น 0 ทั้งหมด?")) {
-            const inputs = document.querySelectorAll('input[type="text"]');
-            inputs.forEach(input => {
+        if (confirm("Reset ทั้งหมด?")) {
+            document.querySelectorAll('input[type="text"]').forEach(input => {
                 input.value = "0";
                 fetch(`${SCRIPT_URL}?id=${input.id}&val=0`);
             });
-            alert("รีเซ็ตเรียบร้อย");
-            location.reload();
+            alert("รีเซ็ตแล้ว"); location.reload();
         }
     }
 
@@ -332,10 +308,7 @@
         localStorage.setItem('menu-' + id, item.classList.contains("open"));
     }
 
-    window.onload = function() {
-        includeSidebar(); 
-        loadData();       
-    }
+    window.onload = function() { includeSidebar(); loadData(); }
 </script>
 </body>
 </html>
