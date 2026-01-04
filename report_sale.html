@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sales Check - Google Sheets</title>
+    <title>Sales Check - Google Sheets Sync</title>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        /* ===== SIDEBAR & LAYOUT CSS (ครบถ้วนตามต้นฉบับ) ===== */
+        /* ===== SIDEBAR & LAYOUT CSS (พร้อมระบบ Rollover) ===== */
         * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
         body { margin: 0; background: #f8fafc; padding-bottom: 100px; color: #334155; overflow-x: hidden; }
 
@@ -14,17 +14,33 @@
         
         .sidebar { position: fixed; top: 0; left: 0; width: 260px; height: 100vh; background: #1e293b; color: #fff; overflow-y: auto; transform: translateX(-260px); transition: all .3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 2000; }
         .sidebar.show { transform: translateX(0); }
-        .sidebar-header { display: flex; align-items: center; gap: 12px; padding: 20px; background: #0f172a; font-weight: 600; font-size: 18px; letter-spacing: 1px; }
+        .sidebar-header { display: flex; align-items: center; gap: 12px; padding: 25px 20px; background: #0f172a; font-weight: 600; font-size: 18px; border-bottom: 1px solid rgba(255,255,255,0.05); }
         
         .menu { display: flex; flex-direction: column; padding: 10px 0; }
         .item { border-bottom: 1px solid rgba(255,255,255,.05); }
-        .menu a, .menu .drop-btn { width: 100%; min-height: 55px; padding: 0 20px; background: none; border: none; color: #cbd5e1; text-align: left; font-size: 15px; cursor: pointer; display: flex; align-items: center; text-decoration: none; transition: all 0.3s; }
-        .menu a:hover, .menu .drop-btn:hover { background: #334155; color: #fff; padding-left: 35px; }
         
+        /* สไตล์ปุ่มเมนูหลัก + Rollover ขยับได้ */
+        .menu a, .menu .drop-btn { 
+            width: 100%; min-height: 55px; padding: 0 20px; background: none; border: none; 
+            color: #cbd5e1; text-align: left; font-size: 15px; cursor: pointer; display: flex; 
+            align-items: center; text-decoration: none; transition: all 0.3s ease; 
+        }
+        .menu a:hover, .menu .drop-btn:hover { 
+            background: #334155; color: #fff; 
+            padding-left: 35px; /* จุดที่ทำให้ขยับตอน Hover */
+        }
+        
+        /* เมนูย่อย + Rollover */
         .sub { display: none; background: #0f172a; }
         .item.open .sub { display: block; }
-        .sub a { min-height: 48px; padding-left: 45px; font-size: 14px; color: #94a3b8; border-top: 1px solid rgba(255,255,255,.03); }
-        .sub a:hover { padding-left: 55px; color: #5bbf8a; } /* สีเขียว Hover ตามรูป */
+        .sub a { 
+            min-height: 48px; padding-left: 45px; font-size: 14px; color: #94a3b8; 
+            border-top: 1px solid rgba(255,255,255,.03); transition: all 0.3s ease;
+        }
+        .sub a:hover { 
+            padding-left: 55px; /* ขยับเมนูย่อย */
+            color: #5bbf8a; 
+        }
 
         .arrow { margin-left: auto; transition: .3s; font-size: 12px; opacity: 0.5; }
         .item.open .arrow { transform: rotate(90deg); }
@@ -49,7 +65,6 @@
         th { background-color: #4db6ac; color: white; padding: 12px; font-weight: 400; border: 1px solid #ddd; }
         td { padding: 10px; border: 1px solid #ddd; text-align: center; font-size: 14px; }
         
-        /* สีแถวสรุปตามรูปภาพ */
         .bg-new { background-color: #c8e6c9 !important; font-weight: 600; }
         .bg-bdbc { background-color: #d1ecf1 !important; font-weight: 600; }
     </style>
@@ -98,19 +113,14 @@
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwMxGbkc76z0_uaPPxqEhXDDTze4MklQqjvePVaSk9BSymCJAXhBdLE6VbhAqFxkfp11w/exec";
 
-    // โหลด Sidebar ทันที
+    // โหลด Sidebar ทันทีพร้อมเทคนิค Timestamp ป้องกันไฟล์ค้าง
     document.addEventListener("DOMContentLoaded", () => {
-        fetch('sidebar.html')
+        const timestamp = new Date().getTime();
+        fetch(`sidebar.html?v=${timestamp}`)
             .then(res => res.text())
             .then(html => {
                 document.getElementById('sidebar').innerHTML = html;
-                // กู้คืนสถานะเมนูที่เคยเปิดไว้
-                ['credit', 'branch'].forEach(id => {
-                    if (localStorage.getItem('menu-' + id) === 'true') {
-                        const el = document.getElementById('menu-' + id);
-                        if (el) el.classList.add('open');
-                    }
-                });
+                restoreMenuState();
             }).catch(err => console.error("Sidebar load failed"));
     });
 
@@ -119,10 +129,20 @@
         document.getElementById("overlay").classList.toggle("show");
     }
 
-    function toggleDrop(btn, id) {
+    // ฟังก์ชัน global สำหรับ sidebar
+    window.toggleDrop = function(btn, id) {
         const item = btn.parentElement;
         const isOpen = item.classList.toggle("open");
         if (id) localStorage.setItem('menu-' + id, isOpen);
+    }
+
+    function restoreMenuState() {
+        ['credit', 'branch', 'sales'].forEach(id => {
+            if (localStorage.getItem('menu-' + id) === 'true') {
+                const el = document.getElementById('menu-' + id);
+                if (el) el.classList.add('open');
+            }
+        });
     }
 
     async function getSalesData() {
@@ -131,12 +151,15 @@
         const table = document.getElementById('salesTable');
         const body = document.getElementById('salesBody');
         const loader = document.getElementById('loader');
+        
+        // เพิ่ม Timestamp ให้กับ URL ข้อมูล เพื่อบังคับดึงค่าล่าสุดจาก Sheets เสมอ
+        const ts = new Date().getTime();
 
         loader.style.display = 'block';
         table.style.display = 'none';
 
         try {
-            const response = await fetch(`${SCRIPT_URL}?sheetName=${encodeURIComponent(sheetName)}`);
+            const response = await fetch(`${SCRIPT_URL}?sheetName=${encodeURIComponent(sheetName)}&t=${ts}`);
             const data = await response.json();
 
             document.getElementById('empTitle').innerText = `สรุปยอด ${empName}`;
@@ -144,9 +167,8 @@
 
             data.forEach((row) => {
                 const tr = document.createElement('tr');
-                // ใส่สีพื้นหลังตามเงื่อนไขชื่อแถว
-                if (row[0].includes("รวมยอด New")) tr.className = 'bg-new';
-                if (row[0].includes("รวมยอด BDBC")) tr.className = 'bg-bdbc';
+                if (row[0] && row[0].includes("รวมยอด New")) tr.className = 'bg-new';
+                if (row[0] && row[0].includes("รวมยอด BDBC")) tr.className = 'bg-bdbc';
 
                 row.forEach(cell => {
                     const td = document.createElement('td');
