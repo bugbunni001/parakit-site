@@ -1,57 +1,61 @@
-
 <!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sales Check - Google Sheets Sync</title>
+    <title>📊 เช็คยอดขาย & ระบบจัดการ</title>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        /* ===== LAYOUT & SIDEBAR BASE ===== */
+        /* ===== GLOBAL RESET & SIDEBAR STRUCTURE ===== */
         * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
-        body { margin: 0; background: #f8fafc; padding-bottom: 100px; color: #334155; overflow-x: hidden; }
-
-        .top-toggle { position: fixed; top: 15px; left: 15px; z-index: 1400; width: 45px; height: 45px; border-radius: 12px; border: none; background: #1e293b; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-        .sidebar { position: fixed; top: 0; left: 0; width: 280px; height: 100vh; background: #1e293b; color: #fff; transform: translateX(-280px); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); z-index: 2000; overflow-y: auto; box-shadow: 4px 0 15px rgba(0,0,0,0.1); }
+        body { margin: 0; background: #f8fafc; padding-bottom: 80px; color: #334155; -webkit-font-smoothing: antialiased; }
+        
+        .top-toggle { position: fixed; top: 15px; left: 15px; z-index: 1400; width: 45px; height: 45px; border-radius: 12px; border: none; background: #1e293b; color: #fff; font-size: 20px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; }
+        @media(min-width:769px) { .top-toggle { display: none; } }
+        
+        .sidebar { position: fixed; top: 0; left: 0; width: 260px; height: 100vh; background: #1e293b; color: #fff; overflow-y: auto; transform: translateX(-260px); transition: all .3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 2000; }
         .sidebar.show { transform: translateX(0); }
-        .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.4); display: none; backdrop-filter: blur(4px); z-index: 1500; transition: 0.3s; }
+        .content { padding: 80px 20px 40px; transition: margin-left .3s; }
+        @media(min-width:769px) { .sidebar { transform: translateX(0); } .content { margin-left: 260px; } }
+        
+        .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: none; backdrop-filter: blur(4px); z-index: 1500; }
         .overlay.show { display: block; }
-        .content { padding: 80px 20px; transition: margin-left 0.4s; }
 
-        @media(min-width:769px) { .sidebar { transform: translateX(0); } .content { margin-left: 280px; padding-top: 40px; } .top-toggle { display: none; } }
-
-        /* ===== SIDEBAR STYLING (ROLLOVER & BEAUTIFY) ===== */
-        .sidebar-header { padding: 30px 20px; font-size: 1.5rem; font-weight: 600; color: #4db6ac; text-align: center; letter-spacing: 2px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .menu { padding: 15px 10px; }
-        .menu a, .drop-btn { 
-            display: flex; align-items: center; justify-content: space-between; width: 100%; 
-            padding: 12px 18px; color: #cbd5e1; text-decoration: none; border-radius: 12px; 
-            margin-bottom: 5px; transition: all 0.3s ease; background: transparent; border: none; 
-            font-size: 15px; cursor: pointer; 
+        /* ===== SIDEBAR INTERNAL MENU STYLE (ROLLOVER) ===== */
+        .sidebar-header { padding: 25px 20px; font-size: 18px; font-weight: 600; background: #0f172a; color: #fff; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .menu { display: flex; flex-direction: column; padding: 10px 0; }
+        .item { border-bottom: 1px solid rgba(255,255,255,0.03); }
+        
+        .menu a, .menu .drop-btn { 
+            width: 100%; min-height: 50px; padding: 12px 20px; background: none; border: none; 
+            color: #cbd5e1; text-align: left; font-size: 15px; cursor: pointer; display: flex; 
+            align-items: center; text-decoration: none; transition: all 0.3s ease; 
         }
-        /* Rollover Effect */
-        .menu a:hover, .drop-btn:hover { background: rgba(77, 182, 172, 0.15); color: #4db6ac; padding-left: 25px; }
+        .menu a:hover, .menu .drop-btn:hover { background: rgba(91, 191, 138, 0.1); color: #5bbf8a; padding-left: 30px; }
         
-        .sub { display: none; flex-direction: column; background: rgba(15, 23, 42, 0.5); border-radius: 12px; margin: 5px 0 10px 0; overflow: hidden; transition: max-height 0.3s ease; }
-        .sub a { padding-left: 45px; font-size: 14px; opacity: 0.8; }
-        .sub a:hover { opacity: 1; padding-left: 50px; }
-        
-        .arrow { font-size: 10px; transition: 0.3s; }
-        .rotate { transform: rotate(90deg); color: #4db6ac; }
+        .sub { display: none; background: #0f172a; padding: 5px 0; flex-direction: column; }
+        .item.open .sub { display: flex; }
+        .sub a { padding-left: 45px; font-size: 14px; color: #94a3b8; min-height: 40px; }
+        .sub a:hover { color: #5bbf8a; padding-left: 55px; }
 
-        /* ===== SALES CARD & FORM (ORIGINAL) ===== */
+        .arrow { margin-left: auto; transition: 0.3s; font-size: 10px; opacity: 0.6; }
+        .item.open .arrow { transform: rotate(90deg); color: #5bbf8a; }
+
+        /* ===== SALES CHECK CARD STYLE ===== */
         .sales-card { background: white; border-radius: 24px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); max-width: 600px; margin: 0 auto; }
-        .header-section { text-align: center; margin-bottom: 25px; }
-        select { width: 100%; padding: 12px; border-radius: 12px; border: 2px solid #e2e8f0; font-size: 16px; outline: none; background: #f8fafc; }
+        .form-group { margin-bottom: 20px; }
+        select { width: 100%; padding: 12px; border-radius: 12px; border: 2px solid #e2e8f0; font-size: 16px; outline: none; background: #f8fafc; cursor: pointer; }
         .btn-fetch { width: 100%; background: #1e293b; color: white; border: none; padding: 15px; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.2s; }
-        .btn-fetch:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.3); }
+        .btn-fetch:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.3); background: #334155; }
 
-        /* ===== TABLE STYLES ===== */
+        /* Table Styles */
         table { width: 100%; border-collapse: collapse; margin-top: 20px; display: none; overflow: hidden; border-radius: 12px; border: 1px solid #e2e8f0; }
-        th { background-color: #4db6ac; color: white; padding: 12px; border: 1px solid #e2e8f0; }
-        td { padding: 10px; border: 1px solid #e2e8f0; text-align: center; }
+        th { background-color: #4db6ac; color: white; padding: 12px; font-weight: 400; border: 1px solid #e2e8f0; }
+        td { padding: 10px; border: 1px solid #e2e8f0; text-align: center; font-size: 14px; background: #fff; }
         .bg-new { background-color: #c8e6c9 !important; font-weight: 600; }
         .bg-bdbc { background-color: #d1ecf1 !important; font-weight: 600; }
+        .device-header { background-color: #00bcd4 !important; color: white; font-weight: 600; }
+        .device-sub-header { background-color: #f1f5f9; font-weight: 600; }
     </style>
 </head>
 <body>
@@ -59,13 +63,12 @@
 <button class="top-toggle" onclick="toggleSidebar()">☰</button>
 <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 
-<aside class="sidebar" id="sidebar">
-    </aside>
+<aside class="sidebar" id="sidebar"></aside>
 
 <main class="content">
-    <div class="header-section"><h2>📊 ระบบตรวจสอบยอดขาย</h2></div>
     <div class="sales-card">
-        <div style="margin-bottom:20px;">
+        <h2 style="text-align: center; margin-bottom: 25px;">📊 ระบบตรวจสอบยอดขาย</h2>
+        <div class="form-group">
             <label style="display:block; margin-bottom:8px; font-weight:600;">เลือกพนักงาน:</label>
             <select id="employeeSelect">
                 <option value="นวพล2">นวพล</option>
@@ -75,6 +78,7 @@
         </div>
         <button class="btn-fetch" onclick="getSalesData()">🔄 ดึงข้อมูลล่าสุด</button>
         <div id="loader" style="display:none; text-align:center; margin:20px 0;">⏳ กำลังดึงข้อมูล...</div>
+
         <table id="salesTable">
             <thead>
                 <tr><th id="empTitle" colspan="3">สรุปยอด</th></tr>
@@ -82,39 +86,58 @@
             </thead>
             <tbody id="salesBody"></tbody>
         </table>
+
         <table id="deviceTable" style="margin-top: 30px;"><tbody id="deviceBody"></tbody></table>
     </div>
 </main>
 
+<footer>© 2026 Copy Right By Angerina Frog</footer>
+
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwMxGbkc76z0_uaPPxqEhXDDTze4MklQqjvePVaSk9BSymCJAXhBdLE6VbhAqFxkfp11w/exec";
+
+    // 1. Sidebar Logic & Memory
+    function includeSidebar() {
+        fetch('sidebar.html?v=' + new Date().getTime())
+            .then(res => res.text())
+            .then(data => {
+                document.getElementById('sidebar').innerHTML = data;
+                restoreMenuState();
+            });
+    }
 
     function toggleSidebar() {
         document.getElementById("sidebar").classList.toggle("show");
         document.getElementById("overlay").classList.toggle("show");
     }
 
-    function toggleDrop(btn, subId) {
-        const subMenu = document.getElementById(subId);
-        const arrow = btn.querySelector('.arrow');
-        const isOpen = subMenu.style.display === "flex";
-        subMenu.style.display = isOpen ? "none" : "flex";
-        arrow.classList.toggle('rotate', !isOpen);
+    // ฟังก์ชัน Dropdown พร้อมระบบจำสถานะ
+    window.toggleDrop = function(btn, id) {
+        const item = btn.parentElement;
+        const isOpen = item.classList.toggle("open");
+        if (id) {
+            localStorage.setItem('menu-' + id, isOpen); // บันทึกค่าลงเครื่อง
+        }
     }
 
-    async function loadSidebar() {
-        try {
-            const response = await fetch('sidebar.html');
-            if (response.ok) {
-                document.getElementById('sidebar').innerHTML = await response.text();
+    function restoreMenuState() {
+        const menus = ['credit', 'branch']; // id ของเมนูที่ต้องการให้จำ
+        menus.forEach(id => {
+            const savedState = localStorage.getItem('menu-' + id);
+            if (savedState === 'true') {
+                const menuEl = document.getElementById('menu-' + id);
+                if (menuEl) menuEl.classList.add('open');
             }
-        } catch (err) { console.error("Sidebar load failed"); }
+        });
     }
 
+    // 2. Sales Data Logic
     async function getSalesData() {
-        const sheetName = document.getElementById('employeeSelect').value;
-        const empName = document.getElementById('employeeSelect').options[document.getElementById('employeeSelect').selectedIndex].text;
+        const select = document.getElementById('employeeSelect');
+        const sheetName = select.value;
+        const empName = select.options[select.selectedIndex].text;
         const loader = document.getElementById('loader');
+        
         loader.style.display = 'block';
         document.getElementById('salesTable').style.display = 'none';
         document.getElementById('deviceTable').style.display = 'none';
@@ -122,37 +145,63 @@
         try {
             const response = await fetch(`${SCRIPT_URL}?sheetName=${encodeURIComponent(sheetName)}&t=${new Date().getTime()}`);
             const data = await response.json();
-            document.getElementById('empTitle').innerText = `สรุปยอด ${empName}`;
-            
-            const salesBody = document.getElementById('salesBody');
-            salesBody.innerHTML = "";
-            data.slice(2, 13).forEach(row => {
-                const tr = document.createElement('tr');
-                if (row[0]?.includes("รวมยอด New")) tr.className = 'bg-new';
-                if (row[0]?.includes("รวมยอด BDBC")) tr.className = 'bg-bdbc';
-                row.forEach(cell => { const td = document.createElement('td'); td.innerText = cell || "0"; tr.appendChild(td); });
-                salesBody.appendChild(tr);
-            });
 
-            const deviceBody = document.getElementById('deviceBody');
-            deviceBody.innerHTML = "";
-            data.slice(21, 25).forEach((row, i) => {
-                const tr = document.createElement('tr');
-                if (i === 0) {
-                    const th = document.createElement('th'); th.className = 'device-header'; th.colSpan = 3; th.innerText = row[0] || "สรุปยอด Device"; tr.appendChild(th);
-                } else {
-                    if (i === 1) tr.className = 'device-sub-header';
-                    row.forEach(cell => { const td = document.createElement('td'); td.innerText = cell || "0"; tr.appendChild(td); });
-                }
-                deviceBody.appendChild(tr);
-            });
+            document.getElementById('empTitle').innerText = `สรุปยอด ${empName}`;
+            renderTable('salesBody', data.slice(2, 13), true);
+            renderDeviceTable(data.slice(21, 25));
 
             document.getElementById('salesTable').style.display = 'table';
             document.getElementById('deviceTable').style.display = 'table';
-        } catch (e) { alert("❌ โหลดข้อมูลไม่สำเร็จ"); } finally { loader.style.display = 'none'; }
+        } catch (error) {
+            alert("❌ ไม่สามารถดึงข้อมูลได้");
+        } finally {
+            loader.style.display = 'none';
+        }
     }
 
-    window.onload = loadSidebar;
+    function renderTable(targetId, rows, checkHighlight) {
+        const body = document.getElementById(targetId);
+        body.innerHTML = "";
+        rows.forEach(row => {
+            const tr = document.createElement('tr');
+            if (checkHighlight) {
+                if (row[0]?.includes("รวมยอด New")) tr.className = 'bg-new';
+                if (row[0]?.includes("รวมยอด BDBC")) tr.className = 'bg-bdbc';
+            }
+            row.forEach(cell => {
+                const td = document.createElement('td');
+                td.innerText = cell === "" || cell === null ? "0" : cell;
+                tr.appendChild(td);
+            });
+            body.appendChild(tr);
+        });
+    }
+
+    function renderDeviceTable(rows) {
+        const body = document.getElementById('deviceBody');
+        body.innerHTML = "";
+        rows.forEach((row, i) => {
+            const tr = document.createElement('tr');
+            if (i === 0) {
+                const th = document.createElement('th');
+                th.className = 'device-header'; th.colSpan = 3;
+                th.innerText = row[0] || "สรุปยอด Device";
+                tr.appendChild(th);
+            } else {
+                if (i === 1) tr.className = 'device-sub-header';
+                row.forEach(cell => {
+                    const td = document.createElement('td');
+                    td.innerText = cell === "" || cell === null ? "0" : cell;
+                    tr.appendChild(td);
+                });
+            }
+            body.appendChild(tr);
+        });
+    }
+
+    window.onload = includeSidebar;
 </script>
+
 </body>
 </html>
+
