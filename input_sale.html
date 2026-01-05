@@ -3,289 +3,173 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🔖 ภารกิจประจำเดือน & บันทึกยอดขาย</title>
+    <title>📊 ระบบบันทึกและตรวจสอบยอดขาย</title>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        /* ===== SETUP & LAYOUT ===== */
+        /* ===== SETUP & SIDEBAR ROLLOVER ===== */
         * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
-        body { margin: 0; background: #f8fafc; padding-bottom: 100px; color: #334155; -webkit-font-smoothing: antialiased; }
+        body { margin: 0; background: #f8fafc; padding-bottom: 100px; color: #334155; }
 
-        /* ===== SIDEBAR NAVIGATION (Core Structure) ===== */
-        .top-toggle { position: fixed; top: 15px; left: 15px; z-index: 1400; width: 45px; height: 45px; border-radius: 12px; border: none; background: #1e293b; color: #fff; font-size: 20px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; }
-        @media(min-width:769px) { .top-toggle { display: none; } }
-
-        .sidebar { position: fixed; top: 0; left: 0; width: 260px; height: 100vh; background: #1e293b; color: #fff; overflow-y: auto; transform: translateX(-260px); transition: all .3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 2000; }
+        .top-toggle { position: fixed; top: 15px; left: 15px; z-index: 1400; width: 45px; height: 45px; border-radius: 12px; border: none; background: #1e293b; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .sidebar { position: fixed; top: 0; left: 0; width: 260px; height: 100vh; background: #1e293b; color: #fff; transform: translateX(-260px); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 2000; padding-top: 60px; }
         .sidebar.show { transform: translateX(0); }
-        .content { padding: 80px 20px 40px; transition: margin-left .3s; }
-        @media(min-width:769px) { .sidebar { transform: translateX(0); } .content { margin-left: 260px; } }
-
-        /* ===== [ADD NEW] SIDEBAR INTERNAL MENU (แก้ปัญหาเมนูมั่ว) ===== */
-        .sidebar-header { padding: 20px; background: #0f172a; font-weight: 600; font-size: 16px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .menu { display: flex; flex-direction: column; padding: 10px 0; }
-        .item { border-bottom: 1px solid rgba(255,255,255,0.03); }
         
-        .menu a, .menu .drop-btn { 
-            width: 100%; min-height: 55px; padding: 0 20px; background: none; border: none; 
-            color: #cbd5e1; text-align: left; font-size: 15px; cursor: pointer; display: flex; 
-            align-items: center; text-decoration: none; transition: all 0.2s; 
-        }
-        .menu a:hover, .menu .drop-btn:hover { background: #334155; color: #fff; padding-left: 25px; }
-
-        .sub { display: none; background: #0f172a; padding: 5px 0; }
-        .item.open .sub { display: block; }
-        .sub a { min-height: 45px; padding-left: 45px; font-size: 14px; color: #94a3b8; }
-        .sub a:hover { color: #5bbf8a; padding-left: 50px; }
-
-        .arrow { margin-left: auto; transition: 0.3s; font-size: 10px; opacity: 0.5; }
-        .item.open .arrow { transform: rotate(90deg); }
-
-        /* ===== REFINED BOX ===== */
-        .box { max-width: 650px; margin: auto; background: #fff; padding: 30px; border-radius: 24px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05); border: 1px solid #f1f5f9; }
-        .box h3 { margin: 0 0 25px 0; text-align: center; color: #1e293b; font-size: 22px; display: flex; align-items: center; justify-content: center; gap: 12px; }
-        .form-row { display: grid; grid-template-columns: 140px 1fr; align-items: center; margin-bottom: 15px; gap: 12px; }
-        .form-row-multi { display: grid; grid-template-columns: 140px 1fr 1fr; align-items: center; margin-bottom: 15px; gap: 10px; }
-        .form-row label, .form-row-multi label { font-weight: 500; font-size: 14px; color: #64748b; text-align: right; }
-        input, select { width: 100%; padding: 10px 14px; font-size: 14px; border: 1.5px solid #e2e8f0; border-radius: 10px; outline: none; transition: all 0.3s; background-color: #f8fafc; }
-        input:focus, select:focus { border-color: #5bbf8a; background-color: #fff; box-shadow: 0 0 0 3px rgba(91, 191, 138, 0.1); }
-
-        @media (max-width: 580px) {
-            .form-row, .form-row-multi { grid-template-columns: 1fr; gap: 5px; }
-            .form-row label, .form-row-multi label { text-align: left; margin-left: 5px; }
-            .box { padding: 20px; }
-        }
-
-        .btn-submit { width: 100%; padding: 16px; font-size: 17px; margin-top: 20px; background: #5bbf8a; color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 600; transition: all 0.3s ease; box-shadow: 0 10px 15px -3px rgba(91, 191, 138, 0.3); }
-        .btn-submit:hover { background: #4eab7a; transform: translateY(-2px); }
+        /* สไตล์ปุ่มเมนู + Rollover */
+        .sidebar-header { padding: 20px; font-weight: 600; font-size: 18px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .menu-item { width: 100%; padding: 15px 25px; display: flex; align-items: center; color: #cbd5e1; text-decoration: none; transition: all 0.3s ease; border-left: 4px solid transparent; cursor: pointer; }
+        .menu-item:hover { background: #334155; color: #fff; padding-left: 35px; border-left: 4px solid #5bbf8a; }
 
         .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: none; backdrop-filter: blur(4px); z-index: 1500; }
         .overlay.show { display: block; }
+        .content { padding: 80px 20px; transition: margin-left .3s; }
+        @media(min-width:769px) { .sidebar { transform: translateX(0); } .content { margin-left: 260px; } .top-toggle { display: none; } }
 
-        .loading { position: fixed; inset: 0; background: rgba(255,255,255,0.9); display: none; align-items: center; justify-content: center; flex-direction: column; z-index: 9999; }
-        .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #5bbf8a; border-radius: 50%; animation: spin 1s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        /* ===== BOX STYLES ===== */
+        .box { max-width: 650px; margin: 0 auto 30px; background: #fff; padding: 25px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        .form-row { display: grid; grid-template-columns: 140px 1fr; align-items: center; margin-bottom: 15px; gap: 12px; }
+        label { font-weight: 500; font-size: 14px; color: #64748b; text-align: right; }
+        input, select { width: 100%; padding: 10px; border: 1.5px solid #e2e8f0; border-radius: 10px; outline: none; background: #f8fafc; }
+        
+        .btn-submit { width: 100%; padding: 15px; background: #5bbf8a; color: white; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; transition: 0.3s; }
+        .btn-submit:hover { background: #4eab7a; transform: translateY(-2px); }
+        .btn-fetch { width: 100%; padding: 15px; background: #1e293b; color: white; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; margin-top: 10px; }
 
-        /* ===== POPUP STYLE ===== */
-        .popup { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); display: none; align-items: center; justify-content: center; z-index: 10000; backdrop-filter: blur(4px); }
-        .popup-box { background: #fff; padding: 35px; border-radius: 24px; text-align: center; width: 340px; transform: scale(0.8); transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .popup.show .popup-box { transform: scale(1); }
-        .icon-box { width: 100px; height: 100px; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; }
-        .check-icon { display: none; width: 80px; height: 80px; stroke-width: 4; stroke: #5bbf8a; stroke-linecap: round; stroke-linejoin: round; fill: none; overflow: visible; }
-        .check-icon circle { stroke-dasharray: 160; stroke-dashoffset: 160; transform-origin: center; animation: draw-circle 0.6s ease-in-out forwards; }
-        .check-icon path { stroke-dasharray: 100; stroke-dashoffset: 100; animation: draw-check 0.4s 0.3s ease-out forwards; }
-        @keyframes draw-circle { to { stroke-dashoffset: 0; } }
-        @keyframes draw-check { to { stroke-dashoffset: 0; } }
-        .warn-icon { display: none; font-size: 60px; animation: pulse-warn 0.6s ease-in-out infinite alternate; }
-        @keyframes pulse-warn { from { transform: scale(1); } to { transform: scale(1.2); } }
-        .success .check-icon { display: block; }
-        .error .warn-icon { display: block; }
-
-        footer { width: 100%; text-align: center; padding: 15px 0; background: #fff; color: #94a3b8; position: fixed; bottom: 0; left: 0; font-size: 11px; z-index: 1100; border-top: 1px solid #f1f5f9; }
+        /* ===== TABLE STYLES (แก้ปัญหาข้อมูลซ้ำ) ===== */
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; border-radius: 12px; overflow: hidden; display: none; border: 1px solid #e2e8f0; }
+        th { background-color: #4db6ac; color: white; padding: 12px; font-weight: 600; }
+        td { padding: 10px; border: 1px solid #e2e8f0; text-align: center; font-size: 14px; }
+        .bg-new { background-color: #c8e6c9 !important; font-weight: 600; }
+        .bg-bdbc { background-color: #d1ecf1 !important; font-weight: 600; }
+        .device-header { background-color: #00bcd4 !important; color: white; }
     </style>
 </head>
-
 <body>
 
 <button class="top-toggle" onclick="toggleSidebar()">☰</button>
 <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 
-<aside class="sidebar" id="sidebar"></aside>
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">MENU</div>
+    <div class="menu-item" onclick="location.reload()">🏠 บันทึกยอดขาย</div>
+    <div class="menu-item" onclick="toggleSidebar()">📊 รายงานประจำวัน</div>
+    <div class="menu-item" onclick="toggleSidebar()">📱 สต็อกสินค้า</div>
+</aside>
 
-<div class="content">
+<main class="content">
     <div class="box">
-        <h3>📊 บันทึกยอดขายรายวัน</h3>
-        <div class="form-row">
-            <label>วันที่ขาย</label>
-            <input type="date" id="date">
-        </div>
+        <h3 style="text-align:center;">💾 บันทึกยอดขาย</h3>
+        <div class="form-row"><label>วันที่</label><input type="date" id="date"></div>
         <div class="form-row">
             <label>ชื่อพนักงาน</label>
             <select id="staff">
-                <option value="">-- เลือกพนักงาน --</option>
-                <option value="ปิยะพร">ปิยะพร</option>
                 <option value="นวพล">นวพล</option>
+                <option value="ปิยะพร">ปิยะพร</option>
                 <option value="กรทักษ์">กรทักษ์</option>
             </select>
         </div>
         <div class="form-row">
-            <label>ชื่อคนขายให้</label>
-            <select id="seller">
-                <option value="">-- เลือก --</option>
-                <option value="โด้">โด้</option>
-                <option value="มิ้น">มิ้น</option>
-                <option value="ตั้ม">ตั้ม</option>
-            </select>
-        </div>
-        <div class="form-row-multi">
-            <label>รายการ Postpay</label>
+            <label>รายการ</label>
             <select id="type">
-                <option value="">-- ประเภท --</option>
                 <option>New Sim Only</option>
-                <option>Mg Sim Only</option>
                 <option>New Rahu</option>
-                <option>New พลังดาว</option>
-                <option>New MyPlan</option>
-                <option>New/Mg Bundling</option>
-                <option>Mnp</option>
                 <option>BDBC</option>
             </select>
-            <input type="number" id="amount" placeholder="ระบุยอดเงิน">
         </div>
-        <div class="form-row-multi">
-            <label>รายการ Device</label>
-            <select id="device">
-                <option value="">-- ยี่ห้อ --</option>
-                <option>iPhone</option>
-                <option>iPad</option>
-                <option>Samsung</option>
-                <option>Xiaomi</option>
-                <option>Realme</option>
-                <option>Oppo</option>
-                <option>Vivo</option>
-                <option>Honor</option>
-                <option>Infinix</option>
-                <option>Alldocube</option>
-                <option>Accessaries</option>
-            </select>
-            <input type="number" id="deviceAmount" placeholder="ระบุยอดเงิน">
-        </div>
-        <div class="form-row">
-            <label>สินเชื่อ (ถ้ามี)</label>
-            <select id="credit_field">
-                <option value="">-- เลือกสินเชื่อ --</option>
-                <option>SG Finance+</option>
-                <option>True Paynext Extra</option>
-                <option>Samsung Finance+</option>
-                <option>Umay+</option>
-            </select>
-        </div>
-        <button type="button" class="btn-submit" onclick="submitData()">💾 บันทึกข้อมูล</button>
+        <div class="form-row"><label>ยอดเงิน</label><input type="number" id="amount" placeholder="0"></div>
+        <button class="btn-submit" onclick="submitData()">บันทึกข้อมูล</button>
     </div>
-</div>
 
-<div class="loading" id="loading">
-    <div class="spinner"></div>
-    <div style="margin-top:15px; font-weight:600; color:#475569;">กำลังส่งข้อมูล...</div>
-</div>
+    <div class="box">
+        <h3 style="text-align:center;">🔍 ตรวจสอบยอดพนักงาน</h3>
+        <select id="employeeSelect" style="margin-bottom:10px;">
+            <option value="นวพล2">นวพล</option>
+            <option value="ปิยะพร2">ปิยะพร</option>
+            <option value="กรทักษ์2">กรทักษ์</option>
+        </select>
+        <button class="btn-fetch" onclick="getSalesData()">ดึงข้อมูลล่าสุด</button>
 
-<div class="popup" id="popup">
-    <div class="popup-box" id="pBox">
-        <div class="icon-box">
-            <svg class="check-icon" viewBox="0 0 52 52"><circle cx="26" cy="26" r="23" /><path d="M14 27l7 7 16-16" /></svg>
-            <div class="warn-icon">⚠️</div>
-        </div>
-        <h3 id="popupText" style="margin-bottom:25px; font-size:20px; color: #1e293b; font-weight:600;"></h3>
-        <button class="btn-submit" style="margin-top:0" onclick="closePopup()">ตกลง</button>
+        <table id="salesTable">
+            <thead>
+                <tr><th id="empTitle" colspan="3">สรุปยอด</th></tr>
+                <tr style="background:#fff;"><td style="font-weight:600;">รายการ</td><td style="font-weight:600;">ยอดเงิน</td><td style="font-weight:600;">จำนวน</td></tr>
+            </thead>
+            <tbody id="salesBody"></tbody>
+        </table>
+
+        <table id="deviceTable" style="margin-top:20px;"><tbody id="deviceBody"></tbody></table>
     </div>
-</div>
-
-<footer>© 2026 Copy Right By Angerina Frog</footer>
+</main>
 
 <script>
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwMxGbkc76z0_uaPPxqEhXDDTze4MklQqjvePVaSk9BSymCJAXhBdLE6VbhAqFxkfp11w/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwMxGbkc76z0_uaPPxqEhXDDTze4MklQqjvePVaSk9BSymCJAXhBdLE6VbhAqFxkfp11w/exec";
 
-function toggleSidebar() {
-    document.getElementById("sidebar").classList.toggle("show");
-    document.getElementById("overlay").classList.toggle("show");
-}
-
-function includeSidebar() {
-    const v = new Date().getTime();
-    fetch('sidebar.html?v=' + v)
-        .then(res => res.text())
-        .then(data => {
-            document.getElementById('sidebar').innerHTML = data;
-            restoreMenuState(); 
-        })
-        .catch(err => console.warn("Load Sidebar Error:", err));
-}
-
-window.toggleDrop = function(btn, id) {
-    const item = btn.parentElement;
-    const isOpen = item.classList.toggle("open");
-    if (id) {
-        localStorage.setItem('menu-' + id, isOpen ? 'true' : 'false');
+    function toggleSidebar() {
+        document.getElementById("sidebar").classList.toggle("show");
+        document.getElementById("overlay").classList.toggle("show");
     }
-};
 
-function restoreMenuState() {
-    const menuIds = ['credit', 'branch', 'sales']; 
-    menuIds.forEach(id => {
-        const savedState = localStorage.getItem('menu-' + id);
-        if (savedState === 'true') {
-            const menuElement = document.getElementById('menu-' + id);
-            if (menuElement) menuElement.classList.add('open');
+    // แก้ไขฟังก์ชันบันทึกข้อมูล
+    async function submitData() {
+        const data = {
+            date: document.getElementById('date').value,
+            staff: document.getElementById('staff').value,
+            type: document.getElementById('type').value,
+            amount: document.getElementById('amount').value
+        };
+
+        try {
+            const response = await fetch(SCRIPT_URL, {
+                method: "POST",
+                mode: "no-cors", // สำคัญมากสำหรับการส่งจากเว็บภายนอกไป App Script
+                body: JSON.stringify(data)
+            });
+            alert("✅ บันทึกข้อมูลสำเร็จ!");
+            document.getElementById('amount').value = "";
+        } catch (e) {
+            alert("❌ ส่งข้อมูลล้มเหลว: " + e.message);
         }
-    });
-}
-
-/* FORM LOGIC */
-document.getElementById("date").value = new Date().toISOString().split("T")[0];
-
-function submitData() {
-    const amount = document.getElementById("amount").value.trim();
-    const deviceAmount = document.getElementById("deviceAmount").value.trim();
-    if (amount === "" && deviceAmount === "") {
-        showPopup("กรุณากรอกยอดขายอย่างน้อย 1 รายการ", false);
-        return;
     }
-    document.getElementById("loading").style.display = "flex";
-    const data = {
-        date: document.getElementById("date").value,
-        staff: document.getElementById("staff").value,
-        seller: document.getElementById("seller").value,
-        type: document.getElementById("type").value,
-        amount: amount,
-        device: document.getElementById("device").value,
-        deviceAmount: deviceAmount,
-        credit: document.getElementById("credit_field").value
-    };
-    fetch(SCRIPT_URL, {
-        method: "POST",
-        body: JSON.stringify(data)
-    })
-    .then(res => res.json())
-    .then(() => {
-        document.getElementById("loading").style.display = "none";
-        showPopup("บันทึกข้อมูลเรียบร้อยแล้ว", true);
-        resetForm();
-    })
-    .catch(() => {
-        document.getElementById("loading").style.display = "none";
-        showPopup("การส่งข้อมูลล้มเหลว", false);
-    });
-}
 
-function showPopup(text, isSuccess) {
-    const popup = document.getElementById("popup");
-    document.getElementById("popupText").innerText = text;
-    popup.classList.remove("success", "error", "show");
-    popup.classList.add(isSuccess ? "success" : "error");
-    popup.style.display = "flex";
-    setTimeout(() => popup.classList.add("show"), 10);
-}
+    // แก้ไขฟังก์ชันดึงยอด (แก้ปัญหาบรรทัดซ้ำ)
+    async function getSalesData() {
+        const sheetName = document.getElementById('employeeSelect').value;
+        const ts = new Date().getTime();
 
-function closePopup() { 
-    const popup = document.getElementById("popup");
-    popup.classList.remove("show");
-    setTimeout(() => popup.style.display = "none", 200); 
-}
+        try {
+            const res = await fetch(`${SCRIPT_URL}?sheetName=${encodeURIComponent(sheetName)}&t=${ts}`);
+            const data = await res.json();
 
-function resetForm() {
-    ["amount", "deviceAmount", "staff", "seller", "type", "device", "credit_field"].forEach(id => {
-        document.getElementById(id).value = "";
-    });
-    document.getElementById("date").value = new Date().toISOString().split("T")[0];
-}
+            // ตารางสรุป (ตัดแถวหัวข้อซ้ำซ้อนออก)
+            const salesBody = document.getElementById('salesBody');
+            salesBody.innerHTML = "";
+            const mainData = data.slice(5, 15); // ข้ามหัวข้อที่ซ้ำซ้อน
+            mainData.forEach(row => {
+                const tr = document.createElement('tr');
+                if (row[1] && row[1].includes("รวมยอด New")) tr.className = 'bg-new';
+                if (row[1] && row[1].includes("รวมยอด BDBC")) tr.className = 'bg-bdbc';
+                tr.innerHTML = `<td>${row[1] || ""}</td><td>${row[2] || "0"}</td><td>${row[3] || "0"}</td>`;
+                salesBody.appendChild(tr);
+            });
 
-window.onload = includeSidebar;
+            // ตาราง Device (B22:D25)
+            const deviceBody = document.getElementById('deviceBody');
+            deviceBody.innerHTML = "";
+            const deviceData = data.slice(21, 25);
+            deviceData.forEach((row, i) => {
+                const tr = document.createElement('tr');
+                if (i === 0) tr.innerHTML = `<th class="device-header" colspan="3">${row[1]}</th>`;
+                else tr.innerHTML = `<td>${row[1] || ""}</td><td>${row[2] || "0"}</td><td>${row[3] || "0"}</td>`;
+                deviceBody.appendChild(tr);
+            });
 
-document.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-        const popup = document.getElementById("popup");
-        if (popup.style.display === "flex") { closePopup(); } 
-        else { submitData(); }
+            document.getElementById('salesTable').style.display = 'table';
+            document.getElementById('deviceTable').style.display = 'table';
+        } catch (e) {
+            alert("ดึงข้อมูลไม่สำเร็จ");
+        }
     }
-});
+
+    document.getElementById('date').value = new Date().toISOString().split('T')[0];
 </script>
 </body>
 </html>
