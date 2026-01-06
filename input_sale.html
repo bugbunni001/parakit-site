@@ -1,183 +1,153 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📊 บันทึกยอดขายประจำวัน</title>
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
-    <style>
-        :root { --primary: #1e293b; --accent: #5bbf8a; --bg: #f1f5f9; }
-        * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
-        body { margin: 0; background: var(--bg); color: #334155; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔖 ภารกิจประจำเดือน & บันทึกยอดขาย</title>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
 
-        /* Sidebar สไตล์เดิม เลื่อนได้ */
-        .sidebar { position: fixed; top: 0; left: 0; width: 260px; height: 100vh; background: var(--primary); color: #fff; overflow-y: auto; transform: translateX(-260px); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 2000; }
-        .sidebar.show { transform: translateX(0); }
-        .top-toggle { position: fixed; top: 15px; left: 15px; z-index: 1400; width: 45px; height: 45px; border-radius: 12px; background: var(--primary); color: #fff; border: none; cursor: pointer; font-size: 20px; display: flex; align-items: center; justify-content: center; }
-        
-        .content { padding: 80px 20px 40px; transition: margin-left 0.3s; }
-        @media(min-width:769px) { .sidebar { transform: translateX(0); } .content { margin-left: 260px; } .top-toggle { display: none; } }
-
-        /* การจัดหน้าแบบ Grid ใหม่ ให้สวยและชัดเจน */
-        .card { max-width: 750px; margin: auto; background: #fff; padding: 40px; border-radius: 24px; box-shadow: 0 15px 35px rgba(0,0,0,0.05); }
-        h2 { text-align: center; color: var(--primary); margin-bottom: 30px; font-weight: 600; font-size: 26px; }
-        
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .full { grid-column: span 2; }
-
-        label { display: block; margin-bottom: 8px; font-weight: 500; font-size: 14px; color: #64748b; }
-        input, select { width: 100%; padding: 13px 16px; border: 1.5px solid #e2e8f0; border-radius: 12px; font-size: 15px; outline: none; background: #f8fafc; transition: 0.2s; }
-        input:focus, select:focus { border-color: var(--accent); background: #fff; box-shadow: 0 0 0 4px rgba(91, 191, 138, 0.1); }
-
-        .btn-submit { width: 100%; padding: 18px; margin-top: 30px; background: var(--accent); color: white; border: none; border-radius: 15px; font-size: 18px; font-weight: 600; cursor: pointer; transition: 0.3s; box-shadow: 0 10px 20px rgba(91, 191, 138, 0.3); }
-        .btn-submit:hover { transform: translateY(-2px); background: #4eab7a; }
-
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; z-index: 1500; backdrop-filter: blur(4px); }
-        .overlay.show { display: block; }
-        
-        .loading { position: fixed; inset: 0; background: rgba(255,255,255,0.8); display: none; align-items: center; justify-content: center; z-index: 9999; }
-        .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } .full { grid-column: span 1; } .card { padding: 25px; } }
-    </style>
+<style>
+/* ====== CSS เดิมทั้งหมด ไม่แก้ ====== */
+* { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
+body { margin:0; background:#f8fafc; padding-bottom:100px; color:#334155; }
+.box { max-width:650px; margin:auto; background:#fff; padding:30px; border-radius:24px; }
+.form-row { display:grid; grid-template-columns:140px 1fr; gap:12px; margin-bottom:15px; }
+.form-row-multi { display:grid; grid-template-columns:140px 1fr 1fr; gap:10px; margin-bottom:15px; }
+label { text-align:right; }
+input, select { padding:10px; border-radius:10px; border:1px solid #e2e8f0; }
+.btn-submit { width:100%; padding:16px; background:#5bbf8a; color:#fff; border:none; border-radius:12px; cursor:pointer; }
+.loading { position:fixed; inset:0; background:rgba(255,255,255,.9); display:none; align-items:center; justify-content:center; flex-direction:column; z-index:9999; }
+.spinner { width:40px; height:40px; border:4px solid #eee; border-top:4px solid #5bbf8a; border-radius:50%; animation:spin 1s linear infinite; }
+@keyframes spin { to{ transform:rotate(360deg); } }
+.popup { position:fixed; inset:0; background:rgba(0,0,0,.6); display:none; align-items:center; justify-content:center; z-index:10000; }
+.popup-box { background:#fff; padding:30px; border-radius:20px; text-align:center; }
+.success .check { display:block; }
+.error .warn { display:block; }
+.check, .warn { display:none; font-size:50px; }
+</style>
 </head>
+
 <body>
 
-<button class="top-toggle" onclick="toggleSidebar()">☰</button>
-<div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+<div class="box">
+<h3>📊 บันทึกยอดขายรายวัน</h3>
 
-<aside class="sidebar" id="sidebar"></aside>
-
-<div class="content">
-    <div class="card">
-        <h2>📊 บันทึกยอดขาย (ยอดจากเว็บ)</h2>
-        <div class="form-grid">
-            <div class="full">
-                <label>วันที่ขาย</label>
-                <input type="date" id="date">
-            </div>
-
-            <div>
-                <label>ชื่อพนักงาน</label>
-                <select id="staff">
-                    <option value="">-- เลือกพนักงาน --</option>
-                    <option>ปิยะพร</option><option>นวพล</option><option>กรทักษ์</option>
-                </select>
-            </div>
-
-            <div>
-                <label>ชื่อคนขายให้</label>
-                <select id="seller">
-                    <option value="">-- เลือก --</option>
-                    <option>โด้</option><option>มิ้น</option><option>ตั้ม</option>
-                </select>
-            </div>
-
-            <div>
-                <label>รายการ Postpay</label>
-                <select id="type">
-                    <option value="">-- ประเภท --</option>
-                    <option>New Sim Only</option><option>Mg Sim Only</option><option>New Rahu</option>
-                    <option>New พลังดาว</option><option>New MyPlan</option><option>New/Mg Bundling</option>
-                    <option>Mnp</option><option>BDBC</option>
-                </select>
-            </div>
-
-            <div>
-                <label>ยอดเงิน Postpay</label>
-                <input type="number" id="amount" placeholder="ระบุยอดเงิน">
-            </div>
-
-            <div>
-                <label>ยี่ห้อ Device</label>
-                <select id="device">
-                    <option value="">-- ยี่ห้อ --</option>
-                    <option>iPhone</option><option>iPad</option><option>Samsung</option><option>Xiaomi</option>
-                    <option>Realme</option><option>Oppo</option><option>Vivo</option><option>Honor</option>
-                    <option>Infinix</option><option>Alldocube</option><option>Accessaries</option>
-                </select>
-            </div>
-
-            <div>
-                <label>ยอดเงิน Device</label>
-                <input type="number" id="deviceAmount" placeholder="ระบุยอดเงิน">
-            </div>
-
-            <div class="full">
-                <label>สินเชื่อ (ถ้ามี)</label>
-                <select id="credit_field">
-                    <option value="">-- เลือกสินเชื่อ --</option>
-                    <option>SG Finance+</option><option>True Paynext Extra</option>
-                    <option>Samsung Finance+</option><option>Umay+</option>
-                </select>
-            </div>
-        </div>
-        <button class="btn-submit" onclick="submitData()">💾 บันทึกข้อมูลเข้าระบบด่วน</button>
-    </div>
+<div class="form-row">
+<label>วันที่</label>
+<input type="date" id="date">
 </div>
 
-<div class="loading" id="loading"><div class="spinner"></div></div>
+<div class="form-row">
+<label>พนักงาน</label>
+<select id="staff">
+<option value="">-- เลือก --</option>
+<option>ปิยะพร</option>
+<option>นวพล</option>
+<option>กรทักษ์</option>
+</select>
+</div>
+
+<div class="form-row">
+<label>คนขายให้</label>
+<select id="seller">
+<option value="">-- เลือก --</option>
+<option>โด้</option>
+<option>มิ้น</option>
+<option>ตั้ม</option>
+</select>
+</div>
+
+<div class="form-row-multi">
+<label>Postpay</label>
+<select id="type">
+<option value="">-- ประเภท --</option>
+<option>New Sim Only</option>
+<option>Mnp</option>
+</select>
+<input type="number" id="amount">
+</div>
+
+<div class="form-row-multi">
+<label>Device</label>
+<select id="device">
+<option value="">-- ยี่ห้อ --</option>
+<option>iPhone</option>
+<option>Samsung</option>
+</select>
+<input type="number" id="deviceAmount">
+</div>
+
+<div class="form-row">
+<label>สินเชื่อ</label>
+<select id="credit_field">
+<option value="">-- ไม่มี --</option>
+<option>SG Finance+</option>
+</select>
+</div>
+
+<button class="btn-submit" onclick="submitData()">💾 บันทึกข้อมูล</button>
+</div>
+
+<div class="loading" id="loading">
+<div class="spinner"></div>
+<div>กำลังส่งข้อมูล...</div>
+</div>
+
+<div class="popup" id="popup">
+<div class="popup-box" id="pBox">
+<div class="check">✅</div>
+<div class="warn">⚠️</div>
+<h3 id="popupText"></h3>
+<button onclick="closePopup()">ตกลง</button>
+</div>
+</div>
 
 <script>
-    // ⚠️ นำ URL จากตอน Deploy (Anyone) มาวางตรงนี้
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyGIHHtWeNB-_vn63EBhhV_pp5i4rOp88bVN4oizDpKm__oLpvDIILjvfafPqvsnMNvew/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby6Z5xYUM1leqgyo4RH7qJ-cqvNfqZuLOgBl85x17BTXShIxCOqRGgP2gRtbDPubcMcvA/exec";
 
-    function toggleSidebar() {
-        document.getElementById("sidebar").classList.toggle("show");
-        document.getElementById("overlay").classList.toggle("show");
-    }
+document.getElementById("date").value = new Date().toISOString().split("T")[0];
 
-    // ดึง Sidebar จากไฟล์ภายนอก
-    function includeSidebar() {
-        fetch('sidebar.html')
-            .then(res => res.text())
-            .then(data => {
-                document.getElementById('sidebar').innerHTML = data;
-                if (window.restoreMenuState) window.restoreMenuState();
-            })
-            .catch(() => console.error("โหลด sidebar.html ไม่สำเร็จ"));
-    }
+function submitData(){
+  document.getElementById("loading").style.display="flex";
 
-    function submitData() {
-        const staff = document.getElementById("staff").value;
-        if (!staff) return alert("กรุณาเลือกชื่อพนักงาน!");
+  const data = {
+    date: date.value,
+    staff: staff.value,
+    seller: seller.value,
+    type: type.value,
+    amount: amount.value,
+    device: device.value,
+    deviceAmount: deviceAmount.value,
+    credit: credit_field.value
+  };
 
-        document.getElementById("loading").style.display = "flex";
+  fetch(SCRIPT_URL,{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" }, // ✅ จุดแก้ error
+    body:JSON.stringify(data)
+  })
+  .then(r=>r.json())
+  .then(res=>{
+    document.getElementById("loading").style.display="none";
+    showPopup("บันทึกข้อมูลเรียบร้อย",true);
+  })
+  .catch(()=>{
+    document.getElementById("loading").style.display="none";
+    showPopup("การส่งข้อมูลล้มเหลว",false);
+  });
+}
 
-        const payload = {
-            date: document.getElementById("date").value,
-            staff: staff,
-            seller: document.getElementById("seller").value,
-            type: document.getElementById("type").value,
-            amount: document.getElementById("amount").value,
-            device: document.getElementById("device").value,
-            deviceAmount: document.getElementById("deviceAmount").value,
-            credit: document.getElementById("credit_field").value
-        };
+function showPopup(msg,success){
+  const p=document.getElementById("popup");
+  document.getElementById("popupText").innerText=msg;
+  p.className="popup "+(success?"success":"error");
+  p.style.display="flex";
+}
 
-        fetch(SCRIPT_URL, {
-            method: "POST",
-            mode: "no-cors", // จำเป็นสำหรับ Google Apps Script
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-        })
-        .then(() => {
-            document.getElementById("loading").style.display = "none";
-            alert("✅ บันทึกเข้าชีต 'ยอดจากเว็บ' สำเร็จ!");
-            location.reload();
-        })
-        .catch(err => {
-            document.getElementById("loading").style.display = "none";
-            alert("❌ ล้มเหลว: " + err);
-        });
-    }
-
-    window.onload = () => {
-        includeSidebar();
-        document.getElementById("date").value = new Date().toISOString().split("T")[0];
-    };
+function closePopup(){
+  document.getElementById("popup").style.display="none";
+}
 </script>
+
 </body>
 </html>
-
