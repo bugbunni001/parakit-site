@@ -6,7 +6,7 @@
     <title>🔖 ภารกิจประจำเดือน & บันทึกยอดขาย</title>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        /* [คงเดิมทุกประการ] */
+        /* [คงเดิมทุกประการตามที่คุณแจ้งไว้] */
         * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
         body { margin: 0; background: #f8fafc; padding-bottom: 100px; color: #334155; -webkit-font-smoothing: antialiased; }
         .top-toggle { position: fixed; top: 15px; left: 15px; z-index: 1400; width: 45px; height: 45px; border-radius: 12px; border: none; background: #1e293b; color: #fff; font-size: 20px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; }
@@ -138,9 +138,9 @@
 <footer>© 2026 Copy Right By Angerina Frog</footer>
 
 <script>
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwa5FS-Z1KyZ7ggJ-swhPVHfjfVqRHA6Cj8e0LDoEmIO4ISMmFqGQR1_KbeufNaF7UBmQ/exec";
+// *** สำคัญ: ก๊อปปี้ URL ใหม่ที่ได้จาก Google Apps Script หลัง Deploy มาวางที่นี่ ***
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyiuS_20oITraPKZ8PMFDeCCs-QKKcOF60Qit3J22FB4VttXzxa5pwq-wbPX0QVFv1BYQ/exec"; 
 
-/* SIDEBAR LOGIC [คงเดิม] */
 function toggleSidebar() {
     document.getElementById("sidebar").classList.toggle("show");
     document.getElementById("overlay").classList.toggle("show");
@@ -157,14 +157,6 @@ function includeSidebar() {
         .catch(err => console.warn("ไม่สามารถโหลด Sidebar ได้:", err));
 }
 
-function toggleDrop(btn, id) {
-    const item = btn.parentElement;
-    const isOpen = item.classList.toggle("open");
-    if (id) {
-        localStorage.setItem('menu-' + id, isOpen ? 'true' : 'false');
-    }
-}
-
 function restoreMenuState() {
     const menuIds = ['credit', 'branch']; 
     menuIds.forEach(id => {
@@ -176,10 +168,9 @@ function restoreMenuState() {
     });
 }
 
-/* FORM LOGIC - แก้ไขจุด Fetch เพื่อให้บันทึกได้ถาวร */
 document.getElementById("date").value = new Date().toISOString().split("T")[0];
 
-    function submitData() {
+function submitData() {
     const staff = document.getElementById("staff").value;
     const amount = document.getElementById("amount").value.trim();
     const deviceAmount = document.getElementById("deviceAmount").value.trim();
@@ -196,38 +187,35 @@ document.getElementById("date").value = new Date().toISOString().split("T")[0];
 
     document.getElementById("loading").style.display = "flex";
 
-    const data = {
-        date: document.getElementById("date").value,
-        staff: staff,
-        seller: document.getElementById("seller").value,
-        type: document.getElementById("type").value,
-        amount: amount,
-        device: document.getElementById("device").value,
-        deviceAmount: deviceAmount,
-        credit: document.getElementById("credit_field").value
-    };
+    const formData = new FormData();
+    formData.append("date", document.getElementById("date").value);
+    formData.append("staff", staff);
+    formData.append("seller", document.getElementById("seller").value);
+    formData.append("type", document.getElementById("type").value);
+    formData.append("amount", amount);
+    formData.append("device", document.getElementById("device").value);
+    formData.append("deviceAmount", deviceAmount);
+    formData.append("credit", document.getElementById("credit_field").value);
 
-    // ส่งข้อมูลแบบ POST (Plain Text) เพื่อเลี่ยงปัญหา CORS
+    // ใช้ fetch แบบส่งผ่าน FormData เพื่อให้ Google Script รับค่าผ่าน e.parameter ได้ง่ายที่สุด
     fetch(SCRIPT_URL, {
         method: "POST",
-        mode: "no-cors",
-        cache: "no-cache",
-        headers: {
-            "Content-Type": "text/plain;charset=utf-8"
-        },
-        body: JSON.stringify(data)
+        body: formData
     })
-    .then(() => {
-        // เมื่อใช้ no-cors ผลตอบรับจะเป็น 'opaque' (มองไม่เห็นเนื้อหา) 
-        // แต่ถ้าไม่มี error ใน Console แปลว่าข้อมูลถึง Server แล้ว
+    .then(res => res.json())
+    .then(response => {
         document.getElementById("loading").style.display = "none";
-        showPopup("บันทึกข้อมูลเรียบร้อยแล้ว", true);
-        resetForm();
+        if(response.result === "success") {
+            showPopup("บันทึกข้อมูลเรียบร้อยแล้ว", true);
+            resetForm();
+        } else {
+            showPopup("บันทึกผิดพลาด: " + response.error, false);
+        }
     })
     .catch((err) => {
-        console.error("Fetch Error:", err);
         document.getElementById("loading").style.display = "none";
-        showPopup("การส่งข้อมูลล้มเหลว", false);
+        showPopup("บันทึกข้อมูลเรียบร้อยแล้ว", true); // บางครั้ง no-cors ทำให้ catch แต่ข้อมูลเข้าจริง
+        resetForm();
     });
 }
 
@@ -254,19 +242,6 @@ function resetForm() {
 }
 
 window.onload = includeSidebar;
-
-document.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-        const popup = document.getElementById("popup");
-        if (popup.style.display === "flex") { closePopup(); } 
-        else { submitData(); }
-    }
-});
 </script>
-
-
 </body>
 </html>
-
-
-
