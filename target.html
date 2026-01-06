@@ -11,11 +11,21 @@
         body { margin: 0; background: #f0f2f5; padding-bottom: 60px; color: #1e293b; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
         
         /* [SIDEBAR & OVERLAY STYLES] */
-        .top-toggle { position: fixed; top: 15px; left: 15px; z-index: 1400; width: 45px; height: 45px; border-radius: 12px; border: none; background: #1e293b; color: #fff; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .top-toggle { position: fixed; top: 15px; left: 15px; z-index: 1400; width: 45px; height: 45px; border-radius: 12px; border: none; background: #1e293b; color: #fff; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.2); transition: 0.3s; }
+        .top-toggle:hover { background: #334155; transform: scale(1.05); }
+
         .sidebar { position: fixed; top: 0; left: 0; width: 260px; height: 100vh; background: #1e293b; color: #fff; overflow-y: auto; transform: translateX(-260px); transition: all .3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 2000; }
         .sidebar.show { transform: translateX(0); }
         .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: none; backdrop-filter: blur(4px); z-index: 1500; }
         .overlay.show { display: block; }
+
+        /* [SIDEBAR ANIMATION] */
+        .sidebar .sub { max-height: 0; overflow: hidden; background: #0f172a; transition: max-height 0.4s cubic-bezier(0, 1, 0, 1); }
+        .sidebar .item.open .sub { max-height: 1000px; transition: max-height 0.4s ease-in; }
+        .sidebar .item.open .arrow { transform: rotate(90deg); color: #5bbf8a; }
+        
+        /* ROLLOVER สำหรับปุ่มใน Sidebar */
+        .sidebar a:hover, .sidebar .drop-btn:hover { background: #334155 !important; color: #5bbf8a !important; padding-left: 30px !important; }
 
         /* [CONTENT AREA] */
         .content { padding: 40px 15px; transition: margin-left .3s; }
@@ -25,10 +35,10 @@
             .top-toggle { display: none; } 
         }
         
-        /* [CARDS & INPUTS] */
         .header-section { text-align: center; max-width: 800px; margin: 0 auto 40px auto; }
         .grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 30px; max-width: 1200px; margin: 0 auto; }
-        .target-card { background: #fff; border-radius: 24px; padding: 25px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border-top: 8px solid #e2e8f0; }
+        .target-card { background: #fff; border-radius: 24px; padding: 25px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border-top: 8px solid #e2e8f0; transition: transform 0.3s ease; }
+        .target-card:hover { transform: translateY(-5px); }
         .card-postpay { border-top-color: #3b82f6; }
         .card-device { border-top-color: #8b5cf6; }
 
@@ -41,12 +51,23 @@
         .bg-label-blue { background: #eff6ff; color: #1e40af; border-left: 5px solid #3b82f6; }
         .bg-label-purple { background: #f5f3ff; color: #5b21b6; border-left: 5px solid #8b5cf6; }
 
-        /* [MODAL & BUTTONS] */
+        /* [MODAL] */
         .modal { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); display: none; align-items: center; justify-content: center; z-index: 3000; backdrop-filter: blur(5px); }
-        .modal-content { background: white; padding: 40px; border-radius: 30px; width: 90%; max-width: 400px; text-align: center; }
-        .btn { padding: 12px 24px; border-radius: 12px; font-weight: 600; cursor: pointer; border: none; transition: 0.3s; display: flex; align-items: center; gap: 8px; font-size: 14px; }
+        .modal-content { background: white; padding: 40px; border-radius: 30px; width: 90%; max-width: 400px; text-align: center; transform: scale(0.9); transition: 0.3s; }
+        .modal.open .modal-content { transform: scale(1); }
+
+        /* [BUTTON ROLLOVER EFFECTS] */
+        .btn { padding: 12px 24px; border-radius: 12px; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s ease; display: flex; align-items: center; gap: 8px; font-size: 14px; }
+        .btn:active { transform: scale(0.95); }
+        
         .btn-dark { background: #1e293b; color: white; }
+        .btn-dark:hover { background: #334155; box-shadow: 0 4px 12px rgba(30, 41, 59, 0.3); }
+
         .btn-success { background: #10b981; color: white; }
+        .btn-success:hover { background: #059669; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); }
+
+        .btn-danger { background: #fee2e2; color: #dc2626; }
+        .btn-danger:hover { background: #fecaca; color: #b91c1c; }
     </style>
 </head>
 <body>
@@ -75,16 +96,13 @@
         <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;">
             <button class="btn btn-dark" id="btn-edit" onclick="openModal('edit')">✏️ แก้ไขเป้าหมาย</button>
             <button class="btn btn-success" id="btn-save" onclick="saveAll()" style="display:none;">💾 บันทึกข้อมูล</button>
-            <button class="btn" style="background:#fee2e2; color:#dc2626;" onclick="openModal('reset')">🔄 รีเซ็ต</button>
+            <button class="btn btn-danger" onclick="openModal('reset')">🔄 รีเซ็ต</button>
         </div>
     </div>
 
     <div class="grid-container">
         <div class="target-card card-postpay">
-            <div class="staff-item" style="border:none; margin-bottom:15px;">
-                <strong style="font-size: 18px;">Postpay Total</strong>
-                <input type="text" class="total-black" id="postpay_total">
-            </div>
+            <div class="staff-item" style="border:none; margin-bottom:15px;"><strong>Postpay Total</strong><input type="text" class="total-black" id="postpay_total"></div>
             <div class="unit-label bg-label-blue"><span>NEW SIM</span><input type="text" id="pp_new_total"></div>
             <div class="staff-item"><span>นวพล</span><input type="text" id="pp_nawa_n"></div>
             <div class="staff-item"><span>ปิยะพร</span><input type="text" id="pp_piya_n"></div>
@@ -94,12 +112,8 @@
             <div class="staff-item"><span>ปิยะพร</span><input type="text" id="pp_piya_e"></div>
             <div class="staff-item"><span>กรทักษ์</span><input type="text" id="pp_korn_e"></div>
         </div>
-
         <div class="target-card card-device">
-            <div class="staff-item" style="border:none; margin-bottom:15px;">
-                <strong style="font-size: 18px;">Device Total</strong>
-                <input type="text" class="total-black" style="background:#8b5cf6 !important;" id="device_total">
-            </div>
+            <div class="staff-item" style="border:none; margin-bottom:15px;"><strong>Device Total</strong><input type="text" class="total-black" style="background:#8b5cf6 !important;" id="device_total"></div>
             <div class="unit-label bg-label-purple"><span>APPLE DEVICE</span><input type="text" id="dev_apple_total"></div>
             <div class="staff-item"><span>นวพล</span><input type="text" id="dev_nawa_a"></div>
             <div class="staff-item"><span>ปิยะพร</span><input type="text" id="dev_piya_a"></div>
@@ -115,43 +129,59 @@
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxXwEVO6t0QBdDHvld0fva-cxT2-VXeGYf5VpyOm7NmK2s5CqqU5-Tr7KN8Bs53lU4gDQ/exec";
 
-    // [SIDEBAR LOADER & MEMORY LOGIC]
+    // [SIDEBAR LOGIC]
     function toggleSidebar() {
         const isShow = document.getElementById("sidebar").classList.toggle("show");
         document.getElementById("overlay").classList.toggle("show");
         localStorage.setItem('sidebarStatus', isShow ? 'open' : 'closed');
     }
 
-    // ฟังก์ชันสำหรับ Sidebar กลาง
-    function toggleSubMenu(menuId) {
-        const item = document.getElementById(menuId);
-        if(!item) return;
+    function handleSubMenu(item) {
+        const menuId = item.id;
         const isOpen = item.classList.toggle('open');
-        localStorage.setItem('subMenu-' + menuId, isOpen ? 'open' : 'closed');
+        if(menuId) localStorage.setItem('subMenu-' + menuId, isOpen ? 'open' : 'closed');
     }
 
-    async function includeSidebar() {
+    async function loadSidebar() {
         try {
             const res = await fetch('sidebar.html');
+            if (!res.ok) throw new Error();
             const html = await res.text();
-            document.getElementById('sidebar').innerHTML = html;
-            
-            // คืนค่าสถานะเมนูย่อย
-            const subMenuContainers = document.querySelectorAll('.item[id]');
-            subMenuContainers.forEach(container => {
-                const savedStatus = localStorage.getItem('subMenu-' + container.id);
-                if (savedStatus === 'open') container.classList.add('open');
+            const sidebar = document.getElementById('sidebar');
+            sidebar.innerHTML = html;
+
+            const subItems = sidebar.querySelectorAll('.item[id]');
+            subItems.forEach(item => {
+                if (localStorage.getItem('subMenu-' + item.id) === 'open') item.classList.add('open');
             });
 
-            // คืนค่า Sidebar หลัก (เฉพาะมือถือ)
-            if (window.innerWidth < 769 && localStorage.getItem('sidebarStatus') === 'open') {
-                document.getElementById("sidebar").classList.add("show");
-                document.getElementById("overlay").classList.add("show");
-            }
-        } catch (e) { console.error("Sidebar file not found"); }
+            if (window.innerWidth < 769 && localStorage.getItem('sidebarStatus') === 'open') toggleSidebar();
+
+            sidebar.addEventListener('click', function(e) {
+                const btn = e.target.closest('.drop-btn');
+                if (btn) handleSubMenu(btn.parentElement);
+            });
+        } catch (e) { 
+            document.getElementById('sidebar').innerHTML = '<div style="padding:20px; color:gray;">ไม่พบไฟล์ sidebar.html</div>';
+        }
     }
 
-    // [DATA & MODAL LOGIC]
+    // [ENTER KEY SUBMIT LOGIC]
+    document.addEventListener('keydown', function(e) {
+        // ถ้า Modal เปิดอยู่ แล้วกด Enter ให้เช็ครหัสผ่าน
+        if (document.getElementById('pwdModal').style.display === 'flex' && e.key === 'Enter') {
+            checkPassword();
+        }
+        // ถ้าอยู่ในโหมดแก้ไข (มีปุ่มบันทึกโชว์อยู่) และกด Enter ให้บันทึกข้อมูล
+        else if (document.getElementById('btn-save').style.display === 'flex' && e.key === 'Enter') {
+            // ป้องกันการบันทึกถ้ากำลังพิมพ์ใน input (ยกเว้นกด Enter)
+            if (e.target.tagName !== 'TEXTAREA') {
+                saveAll();
+            }
+        }
+    });
+
+    // [DATA FETCHING]
     async function loadData() {
         const dot = document.getElementById('sync-status');
         const txt = document.getElementById('status-text');
@@ -167,9 +197,22 @@
         } catch (e) { txt.innerText = "เชื่อมต่อล้มเหลว"; }
     }
 
+    // [MODAL & DATA SAVE]
     let currentMode = "";
-    function openModal(m) { currentMode = m; document.getElementById('pwdModal').style.display = 'flex'; }
-    function closeModal() { document.getElementById('pwdModal').style.display = 'none'; document.getElementById('pwdInput').value = ''; }
+    function openModal(m) { 
+        currentMode = m; 
+        const modal = document.getElementById('pwdModal');
+        modal.style.display = 'flex'; 
+        setTimeout(() => modal.classList.add('open'), 10);
+        document.getElementById('pwdInput').focus(); // Focus ช่องรหัสทันที
+    }
+    
+    function closeModal() { 
+        const modal = document.getElementById('pwdModal');
+        modal.classList.remove('open');
+        setTimeout(() => modal.style.display = 'none', 300);
+        document.getElementById('pwdInput').value = ''; 
+    }
 
     function checkPassword() {
         if (document.getElementById('pwdInput').value === "80000397") {
@@ -177,6 +220,8 @@
                 document.querySelectorAll('input[type="text"]').forEach(el => el.classList.add('editable'));
                 document.getElementById('btn-edit').style.display = 'none';
                 document.getElementById('btn-save').style.display = 'flex';
+                // Focus ช่องแรกหลังปลดล็อค
+                document.querySelector('input.editable').focus();
             } else if (currentMode === 'reset') {
                 if(confirm("ยืนยันรีเซ็ตเป็น 0 ทั้งหมด?")) {
                     document.querySelectorAll('input[type="text"]').forEach(el => el.value = "0");
@@ -189,16 +234,28 @@
 
     async function saveAll() {
         const btn = document.getElementById('btn-save');
+        if(btn.disabled) return; // ป้องกันการกดซ้อน
+        
         btn.innerText = "⏳ กำลังบันทึก..."; btn.disabled = true;
         const payload = {};
         document.querySelectorAll('input[type="text"]').forEach(el => payload[el.id] = el.value);
         try {
             const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
-            if (await res.text() === "Success") { alert("✅ บันทึกสำเร็จ"); location.reload(); }
-        } catch (e) { alert("❌ ผิดพลาด"); btn.disabled = false; btn.innerText = "💾 บันทึกข้อมูล"; }
+            if (await res.text() === "Success") { 
+                alert("✅ บันทึกสำเร็จ"); 
+                location.reload(); 
+            }
+        } catch (e) { 
+            alert("❌ ผิดพลาด"); 
+            btn.disabled = false; 
+            btn.innerText = "💾 บันทึกข้อมูล"; 
+        }
     }
 
-    window.onload = () => { includeSidebar(); loadData(); };
+    window.onload = () => {
+        loadSidebar();
+        loadData();
+    };
 </script>
 </body>
 </html>
