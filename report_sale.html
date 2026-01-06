@@ -8,12 +8,19 @@
     <style>
         /* ===== GLOBAL & SIDEBAR STRUCTURE ===== */
         * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
-        body { margin: 0; background: #f8fafc; padding-bottom: 80px; color: #334155; }
+        body { margin: 0; background: #f8fafc; padding-bottom: 80px; color: #334155; overflow-x: hidden; }
         
-        .top-toggle { position: fixed; top: 15px; left: 15px; z-index: 1400; width: 45px; height: 45px; border-radius: 12px; border: none; background: #1e293b; color: #fff; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .top-toggle { position: fixed; top: 15px; left: 15px; z-index: 1400; width: 45px; height: 45px; border-radius: 12px; border: none; background: #1e293b; color: #fff; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
         @media(min-width:769px) { .top-toggle { display: none; } }
         
-        .sidebar { position: fixed; top: 0; left: 0; width: 260px; height: 100vh; background: #1e293b; color: #fff; overflow-y: auto; transform: translateX(-260px); transition: all .3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 2000; }
+        /* แก้ไข Sidebar ให้เลื่อน Scroll ได้ในมือถือ */
+        .sidebar { 
+            position: fixed; top: 0; left: 0; width: 260px; height: 100vh; 
+            background: #1e293b; color: #fff; 
+            overflow-y: auto; /* เพิ่มการ scroll */
+            -webkit-overflow-scrolling: touch; /* ให้ scroll ลื่นใน iOS */
+            transform: translateX(-260px); transition: all .3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 2000; 
+        }
         .sidebar.show { transform: translateX(0); }
         .content { padding: 80px 20px 40px; transition: margin-left .3s; }
         @media(min-width:769px) { .sidebar { transform: translateX(0); } .content { margin-left: 260px; } }
@@ -21,40 +28,40 @@
         .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: none; backdrop-filter: blur(4px); z-index: 1500; }
         .overlay.show { display: block; }
 
-        /* ===== SIDEBAR ROLLOVER STYLE ===== */
-        .sidebar-header { padding: 25px 20px; font-size: 18px; font-weight: 600; background: #0f172a; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .menu { display: flex; flex-direction: column; padding: 10px 0; }
-        .menu a, .menu .drop-btn { 
-            width: 100%; min-height: 50px; padding: 12px 20px; background: none; border: none; 
-            color: #cbd5e1; text-align: left; font-size: 15px; cursor: pointer; display: flex; 
-            align-items: center; text-decoration: none; transition: all 0.3s ease; 
+        /* ===== SIDEBAR STYLE (รักษา CSS เดิม) ===== */
+        .sidebar .menu { padding: 10px 0; }
+        .sidebar .item { border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .sidebar a, .sidebar .drop-btn, .sidebar .item b { 
+            display: flex; align-items: center; padding: 15px 20px; 
+            color: #cbd5e1 !important; text-decoration: none !important; 
+            cursor: pointer; transition: 0.3s; background: none; border: none; 
+            width: 100%; text-align: left; font-size: 15px; 
         }
-        .menu a:hover, .menu .drop-btn:hover { background: #334155; color: #fff; padding-left: 30px; }
-        
-        .sub { display: none; background: #0f172a; flex-direction: column; }
-        .item.open .sub { display: flex; }
-        .sub a { padding-left: 45px; font-size: 14px; color: #94a3b8; }
-        .sub a:hover { color: #5bbf8a; padding-left: 55px; }
-        .arrow { margin-left: auto; transition: 0.3s; font-size: 10px; opacity: 0.6; }
-        .item.open .arrow { transform: rotate(90deg); }
+        .sidebar .item b { color: #fff !important; }
+        .sidebar a:hover, .sidebar .drop-btn:hover { background: #334155 !important; color: #fff !important; }
 
-        /* ===== [FIXED] ORIGINAL TABLE COLORS ===== */
+        /* ระบบกาง/หุบเมนูย่อย */
+        .sidebar .sub { max-height: 0; overflow: hidden; background: #0f172a; transition: max-height 0.3s ease-out; display: flex; flex-direction: column; }
+        .sidebar .item.open .sub { max-height: 2000px; } 
+        .sidebar .item.open .arrow { transform: rotate(90deg); }
+        .sidebar .arrow { margin-left: auto; transition: 0.3s; font-size: 10px; opacity: 0.5; }
+
+        /* ===== TABLE & SALES CARD ===== */
         .sales-card { background: white; border-radius: 24px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); max-width: 600px; margin: 0 auto; }
-        select { width: 100%; padding: 12px; border-radius: 12px; border: 2px solid #e2e8f0; font-size: 16px; margin-bottom: 20px; outline: none; }
+        select { width: 100%; padding: 12px; border-radius: 12px; border: 2px solid #e2e8f0; font-size: 16px; margin-bottom: 20px; outline: none; background: #fff; }
         .btn-fetch { width: 100%; background: #1e293b; color: white; border: none; padding: 15px; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.2s; }
-        .btn-fetch:hover { background: #334155; transform: translateY(-2px); }
-
+        
         table { width: 100%; border-collapse: collapse; margin-top: 20px; display: none; overflow: hidden; border-radius: 12px; border: 1px solid #e2e8f0; }
         th { background-color: #4db6ac; color: white; padding: 12px; font-weight: 400; border: 1px solid #e2e8f0; }
         td { padding: 10px; border: 1px solid #e2e8f0; text-align: center; font-size: 14px; }
         
-        /* สีเดิมที่คุณต้องการ */
+        /* สีตามหัวข้อรายงานเดิม */
         .bg-new { background-color: #c8e6c9 !important; font-weight: 600; }
         .bg-bdbc { background-color: #d1ecf1 !important; font-weight: 600; }
         .device-header { background-color: #00bcd4 !important; color: white; font-weight: 600; }
         .device-sub-header { background-color: #f1f5f9; color: #334155; font-weight: 600; }
         
-        footer { width: 100%; text-align: center; padding: 20px 0; background: #fff; color: #94a3b8; position: fixed; bottom: 0; left: 0; font-size: 12px; border-top: 1px solid #f1f5f9; }
+        footer { width: 100%; text-align: center; padding: 15px 0; color: #94a3b8; font-size: 12px; }
     </style>
 </head>
 <body>
@@ -68,38 +75,42 @@
     <div class="sales-card">
         <h2 style="text-align: center; margin-bottom: 20px;">📊 ตรวจสอบยอดขาย</h2>
         <select id="employeeSelect">
-            <option value="นวพล2">นวพล</option>
-            <option value="ปิยะพร2">ปิยะพร</option>
-            <option value="กรทักษ์2">กรทักษ์</option>
+            <option value="นวพล2">👤 นวพล</option>
+            <option value="ปิยะพร2">👤 ปิยะพร</option>
+            <option value="กรทักษ์2">👤 กรทักษ์</option>
         </select>
         <button class="btn-fetch" onclick="getSalesData()">🔄 ดึงข้อมูลล่าสุด</button>
-        <div id="loader" style="display:none; text-align:center; margin:20px 0;">⏳ กำลังดึงข้อมูล...</div>
+        
+        <div id="loader" style="display:none; text-align:center; margin:20px 0;">⏳ กำลังประมวลผล...</div>
 
         <table id="salesTable">
             <thead>
                 <tr><th id="empTitle" colspan="3">สรุปยอด</th></tr>
-                <tr style="background:#fff; color:#333;"><th>Type การขาย</th><th>ยอด PostPay</th><th>จำนวน</th></tr>
+                <tr style="background:#f1f5f9; color:#333;"><th>Type การขาย</th><th>ยอด PostPay</th><th>จำนวน</th></tr>
             </thead>
             <tbody id="salesBody"></tbody>
         </table>
 
-        <table id="deviceTable" style="margin-top: 30px;"><tbody id="deviceBody"></tbody></table>
+        <table id="deviceTable" style="margin-top: 25px;"><tbody id="deviceBody"></tbody></table>
     </div>
+    <footer>© 2026 Copy Right By Angerina Frog</footer>
 </main>
 
-<footer>© 2026 Copy Right By Angerina Frog</footer>
-
 <script>
+    // ใช้ ID ชีตที่คุณให้มา
+    const SPREADSHEET_ID = "1TmUd8Xl3ceF7nlEs2U7Wpk1dejzMIGjJ0MSRrHBKs1";
+    // เปลี่ยน URL Web App ของคุณที่นี่ (ที่เขียนให้ดึงข้อมูลจากชีต)
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzN8m0wOGKSZQXFsx5I5Mnw48_yptPpHbR9JSePBjxfIImvIUTqDxZj7T_zlqUIov0njA/exec";
 
-    // --- SIDEBAR & MEMORY ---
-    function includeSidebar() {
-        fetch('sidebar.html?v=' + new Date().getTime())
-            .then(res => res.text())
-            .then(data => {
-                document.getElementById('sidebar').innerHTML = data;
-                restoreMenuState();
-            });
+    // --- ระบบ SIDEBAR & การจำค่า ---
+    async function loadSidebar() {
+        try {
+            const res = await fetch('sidebar.html');
+            const html = await res.text();
+            document.getElementById('sidebar').innerHTML = html;
+            setupSidebarEvents();
+            restoreMenuState();
+        } catch (e) { console.warn("Sidebar file not found"); }
     }
 
     function toggleSidebar() {
@@ -107,26 +118,33 @@
         document.getElementById("overlay").classList.toggle("show");
     }
 
-    window.toggleDrop = function(btn, id) {
-        const item = btn.closest('.item');
-        const isOpen = item.classList.toggle("open");
-        if (id) localStorage.setItem('menu-' + id, isOpen);
+    function setupSidebarEvents() {
+        // ดักจับการคลิกเมนูที่มีเมนูย่อย
+        document.querySelectorAll('.drop-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const item = this.parentElement;
+                const menuId = this.getAttribute('data-id') || this.innerText.trim();
+                const isOpen = item.classList.toggle('open');
+                // บันทึกสถานะลงเครื่อง
+                localStorage.setItem('menu_' + menuId, isOpen);
+            });
+        });
     }
 
     function restoreMenuState() {
-        ['credit', 'branch'].forEach(id => {
-            if (localStorage.getItem('menu-' + id) === 'true') {
-                const el = document.getElementById('menu-' + id);
-                if (el) el.classList.add('open');
+        document.querySelectorAll('.drop-btn').forEach(btn => {
+            const menuId = btn.getAttribute('data-id') || btn.innerText.trim();
+            const savedState = localStorage.getItem('menu_' + menuId);
+            if (savedState === 'true') {
+                btn.parentElement.classList.add('open');
             }
         });
     }
 
-    // --- SALES DATA ---
+    // --- ระบบดึงข้อมูลยอดขาย ---
     async function getSalesData() {
-        const select = document.getElementById('employeeSelect');
-        const sheetName = select.value;
-        const empName = select.options[select.selectedIndex].text;
+        const sheetName = document.getElementById('employeeSelect').value;
+        const empName = document.getElementById('employeeSelect').options[document.getElementById('employeeSelect').selectedIndex].text;
         const loader = document.getElementById('loader');
         
         loader.style.display = 'block';
@@ -134,51 +152,66 @@
         document.getElementById('deviceTable').style.display = 'none';
 
         try {
-            const res = await fetch(`${SCRIPT_URL}?sheetName=${encodeURIComponent(sheetName)}&t=${new Date().getTime()}`);
-            const data = await res.json();
+            // ส่ง parameter ไปยัง Google Apps Script
+            const response = await fetch(`${SCRIPT_URL}?sheetName=${encodeURIComponent(sheetName)}`);
+            const result = await response.json();
+            const data = result.values; // สมมติว่า GAS ส่ง {values: [[...]]}
+
             document.getElementById('empTitle').innerText = `สรุปยอด ${empName}`;
             
-            // ตารางหลัก
+            // 1. จัดการตารางยอดขาย (B5:D15 ของไฟล์ คือ index 4 ถึง 14 ใน Array)
             const salesBody = document.getElementById('salesBody');
             salesBody.innerHTML = "";
-            data.slice(2, 13).forEach(row => {
+            const salesRows = data.slice(4, 15); 
+            
+            salesRows.forEach(row => {
                 const tr = document.createElement('tr');
                 if (row[0]?.includes("รวมยอด New")) tr.className = 'bg-new';
                 if (row[0]?.includes("รวมยอด BDBC")) tr.className = 'bg-bdbc';
-                row.forEach(cell => {
+                
+                // ดึง 3 คอลัมน์ (Type, ยอด, จำนวน)
+                for(let i=0; i<3; i++) {
                     const td = document.createElement('td');
-                    td.innerText = (cell === "" || cell === null) ? "0" : cell;
+                    td.innerText = row[i] || "0";
                     tr.appendChild(td);
-                });
+                }
                 salesBody.appendChild(tr);
             });
 
-            // ตาราง Device
+            // 2. จัดการตาราง Device (B22:D25 คือ index 21 ถึง 24)
             const deviceBody = document.getElementById('deviceBody');
             deviceBody.innerHTML = "";
-            data.slice(21, 25).forEach((row, i) => {
+            const deviceRows = data.slice(21, 25);
+
+            deviceRows.forEach((row, idx) => {
                 const tr = document.createElement('tr');
-                if (i === 0) {
-                    const th = document.createElement('th'); th.className = 'device-header'; th.colSpan = 3;
-                    th.innerText = row[0] || "สรุปยอด Device"; tr.appendChild(th);
+                if (idx === 0) { // หัวข้อสรุปยอด Device
+                    const th = document.createElement('th');
+                    th.className = 'device-header'; th.colSpan = 3;
+                    th.innerText = row[0] || "สรุปยอด Device";
+                    tr.appendChild(th);
                 } else {
-                    if (i === 1) tr.className = 'device-sub-header';
-                    row.forEach(cell => {
+                    if (idx === 1) tr.className = 'device-sub-header'; // แถวชื่อคอลัมน์ Apple/Smartphone
+                    for(let i=0; i<3; i++) {
                         const td = document.createElement('td');
-                        td.innerText = (cell === "" || cell === null) ? "0" : cell;
+                        td.innerText = row[i] || "0";
                         tr.appendChild(td);
-                    });
+                    }
                 }
                 deviceBody.appendChild(tr);
             });
 
             document.getElementById('salesTable').style.display = 'table';
             document.getElementById('deviceTable').style.display = 'table';
-        } catch (e) { alert("❌ โหลดข้อมูลไม่สำเร็จ"); } 
-        finally { loader.style.display = 'none'; }
+        } catch (e) {
+            console.error(e);
+            alert("❌ ไม่สามารถดึงข้อมูลได้ โปรดตรวจสอบการตั้งค่า Google Apps Script");
+        } finally {
+            loader.style.display = 'none';
+        }
     }
 
-    window.onload = includeSidebar;
+    window.onload = loadSidebar;
 </script>
 </body>
 </html>
