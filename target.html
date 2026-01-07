@@ -9,7 +9,7 @@
     <style>
         :root {
             --primary: #3b82f6;
-            --primary-soft: #eff6ff;
+            --primary-light: #eff6ff;
             --secondary: #8b5cf6;
             --success: #10b981;
             --warning: #f59e0b;
@@ -19,36 +19,12 @@
             --text-main: #0f172a;
             --text-sub: #64748b;
             --sidebar-w: 280px;
-            --radius-xl: 24px;
-            --radius-lg: 18px;
             --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --radius: 20px;
         }
 
         * { box-sizing: border-box; font-family: 'Kanit', sans-serif; }
         body { margin: 0; background: var(--bg); color: var(--text-main); overflow-x: hidden; }
-
-        /* ===== DYNAMIC STATUS INDICATOR ===== */
-        .status-pill { 
-            display: inline-flex; align-items: center; gap: 10px; 
-            background: #fff; padding: 6px 16px; border-radius: 30px; 
-            font-size: 13px; font-weight: 500; box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            border: 1px solid rgba(0,0,0,0.03);
-        }
-        .dot-container { position: relative; width: 10px; height: 10px; }
-        .dot { 
-            width: 10px; height: 10px; border-radius: 50%; background: #cbd5e1; 
-            display: block; transition: var(--transition);
-        }
-        .dot-ping {
-            position: absolute; display: inline-flex; height: 100%; width: 100%;
-            border-radius: 50%; opacity: 0.75; animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
-        }
-        @keyframes ping { 75%, 100% { transform: scale(2.5); opacity: 0; } }
-
-        /* Status States */
-        .status-syncing .dot, .status-syncing .dot-ping { background: var(--warning); }
-        .status-online .dot { background: var(--success); } .status-online .dot-ping { display: none; }
-        .status-error .dot, .status-error .dot-ping { background: var(--danger); }
 
         /* ===== SIDEBAR & ACCORDION FIX ===== */
         .sidebar {
@@ -59,148 +35,157 @@
         }
         .sidebar.show { transform: translateX(0); }
         
-        /* แก้ไข Accordion: กาง/หุบ */
+        /* แก้ไขเมนูให้กาง/หุบได้ */
         .menu .item .sub { 
-            max-height: 0; overflow: hidden; transition: var(--transition);
-            background: rgba(0,0,0,0.15);
+            max-height: 0; 
+            overflow: hidden; 
+            transition: var(--transition); 
+            background: rgba(0,0,0,0.2);
         }
-        .menu .item.open .sub { max-height: 500px; } /* ปรับค่าตามความเหมาะสม */
-        .menu .item.open .arrow { transform: rotate(180deg); }
+        .menu .item.open .sub { max-height: 500px; } /* ปรับค่าตามความสูงเมนู */
+        .menu .item.open .drop-btn i.fa-chevron-right { transform: rotate(90deg); }
 
         .menu a, .drop-btn { 
             display: flex; align-items: center; width: 100%; padding: 16px 24px; 
             color: #94a3b8; text-decoration: none; background: transparent; border: none; 
             font-size: 15px; cursor: pointer; transition: var(--transition);
         }
-        .menu a:hover, .drop-btn:hover { background: rgba(255,255,255,0.05); color: #fff; }
-        .arrow { margin-left: auto; font-size: 12px; transition: var(--transition); }
+        .menu a:hover, .drop-btn:hover { background: rgba(255, 255, 255, 0.05); color: #fff; padding-left: 30px; }
+        .drop-btn i.fa-chevron-right { margin-left: auto; font-size: 12px; transition: var(--transition); }
 
-        /* ===== UI CARDS & INPUTS ===== */
+        /* ===== DYNAMIC STATUS PILL ===== */
+        .status-pill { 
+            display: inline-flex; align-items: center; gap: 10px; 
+            background: #fff; padding: 6px 16px; border-radius: 50px; 
+            font-size: 13px; font-weight: 500; box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+        .dot-wrapper { position: relative; width: 10px; height: 10px; }
+        .dot { width: 10px; height: 10px; border-radius: 50%; background: #cbd5e1; display: block; }
+        /* เอฟเฟกต์ไฟกะพริบ */
+        .pulse {
+            position: absolute; width: 100%; height: 100%; border-radius: 50%;
+            background: inherit; opacity: 0.6; animation: pulse-animation 1.5s infinite;
+        }
+        @keyframes pulse-animation { 0% { transform: scale(1); opacity: 0.6; } 100% { transform: scale(2.5); opacity: 0; } }
+
+        /* ===== UI REFINEMENT (THE "ROUNDED" LOOK) ===== */
         .top-nav { 
             position: sticky; top: 0; background: rgba(255,255,255,0.7); 
-            backdrop-filter: blur(12px); padding: 12px 20px; 
+            backdrop-filter: blur(15px); padding: 12px 25px; 
             display: flex; align-items: center; justify-content: space-between; 
             z-index: 1000; border-bottom: 1px solid rgba(0,0,0,0.05);
         }
 
-        .main-container { padding: 25px; transition: var(--transition); max-width: 1200px; margin: 0 auto; }
-        @media(min-width: 992px) { 
-            .sidebar { transform: translateX(0); } 
-            .main-container { margin-left: var(--sidebar-w); }
-            .menu-toggle { display: none; }
-        }
+        .main-container { padding: 30px 20px; transition: var(--transition); max-width: 1200px; margin: 0 auto; }
+        @media(min-width: 992px) { .sidebar { transform: translateX(0); } .main-container { margin-left: var(--sidebar-w); } .menu-toggle { display: none; } }
 
         .target-card { 
-            background: var(--card-bg); border-radius: var(--radius-xl); 
-            padding: 28px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.04); 
-            border: 1px solid rgba(0,0,0,0.03); transition: var(--transition);
-            margin-bottom: 25px;
+            background: var(--card-bg); border-radius: var(--radius); 
+            padding: 30px; box-shadow: 0 15px 35px -5px rgba(0,0,0,0.05); 
+            border: 1px solid rgba(255,255,255,0.8); transition: var(--transition);
         }
-        .target-card:hover { transform: translateY(-5px); box-shadow: 0 20px 30px -10px rgba(0,0,0,0.08); }
+        .target-card:hover { transform: translateY(-5px); box-shadow: 0 25px 45px -10px rgba(0,0,0,0.1); }
+        .target-card::before { height: 8px; border-radius: var(--radius) var(--radius) 0 0; }
 
         .unit-label { 
-            margin: 20px 0 12px; padding: 12px 18px; border-radius: var(--radius-lg); 
-            font-weight: 600; font-size: 14px;
+            border-radius: 15px; padding: 12px 20px; font-weight: 500; 
+            letter-spacing: 0.5px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
         }
 
         input[type="text"] { 
-            width: 110px; text-align: right; padding: 10px 14px; 
-            border-radius: 14px; border: 2px solid #f1f5f9; 
-            background: #f8fafc; font-weight: 600; transition: var(--transition); outline: none;
+            width: 110px; padding: 10px 15px; border-radius: 12px; 
+            border: 2px solid #eef2f6; background: #f8fafc; font-weight: 600;
         }
-        input.editable { border-color: #e2e8f0; background: #fff; }
-        input.editable:focus { border-color: var(--primary); transform: scale(1.05); box-shadow: 0 0 0 4px var(--primary-soft); }
+        input.editable { border-color: #e2e8f0; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        input.editable:focus { border-color: var(--primary); transform: scale(1.05); }
 
-        .total-black { background: #0f172a !important; color: #fff !important; border: none !important; width: 130px !important; font-size: 19px; }
-
-        .btn {
-            padding: 14px 28px; border-radius: 16px; font-weight: 600;
-            cursor: pointer; border: none; transition: var(--transition); 
-            display: flex; align-items: center; gap: 10px;
-        }
-        .btn-edit { background: #0f172a; color: white; }
-        .btn-save { background: var(--success); color: white; display: none; }
-        .btn:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); filter: brightness(1.1); }
-
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: none; z-index: 1500; backdrop-filter: blur(4px); }
+        .btn { padding: 14px 28px; border-radius: 18px; box-shadow: 0 8px 15px rgba(0,0,0,0.1); }
+        
+        .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.5); display: none; z-index: 1500; backdrop-filter: blur(4px); }
         .overlay.show { display: block; }
+
+        .bg-blue { background: #e0f2fe; color: #0369a1; }
+        .bg-purple { background: #f3e8ff; color: #7e22ce; }
     </style>
 </head>
-<body class="status-syncing"> <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+<body>
+
+<div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 <aside class="sidebar" id="sidebar"></aside>
 
 <nav class="top-nav">
-    <div class="menu-toggle" onclick="toggleSidebar()"><i class="fa-solid fa-bars-staggered" style="font-size: 20px;"></i></div>
-    <div class="status-pill" id="status-container">
-        <div class="dot-container">
-            <span class="dot-ping" id="status-ping"></span>
+    <div class="menu-toggle" onclick="toggleSidebar()"><i class="fa-solid fa-bars-staggered" style="font-size: 20px; color: var(--primary);"></i></div>
+    <div class="status-pill">
+        <div class="dot-wrapper">
+            <span class="pulse" id="status-pulse"></span>
             <span class="dot" id="sync-dot"></span>
         </div>
-        <span id="status-text">กำลังตรวจสอบสถานะ...</span>
+        <span id="status-text">เริ่มต้นระบบ...</span>
     </div>
 </nav>
 
 <main class="main-container">
-    <div class="header-section" style="text-align: center; margin-bottom: 40px;">
-        <h1 style="margin:0 0 8px 0; font-size: 32px; font-weight: 600;">Target Dashboard</h1>
-        <p style="color:var(--text-sub);">BigC Prachauthit • Sales Performance Tracking</p>
+    <div class="header-section">
+        <h1 style="margin:0 0 10px 0; font-size: 32px; font-weight: 600; letter-spacing: -0.5px;">Target BigC Prachauthit</h1>
+        <p style="color:var(--text-sub); font-size: 16px;">ระบบจัดการเป้าหมายและวิเคราะห์ยอดขายแบบ Real-time</p>
         
-        <div class="btn-group" style="display: flex; justify-content: center; gap: 15px; margin-top: 25px;">
+        <div class="btn-group">
             <button class="btn btn-edit" id="editBtn" onclick="unlock()">
-                <i class="fa-solid fa-pen-to-square"></i> แก้ไขข้อมูล
+                <i class="fa-solid fa-pen-nib"></i> แก้ไขข้อมูล
             </button>
             <button class="btn btn-save" id="saveBtn" onclick="saveAll()">
-                <i class="fa-solid fa-cloud-arrow-up"></i> บันทึกยอด
+                <i class="fa-solid fa-cloud-arrow-up"></i> บันทึกข้อมูลเข้า Server
             </button>
         </div>
     </div>
 
     
 
-    <div class="grid-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 30px;">
-        <div class="target-card" style="border-top: 6px solid var(--primary);">
-            <div class="staff-item" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <strong style="font-size:1.2rem">Postpay Total</strong>
-                <input type="text" class="total-black" id="postpay_total" readonly value="0">
+    <div class="grid-container">
+        <div class="target-card card-postpay">
+            <div class="staff-item">
+                <strong style="font-size:1.2rem"><i class="fa-solid fa-chart-line"></i> Postpay Total</strong>
+                <input type="text" class="total-black" id="postpay_total" readonly>
             </div>
 
-            <div class="unit-label" style="background: var(--primary-soft); color: var(--primary-dark);">
-                <i class="fa-solid fa-sim-card"></i> NEW SIM
-            </div>
-            <div class="staff-item" style="display: flex; justify-content: space-between; align-items: center; margin: 12px 0;"><span>นวพล</span><input type="text" id="pp_nawa_n"></div>
-            <div class="staff-item" style="display: flex; justify-content: space-between; align-items: center; margin: 12px 0;"><span>ปิยะพร</span><input type="text" id="pp_piya_n"></div>
-            <div class="staff-item" style="display: flex; justify-content: space-between; align-items: center; margin: 12px 0;"><span>กรทักษ์</span><input type="text" id="pp_korn_n"></div>
-            <div class="staff-item" style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed #e2e8f0; display: flex; justify-content: space-between; font-weight: 600;">
-                <span>รวม New Sim</span><input type="text" id="pp_new_total" style="border:none; background:transparent" readonly>
+            <div class="unit-label bg-blue">NEW SIM</div>
+            <div class="staff-item"><span>นวพล</span><input type="text" id="pp_nawa_n"></div>
+            <div class="staff-item"><span>ปิยะพร</span><input type="text" id="pp_piya_n"></div>
+            <div class="staff-item"><span>กรทักษ์</span><input type="text" id="pp_korn_n"></div>
+            <div class="staff-item" style="border-top:2px dashed #e2e8f0; padding-top:15px; margin-top:15px;">
+                <strong style="color:var(--primary)">รวม New Sim</strong><input type="text" id="pp_new_total" readonly style="border:none; background:transparent; font-size:1.1rem">
             </div>
 
-            <div class="unit-label" style="background: var(--primary-soft); color: var(--primary-dark);">
-                <i class="fa-solid fa-user-check"></i> EXISTING
+            <div class="unit-label bg-blue">EXISTING</div>
+            <div class="staff-item"><span>นวพล</span><input type="text" id="pp_nawa_e"></div>
+            <div class="staff-item"><span>ปิยะพร</span><input type="text" id="pp_piya_e"></div>
+            <div class="staff-item"><span>กรทักษ์</span><input type="text" id="pp_korn_e"></div>
+            <div class="staff-item" style="border-top:2px dashed #e2e8f0; padding-top:15px; margin-top:15px;">
+                <strong style="color:var(--primary)">รวม Existing</strong><input type="text" id="pp_ext_total" readonly style="border:none; background:transparent; font-size:1.1rem">
             </div>
-            <div class="staff-item" style="display: flex; justify-content: space-between; align-items: center; margin: 12px 0;"><span>นวพล</span><input type="text" id="pp_nawa_e"></div>
-            <div class="staff-item" style="display: flex; justify-content: space-between; align-items: center; margin: 12px 0;"><span>ปิยะพร</span><input type="text" id="pp_piya_e"></div>
-            <div class="staff-item" style="display: flex; justify-content: space-between; align-items: center; margin: 12px 0;"><span>กรทักษ์</span><input type="text" id="pp_korn_e"></div>
         </div>
 
-        <div class="target-card" style="border-top: 6px solid var(--secondary);">
-            <div class="staff-item" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <strong style="font-size:1.2rem">Device Total</strong>
-                <input type="text" class="total-black" id="device_total" readonly style="background: var(--secondary) !important;" value="0">
+        <div class="target-card card-device">
+            <div class="staff-item">
+                <strong style="font-size:1.2rem"><i class="fa-solid fa-mobile-screen"></i> Device Total</strong>
+                <input type="text" class="total-black" id="device_total" readonly style="background: var(--secondary) !important;">
             </div>
 
-            <div class="unit-label" style="background: #f5f3ff; color: #5b21b6;">
-                <i class="fa-brands fa-apple"></i> APPLE DEVICE
+            <div class="unit-label bg-purple">APPLE DEVICE</div>
+            <div class="staff-item"><span>นวพล</span><input type="text" id="dev_nawa_a"></div>
+            <div class="staff-item"><span>ปิยะพร</span><input type="text" id="dev_piya_a"></div>
+            <div class="staff-item"><span>กรทักษ์</span><input type="text" id="dev_korn_a"></div>
+            <div class="staff-item" style="border-top:2px dashed #e2e8f0; padding-top:15px; margin-top:15px;">
+                <strong style="color:var(--secondary)">รวม Apple</strong><input type="text" id="dev_apple_total" readonly style="border:none; background:transparent; font-size:1.1rem">
             </div>
-            <div class="staff-item" style="display: flex; justify-content: space-between; align-items: center; margin: 12px 0;"><span>นวพล</span><input type="text" id="dev_nawa_a"></div>
-            <div class="staff-item" style="display: flex; justify-content: space-between; align-items: center; margin: 12px 0;"><span>ปิยะพร</span><input type="text" id="dev_piya_a"></div>
-            <div class="staff-item" style="display: flex; justify-content: space-between; align-items: center; margin: 12px 0;"><span>กรทักษ์</span><input type="text" id="dev_korn_a"></div>
 
-            <div class="unit-label" style="background: #f5f3ff; color: #5b21b6;">
-                <i class="fa-solid fa-mobile-screen-button"></i> SMARTPHONE
+            <div class="unit-label bg-purple">SMARTPHONE</div>
+            <div class="staff-item"><span>นวพล</span><input type="text" id="dev_nawa_s"></div>
+            <div class="staff-item"><span>ปิยะพร</span><input type="text" id="dev_piya_s"></div>
+            <div class="staff-item"><span>กรทักษ์</span><input type="text" id="dev_korn_s"></div>
+            <div class="staff-item" style="border-top:2px dashed #e2e8f0; padding-top:15px; margin-top:15px;">
+                <strong style="color:var(--secondary)">รวม SmartPhone</strong><input type="text" id="dev_smart_total" readonly style="border:none; background:transparent; font-size:1.1rem">
             </div>
-            <div class="staff-item" style="display: flex; justify-content: space-between; align-items: center; margin: 12px 0;"><span>นวพล</span><input type="text" id="dev_nawa_s"></div>
-            <div class="staff-item" style="display: flex; justify-content: space-between; align-items: center; margin: 12px 0;"><span>ปิยะพร</span><input type="text" id="dev_piya_s"></div>
-            <div class="staff-item" style="display: flex; justify-content: space-between; align-items: center; margin: 12px 0;"><span>กรทักษ์</span><input type="text" id="dev_korn_s"></div>
         </div>
     </div>
 </main>
@@ -208,15 +193,36 @@
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz4jD9tgF3eR-j5xEyq2HUlQ2r7eYyHFo7pwvkV_EHBLz33Srnez2Vy9q7i-biUvtvmgQ/exec";
 
-    // --- ฟังก์ชันควบคุมสถานะ (UI Feedback) ---
-    function setStatus(state, message) {
-        const body = document.body;
-        const text = document.getElementById("status-text");
-        body.className = "status-" + state; // online, syncing, error
-        text.innerText = message;
+    // ฟังก์ชันจัดการสถานะ (Status Manager)
+    function updateStatus(state) {
+        const dot = document.getElementById("sync-dot");
+        const pulse = document.getElementById("status-pulse");
+        const txt = document.getElementById("status-text");
+
+        switch(state) {
+            case 'loading':
+                dot.style.background = "#f59e0b"; // สีส้ม
+                txt.innerText = "กำลังดึงข้อมูล...";
+                pulse.className = "pulse"; // กะพริบ
+                break;
+            case 'saving':
+                dot.style.background = "#3b82f6"; // สีน้ำเงิน
+                txt.innerText = "กำลังบันทึกข้อมูล...";
+                pulse.className = "pulse"; 
+                break;
+            case 'success':
+                dot.style.background = "#10b981"; // สีเขียว
+                txt.innerText = "เชื่อมต่อฐานข้อมูลเรียบร้อย";
+                pulse.className = ""; // หยุดกะพริบ
+                break;
+            case 'error':
+                dot.style.background = "#ef4444"; // สีแดง
+                txt.innerText = "การเชื่อมต่อขัดข้อง";
+                pulse.className = "pulse"; 
+                break;
+        }
     }
 
-    // --- ฟังก์ชันจัดการ Sidebar ---
     function includeSidebar() {
         const version = new Date().getTime();
         fetch('sidebar.html?v=' + version)
@@ -232,15 +238,11 @@
         document.getElementById("overlay").classList.toggle("show");
     }
 
-    // แก้ไข Accordion ให้หุบได้
+    // แก้ไข Logic การกาง/หุบเมนู
     window.toggleDrop = function(btn, id) {
         const item = btn.closest('.item'); 
         const isOpen = item.classList.toggle("open");
         if (id) localStorage.setItem('menu-' + id, isOpen);
-        
-        // หมุนลูกศร (ถ้าใน sidebar.html มีไอคอน arrow)
-        const icon = btn.querySelector('.fa-chevron-right');
-        if(icon) icon.style.transform = isOpen ? 'rotate(90deg)' : 'rotate(0deg)';
     }
 
     function restoreMenuState() {
@@ -252,7 +254,6 @@
         });
     }
 
-    // --- ฟังก์ชันจัดการข้อมูล ---
     function unlock() {
         document.querySelectorAll("input:not([readonly])").forEach(i => i.classList.add("editable"));
         document.getElementById("saveBtn").style.display = "flex";
@@ -260,7 +261,7 @@
     }
 
     async function loadData() {
-        setStatus("syncing", "กำลังดึงข้อมูลล่าสุด...");
+        updateStatus('loading');
         try {
             const res = await fetch(SCRIPT_URL);
             const data = await res.json();
@@ -268,9 +269,9 @@
                 const el = document.getElementById(k);
                 if (el) el.value = data[k];
             });
-            setStatus("online", "เชื่อมต่อฐานข้อมูลเรียบร้อย");
+            updateStatus('success');
         } catch (e) {
-            setStatus("error", "การเชื่อมต่อล้มเหลว");
+            updateStatus('error');
         }
     }
 
@@ -278,7 +279,7 @@
         const btn = document.getElementById("saveBtn");
         btn.disabled = true;
         btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> กำลังบันทึก...`;
-        setStatus("syncing", "กำลังส่งข้อมูลไปที่ Server...");
+        updateStatus('saving');
 
         const payload = {};
         document.querySelectorAll("input").forEach(i => {
@@ -292,14 +293,14 @@
             });
             const result = await response.json();
             if (result.status === "Success") {
-                setStatus("online", "บันทึกสำเร็จ!");
-                setTimeout(() => location.reload(), 1200);
+                updateStatus('success');
+                setTimeout(() => location.reload(), 800);
             } else { throw new Error(); }
         } catch (e) {
-            alert("❌ บันทึกไม่สำเร็จ กรุณาลองใหม่");
+            alert("❌ บันทึกล้มเหลว");
             btn.disabled = false;
-            btn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> บันทึกยอด`;
-            setStatus("error", "เกิดข้อผิดพลาดในการบันทึก");
+            btn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> บันทึกข้อมูลเข้า Server`;
+            updateStatus('error');
         }
     }
 
