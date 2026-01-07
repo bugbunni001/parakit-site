@@ -41,6 +41,7 @@
             box-shadow: 4px 0 15px rgba(0,0,0,0.2);
         }
 
+        /* สำหรับรองรับเนื้อหาจาก sidebar.html */
         .menu .item .sub { display: none; background: #0f172a; }
         .menu .item.open .sub { display: block; }
         .menu .item.open .arrow { transform: rotate(90deg); }
@@ -70,6 +71,7 @@
             transition: all 0.3s ease;
         }
 
+        /* คลาสควบคุมการ หุบ */
         body.collapsed #sidebar-container { transform: translateX(calc(var(--sidebar-width) * -1)); }
         body.collapsed .main-content { margin-left: 0; width: 100%; }
 
@@ -77,6 +79,8 @@
             #sidebar-container { transform: translateX(calc(var(--sidebar-width) * -1)); }
             .main-content { margin-left: 0; width: 100%; padding: 10px; }
             body.show-sidebar #sidebar-container { transform: translateX(0); }
+            /* เมื่อเป็น Mobile ห้ามใช้โหมด collapsed แบบ Desktop */
+            body.collapsed #sidebar-container { transform: translateX(calc(var(--sidebar-width) * -1)); }
         }
 
         .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: none; backdrop-filter: blur(4px); z-index: 1500; }
@@ -163,17 +167,8 @@
 <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 
 <aside id="sidebar-container">
-    <div class="menu" style="padding-top: 20px;">
-        <a href="#">🏠 Dashboard</a>
-        <div class="item" id="menu-branch">
-            <button class="drop-btn" onclick="toggleDrop(this, 'branch')">
-                <span>📂 ข้อมูลสาขา</span>
-                <span class="arrow">▶</span>
-            </button>
-            <div class="sub">
-                <a href="#">- รายงานรวม</a>
-            </div>
-        </div>
+    <div id="sidebar-content">
+        <?!= HtmlService.createHtmlOutputFromFile('sidebar').getContent(); ?>
     </div>
 </aside>
 
@@ -266,28 +261,36 @@
 </main>
 
 <script>
-    // *** สำคัญ: เปลี่ยน URL นี้เป็น Web App URL จาก Google Apps Script ของคุณ ***
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw1-xCz4hKJx8k9j7yKjxYvBjqVoWmyzy33-XBJkp_WoIpOTcDa9cee3eKuCKiMjsbT/exec"; 
 
-    // ฟังก์ชันจัดการ Sidebar
+    // ระบบจดจำสถานะ Sidebar และการหุบกาง
+    document.addEventListener('DOMContentLoaded', () => {
+        const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+        if (isCollapsed && window.innerWidth > 900) {
+            document.getElementById('mainBody').classList.add('collapsed');
+        }
+    });
+
     function toggleSidebar() {
         const body = document.getElementById('mainBody');
         const overlay = document.getElementById('overlay');
+        
         if (window.innerWidth > 900) {
             body.classList.toggle('collapsed');
+            // บันทึกสถานะลง localStorage
+            localStorage.setItem('sidebarCollapsed', body.classList.contains('collapsed'));
         } else {
             body.classList.toggle('show-sidebar');
             overlay.classList.toggle('show');
         }
     }
 
-    // ฟังก์ชันเปิด/ปิด Dropdown ใน Sidebar
+    // ฟังก์ชันสำหรับเปิดปิด Dropdown ใน Sidebar (รองรับโค้ดจาก sidebar.html)
     function toggleDrop(btn) {
         const item = btn.closest('.item'); 
-        item.classList.toggle("open");
+        if(item) item.classList.toggle("open");
     }
 
-    // ฟังก์ชันดึงข้อมูลจาก Google Sheets
     async function loadData() {
         const loader = document.getElementById('loader');
         const selectedDay = document.getElementById('daySelect').value;
@@ -305,18 +308,15 @@
                 document.getElementById('labelStaff').innerText = data.staffName;
                 document.getElementById('dailyDateNum').innerText = selectedDay;
 
-                // 1. ตารางสรุปยอดขาย
                 document.getElementById('summaryBody').innerHTML = data.summary.map(r => {
                     const isTotal = r[0].includes("รวมยอด");
                     return `<tr class="${isTotal?'row-summary':''}"><td>${r[0]}</td><td class="text-right">${r[1]}</td><td class="text-right">${r[2]}</td></tr>`;
                 }).join('');
 
-                // 2. ตาราง Focus
                 document.getElementById('focusBody').innerHTML = data.focus
                     .filter(r => r[0] && r[0] !== "Target")
                     .map(r => `<tr><td>${r[0]}</td><td class="text-right" style="color:#dc2626; font-weight:700;">${r[1]}</td></tr>`).join('');
 
-                // 3. เป้าหมายรายเดือน
                 const tDiv = document.getElementById('targetBody');
                 tDiv.innerHTML = "";
                 data.targets.forEach(r => {
@@ -328,7 +328,6 @@
                     }
                 });
 
-                // 4. สถิติด้านล่าง (Stat Cards)
                 const s = data.topStats;
                 const stats = [
                     { l: s[0][0], v: s[1][0], d: s[1][1], c: '#ffb100' },
@@ -345,7 +344,6 @@
                         </div>
                     </div>`).join('');
 
-                // 5. ข้อมูลรายวัน
                 if(data.dailyRow) {
                     const dr = data.dailyRow;
                     document.getElementById('dailyBody').innerHTML = `
