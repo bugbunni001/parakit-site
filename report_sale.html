@@ -3,31 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📊 เช็คยอดขาย - ระบบรวมยอด2</title>
+    <title>📊 รายงานยอดขายพนักงานรายบุคคล</title>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        /* [CSS เดิมของคุณทั้งหมด เพื่อรักษาหน้าตาเดิมไว้] */
         * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
-        body { margin: 0; background: #f8fafc; padding-bottom: 80px; color: #334155; overflow-x: hidden; }
-        .top-toggle { position: fixed; top: 15px; left: 15px; z-index: 1400; width: 45px; height: 45px; border-radius: 12px; border: none; background: #1e293b; color: #fff; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
-        .sidebar { position: fixed; top: 0; left: 0; width: 260px; height: 100vh; background: #1e293b; color: #fff; overflow-y: auto; transform: translateX(-260px); transition: all .3s; z-index: 2000; }
+        body { margin: 0; background: #f1f5f9; color: #334155; }
+        
+        /* Sidebar Layout */
+        .top-toggle { position: fixed; top: 15px; left: 15px; z-index: 1400; width: 45px; height: 45px; border-radius: 12px; border: none; background: #1e293b; color: #fff; font-size: 20px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; }
+        .sidebar { position: fixed; top: 0; left: 0; width: 260px; height: 100vh; background: #1e293b; transform: translateX(-260px); transition: 0.3s; z-index: 2000; overflow-y: auto; }
         .sidebar.show { transform: translateX(0); }
-        .content { padding: 80px 20px 40px; transition: margin-left .3s; }
+        .content { padding: 80px 20px 40px; transition: margin-left 0.3s; }
         @media(min-width:769px) { .sidebar { transform: translateX(0); } .content { margin-left: 260px; } .top-toggle { display: none; } }
-        .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: none; backdrop-filter: blur(4px); z-index: 1500; }
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; z-index: 1500; backdrop-filter: blur(4px); }
         .overlay.show { display: block; }
-        .sales-card { background: white; border-radius: 24px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); max-width: 600px; margin: 0 auto; }
-        .btn-fetch { width: 100%; background: #1e293b; color: white; border: none; padding: 15px; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.2s; margin-bottom: 20px; }
-        .btn-fetch:hover { background: #334155; }
-        table { width: 100%; border-collapse: collapse; display: none; overflow: hidden; border-radius: 12px; border: 1px solid #e2e8f0; }
-        th { background-color: #4db6ac; color: white; padding: 12px; font-weight: 400; border: 1px solid #e2e8f0; }
-        td { padding: 10px; border: 1px solid #e2e8f0; text-align: center; font-size: 14px; }
-        .bg-new { background-color: #c8e6c9 !important; font-weight: 600; }
-        .bg-bdbc { background-color: #d1ecf1 !important; font-weight: 600; }
-        .device-header { background-color: #00bcd4 !important; color: white; font-weight: 600; }
-        .device-sub-header { background-color: #f1f5f9; color: #334155; font-weight: 600; }
-        #loader { text-align: center; margin: 20px 0; color: #64748b; font-weight: 600; }
-        footer { width: 100%; text-align: center; padding: 15px 0; color: #94a3b8; font-size: 12px; }
+
+        /* Report Card */
+        .report-card { max-width: 700px; margin: auto; background: #fff; padding: 30px; border-radius: 24px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.05); }
+        h2 { text-align: center; color: #1e293b; margin-bottom: 25px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 500; color: #64748b; }
+        select { width: 100%; padding: 12px 15px; border-radius: 12px; border: 2px solid #e2e8f0; font-size: 16px; outline: none; transition: 0.2s; cursor: pointer; background: #f8fafc; }
+        select:focus { border-color: #4db6ac; background: #fff; }
+        
+        .btn-fetch { width: 100%; padding: 15px; border-radius: 12px; border: none; background: #1e293b; color: #fff; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.3s; margin-bottom: 25px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        .btn-fetch:hover { background: #334155; transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+        .btn-fetch:active { transform: translateY(0); }
+
+        /* Table Styling */
+        .table-container { overflow-x: auto; display: none; margin-top: 10px; border-radius: 15px; border: 1px solid #e2e8f0; }
+        table { width: 100%; border-collapse: collapse; min-width: 500px; }
+        th { background: #4db6ac; color: white; padding: 14px; font-weight: 400; text-align: center; }
+        td { padding: 12px; border-bottom: 1px solid #f1f5f9; text-align: center; font-size: 15px; }
+        
+        /* Row Highlighting based on image_970ea3.png */
+        .row-new { background-color: #c8e6c9 !important; font-weight: 600; }
+        .row-bdbc { background-color: #d1ecf1 !important; font-weight: 600; }
+        
+        #loader { text-align: center; display: none; color: #64748b; margin: 20px 0; font-weight: 500; }
+        footer { text-align: center; margin-top: 30px; color: #94a3b8; font-size: 12px; }
     </style>
 </head>
 <body>
@@ -37,129 +52,128 @@
 <aside class="sidebar" id="sidebar"></aside>
 
 <main class="content">
-    <div class="sales-card">
-        <h2 style="text-align: center; margin-bottom: 10px;">📊 ยอดขายรวมทุกพนักงาน</h2>
-        <p style="text-align:center; color:#64748b; font-size:14px; margin-bottom: 25px;">( ข้อมูลจากแผ่นงาน: รวมยอด2 )</p>
+    <div class="report-card">
+        <h2>📊 รายงานยอดขายรายบุคคล</h2>
         
-        <button class="btn-fetch" onclick="getSalesData()">🔄 ดึงข้อมูลล่าสุด</button>
+        <div class="form-group">
+            <label>เลือกชื่อพนักงาน</label>
+            <select id="staffSelect">
+                <option value="นวพล2">👤 นวพล</option>
+                <option value="ปิยะพร2">👤 ปิยะพร</option>
+                <option value="กรทักษ์2">👤 กรทักษ์</option>
+            </select>
+        </div>
         
-        <div id="loader" style="display:none;">⏳ กำลังติดต่อ Server...</div>
+        <button class="btn-fetch" onclick="getPersonalSales()">🔄 ดึงยอดขายล่าสุด</button>
+        
+        <div id="loader">⏳ กำลังประมวลผลข้อมูล...</div>
 
-        <table id="salesTable">
-            <thead>
-                <tr><th colspan="3" style="background:#1e293b;">สรุปยอดขาย PostPay</th></tr>
-                <tr style="background:#f1f5f9; color:#333;">
-                    <th>รายการขาย</th>
-                    <th>ยอดเงิน</th>
-                    <th>จำนวน</th>
-                </tr>
-            </thead>
-            <tbody id="salesBody"></tbody>
-        </table>
-
-        <table id="deviceTable" style="margin-top: 25px;">
-            <tbody id="deviceBody"></tbody>
-        </table>
+        <div class="table-container" id="tableContainer">
+            <table id="reportTable">
+                <thead>
+                    <tr><th colspan="3" id="tableTitle">สรุปยอดขาย</th></tr>
+                    <tr style="background:#f1f5f9; color:#334155;">
+                        <th style="background:#f1f5f9; color:#334155;">Type การขาย</th>
+                        <th style="background:#f1f5f9; color:#334155;">ยอด PostPay</th>
+                        <th style="background:#f1f5f9; color:#334155;">จำนวน</th>
+                    </tr>
+                </thead>
+                <tbody id="reportData"></tbody>
+            </table>
+        </div>
     </div>
     <footer>© 2026 Copy Right By Angerina Frog</footer>
 </main>
 
 <script>
-    // *** สำคัญ: ก๊อปปี้ URL ใหม่ที่ได้จาก Google Apps Script หลัง Deploy มาวางที่นี่ ***
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyVvSdDb4M6kddmnszqKYPLtTBNndcBbUviaG_P3x-D4NkzndvW8463N4OOr_5Zk3FMDw/exec"; 
+    // แทนที่ด้วย URL ของคุณหลังจาก Deploy Apps Script
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz8ndAVal540NgB3cTJi9UX1moqLwLBDuBNbyeYlkUmxLTLHxbW1PdIDeVfuHLUp4zqdw/exec"; 
 
     function toggleSidebar() {
         document.getElementById("sidebar").classList.toggle("show");
         document.getElementById("overlay").classList.toggle("show");
     }
 
-    // ฟังก์ชันดึง Sidebar (ถ้ามีไฟล์แยก)
-    async function loadSidebar() {
+    // โหลด Sidebar และระบบ Sidebar Event
+    async function initPage() {
         try {
             const res = await fetch('sidebar.html');
             if(res.ok) {
                 const html = await res.text();
                 document.getElementById('sidebar').innerHTML = html;
+                setupSidebarEvents();
             }
-        } catch (e) { console.warn("ไม่พบไฟล์ sidebar.html"); }
+        } catch(e) { console.warn("Sidebar not found"); }
     }
 
-    // ฟังก์ชันหลักในการดึงข้อมูลจาก Google Sheets
-    async function getSalesData() {
+    function setupSidebarEvents() {
+        document.querySelectorAll('.drop-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const item = this.parentElement;
+                const menuId = this.getAttribute('data-id') || this.innerText.trim();
+                const isOpen = item.classList.toggle('open');
+                localStorage.setItem('menu_' + menuId, isOpen);
+            });
+        });
+        restoreMenuState();
+    }
+
+    function restoreMenuState() {
+        document.querySelectorAll('.drop-btn').forEach(btn => {
+            const menuId = btn.getAttribute('data-id') || btn.innerText.trim();
+            if(localStorage.getItem('menu_' + menuId) === 'true') {
+                btn.parentElement.classList.add('open');
+            }
+        });
+    }
+
+    // ฟังก์ชันดึงข้อมูลยอดขายตามชื่อชีตพนักงาน
+    async function getPersonalSales() {
+        const sheetName = document.getElementById('staffSelect').value;
+        const staffName = document.getElementById('staffSelect').options[document.getElementById('staffSelect').selectedIndex].text;
         const loader = document.getElementById('loader');
-        const salesTable = document.getElementById('salesTable');
-        const deviceTable = document.getElementById('deviceTable');
+        const container = document.getElementById('tableContainer');
+        const tbody = document.getElementById('reportData');
         
         loader.style.display = 'block';
-        salesTable.style.display = 'none';
-        deviceTable.style.display = 'none';
+        container.style.display = 'none';
+        tbody.innerHTML = "";
 
         try {
-            // เรียกข้อมูลจาก Google Apps Script (doGet)
-            const response = await fetch(SCRIPT_URL);
+            const response = await fetch(`${SCRIPT_URL}?sheetName=${encodeURIComponent(sheetName)}`);
             const result = await response.json();
-            const data = result.values; // รับข้อมูล B1:D30 จากชีต
-
-            // 1. จัดการตารางสรุปยอดขาย (อิงจาก B5:D15 ในชีต)
-            const salesBody = document.getElementById('salesBody');
-            salesBody.innerHTML = "";
-            const salesRows = data.slice(4, 15); // แถวที่ 5 ถึง 15
             
-            salesRows.forEach(row => {
-                if(!row[0] || row[0] === "") return; // ข้ามแถวว่าง
+            if (result.error) throw new Error(result.error);
+
+            document.getElementById('tableTitle').innerText = `สรุปยอดขาย: ${staffName}`;
+            
+            // วนลูปสร้างแถวข้อมูล (B5:D15)
+            result.values.forEach(row => {
+                if(!row[0] && !row[1]) return; // ข้ามแถวว่าง
+                
                 const tr = document.createElement('tr');
+                // กำหนดสีไฮไลท์ตามเงื่อนไขในภาพ
+                if(row[0].includes("รวมยอด New")) tr.className = 'row-new';
+                if(row[0].includes("รวมยอด BDBC")) tr.className = 'row-bdbc';
                 
-                // ตรวจสอบชื่อเพื่อใส่สีไฮไลท์
-                if (row[0].includes("รวมยอด New")) tr.className = 'bg-new';
-                if (row[0].includes("รวมยอด BDBC")) tr.className = 'bg-bdbc';
-                
-                row.forEach(cell => {
+                row.forEach(cellValue => {
                     const td = document.createElement('td');
-                    td.innerText = cell || "0";
+                    td.innerText = cellValue || "0";
                     tr.appendChild(td);
                 });
-                salesBody.appendChild(tr);
+                tbody.appendChild(tr);
             });
 
-            // 2. จัดการตาราง Device (อิงจาก B22:D25 ในชีต)
-            const deviceBody = document.getElementById('deviceBody');
-            deviceBody.innerHTML = "";
-            const deviceRows = data.slice(21, 25); // แถวที่ 22 ถึง 25
-
-            deviceRows.forEach((row, idx) => {
-                if(!row[0] || row[0] === "") return;
-                const tr = document.createElement('tr');
-                
-                if (idx === 0) { 
-                    // หัวข้อ "สรุปยอด Device"
-                    const th = document.createElement('th');
-                    th.className = 'device-header'; th.colSpan = 3;
-                    th.innerText = row[0];
-                    tr.appendChild(th);
-                } else {
-                    if (idx === 1) tr.className = 'device-sub-header'; // แถว All Device/ยอด/จำนวน
-                    row.forEach(cell => {
-                        const td = document.createElement('td');
-                        td.innerText = cell || "0";
-                        tr.appendChild(td);
-                    });
-                }
-                deviceBody.appendChild(tr);
-            });
-
-            // แสดงตารางเมื่อข้อมูลโหลดเสร็จ
-            salesTable.style.display = 'table';
-            deviceTable.style.display = 'table';
-
+            container.style.display = 'block';
         } catch (e) {
             console.error(e);
-            alert("❌ ดึงข้อมูลไม่สำเร็จ: ตรวจสอบ URL หรือ การ Deploy ใน Apps Script");
+            alert("❌ บันทึกผิดพลาด: Server Error หรือไม่พบชื่อชีต");
         } finally {
             loader.style.display = 'none';
         }
     }
 
-    window.onload = loadSidebar;
+    window.onload = initPage;
 </script>
 </body>
 </html>
