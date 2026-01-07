@@ -6,7 +6,7 @@
     <title>📊 เช็คยอดขาย - ระบบรวมยอด2</title>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        /* [CSS เดิมของคุณทั้งหมด คงไว้เพื่อความสวยงามตามสไตล์เดิม] */
+        /* [CSS เดิมของคุณทั้งหมด เพื่อรักษาหน้าตาเดิมไว้] */
         * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
         body { margin: 0; background: #f8fafc; padding-bottom: 80px; color: #334155; overflow-x: hidden; }
         .top-toggle { position: fixed; top: 15px; left: 15px; z-index: 1400; width: 45px; height: 45px; border-radius: 12px; border: none; background: #1e293b; color: #fff; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
@@ -26,6 +26,7 @@
         .bg-bdbc { background-color: #d1ecf1 !important; font-weight: 600; }
         .device-header { background-color: #00bcd4 !important; color: white; font-weight: 600; }
         .device-sub-header { background-color: #f1f5f9; color: #334155; font-weight: 600; }
+        #loader { text-align: center; margin: 20px 0; color: #64748b; font-weight: 600; }
         footer { width: 100%; text-align: center; padding: 15px 0; color: #94a3b8; font-size: 12px; }
     </style>
 </head>
@@ -37,18 +38,18 @@
 
 <main class="content">
     <div class="sales-card">
-        <h2 style="text-align: center; margin-bottom: 20px;">📊 ยอดขายรวมทุกพนักงาน</h2>
-        <p style="text-align:center; color:#64748b; font-size:14px; margin-top:-15px;">ข้อมูลจากชีต: รวมยอด2</p>
+        <h2 style="text-align: center; margin-bottom: 10px;">📊 ยอดขายรวมทุกพนักงาน</h2>
+        <p style="text-align:center; color:#64748b; font-size:14px; margin-bottom: 25px;">( ข้อมูลจากแผ่นงาน: รวมยอด2 )</p>
         
         <button class="btn-fetch" onclick="getSalesData()">🔄 ดึงข้อมูลล่าสุด</button>
         
-        <div id="loader" style="display:none; text-align:center; margin:20px 0;">⏳ กำลังติดต่อฐานข้อมูล...</div>
+        <div id="loader" style="display:none;">⏳ กำลังติดต่อ Server...</div>
 
         <table id="salesTable">
             <thead>
                 <tr><th colspan="3" style="background:#1e293b;">สรุปยอดขาย PostPay</th></tr>
                 <tr style="background:#f1f5f9; color:#333;">
-                    <th>Type การขาย</th>
+                    <th>รายการขาย</th>
                     <th>ยอดเงิน</th>
                     <th>จำนวน</th>
                 </tr>
@@ -64,22 +65,26 @@
 </main>
 
 <script>
-    // แทนที่ด้วย URL Web App ที่ได้จากการ Deploy Google Apps Script
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby0FcO_sLLu8I8puaqUDb8ybK3Fqqz3hMIrMBsKWVgENZvw5Eo90DBnbv-vrzIrxq0tWg/exec";
+    // *** สำคัญ: ก๊อปปี้ URL ใหม่ที่ได้จาก Google Apps Script หลัง Deploy มาวางที่นี่ ***
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyVvSdDb4M6kddmnszqKYPLtTBNndcBbUviaG_P3x-D4NkzndvW8463N4OOr_5Zk3FMDw/exec"; 
 
     function toggleSidebar() {
         document.getElementById("sidebar").classList.toggle("show");
         document.getElementById("overlay").classList.toggle("show");
     }
 
+    // ฟังก์ชันดึง Sidebar (ถ้ามีไฟล์แยก)
     async function loadSidebar() {
         try {
             const res = await fetch('sidebar.html');
-            const html = await res.text();
-            document.getElementById('sidebar').innerHTML = html;
-        } catch (e) { console.warn("Sidebar error"); }
+            if(res.ok) {
+                const html = await res.text();
+                document.getElementById('sidebar').innerHTML = html;
+            }
+        } catch (e) { console.warn("ไม่พบไฟล์ sidebar.html"); }
     }
 
+    // ฟังก์ชันหลักในการดึงข้อมูลจาก Google Sheets
     async function getSalesData() {
         const loader = document.getElementById('loader');
         const salesTable = document.getElementById('salesTable');
@@ -90,24 +95,21 @@
         deviceTable.style.display = 'none';
 
         try {
-            // ดึงข้อมูลจาก Google Apps Script
+            // เรียกข้อมูลจาก Google Apps Script (doGet)
             const response = await fetch(SCRIPT_URL);
-            if (!response.ok) throw new Error("Network response was not ok");
-            
             const result = await response.json();
-            const data = result.values; // รับ Array B1:D30 จากชีต
+            const data = result.values; // รับข้อมูล B1:D30 จากชีต
 
-            // 1. จัดการตารางยอดขาย PostPay (ดึงจาก B5:D15)
-            // ใน Array ที่เริ่มจาก index 0: แถวที่ 5 คือ index 4 | แถวที่ 15 คือ index 14
+            // 1. จัดการตารางสรุปยอดขาย (อิงจาก B5:D15 ในชีต)
             const salesBody = document.getElementById('salesBody');
             salesBody.innerHTML = "";
-            const salesRows = data.slice(4, 15); 
+            const salesRows = data.slice(4, 15); // แถวที่ 5 ถึง 15
             
             salesRows.forEach(row => {
-                if(!row[0] && !row[1]) return; // ข้ามแถวว่าง
+                if(!row[0] || row[0] === "") return; // ข้ามแถวว่าง
                 const tr = document.createElement('tr');
                 
-                // ใส่สีตามเงื่อนไข
+                // ตรวจสอบชื่อเพื่อใส่สีไฮไลท์
                 if (row[0].includes("รวมยอด New")) tr.className = 'bg-new';
                 if (row[0].includes("รวมยอด BDBC")) tr.className = 'bg-bdbc';
                 
@@ -119,32 +121,23 @@
                 salesBody.appendChild(tr);
             });
 
-            // 2. จัดการตาราง Device (ดึงจาก B22:D25)
-            // แถวที่ 22 คือ index 21 | แถวที่ 25 คือ index 24
+            // 2. จัดการตาราง Device (อิงจาก B22:D25 ในชีต)
             const deviceBody = document.getElementById('deviceBody');
             deviceBody.innerHTML = "";
-            const deviceRows = data.slice(21, 25);
+            const deviceRows = data.slice(21, 25); // แถวที่ 22 ถึง 25
 
             deviceRows.forEach((row, idx) => {
-                if(!row[0] && !row[1]) return;
+                if(!row[0] || row[0] === "") return;
                 const tr = document.createElement('tr');
                 
                 if (idx === 0) { 
-                    // หัวข้อใหญ่ สรุปยอด Device
+                    // หัวข้อ "สรุปยอด Device"
                     const th = document.createElement('th');
                     th.className = 'device-header'; th.colSpan = 3;
-                    th.innerText = row[0] || "สรุปยอด Device";
+                    th.innerText = row[0];
                     tr.appendChild(th);
-                } else if (idx === 1) {
-                    // หัวข้อคอลัมน์ Apple / Smartphone
-                    tr.className = 'device-sub-header';
-                    row.forEach(cell => {
-                        const td = document.createElement('td');
-                        td.innerText = cell || "";
-                        tr.appendChild(td);
-                    });
                 } else {
-                    // ข้อมูลยอดเงินและจำนวน
+                    if (idx === 1) tr.className = 'device-sub-header'; // แถว All Device/ยอด/จำนวน
                     row.forEach(cell => {
                         const td = document.createElement('td');
                         td.innerText = cell || "0";
@@ -154,12 +147,13 @@
                 deviceBody.appendChild(tr);
             });
 
+            // แสดงตารางเมื่อข้อมูลโหลดเสร็จ
             salesTable.style.display = 'table';
             deviceTable.style.display = 'table';
 
         } catch (e) {
             console.error(e);
-            alert("❌ เกิดข้อผิดพลาด: ไม่สามารถดึงข้อมูลได้\n1. ตรวจสอบว่าได้ Deploy Web App หรือยัง?\n2. ตรวจสอบสิทธิ์การเข้าถึงว่าเป็น 'Anyone'");
+            alert("❌ ดึงข้อมูลไม่สำเร็จ: ตรวจสอบ URL หรือ การ Deploy ใน Apps Script");
         } finally {
             loader.style.display = 'none';
         }
