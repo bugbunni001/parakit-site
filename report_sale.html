@@ -15,6 +15,8 @@
             --sidebar-bg: #1e293b;
             --sidebar-hover: #334155;
             --sidebar-text: #cbd5e1;
+            --success: #059669;
+            --danger: #dc2626;
         }
         * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
         
@@ -71,7 +73,6 @@
 
         .container { max-width: 1200px; margin: 0 auto; width: 100%; }
         
-        /* Header & Action Buttons - ปรับ UX UI ให้ดูสะอาดแต่กดง่ายขึ้น */
         .header-bar { 
             background: var(--white); 
             padding: 15px 20px; 
@@ -87,8 +88,7 @@
 
         .action-group { display: flex; align-items: center; gap: 12px; }
 
-        /* ปรับ Dropdown ให้ใหญ่ขึ้นและสะอาดตา */
-        #staffSelect { 
+        #staffSelect, #daySelect { 
             padding: 10px 16px; 
             border-radius: 10px; 
             border: 1px solid #e2e8f0; 
@@ -97,13 +97,12 @@
             background-color: #f8fafc;
             color: var(--text-dark);
             cursor: pointer;
-            min-width: 180px;
             outline: none;
             transition: all 0.2s;
         }
-        #staffSelect:hover { border-color: var(--primary); background-color: #fff; }
+        #staffSelect { min-width: 180px; }
+        #staffSelect:hover, #daySelect:hover { border-color: var(--primary); background-color: #fff; }
 
-        /* ปรับปุ่มดึงข้อมูลให้เด่น กดง่าย แต่ดู Premium */
         .btn-fetch { 
             background: var(--primary); 
             color: white; 
@@ -124,9 +123,7 @@
             transform: translateY(-1px);
             box-shadow: 0 6px 15px rgba(91, 183, 170, 0.35);
         }
-        .btn-fetch:active { transform: translateY(0); }
 
-        /* ส่วนแสดงผลข้อมูล (ห้ามแก้) */
         .main-grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 15px; }
         #dashboardData { display: none; } 
         .card { background: var(--white); border-radius: 15px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid #edf2f7; margin-bottom: 15px; width: 100%; }
@@ -148,6 +145,24 @@
         .bg-amber { background: #ffb100; } .bg-orange { background: #ff5722; } .bg-slate { background: #4a5568; } .bg-teal { background: #38b2ac; }
         .loading { position: fixed; inset: 0; background: rgba(255,255,255,0.8); display: none; justify-content: center; align-items: center; z-index: 3000; font-weight: 600; }
 
+        /* ===== UI ใหม่สำหรับ Daily Card (ด้านบนสุด) ===== */
+        #dailyCard { border: none; box-shadow: 0 8px 30px rgba(0,0,0,0.08); margin-bottom: 25px; border-radius: 20px; }
+        #dailyCard .card-header { background: #1e293b; padding: 18px 25px; border-bottom: 2px solid var(--primary); }
+        .daily-table th { 
+            font-size: 11px; padding: 15px 8px; white-space: nowrap; text-align: center; 
+            background: #f8fafc; color: #64748b; font-weight: 600; text-transform: uppercase;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        .daily-table td { text-align: center; padding: 18px 8px; border-bottom: 1px solid #f1f5f9; }
+        .val-badge { 
+            display: inline-block; padding: 4px 10px; border-radius: 8px; font-weight: 700; min-width: 40px; 
+            transition: transform 0.2s;
+        }
+        .val-badge:hover { transform: scale(1.1); }
+        .bg-val { background-color: #ecfdf5 !important; color: #059669 !important; border: 1px solid #d1fae5; }
+        .bg-diff { background-color: #fef2f2 !important; color: #dc2626 !important; border: 1px solid #fee2e2; }
+        .bg-total { background-color: #f1f5f9 !important; color: #1e293b !important; font-size: 16px; border: 1px solid #e2e8f0; }
+
         @media (max-width: 900px) {
             .main-content { margin-left: 0; width: 100%; padding: 10px; }
             #sidebar-container { transform: translateX(-100%); }
@@ -156,7 +171,9 @@
             .header-bar { flex-direction: column; align-items: stretch; }
             .bottom-stats-grid { grid-template-columns: 1fr; }
             .action-group { flex-direction: column; }
-            #staffSelect, .btn-fetch { width: 100%; }
+            #staffSelect, #daySelect, .btn-fetch { width: 100%; }
+            .daily-table th { font-size: 10px; padding: 10px 4px; }
+            .daily-table td { padding: 12px 4px; }
         }
     </style>
 </head>
@@ -179,6 +196,12 @@
                     <option value="ปิยะพร2">👤 ปิยะพร</option>
                     <option value="กรทักษ์2">👤 กรทักษ์</option>
                 </select>
+                <select id="daySelect">
+                    <option value="">📅 เลือกวันที่ (รายวัน)</option>
+                    <script>
+                        for(let i=1; i<=31; i++) document.write(`<option value="${i}">วันที่ ${i}</option>`);
+                    </script>
+                </select>
                 <button class="btn-fetch" onclick="loadData()">🚀 ดึงข้อมูล</button>
             </div>
         </div>
@@ -188,6 +211,28 @@
         </div>
 
         <div id="dashboardData">
+            <div class="card" id="dailyCard" style="display:none;">
+                <div class="card-header">
+                    <span>📅 ยอดขายรายวัน</span>
+                    <span id="dailyDateLabel" style="font-weight: 400; font-size: 14px; background: rgba(255,255,255,0.2); padding: 2px 10px; border-radius: 20px;"></span>
+                </div>
+                <div class="table-wrapper">
+                    <table class="daily-table">
+                        <thead>
+                            <tr>
+                                <th>วันที่</th>
+                                <th>New Post</th><th>ขาด/เกิน</th>
+                                <th>BDBC</th><th>ขาด/เกิน</th>
+                                <th>Apple</th><th>ขาด/เกิน</th>
+                                <th>SmartPhone</th><th>ขาด/เกิน</th>
+                                <th>รวม Post</th><th>รวม Device</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dailyBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
             <div class="main-grid">
                 <div class="card">
                     <div class="card-header">
@@ -226,7 +271,7 @@
 </main>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbytOut29HJPTaaSjeg2HaLhWSoxNzNu-PM71oDQTI8fUjUPu_vw5eYJlC8qxqzEZrCZBA/exec"; 
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxzyL0BRCXvgfk2spoO4JLasqtMxhViclJTaBpb8DPF8x1AuNU8B1kwA2o3QnfNTqJqaw/exec"; 
 
     async function includeSidebar() {
         const version = new Date().getTime();
@@ -273,30 +318,35 @@
     async function loadData() {
         const loader = document.getElementById('loader');
         const sheet = document.getElementById('staffSelect').value;
+        const selectedDay = document.getElementById('daySelect').value;
         const dashContainer = document.getElementById('dashboardData');
         const noData = document.getElementById('noData');
         
         loader.style.display = 'flex';
         
         try {
-            const res = await fetch(`${SCRIPT_URL}?sheetName=${sheet}`);
+            const fetchUrl = `${SCRIPT_URL}?sheetName=${sheet}&targetDay=${selectedDay}`;
+            const res = await fetch(fetchUrl);
             const data = await res.json();
             
             if(data.result === "success") {
                 document.getElementById('labelL').innerText = data.staffName;
                 document.getElementById('labelR').innerText = data.staffName;
 
+                // ตารางสรุป
                 document.getElementById('summaryBody').innerHTML = data.summary.map(r => {
                     const isTotalRow = r[0].includes("รวมยอด");
                     const rowClass = isTotalRow ? 'class="row-summary"' : '';
                     return `<tr ${rowClass}><td>${r[0]}</td><td class="text-right">${r[1]}</td><td class="text-right">${r[2]}</td></tr>`;
                 }).join('');
 
+                // Focus
                 document.getElementById('focusBody').innerHTML = data.focus
                     .filter(r => !(r[0] === "Target" && r[1] === "Actual")) 
                     .map(r => `<tr><td>${r[0]}</td><td class="text-right" style="color:#e53e3e; font-weight:800; font-size:16px;">${r[1]}</td></tr>`)
                     .join('');
 
+                // Targets
                 const tDiv = document.getElementById('targetBody');
                 tDiv.innerHTML = "";
                 data.targets.forEach(r => {
@@ -308,6 +358,7 @@
                     }
                 });
 
+                // Top Stats
                 const s = data.topStats;
                 const statsMap = [
                     { label: s[0][0], main: s[1][0], diff: s[1][1], color: '#ffb100' },
@@ -315,7 +366,6 @@
                     { label: s[0][4], main: s[1][4], diff: s[1][5], color: '#4a5568' },
                     { label: s[0][6], main: s[1][6], diff: s[1][7], color: '#38b2ac' }
                 ];
-                
                 document.getElementById('bottomStats').innerHTML = statsMap.map(item => `
                     <div class="stat-item" style="border-left-color: ${item.color};">
                         <span class="stat-label">${item.label}</span>
@@ -329,10 +379,36 @@
                     </div>
                 `).join('');
 
+                // --- แสดงผลรายวัน (ใหม่) ---
+                const dailyCard = document.getElementById('dailyCard');
+                if (data.dailyRow && selectedDay) {
+                    dailyCard.style.display = 'block';
+                    document.getElementById('dailyDateLabel').innerText = `ประจำวันที่ ${selectedDay}`;
+                    const dr = data.dailyRow; 
+                    
+                    document.getElementById('dailyBody').innerHTML = `
+                        <tr>
+                            <td style="font-weight:600; color:#1e293b;">${dr[0]}</td>
+                            <td><span class="val-badge bg-val">${dr[1]}</span></td>
+                            <td><span class="val-badge bg-diff">${dr[2]}</span></td>
+                            <td><span class="val-badge bg-val">${dr[3]}</span></td>
+                            <td><span class="val-badge bg-diff">${dr[4]}</span></td>
+                            <td><span class="val-badge bg-val">${dr[5]}</span></td>
+                            <td><span class="val-badge bg-diff">${dr[6]}</span></td>
+                            <td><span class="val-badge bg-val">${dr[7]}</span></td>
+                            <td><span class="val-badge bg-diff">${dr[8]}</span></td>
+                            <td><span class="val-badge bg-total">${dr[9]}</span></td>
+                            <td><span class="val-badge bg-total">${dr[10]}</span></td>
+                        </tr>
+                    `;
+                } else {
+                    dailyCard.style.display = 'none';
+                }
+
                 dashContainer.style.display = 'block';
                 noData.style.display = 'none';
             }
-        } catch (e) { alert("เกิดข้อผิดพลาดในการดึงข้อมูล"); } 
+        } catch (e) { alert("เกิดข้อผิดพลาดในการดึงข้อมูล"); console.log(e); } 
         finally { loader.style.display = 'none'; }
     }
 
