@@ -28,7 +28,7 @@
 
         body { display: flex; }
 
-        /* ===== SIDEBAR SYSTEM ===== */
+        /* ===== SIDEBAR CONTAINER ===== */
         #sidebar-container { 
             width: var(--sidebar-width); 
             background: var(--sidebar-bg); 
@@ -41,12 +41,6 @@
             z-index: 2000;
             box-shadow: 4px 0 15px rgba(0,0,0,0.2);
         }
-
-        .sidebar-header { padding: 25px 20px; font-size: 20px; font-weight: 600; background: #0f172a; color: var(--primary); text-align: center; border-bottom: 1px solid #334155; }
-        .menu { padding: 10px 0; }
-        .menu a { width: 100%; padding: 15px 20px; color: #cbd5e1 !important; display: flex; align-items: center; text-decoration: none !important; transition: 0.3s; font-size: 15px; border-left: 4px solid transparent; }
-        .menu a:hover { background: #334155; color: var(--primary) !important; border-left: 4px solid var(--primary); }
-        .menu a.active { background: #1e293b; color: var(--primary) !important; border-left: 4px solid var(--primary); font-weight: 500; }
 
         .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: none; backdrop-filter: blur(4px); z-index: 1500; }
         .overlay.show { display: block; }
@@ -89,7 +83,7 @@
             font-weight: 600;
             transition: 0.2s;
         }
-        .btn-fetch:hover { filter: brightness(0.9); transform: translateY(-1px); }
+        .btn-fetch:hover { filter: brightness(0.9); }
 
         .main-grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 15px; }
         #dashboardData { display: none; } 
@@ -113,13 +107,13 @@
         td { padding: 12px 15px; border-bottom: 1px solid #f7fafc; font-size: 15px; }
         .text-right { text-align: right; }
 
-        /* ===== สไตล์แถวสรุปยอด (Highlight) ===== */
+        /* ===== สไตล์ไฮไลท์แถว "รวมยอด" ===== */
         .row-summary {
-            background-color: rgba(91, 183, 170, 0.12) !important; /* แถบสีจางๆ */
+            background-color: rgba(91, 183, 170, 0.15) !important; /* แถบสีจาง */
         }
         .row-summary td {
-            font-weight: 700 !important;
-            font-size: 18px !important; /* ตัวหนังสือใหญ่ขึ้น */
+            font-weight: 800 !important; /* หนาพิเศษ */
+            font-size: 18px !important; /* ใหญ่ขึ้น */
             color: #1a202c;
             border-bottom: 2px solid var(--primary);
         }
@@ -149,7 +143,6 @@
             body.show-sidebar #sidebar-container { transform: translateX(0); }
             .main-grid { grid-template-columns: 1fr; }
             .header-bar { flex-direction: column; align-items: stretch; }
-            .bottom-stats-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -157,15 +150,7 @@
 <div class="loading" id="loader">🔄 กำลังอัปเดตข้อมูล...</div>
 <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 
-<aside id="sidebar-container">
-    <div class="sidebar-header">MENU</div>
-    <nav class="menu">
-        <a href="#" class="active">📊 Dashboard</a>
-        <a href="#">📈 Sales Report</a>
-        <a href="#">👥 Staff Performance</a>
-        <a href="#">⚙️ Settings</a>
-    </nav>
-</aside>
+<aside id="sidebar-container"></aside>
 
 <main class="main-content">
     <div class="container">
@@ -175,7 +160,7 @@
                 <h2 style="margin:0; font-size:18px; color:var(--primary);">Performance Report</h2>
             </div>
             <div class="action-group">
-                <select id="staffSelect" style="padding: 8px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 14px;">
+                <select id="staffSelect" style="padding: 8px; border-radius: 8px; border: 1px solid #e2e8f0;">
                     <option value="นวพล2">👤 นวพล</option>
                     <option value="ปิยะพร2">👤 ปิยะพร</option>
                     <option value="กรทักษ์2">👤 กรทักษ์</option>
@@ -238,11 +223,30 @@
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbytOut29HJPTaaSjeg2HaLhWSoxNzNu-PM71oDQTI8fUjUPu_vw5eYJlC8qxqzEZrCZBA/exec"; 
 
+    // ฟังก์ชันโหลด Sidebar จากไฟล์ภายนอก
+    async function loadSidebar() {
+        try {
+            const res = await fetch('sidebar.html?v=' + new Date().getTime());
+            if (res.ok) {
+                const html = await res.text();
+                document.getElementById('sidebar-container').innerHTML = html;
+            } else {
+                console.error("Failed to load sidebar.html Status:", res.status);
+            }
+        } catch (e) {
+            console.error("Sidebar load error:", e);
+        }
+    }
+
     function toggleSidebar() {
         const body = document.getElementById('mainBody');
         const overlay = document.getElementById('overlay');
-        if (window.innerWidth > 900) { body.classList.toggle('collapsed'); } 
-        else { body.classList.toggle('show-sidebar'); overlay.classList.toggle('show'); }
+        if (window.innerWidth > 900) {
+            body.classList.toggle('collapsed');
+        } else {
+            body.classList.toggle('show-sidebar');
+            overlay.classList.toggle('show');
+        }
     }
 
     async function loadData() {
@@ -261,7 +265,7 @@
                 document.getElementById('labelL').innerText = data.staffName;
                 document.getElementById('labelR').innerText = data.staffName;
 
-                // ตรวจสอบคำว่า "รวมยอด" เพื่อใส่แถบสี
+                // ไฮไลท์แถว "รวมยอด" และปรับตัวหนังสือ
                 document.getElementById('summaryBody').innerHTML = data.summary.map(r => {
                     const isTotalRow = r[0].includes("รวมยอด");
                     const rowClass = isTotalRow ? 'class="row-summary"' : '';
@@ -277,7 +281,7 @@
                 document.getElementById('focusBody').innerHTML = data.focus
                     .filter(r => !(r[0] === "Target" && r[1] === "Actual")) 
                     .map(r => `
-                    <tr><td>${r[0]}</td><td class="text-right" style="color:#e53e3e; font-weight:800; font-size:17px;">${r[1]}</td></tr>
+                    <tr><td>${r[0]}</td><td class="text-right" style="color:#e53e3e; font-weight:800; font-size:16px;">${r[1]}</td></tr>
                 `).join('');
 
                 const tDiv = document.getElementById('targetBody');
@@ -315,9 +319,16 @@
                 dashContainer.style.display = 'block';
                 noData.style.display = 'none';
             }
-        } catch (e) { alert("เกิดข้อผิดพลาดในการดึงข้อมูล"); } 
-        finally { loader.style.display = 'none'; }
+        } catch (e) { 
+            console.error(e);
+            alert("เกิดข้อผิดพลาดในการดึงข้อมูล"); 
+        } finally { 
+            loader.style.display = 'none'; 
+        }
     }
+
+    // เรียกโหลด Sidebar ทันทีที่เปิดหน้าเว็บ
+    window.onload = loadSidebar;
 </script>
 </body>
 </html>
