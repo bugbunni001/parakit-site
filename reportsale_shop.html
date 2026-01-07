@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Performance Dashboard - SHOP</title>
+    <title>Performance Dashboard - รวมยอด2</title>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -143,7 +143,7 @@
         .bottom-stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 15px; background: #fafbfc; border-top: 1px solid #edf2f7; }
         .stat-item { background: #ffffff; padding: 15px; border-radius: 10px; border-left: 6px solid var(--primary); border: 1px solid #e2e8f0; border-left-width: 6px; }
         .stat-main { font-size: 24px; font-weight: 800; }
-        .stat-sub-val { color: #d53f3f; font-weight: 700; }
+        .stat-sub-val { color: #dc2626; font-weight: 700; }
 
         .target-group-header { padding: 10px 15px; font-weight: 600; color: white; }
         .bg-amber { background: #ffb100; } .bg-orange { background: #ff5722; } .bg-slate { background: #4a5568; } .bg-teal { background: #38b2ac; }
@@ -163,6 +163,18 @@
 <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 
 <aside id="sidebar-container">
+    <div class="menu" style="padding-top: 20px;">
+        <a href="#">🏠 Dashboard</a>
+        <div class="item" id="menu-branch">
+            <button class="drop-btn" onclick="toggleDrop(this, 'branch')">
+                <span>📂 ข้อมูลสาขา</span>
+                <span class="arrow">▶</span>
+            </button>
+            <div class="sub">
+                <a href="#">- รายงานรวม</a>
+            </div>
+        </div>
+    </div>
 </aside>
 
 <main class="main-content">
@@ -170,7 +182,7 @@
         <div class="header-bar">
             <div style="display:flex; align-items:center; gap:12px;">
                 <button onclick="toggleSidebar()" style="background:var(--sidebar-bg); color:white; border:none; padding:10px 14px; border-radius:10px; cursor:pointer;">☰</button>
-                <h2 style="margin:0; font-size:18px; color:var(--primary);">Performance Report (SHOP)</h2>
+                <h2 style="margin:0; font-size:18px; color:var(--primary);">Performance Report (รวมยอด2)</h2>
             </div>
             <div class="action-group">
                 <select id="daySelect">
@@ -254,9 +266,10 @@
 </main>
 
 <script>
-    // *** สำคัญ: เปลี่ยน URL นี้เป็น Web App URL ของคุณ ***
+    // *** สำคัญ: เปลี่ยน URL นี้เป็น Web App URL จาก Google Apps Script ของคุณ ***
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw1-xCz4hKJx8k9j7yKjxYvBjqVoWmyzy33-XBJkp_WoIpOTcDa9cee3eKuCKiMjsbT/exec"; 
 
+    // ฟังก์ชันจัดการ Sidebar
     function toggleSidebar() {
         const body = document.getElementById('mainBody');
         const overlay = document.getElementById('overlay');
@@ -268,11 +281,13 @@
         }
     }
 
-    function toggleDrop(btn, id) {
+    // ฟังก์ชันเปิด/ปิด Dropdown ใน Sidebar
+    function toggleDrop(btn) {
         const item = btn.closest('.item'); 
         item.classList.toggle("open");
     }
 
+    // ฟังก์ชันดึงข้อมูลจาก Google Sheets
     async function loadData() {
         const loader = document.getElementById('loader');
         const selectedDay = document.getElementById('daySelect').value;
@@ -280,8 +295,7 @@
 
         loader.style.display = 'flex';
         try {
-            // กำหนดชื่อชีตตรงๆ ตามที่ต้องการ "SHOP"
-            const fetchUrl = `${SCRIPT_URL}?sheetName=${encodeURIComponent("SHOP")}&targetDay=${selectedDay}`;
+            const fetchUrl = `${SCRIPT_URL}?sheetName=${encodeURIComponent("รวมยอด2")}&targetDay=${selectedDay}`;
             const res = await fetch(fetchUrl);
             const data = await res.json();
 
@@ -291,18 +305,18 @@
                 document.getElementById('labelStaff').innerText = data.staffName;
                 document.getElementById('dailyDateNum').innerText = selectedDay;
 
-                // 1. สรุปยอดขาย
+                // 1. ตารางสรุปยอดขาย
                 document.getElementById('summaryBody').innerHTML = data.summary.map(r => {
                     const isTotal = r[0].includes("รวมยอด");
                     return `<tr class="${isTotal?'row-summary':''}"><td>${r[0]}</td><td class="text-right">${r[1]}</td><td class="text-right">${r[2]}</td></tr>`;
                 }).join('');
 
-                // 2. Focus
+                // 2. ตาราง Focus
                 document.getElementById('focusBody').innerHTML = data.focus
                     .filter(r => r[0] && r[0] !== "Target")
                     .map(r => `<tr><td>${r[0]}</td><td class="text-right" style="color:#dc2626; font-weight:700;">${r[1]}</td></tr>`).join('');
 
-                // 3. Monthly Targets
+                // 3. เป้าหมายรายเดือน
                 const tDiv = document.getElementById('targetBody');
                 tDiv.innerHTML = "";
                 data.targets.forEach(r => {
@@ -314,7 +328,7 @@
                     }
                 });
 
-                // 4. Bottom Stats (Cards)
+                // 4. สถิติด้านล่าง (Stat Cards)
                 const s = data.topStats;
                 const stats = [
                     { l: s[0][0], v: s[1][0], d: s[1][1], c: '#ffb100' },
@@ -324,14 +338,14 @@
                 ];
                 document.getElementById('bottomStats').innerHTML = stats.map(i => `
                     <div class="stat-item" style="border-left-color:${i.c}">
-                        <small>${i.l}</small><br>
-                        <div style="display:flex;justify-content:space-between;align-items:flex-end;">
+                        <small style="font-weight:600; color:#4a5568;">${i.l}</small><br>
+                        <div style="display:flex;justify-content:space-between;align-items:flex-end; margin-top:5px;">
                             <span class="stat-main">${i.v}</span>
-                            <div class="text-right"><small>ขาด/เกิน</small><br><span class="stat-sub-val">${i.d}</span></div>
+                            <div class="text-right"><small style="font-size:10px; color:#718096;">ขาด/เกิน</small><br><span class="stat-sub-val">${i.d}</span></div>
                         </div>
                     </div>`).join('');
 
-                // 5. Daily Row
+                // 5. ข้อมูลรายวัน
                 if(data.dailyRow) {
                     const dr = data.dailyRow;
                     document.getElementById('dailyBody').innerHTML = `
@@ -347,7 +361,7 @@
                 document.getElementById('noData').style.display = 'none';
             }
         } catch (e) {
-            alert("ไม่สามารถดึงข้อมูลได้ โปรดตรวจสอบการตั้งค่า App Script");
+            alert("ไม่สามารถดึงข้อมูลได้ โปรดตรวจสอบการตั้งค่า App Script ของคุณ");
         } finally {
             loader.style.display = 'none';
         }
@@ -355,7 +369,7 @@
 
     function exportPDF() {
         const element = document.getElementById('dashboardData');
-        html2pdf().set({ margin: 5, filename: 'Report.pdf', jsPDF: { orientation: 'landscape' } }).from(element).save();
+        html2pdf().set({ margin: 5, filename: 'Performance_Report.pdf', jsPDF: { orientation: 'landscape' } }).from(element).save();
     }
 
     function exportExcel() {
