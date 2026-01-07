@@ -3,42 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📊 รายงานยอดขายพนักงาน</title>
+    <title>📊 สรุปยอดขายรายบุคคล</title>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
         body { margin: 0; background: #f1f5f9; color: #334155; display: flex; }
         
-        /* --- Sidebar Style --- */
-        .sidebar { position: fixed; top: 0; left: 0; width: 260px; height: 100vh; background: #1e293b; color: white; transition: 0.3s; z-index: 2000; overflow-y: auto; transform: translateX(-260px); }
+        /* Sidebar & Overlay */
+        .sidebar { position: fixed; top: 0; left: 0; width: 250px; height: 100vh; background: #1e293b; color: white; transition: 0.3s; z-index: 2000; overflow-y: auto; transform: translateX(-250px); }
         .sidebar.show { transform: translateX(0); }
-        .top-toggle { position: fixed; top: 15px; left: 15px; z-index: 1500; width: 45px; height: 45px; border-radius: 12px; border: none; background: #1e293b; color: white; cursor: pointer; font-size: 20px; display: flex; align-items: center; justify-content: center; }
         .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; z-index: 1000; backdrop-filter: blur(4px); }
         .overlay.show { display: block; }
+        .top-toggle { position: fixed; top: 15px; left: 15px; z-index: 1500; width: 40px; height: 40px; border-radius: 10px; border: none; background: #1e293b; color: white; cursor: pointer; }
 
         @media(min-width: 769px) {
             .sidebar { transform: translateX(0); }
-            .content { margin-left: 260px; width: calc(100% - 260px); }
+            .content { margin-left: 250px; width: calc(100% - 250px); }
             .top-toggle { display: none; }
         }
 
-        /* --- Main Content --- */
-        .content { flex: 1; padding: 60px 20px; transition: 0.3s; }
-        .report-card { max-width: 700px; margin: auto; background: white; padding: 30px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        /* Card Content - ปรับขนาดให้กระชับ */
+        .content { flex: 1; padding: 40px 15px; }
+        .report-card { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        h2 { font-size: 1.2rem; text-align: center; margin-bottom: 15px; }
         
-        select { width: 100%; padding: 12px; border-radius: 12px; border: 2px solid #e2e8f0; margin-bottom: 20px; font-size: 16px; background: #f8fafc; cursor: pointer; }
-        .btn-fetch { width: 100%; padding: 15px; border: none; background: #1e293b; color: white; border-radius: 12px; font-weight: 600; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .btn-fetch:hover { background: #334155; transform: translateY(-1px); }
+        select { width: 100%; padding: 10px; border-radius: 10px; border: 2px solid #e2e8f0; margin-bottom: 15px; font-size: 15px; }
+        
+        /* Button Rollover Effect */
+        .btn-fetch { width: 100%; padding: 12px; border: none; background: #1e293b; color: white; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-fetch:hover { background: #334155; transform: scale(1.02); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
 
-        /* --- Table Style --- */
-        .table-container { margin-top: 25px; display: none; border-radius: 15px; overflow: hidden; border: 1px solid #e2e8f0; }
-        table { width: 100%; border-collapse: collapse; }
-        th { background: #4db6ac; color: white; padding: 15px; font-weight: 400; border: 1px solid #e2e8f0; }
-        td { padding: 12px; border: 1px solid #f1f5f9; text-align: center; }
+        /* Table Structure */
+        .table-container { margin-top: 20px; display: none; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th { background: #4db6ac; color: white; padding: 10px; border: 1px solid #e2e8f0; font-weight: 400; }
+        td { padding: 8px; border: 1px solid #f1f5f9; text-align: center; }
         
-        .row-new { background: #c8e6c9 !important; font-weight: 600; } /* */
-        .row-bdbc { background: #d1ecf1 !important; font-weight: 600; } /* */
-        #loader { text-align: center; display: none; margin: 20px 0; color: #64748b; }
+        .row-new { background: #e8f5e9 !important; font-weight: 600; } /* เขียวอ่อน */
+        .row-bdbc { background: #e0f2f1 !important; font-weight: 600; } /* ฟ้าอ่อน */
+        #loader { text-align: center; display: none; padding: 15px; font-size: 14px; }
     </style>
 </head>
 <body>
@@ -49,7 +52,7 @@
 
 <main class="content">
     <div class="report-card">
-        <h2 style="text-align:center">📊 รายงานยอดขายรายบุคคล</h2>
+        <h2>📊 รายงานยอดขายรายบุคคล</h2>
         <select id="staffSelect">
             <option value="นวพล2">👤 นวพล</option>
             <option value="ปิยะพร2">👤 ปิยะพร</option>
@@ -57,14 +60,14 @@
         </select>
         <button class="btn-fetch" onclick="getPersonalSales()">🔄 ดึงยอดขายล่าสุด</button>
         
-        <div id="loader">⏳ กำลังติดต่อ Server...</div>
+        <div id="loader">⏳ กำลังประมวลผล...</div>
 
         <div class="table-container" id="tableContainer">
             <table id="reportTable">
                 <thead>
                     <tr id="headerTitle"><th colspan="3">สรุปยอด</th></tr>
-                    <tr style="background:#f1f5f9; color: #333;">
-                        <th>Type การขาย</th><th>ยอด PostPay</th><th>จำนวน</th>
+                    <tr style="background:#f8fafc; color: #64748b;">
+                        <th>รายการ</th><th>ยอดขาย</th><th>จำนวน</th>
                     </tr>
                 </thead>
                 <tbody id="reportData"></tbody>
@@ -74,9 +77,9 @@
 </main>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw4Y6tMuSvAG-3FMoa92QSqWMzlA75n47eZ7IzpnlDAKX2ZnKS_9lY0Bw00kNLjGlRAKw/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxjK2--2Ka0kxNglF1-HnonTWYTKL3JnzVk8wGbZrg1r4tS66slONjQyrA4K069bvXE4A/exec";
 
-    // --- Sidebar Logic ---
+    // --- Sidebar & Persistence Logic ---
     function toggleSidebar() {
         document.getElementById('sidebar').classList.toggle('show');
         document.getElementById('overlay').classList.toggle('show');
@@ -88,11 +91,28 @@
             if (res.ok) {
                 const html = await res.text();
                 document.getElementById('sidebar').innerHTML = html;
+                restoreMenuState(); // เรียกใช้ฟังก์ชันจำค่าเมนู
             }
-        } catch (e) { console.warn("ไม่พบไฟล์ sidebar.html"); }
+        } catch (e) { console.warn("sidebar.html missing"); }
     }
 
-    // --- Data Fetching Logic ---
+    // ฟังก์ชันจำค่าการกางเมนู Sidebar
+    function restoreMenuState() {
+        document.querySelectorAll('.drop-btn').forEach(btn => {
+            const menuId = btn.innerText.trim();
+            if (localStorage.getItem('menu_' + menuId) === 'true') {
+                btn.parentElement.classList.add('open');
+            }
+            btn.addEventListener('click', () => {
+                setTimeout(() => {
+                    const isOpen = btn.parentElement.classList.contains('open');
+                    localStorage.setItem('menu_' + menuId, isOpen);
+                }, 100);
+            });
+        });
+    }
+
+    // --- Data Fetching Logic (No Error Edition) ---
     async function getPersonalSales() {
         const sheetName = document.getElementById('staffSelect').value;
         const staffName = document.getElementById('staffSelect').options[document.getElementById('staffSelect').selectedIndex].text;
@@ -102,26 +122,27 @@
         
         loader.style.display = 'block';
         container.style.display = 'none';
+        tbody.innerHTML = "";
 
         try {
             const response = await fetch(`${SCRIPT_URL}?sheetName=${encodeURIComponent(sheetName)}`);
             const result = await response.json();
             
-            // ตรวจสอบว่ามีค่า result.values มาจริงไหม ป้องกัน Error reading forEach
-            if (result.result === "error" || !result.values) {
-                throw new Error(result.error || "ไม่ได้รับข้อมูลจากระบบ");
+            // ป้องกัน Error 'forEach' of undefined
+            if (!result || result.result === "error" || !result.values) {
+                throw new Error(result.error || "ไม่สามารถดึงข้อมูลได้");
             }
 
             document.getElementById('headerTitle').innerHTML = `<th colspan="3">สรุปยอด ${staffName}</th>`;
-            tbody.innerHTML = "";
 
-            // ใช้ .slice(1) เพื่อตัดบรรทัดหัวข้อ "Type การขาย" ที่ซ้ำซ้อนออก
+            // ตัดแถวแรกทิ้งเพื่อแก้ปัญหาแถวหัวข้อซ้ำ
             const cleanData = result.values.slice(1);
 
             cleanData.forEach(row => {
-                if(!row[0] || row[0].trim() === "") return;
+                if(!row[0] || row[0].trim() === "" || row[0] === "Type การขาย") return;
                 
                 const tr = document.createElement('tr');
+                // ใส่สีตามภาพต้นฉบับ
                 if(row[0].includes("รวมยอด New")) tr.className = 'row-new';
                 if(row[0].includes("รวมยอด BDBC")) tr.className = 'row-bdbc';
                 
@@ -135,7 +156,7 @@
 
             container.style.display = 'block';
         } catch (e) {
-            alert("❌ เกิดข้อผิดพลาด: " + e.message); // แก้ปัญหาแจ้งเตือนคลุมเครือ
+            alert("❌ บันทึกผิดพลาด: " + e.message);
         } finally {
             loader.style.display = 'none';
         }
