@@ -3,136 +3,226 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📊 ระบบรายงานผลงานพนักงาน</title>
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
+    <title>Performance Dashboard Compact</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
-        /* --- CSS ส่วนการจัดวาง --- */
-        * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
-        body { margin: 0; background: #f4f7f6; color: #334155; padding: 20px; }
-        .report-card { max-width: 1200px; margin: 0 auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
-        .controls { text-align: center; margin-bottom: 30px; padding: 20px; background: #f8fafc; border-radius: 10px; }
-        select { padding: 10px; width: 250px; border-radius: 8px; border: 1px solid #ddd; font-size: 16px; margin-right: 10px; }
-        .btn-fetch { padding: 10px 25px; background: #1e293b; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; transition: 0.3s; }
-        .btn-fetch:hover { background: #334155; }
+        :root {
+            --primary: #5bb7aa;
+            --bg: #f5f7fa;
+            --text-dark: #2d3748;
+            --white: #ffffff;
+            --sidebar-width: 250px; /* ความกว้างตอนกาง */
+            --sidebar-collapsed: 0px; /* ความกว้างตอนหุบ (หรือเปลี่ยนเป็น 60px ถ้ามีไอคอน) */
+            --highlight-new: rgba(255, 177, 0, 0.08); 
+            --highlight-bdbc: rgba(255, 87, 34, 0.08); 
+        }
 
-        /* การจัดตารางแบบ Side-by-Side */
-        .tables-container { display: flex; gap: 20px; flex-wrap: wrap; }
-        .table-box { flex: 1; min-width: 350px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; border: 1px solid #eee; }
-        th, td { padding: 10px; border: 1px solid #eee; text-align: center; font-size: 14px; }
-        th { background: #4db6ac; color: white; font-weight: 500; }
+        * { box-sizing: border-box; font-family: 'Kanit', sans-serif; }
+        body { background-color: var(--bg); margin: 0; display: flex; color: var(--text-dark); transition: all 0.3s; }
 
-        /* --- สีตามรูปแบบในภาพ (Target) --- */
-        .head-focus { background: #4dd0e1 !important; font-weight: bold; }
-        .head-new { background: #ffca28 !important; font-weight: bold; }
-        .head-bdbc { background: #ff6f00 !important; color: white; font-weight: bold; }
-        .head-apple { background: #bdbdbd !important; font-weight: bold; }
-        .text-red { color: red !important; font-weight: bold; }
-        .row-total { background: #e0f2f1; font-weight: bold; }
+        /* Sidebar Structure */
+        #sidebar-container {
+            width: var(--sidebar-width);
+            min-height: 100vh;
+            background: #2d3748; /* สีพื้นหลัง sidebar */
+            transition: all 0.3s ease;
+            overflow-x: hidden;
+            flex-shrink: 0;
+            z-index: 1000;
+        }
 
-        #loader { display: none; text-align: center; margin: 20px; font-weight: bold; color: #64748b; }
+        body.collapsed #sidebar-container {
+            width: var(--sidebar-collapsed);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex-grow: 1;
+            padding: 15px;
+            width: calc(100% - var(--sidebar-width));
+            transition: all 0.3s ease;
+        }
+
+        .container { max-width: 1100px; margin: 0 auto; }
+        
+        /* Header ปรับให้เล็กลงและกระชับขึ้น */
+        .header-bar {
+            background: var(--white); padding: 12px 20px; border-radius: 12px; 
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .header-left { display: flex; align-items: center; gap: 12px; }
+        h2 { margin: 0; font-weight: 600; font-size: 19px; color: var(--primary); }
+
+        /* ปุ่ม Toggle Sidebar */
+        .btn-toggle {
+            background: var(--primary); color: white; border: none; padding: 6px 10px;
+            border-radius: 6px; cursor: pointer; display: flex; align-items: center;
+        }
+
+        select {
+            padding: 7px 15px; border-radius: 8px; border: 1px solid #e2e8f0;
+            font-size: 14.5px; outline: none; cursor: pointer; background: white;
+        }
+
+        /* Layout */
+        .main-grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 15px; }
+
+        .card { background: var(--white); border-radius: 15px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid #edf2f7; }
+        .card-header { 
+            padding: 10px 18px; color: white; font-weight: 500; font-size: 15px; 
+            background: var(--primary); display: flex; align-items: center; gap: 8px;
+        }
+
+        /* Table ปรับให้กระชับขึ้น (Compact) */
+        table { width: 100%; border-collapse: collapse; }
+        th { 
+            padding: 10px 18px; text-align: left; font-size: 13px; 
+            color: #718096; border-bottom: 1px solid #f1f5f9; font-weight: 600;
+            background: #fafbfc;
+        }
+        td { padding: 9px 18px; border-bottom: 1px solid #f7fafc; font-size: 14.5px; }
+        
+        .text-right { text-align: right; }
+        .font-bold { font-weight: 600; }
+
+        /* ไฮไลท์แถบสีจาง */
+        .row-total-new { background-color: var(--highlight-new) !important; font-weight: 600; color: #b45309; }
+        .row-total-bdbc { background-color: var(--highlight-bdbc) !important; font-weight: 600; color: #c2410c; }
+
+        /* Focus & Target */
+        .target-group-header { padding: 8px 15px; font-weight: 600; color: white; font-size: 13.5px; }
+        .bg-amber { background: #ffb100; }
+        .bg-orange { background: #ff5722; }
+        .bg-slate { background: #4a5568; }
+        .bg-teal { background: #38b2ac; }
+
+        .actual-val { color: #e53e3e; font-weight: 700; font-size: 16px; }
+
+        .loading { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); display: none; justify-content: center; align-items: center; z-index: 2000; font-size: 16px; }
+
+        @media (max-width: 900px) { 
+            .main-grid { grid-template-columns: 1fr; }
+            #sidebar-container { position: absolute; left: -250px; }
+            body.collapsed #sidebar-container { left: 0; }
+        }
     </style>
 </head>
-<body>
+<body id="mainBody">
 
-<div class="report-card">
-    <h2>📊 รายงานสรุปผลงานรายบุคคล</h2>
-    
-    <div class="controls">
-        <select id="staffSelect">
-            <option value="นวพล2">👤 นวพล</option>
-            <option value="ปิยะพร2">👤 ปิยะพร</option>
-            <option value="กรทักษ์2">👤 กรทักษ์</option>
-        </select>
-        <button class="btn-fetch" onclick="fetchData()">🔄 ดึงข้อมูลล่าสุด</button>
-    </div>
+<div class="loading" id="loader">🔄 อัปเดตข้อมูล...</div>
 
-    <div id="loader">⏳ กำลังเชื่อมต่อฐานข้อมูล...</div>
+<div id="sidebar-container">
+    <?!= include('Sidebar'); ?>
+</div>
 
-    <div class="tables-container" id="reportArea" style="display:none;">
-        <div class="table-box">
-            <h3 id="staffLabelLeft" style="color:#4db6ac">📍 สรุปยอดขาย</h3>
-            <table>
-                <thead>
-                    <tr><th>Type การขาย</th><th>ยอดเงิน</th><th>จำนวน</th></tr>
-                </thead>
-                <tbody id="salesTableBody"></tbody>
-            </table>
+<div class="main-content">
+    <div class="container">
+        <div class="header-bar">
+            <div class="header-left">
+                <button class="btn-toggle" onclick="toggleSidebar()">☰</button>
+                <h2>Performance Report</h2>
+            </div>
+            <select id="staffSelect" onchange="loadData()">
+                <option value="นวพล2">👤 นวพล</option>
+                <option value="ปิยะพร2">👤 ปิยะพร</option>
+                <option value="กรทักษ์2">👤 กรทักษ์</option>
+            </select>
         </div>
 
-        <div class="table-box">
-            <h3 id="staffLabelRight" style="color:#1e293b">🎯 เป้าหมาย (Targets)</h3>
-            <table id="targetTable">
-                <tbody id="targetTableBody"></tbody>
-            </table>
+        <div class="main-grid">
+            <div class="card">
+                <div class="card-header">📍 สรุปยอดขาย: <span id="labelL"></span></div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Type การขาย</th>
+                            <th class="text-right">ยอด PostPay</th>
+                            <th class="text-right">จำนวน</th>
+                        </tr>
+                    </thead>
+                    <tbody id="summaryBody"></tbody>
+                </table>
+            </div>
+
+            <div class="side-panel">
+                <div class="card" style="margin-bottom: 15px;">
+                    <div class="card-header">🎯 Focus: <span id="labelR"></span></div>
+                    <table>
+                        <thead>
+                            <tr><th>Target</th><th class="text-right">Actual</th></tr>
+                        </thead>
+                        <tbody id="focusBody"></tbody>
+                    </table>
+                </div>
+
+                <div class="card">
+                    <div class="card-header" style="background: #2d3748;">🏁 เป้าหมายรายเดือน</div>
+                    <div id="targetBody"></div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-    // 🔥 วาง Web App URL ที่ได้จากการ Deploy Apps Script ตรงนี้ครับ 🔥
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxgy9nD9BIK1q4R7lTs6fdeBe14jzOpnOfzChK3kQySFvrdfm16iCQhjqK8X_ziLIwjNA/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw5I3f8Ul1dkIfDfYEfU9-GEs1ssUF-aByBYpX40qS2VZbjSOyr8RtauO5cRSEhkd06/exec";
 
-    async function fetchData() {
-        const sheetName = document.getElementById('staffSelect').value;
-        const staffName = document.getElementById('staffSelect').options[document.getElementById('staffSelect').selectedIndex].text;
+    // ระบบ Sidebar Toggle & Memory
+    function toggleSidebar() {
+        const body = document.getElementById('mainBody');
+        body.classList.toggle('collapsed');
+        localStorage.setItem('sidebarStatus', body.classList.contains('collapsed') ? 'closed' : 'open');
+    }
+
+    // โหลดสถานะล่าสุดของ Sidebar
+    window.addEventListener('DOMContentLoaded', () => {
+        if(localStorage.getItem('sidebarStatus') === 'closed') {
+            document.getElementById('mainBody').classList.add('collapsed');
+        }
+        loadData();
+    });
+
+    async function loadData() {
         const loader = document.getElementById('loader');
-        const reportArea = document.getElementById('reportArea');
-
-        loader.style.display = 'block';
-        reportArea.style.display = 'none';
+        const sheet = document.getElementById('staffSelect').value;
+        loader.style.display = 'flex';
 
         try {
-            const response = await fetch(`${SCRIPT_URL}?sheetName=${encodeURIComponent(sheetName)}`);
-            const data = await response.json();
+            const res = await fetch(`${SCRIPT_URL}?sheetName=${sheet}`);
+            const data = await res.json();
+            
+            if(data.result === "success") {
+                document.getElementById('labelL').innerText = data.staffName;
+                document.getElementById('labelR').innerText = data.staffName;
 
-            if (data.result === "success") {
-                // 1. แสดงชื่อพนักงานบนหัวตาราง
-                document.getElementById('staffLabelLeft').innerText = `📍 สรุปยอด ${staffName}`;
-                document.getElementById('staffLabelRight').innerText = `🎯 Focus ${staffName}`;
+                document.getElementById('summaryBody').innerHTML = data.summary.map(r => {
+                    let rowClass = "";
+                    if (r[0].includes("รวมยอด New")) rowClass = "row-total-new";
+                    if (r[0].includes("รวมยอด BDBC")) rowClass = "row-total-bdbc";
+                    return `<tr class="${rowClass}"><td>${r[0]}</td><td class="text-right">${r[1]}</td><td class="text-right">${r[2]}</td></tr>`;
+                }).join('');
 
-                // 2. จัดการตารางยอดขาย (ซ้าย)
-                const sBody = document.getElementById('salesTableBody');
-                sBody.innerHTML = "";
-                data.sales.forEach(row => {
-                    if (!row[0]) return;
-                    let tr = document.createElement('tr');
-                    if (row[0].includes("รวมยอด")) tr.className = "row-total";
-                    tr.innerHTML = `<td>${row[0]}</td><td>${row[1] || 0}</td><td>${row[2] || 0}</td>`;
-                    sBody.appendChild(tr);
-                });
+                document.getElementById('focusBody').innerHTML = data.focus.map(r => `
+                    <tr><td>${r[0]}</td><td class="text-right actual-val">${r[1]}</td></tr>
+                `).join('');
 
-                // 3. จัดการตาราง Target (ขวา)
-                const tBody = document.getElementById('targetTableBody');
-                tBody.innerHTML = "";
-                data.targets.forEach(row => {
-                    if (!row[0] && !row[1]) return;
-                    let tr = document.createElement('tr');
-                    let label = row[0].toString();
-                    let val = row[1].toString();
-
-                    if (label.includes("Focus")) {
-                        tr.innerHTML = `<td colspan="2" class="head-focus">${label}</td>`;
-                    } else if (label.includes("Target NEW")) {
-                        tr.innerHTML = `<td colspan="2" class="head-new">${label}</td>`;
-                    } else if (label.includes("Target BDBC")) {
-                        tr.innerHTML = `<td colspan="2" class="head-bdbc">${label}</td>`;
-                    } else if (label.includes("Target Apple")) {
-                        tr.innerHTML = `<td colspan="2" class="head-apple">${label}</td>`;
-                    } else {
-                        let valClass = (label.includes("ราหู") || label.includes("พลังดาว")) ? "text-red" : "";
-                        tr.innerHTML = `<td style="text-align:left">${label}</td><td class="${valClass}">${val}</td>`;
+                const tDiv = document.getElementById('targetBody');
+                tDiv.innerHTML = "";
+                data.targets.forEach(r => {
+                    if(r[0].includes("คำนวณ Target")) {
+                        let colorClass = r[0].includes("NEW") ? "bg-amber" : r[0].includes("BDBC") ? "bg-orange" : r[0].includes("Apple") ? "bg-slate" : "bg-teal";
+                        tDiv.innerHTML += `<div class="target-group-header ${colorClass}">${r[0]}</div>`;
+                    } else if(r[0]) {
+                        tDiv.innerHTML += `
+                        <div style="display:flex; justify-content:space-between; padding:10px 18px; border-bottom:1px solid #f1f5f9; font-size:14px;">
+                            <span>${r[0]}</span><span style="font-weight:600;">${r[1]}</span>
+                        </div>`;
                     }
-                    tBody.appendChild(tr);
                 });
-
-                reportArea.style.display = 'flex';
             }
-        } catch (e) {
-            alert("❌ เกิดข้อผิดพลาด: " + e.message);
-        } finally {
-            loader.style.display = 'none';
-        }
+        } catch (e) { console.error(e); } 
+        finally { loader.style.display = 'none'; }
     }
 </script>
 </body>
