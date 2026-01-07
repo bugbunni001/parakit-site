@@ -21,7 +21,7 @@
         html, body { margin: 0; padding: 0; width: 100%; background-color: var(--bg); color: var(--text-dark); min-height: 100vh; overflow-x: hidden; }
         body { display: flex; }
 
-        /* ===== SIDEBAR SYSTEM (FIXED & ROLLOVER) ===== */
+        /* ===== SIDEBAR SYSTEM ===== */
         #sidebar-container { 
             width: var(--sidebar-width); 
             background: var(--sidebar-bg); 
@@ -34,7 +34,6 @@
             box-shadow: 4px 0 15px rgba(0,0,0,0.2);
         }
 
-        /* เมนูใน sidebar.html */
         .menu .item .sub { display: none; background: #0f172a; }
         .menu .item.open .sub { display: block; }
         .menu .item.open .arrow { transform: rotate(90deg); }
@@ -48,12 +47,11 @@
             border-left: 4px solid transparent;
         }
 
-        /* ROLLOVER EFFECT */
         .menu a:hover, .drop-btn:hover { 
             background: var(--sidebar-hover); 
             color: var(--primary) !important; 
             border-left: 4px solid var(--primary);
-            padding-left: 25px; /* ขยับเล็กน้อยเมื่อ hover */
+            padding-left: 25px;
         }
 
         /* ===== MAIN CONTENT AREA ===== */
@@ -71,10 +69,64 @@
         .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: none; backdrop-filter: blur(4px); z-index: 1500; }
         .overlay.show { display: block; }
 
-        /* การดึงตารางและ Card (คงเดิม) */
         .container { max-width: 1200px; margin: 0 auto; width: 100%; }
-        .header-bar { background: var(--white); padding: 12px 20px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); flex-wrap: wrap; gap: 10px; }
-        .btn-fetch { background: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 500; transition: 0.2s; }
+        
+        /* Header & Action Buttons - ปรับ UX UI ให้ดูสะอาดแต่กดง่ายขึ้น */
+        .header-bar { 
+            background: var(--white); 
+            padding: 15px 20px; 
+            border-radius: 14px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 20px; 
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); 
+            flex-wrap: wrap; 
+            gap: 15px; 
+        }
+
+        .action-group { display: flex; align-items: center; gap: 12px; }
+
+        /* ปรับ Dropdown ให้ใหญ่ขึ้นและสะอาดตา */
+        #staffSelect { 
+            padding: 10px 16px; 
+            border-radius: 10px; 
+            border: 1px solid #e2e8f0; 
+            font-size: 16px; 
+            font-weight: 400;
+            background-color: #f8fafc;
+            color: var(--text-dark);
+            cursor: pointer;
+            min-width: 180px;
+            outline: none;
+            transition: all 0.2s;
+        }
+        #staffSelect:hover { border-color: var(--primary); background-color: #fff; }
+
+        /* ปรับปุ่มดึงข้อมูลให้เด่น กดง่าย แต่ดู Premium */
+        .btn-fetch { 
+            background: var(--primary); 
+            color: white; 
+            border: none; 
+            padding: 10px 24px; 
+            border-radius: 10px; 
+            cursor: pointer; 
+            font-weight: 500; 
+            font-size: 16px;
+            transition: all 0.3s ease; 
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(91, 183, 170, 0.25);
+        }
+        .btn-fetch:hover { 
+            background: #4da398;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 15px rgba(91, 183, 170, 0.35);
+        }
+        .btn-fetch:active { transform: translateY(0); }
+
+        /* ส่วนแสดงผลข้อมูล (ห้ามแก้) */
         .main-grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 15px; }
         #dashboardData { display: none; } 
         .card { background: var(--white); border-radius: 15px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid #edf2f7; margin-bottom: 15px; width: 100%; }
@@ -103,6 +155,8 @@
             .main-grid { grid-template-columns: 1fr; }
             .header-bar { flex-direction: column; align-items: stretch; }
             .bottom-stats-grid { grid-template-columns: 1fr; }
+            .action-group { flex-direction: column; }
+            #staffSelect, .btn-fetch { width: 100%; }
         }
     </style>
 </head>
@@ -116,11 +170,11 @@
     <div class="container">
         <div class="header-bar">
             <div style="display:flex; align-items:center; gap:12px;">
-                <button onclick="toggleSidebar()" style="background:var(--sidebar-bg); color:white; border:none; padding:8px 12px; border-radius:8px; cursor:pointer;">☰</button>
-                <h2 style="margin:0; font-size:18px; color:var(--primary);">Performance Report</h2>
+                <button onclick="toggleSidebar()" style="background:var(--sidebar-bg); color:white; border:none; padding:10px 14px; border-radius:10px; cursor:pointer; font-size:18px;">☰</button>
+                <h2 style="margin:0; font-size:20px; color:var(--primary); letter-spacing: -0.5px;">Performance Report</h2>
             </div>
             <div class="action-group">
-                <select id="staffSelect" style="padding: 8px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <select id="staffSelect">
                     <option value="นวพล2">👤 นวพล</option>
                     <option value="ปิยะพร2">👤 ปิยะพร</option>
                     <option value="กรทักษ์2">👤 กรทักษ์</option>
@@ -129,8 +183,8 @@
             </div>
         </div>
 
-        <div id="noData" style="text-align: center; padding: 50px; color: #a0aec0;">
-            <p>กรุณาเลือกชื่อพนักงานแล้วกดปุ่ม <b>"ดึงข้อมูล"</b> เพื่อแสดงผล</p>
+        <div id="noData" style="text-align: center; padding: 80px 20px; color: #a0aec0; background: white; border-radius: 20px; border: 2px dashed #e2e8f0; margin-top: 20px;">
+            <p style="font-size: 18px; margin: 0;">กรุณาเลือกชื่อพนักงานแล้วกดปุ่ม <b>"ดึงข้อมูล"</b></p>
         </div>
 
         <div id="dashboardData">
@@ -174,14 +228,12 @@
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbytOut29HJPTaaSjeg2HaLhWSoxNzNu-PM71oDQTI8fUjUPu_vw5eYJlC8qxqzEZrCZBA/exec"; 
 
-    // 1. SIDEBAR LOGIC
     async function includeSidebar() {
         const version = new Date().getTime();
         try {
             const response = await fetch('sidebar.html?v=' + version);
             const data = await response.text();
             document.getElementById('sidebar-container').innerHTML = data;
-            
             if(localStorage.getItem('sidebarCollapsed') === 'true' && window.innerWidth > 900) {
                 document.body.classList.add('collapsed');
             }
@@ -218,7 +270,6 @@
         });
     }
 
-    // 2. DATA LOADING (ดึง Logic เดิมกลับมาทั้งหมด)
     async function loadData() {
         const loader = document.getElementById('loader');
         const sheet = document.getElementById('staffSelect').value;
@@ -235,20 +286,17 @@
                 document.getElementById('labelL').innerText = data.staffName;
                 document.getElementById('labelR').innerText = data.staffName;
 
-                // ตารางสรุปยอดขาย (ใส่แถบสีเมื่อเจอคำว่า รวมยอด)
                 document.getElementById('summaryBody').innerHTML = data.summary.map(r => {
                     const isTotalRow = r[0].includes("รวมยอด");
                     const rowClass = isTotalRow ? 'class="row-summary"' : '';
                     return `<tr ${rowClass}><td>${r[0]}</td><td class="text-right">${r[1]}</td><td class="text-right">${r[2]}</td></tr>`;
                 }).join('');
 
-                // ตาราง Focus
                 document.getElementById('focusBody').innerHTML = data.focus
                     .filter(r => !(r[0] === "Target" && r[1] === "Actual")) 
                     .map(r => `<tr><td>${r[0]}</td><td class="text-right" style="color:#e53e3e; font-weight:800; font-size:16px;">${r[1]}</td></tr>`)
                     .join('');
 
-                // เป้าหมายรายเดือน (Target)
                 const tDiv = document.getElementById('targetBody');
                 tDiv.innerHTML = "";
                 data.targets.forEach(r => {
@@ -260,7 +308,6 @@
                     }
                 });
 
-                // สถิติด้านล่าง (topStats)
                 const s = data.topStats;
                 const statsMap = [
                     { label: s[0][0], main: s[1][0], diff: s[1][1], color: '#ffb100' },
