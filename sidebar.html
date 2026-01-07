@@ -1,19 +1,112 @@
+<style>
+    /* ส่วนหัวเมนู */
+    .sidebar-header {
+        padding: 20px;
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #5bb7aa; /* สีเดียวกับ primary */
+        letter-spacing: 1px;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        text-align: center;
+    }
+
+    .menu { padding: 10px 0; }
+    .item { border-bottom: 1px solid rgba(255,255,255,0.05); }
+    
+    /* สไตล์ปุ่มและลิงก์ */
+    #sidebar-container a, #sidebar-container .drop-btn { 
+        display: flex; 
+        align-items: center; 
+        padding: 14px 20px; 
+        color: #cbd5e1 !important; 
+        text-decoration: none !important; 
+        cursor: pointer; 
+        transition: all 0.3s ease; 
+        background: none; 
+        border: none; 
+        width: 100%; 
+        text-align: left; 
+        font-size: 15px; 
+        position: relative;
+    }
+
+    /* Hover Effect */
+    #sidebar-container a:hover, #sidebar-container .drop-btn:hover { 
+        background: #334155 !important; 
+        color: #5bb7aa !important; 
+        padding-left: 30px; 
+    }
+
+    #sidebar-container a:hover::before, #sidebar-container .drop-btn:hover::before { 
+        content: ""; 
+        position: absolute; 
+        left: 0; 
+        top: 0; 
+        height: 100%; 
+        width: 4px; 
+        background: #5bb7aa; 
+    }
+
+    /* เมนูย่อย (Sub-menu) */
+    #sidebar-container .sub { 
+        max-height: 0; 
+        overflow: hidden; 
+        background: #1e293b; 
+        transition: max-height 0.4s cubic-bezier(0, 1, 0, 1); 
+    }
+
+    /* เมื่อกดเปิดเมนูย่อย */
+    #sidebar-container .item.active .sub { 
+        max-height: 1000px; 
+        transition: max-height 0.4s ease-in; 
+    }
+
+    /* สไตล์ของลิงก์ในเมนูย่อย */
+    #sidebar-container .sub a {
+        padding: 12px 20px 12px 45px;
+        font-size: 14px;
+        color: #94a3b8 !important;
+    }
+
+    /* ลูกศร */
+    .arrow { 
+        margin-left: auto; 
+        transition: transform 0.3s; 
+        font-size: 10px; 
+        opacity: 0.5; 
+    }
+    
+    .item.active .arrow { 
+        transform: rotate(90deg); 
+        color: #5bb7aa; 
+        opacity: 1;
+    }
+</style>
+
 <div class="sidebar-header">MENU</div>
+
 <div class="menu">
-    <a href="index.html">🏠 หน้าหลัก</a>
-    <div class="item" id="menu-credit">
-        <button class="drop-btn" onclick="toggleDrop(this, 'credit')">📊 บันทึกสินเชื่อ <span class="arrow">▶</span></button>
-        <div class="sub" id="credit">
+    <a href="javascript:void(0)" onclick="window.location.reload()">🏠 หน้าหลัก (Dashboard)</a>
+
+    <div class="item">
+        <button class="drop-btn" onclick="toggleSubMenu(this)">
+            📊 บันทึกสินเชื่อ <span class="arrow">▶</span>
+        </button>
+        <div class="sub">
             <a href="https://docs.google.com/forms/d/e/1FAIpQLSerK-IQFH4StGmvrOxb8M2DOC9VyrToSycYBxWrzSVOq67SOw/viewform" target="_blank">📈 ลงสินเชื่อส่วนกลาง</a>
             <a href="https://lookerstudio.google.com/reporting/8eee598b-7f10-4d88-8162-8ac554e50b9e" target="_blank">📑 Report สินเชื่อส่วนกลาง</a>
         </div>
     </div>
+
     <a href="download.html">⬇️ ดาวน์โหลด</a>
-    <div class="item" id="menu-branch">
-        <button class="drop-btn" onclick="toggleDrop(this, 'branch')">📍 เฉพาะประชาอุทิศ <span class="arrow">▶</span></button>
-        <div class="sub" id="branch">
-            <a href="schedule_dec25.html">📆 ตารางงาน ธ.ค. 25</a>
-            <a href="schedule_jan26.html">📆 ตารางงาน ม.ค. 26</a>
+
+    <div class="item">
+        <button class="drop-btn" onclick="toggleSubMenu(this)">
+            📍 เฉพาะประชาอุทิศ <span class="arrow">▶</span>
+        </button>
+        <div class="sub">
+            <a href="schedule_dec25">📆 ตารางงาน ธ.ค. 25</a>
+            <a href="schedule_jan26">📆 ตารางงาน ม.ค. 26</a>
             <a href="mat.html">📱 เช็ค Mat เครื่อง</a>
             <a href="input_sale.html">✏️ ลงยอดขาย</a>
             <a href="report_sale.html">📑 รายงานยอดขาย</a>
@@ -23,36 +116,30 @@
     </div>
 </div>
 
-<style>
-    /* [SIDEBAR INTERNAL STYLES] */
-    .menu { padding: 10px 0; }
-    .item { border-bottom: 1px solid rgba(255,255,255,0.05); }
-    
-    /* ROLLOVER EFFECT */
-    .sidebar a, .sidebar .drop-btn { 
-        display: flex; align-items: center; padding: 15px 20px; 
-        color: #cbd5e1 !important; text-decoration: none !important; 
-        cursor: pointer; transition: all 0.3s ease; background: none; border: none; 
-        width: 100%; text-align: left; font-size: 15px; position: relative;
+<script>
+    /**
+     * ฟังก์ชันเปิด-ปิดเมนูย่อย
+     * @param {HTMLElement} btn - ปุ่มที่ถูกคลิก
+     */
+    function toggleSubMenu(btn) {
+        // หา element ชั้นนอกสุดที่มี class .item
+        const parentItem = btn.parentElement;
+        
+        // ตรวจสอบว่าเมนูนี้เปิดอยู่หรือไม่
+        const isActive = parentItem.classList.contains('active');
+
+        // ปิดเมนูอื่นๆ ที่เปิดอยู่ก่อน (Optional - ถ้าอยากให้เปิดได้ทีละเมนู)
+        /*
+        document.querySelectorAll('.item').forEach(item => {
+            item.classList.remove('active');
+        });
+        */
+
+        // สลับสถานะ (Toggle)
+        if (isActive) {
+            parentItem.classList.remove('active');
+        } else {
+            parentItem.classList.add('active');
+        }
     }
-    .sidebar a:hover, .sidebar .drop-btn:hover { 
-        background: #334155 !important; color: #5bbf8a !important; padding-left: 30px; 
-    }
-    .sidebar a:hover::before, .sidebar .drop-btn:hover::before { 
-        content: ""; position: absolute; left: 0; top: 0; height: 100%; width: 4px; background: #5bbf8a; 
-    }
-
-    /* SUB-MENU ANIMATION */
-    .sidebar .sub { max-height: 0; overflow: hidden; background: #0f172a; transition: max-height 0.4s cubic-bezier(0, 1, 0, 1); }
-    .sidebar .item.open .sub { max-height: 1000px; transition: max-height 0.4s ease-in; }
-    .sidebar .item.open .arrow { transform: rotate(90deg); color: #5bbf8a; }
-    .sidebar .arrow { margin-left: auto; transition: 0.3s; font-size: 10px; opacity: 0.5; }
-</style>
-
-
-
-
-
-
-
-
+</script>
