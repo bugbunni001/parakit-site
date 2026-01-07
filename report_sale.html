@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Performance Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
     <style>
         :root { 
             --primary: #5bb7aa; 
@@ -17,6 +20,8 @@
             --sidebar-text: #cbd5e1;
             --success: #059669;
             --danger: #dc2626;
+            --pdf: #e11d48;
+            --excel: #166534;
         }
         * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
         
@@ -86,7 +91,7 @@
             gap: 15px; 
         }
 
-        .action-group { display: flex; align-items: center; gap: 12px; }
+        .action-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 
         #staffSelect, #daySelect { 
             padding: 10px 16px; 
@@ -100,29 +105,21 @@
             outline: none;
             transition: all 0.2s;
         }
-        #staffSelect { min-width: 180px; }
+        #staffSelect { min-width: 150px; }
         #staffSelect:hover, #daySelect:hover { border-color: var(--primary); background-color: #fff; }
 
         .btn-fetch { 
-            background: var(--primary); 
-            color: white; 
-            border: none; 
-            padding: 10px 24px; 
-            border-radius: 10px; 
-            cursor: pointer; 
-            font-weight: 500; 
-            font-size: 16px;
-            transition: all 0.3s ease; 
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            background: var(--primary); color: white; border: none; padding: 10px 20px; 
+            border-radius: 10px; cursor: pointer; font-weight: 500; font-size: 15px;
+            transition: all 0.3s ease; display: flex; align-items: center; gap: 6px;
             box-shadow: 0 4px 12px rgba(91, 183, 170, 0.25);
         }
-        .btn-fetch:hover { 
-            background: #4da398;
-            transform: translateY(-1px);
-            box-shadow: 0 6px 15px rgba(91, 183, 170, 0.35);
-        }
+        .btn-fetch:hover { background: #4da398; transform: translateY(-1px); }
+
+        .btn-pdf { background: var(--pdf); color: white; border: none; padding: 10px 16px; border-radius: 10px; cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 5px; transition: 0.2s; }
+        .btn-pdf:hover { background: #be123c; opacity: 0.9; }
+        .btn-excel { background: var(--excel); color: white; border: none; padding: 10px 16px; border-radius: 10px; cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 5px; transition: 0.2s; }
+        .btn-excel:hover { background: #14532d; opacity: 0.9; }
 
         .main-grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 15px; }
         #dashboardData { display: none; } 
@@ -145,27 +142,10 @@
         .bg-amber { background: #ffb100; } .bg-orange { background: #ff5722; } .bg-slate { background: #4a5568; } .bg-teal { background: #38b2ac; }
         .loading { position: fixed; inset: 0; background: rgba(255,255,255,0.8); display: none; justify-content: center; align-items: center; z-index: 3000; font-weight: 600; }
 
-        /* ===== [CSS สำหรับ Daily Card] สไตล์เดียวกับตารางล่าง ===== */
-        .daily-table thead tr:first-child th {
-            color: #ffffff;
-            font-size: 13px;
-            text-align: center;
-            padding: 8px;
-            border-bottom: none;
-        }
-        .daily-table thead tr:last-child th {
-            background: #f1f5f9;
-            color: #475569;
-            font-size: 12px;
-            text-align: center;
-            padding: 6px;
-            border-bottom: 2px solid #cbd5e1;
-        }
-        .daily-table td {
-            text-align: center;
-            font-weight: 500;
-            border-right: 1px solid #f1f5f9;
-        }
+        /* ===== [CSS สำหรับ Daily Card] ===== */
+        .daily-table thead tr:first-child th { color: #ffffff; font-size: 13px; text-align: center; padding: 8px; border-bottom: none; }
+        .daily-table thead tr:last-child th { background: #f1f5f9; color: #475569; font-size: 12px; text-align: center; padding: 6px; border-bottom: 2px solid #cbd5e1; }
+        .daily-table td { text-align: center; font-weight: 500; border-right: 1px solid #f1f5f9; }
         .daily-table tr:hover { background: #f8fafc; }
         .v-sep { border-left: 2px solid #e2e8f0 !important; }
         .val-actual { color: var(--primary); font-weight: 700; font-size: 16px; }
@@ -174,12 +154,13 @@
 
         @media (max-width: 900px) {
             .daily-table th, .daily-table td { font-size: 11px !important; padding: 4px !important; }
+            .action-group { justify-content: center; }
         }
     </style>
 </head>
 <body id="mainBody">
 
-<div class="loading" id="loader">🔄 กำลังอัปเดตข้อมูล...</div>
+<div class="loading" id="loader">🔄 กำลังประมวลผล...</div>
 <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 <aside id="sidebar-container"></aside>
 
@@ -203,6 +184,8 @@
                     </script>
                 </select>
                 <button class="btn-fetch" onclick="loadData()">🚀 ดึงข้อมูล</button>
+                <button class="btn-pdf" onclick="exportPDF()">📄 PDF</button>
+                <button class="btn-excel" onclick="exportExcel()">📊 Excel</button>
             </div>
         </div>
 
@@ -217,7 +200,7 @@
                     <span id="labelStaff" style="opacity: 0.9; font-size: 14px;"></span>
                 </div>
                 <div class="table-wrapper">
-                    <table class="daily-table">
+                    <table class="daily-table" id="tableDaily">
                         <thead>
                             <tr>
                                 <th rowspan="2" style="background:#4a5568;">วันที่</th>
@@ -240,14 +223,14 @@
                 </div>
             </div>
 
-            <div class="main-grid">
+            <div class="main-grid" id="exportArea">
                 <div class="card">
                     <div class="card-header">
                         <span>📍 สรุปยอดขาย</span>
                         <span id="labelL" style="opacity: 0.9; font-size: 14px;"></span>
                     </div>
                     <div class="table-wrapper">
-                        <table>
+                        <table id="tableSummary">
                             <thead>
                                 <tr><th>Type การขาย</th><th class="text-right">ยอด PostPay</th><th class="text-right">จำนวน</th></tr>
                             </thead>
@@ -261,7 +244,7 @@
                     <div class="card">
                         <div class="card-header">🎯 Focus: <span id="labelR"></span></div>
                         <div class="table-wrapper">
-                            <table>
+                            <table id="tableFocus">
                                 <thead><tr><th>Target</th><th class="text-right">Actual</th></tr></thead>
                                 <tbody id="focusBody"></tbody>
                             </table>
@@ -328,30 +311,22 @@
         const selectedDay = document.getElementById('daySelect').value;
         const dashContainer = document.getElementById('dashboardData');
         const noData = document.getElementById('noData');
-        
         loader.style.display = 'flex';
-        
         try {
             const fetchUrl = `${SCRIPT_URL}?sheetName=${sheet}&targetDay=${selectedDay}`;
             const res = await fetch(fetchUrl);
             const data = await res.json();
-            
             if(data.result === "success") {
                 document.getElementById('labelL').innerText = data.staffName;
                 document.getElementById('labelR').innerText = data.staffName;
                 document.getElementById('labelStaff').innerText = data.staffName;
-
                 document.getElementById('summaryBody').innerHTML = data.summary.map(r => {
                     const isTotalRow = r[0].includes("รวมยอด");
-                    const rowClass = isTotalRow ? 'class="row-summary"' : '';
-                    return `<tr ${rowClass}><td>${r[0]}</td><td class="text-right">${r[1]}</td><td class="text-right">${r[2]}</td></tr>`;
+                    return `<tr ${isTotalRow ? 'class="row-summary"' : ''}><td>${r[0]}</td><td class="text-right">${r[1]}</td><td class="text-right">${r[2]}</td></tr>`;
                 }).join('');
-
                 document.getElementById('focusBody').innerHTML = data.focus
                     .filter(r => !(r[0] === "Target" && r[1] === "Actual")) 
-                    .map(r => `<tr><td>${r[0]}</td><td class="text-right" style="color:#e53e3e; font-weight:800; font-size:16px;">${r[1]}</td></tr>`)
-                    .join('');
-
+                    .map(r => `<tr><td>${r[0]}</td><td class="text-right" style="color:#e53e3e; font-weight:800; font-size:16px;">${r[1]}</td></tr>`).join('');
                 const tDiv = document.getElementById('targetBody');
                 tDiv.innerHTML = "";
                 data.targets.forEach(r => {
@@ -362,7 +337,6 @@
                         tDiv.innerHTML += `<div style="display:flex;justify-content:space-between;padding:12px 18px;border-bottom:1px solid #f1f5f9;font-size:15px; font-weight:500;"><span>${r[0]}</span><span style="font-weight:700;">${r[1]}</span></div>`;
                     }
                 });
-
                 const s = data.topStats;
                 const statsMap = [
                     { label: s[0][0], main: s[1][0], diff: s[1][1], color: '#ffb100' },
@@ -375,40 +349,60 @@
                         <span class="stat-label">${item.label}</span>
                         <div style="display: flex; justify-content: space-between; align-items: flex-end;">
                             <span class="stat-main">${item.main}</span>
-                            <div style="text-align: right;">
-                                <span class="stat-sub-label">ขาด/เกิน</span>
-                                <div class="stat-sub-val">${item.diff}</div>
-                            </div>
+                            <div style="text-align: right;"><span class="stat-sub-label">ขาด/เกิน</span><div class="stat-sub-val">${item.diff}</div></div>
                         </div>
-                    </div>
-                `).join('');
-
-                // --- [JS ปรับปรุง Daily Card] แสดงผลสไตล์ตาราง Dashboard ---
+                    </div>`).join('');
                 const dailyCard = document.getElementById('dailyCard');
                 if (data.dailyRow && selectedDay) {
                     dailyCard.style.display = 'block';
                     document.getElementById('dailyDateNum').innerText = selectedDay;
                     const dr = data.dailyRow; 
-                    
                     document.getElementById('dailyBody').innerHTML = `
-                        <tr>
-                            <td style="background:#f8fafc; color:#475569;">${dr[0]}</td>
-                            <td class="v-sep val-actual">${dr[1]}</td><td class="val-diff">${dr[2]}</td>
-                            <td class="v-sep val-actual">${dr[3]}</td><td class="val-diff">${dr[4]}</td>
-                            <td class="v-sep val-actual">${dr[5]}</td><td class="val-diff">${dr[6]}</td>
-                            <td class="v-sep val-actual">${dr[7]}</td><td class="val-diff">${dr[8]}</td>
-                            <td class="v-sep val-total">${dr[9]}</td><td class="val-total">${dr[10]}</td>
-                        </tr>
-                    `;
-                } else {
-                    dailyCard.style.display = 'none';
-                }
-
+                        <tr><td style="background:#f8fafc; color:#475569;">${dr[0]}</td>
+                        <td class="v-sep val-actual">${dr[1]}</td><td class="val-diff">${dr[2]}</td>
+                        <td class="v-sep val-actual">${dr[3]}</td><td class="val-diff">${dr[4]}</td>
+                        <td class="v-sep val-actual">${dr[5]}</td><td class="val-diff">${dr[6]}</td>
+                        <td class="v-sep val-actual">${dr[7]}</td><td class="val-diff">${dr[8]}</td>
+                        <td class="v-sep val-total">${dr[9]}</td><td class="val-total">${dr[10]}</td></tr>`;
+                } else { dailyCard.style.display = 'none'; }
                 dashContainer.style.display = 'block';
                 noData.style.display = 'none';
             }
-        } catch (e) { alert("เกิดข้อผิดพลาดในการดึงข้อมูล"); console.log(e); } 
-        finally { loader.style.display = 'none'; }
+        } catch (e) { alert("เกิดข้อผิดพลาดในการดึงข้อมูล"); } finally { loader.style.display = 'none'; }
+    }
+
+    // ===== Export Functions =====
+    function exportPDF() {
+        const element = document.getElementById('dashboardData');
+        if (element.style.display === 'none') return alert('กรุณาดึงข้อมูลก่อน export');
+        const staff = document.getElementById('staffSelect').value;
+        const opt = {
+            margin: 10,
+            filename: `Performance_${staff}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+        };
+        html2pdf().set(opt).from(element).save();
+    }
+
+    function exportExcel() {
+        const dash = document.getElementById('dashboardData');
+        if (dash.style.display === 'none') return alert('กรุณาดึงข้อมูลก่อน export');
+        const wb = XLSX.utils.book_new();
+        const staff = document.getElementById('staffSelect').value;
+        
+        // แผ่นที่ 1: รายวัน (ถ้ามี)
+        if(document.getElementById('dailyCard').style.display !== 'none') {
+            const ws1 = XLSX.utils.table_to_sheet(document.getElementById('tableDaily'));
+            XLSX.utils.book_append_sheet(wb, ws1, "Daily_Report");
+        }
+        
+        // แผ่นที่ 2: สรุปยอด
+        const ws2 = XLSX.utils.table_to_sheet(document.getElementById('tableSummary'));
+        XLSX.utils.book_append_sheet(wb, ws2, "Summary_Report");
+        
+        XLSX.writeFile(wb, `Performance_${staff}.xlsx`);
     }
 
     window.onload = includeSidebar;
