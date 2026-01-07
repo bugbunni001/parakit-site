@@ -9,7 +9,8 @@
     <style>
         :root {
             --primary: #3b82f6;
-            --primary-light: #eff6ff;
+            --primary-soft: #eff6ff;
+            --secondary: #8b5cf6;
             --success: #10b981;
             --warning: #f59e0b;
             --danger: #ef4444;
@@ -18,15 +19,38 @@
             --text-main: #0f172a;
             --text-sub: #64748b;
             --sidebar-w: 280px;
-            --radius-lg: 24px;
-            --radius-md: 16px;
+            --radius-xl: 24px;
+            --radius-lg: 18px;
             --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         * { box-sizing: border-box; font-family: 'Kanit', sans-serif; }
         body { margin: 0; background: var(--bg); color: var(--text-main); overflow-x: hidden; }
 
-        /* ===== SIDEBAR & ACCORDION ===== */
+        /* ===== DYNAMIC STATUS INDICATOR ===== */
+        .status-pill { 
+            display: inline-flex; align-items: center; gap: 10px; 
+            background: #fff; padding: 6px 16px; border-radius: 30px; 
+            font-size: 13px; font-weight: 500; box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.03);
+        }
+        .dot-container { position: relative; width: 10px; height: 10px; }
+        .dot { 
+            width: 10px; height: 10px; border-radius: 50%; background: #cbd5e1; 
+            display: block; transition: var(--transition);
+        }
+        .dot-ping {
+            position: absolute; display: inline-flex; height: 100%; width: 100%;
+            border-radius: 50%; opacity: 0.75; animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+        }
+        @keyframes ping { 75%, 100% { transform: scale(2.5); opacity: 0; } }
+
+        /* Status States */
+        .status-syncing .dot, .status-syncing .dot-ping { background: var(--warning); }
+        .status-online .dot { background: var(--success); } .status-online .dot-ping { display: none; }
+        .status-error .dot, .status-error .dot-ping { background: var(--danger); }
+
+        /* ===== SIDEBAR & ACCORDION FIX ===== */
         .sidebar {
             position: fixed; top: 0; left: 0; width: var(--sidebar-w); height: 100vh;
             background: #0f172a; color: #fff; transform: translateX(-100%);
@@ -35,213 +59,148 @@
         }
         .sidebar.show { transform: translateX(0); }
         
-        .sidebar-header { padding: 30px 20px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        
+        /* แก้ไข Accordion: กาง/หุบ */
         .menu .item .sub { 
-            max-height: 0; overflow: hidden; background: rgba(0,0,0,0.2); 
-            transition: max-height 0.4s ease-out; 
+            max-height: 0; overflow: hidden; transition: var(--transition);
+            background: rgba(0,0,0,0.15);
         }
-        .menu .item.open .sub { max-height: 500px; } /* ปรับค่าตามความสูงเมนูย่อย */
-        .menu .item.open .arrow { transform: rotate(90deg); }
+        .menu .item.open .sub { max-height: 500px; } /* ปรับค่าตามความเหมาะสม */
+        .menu .item.open .arrow { transform: rotate(180deg); }
 
         .menu a, .drop-btn { 
             display: flex; align-items: center; width: 100%; padding: 16px 24px; 
             color: #94a3b8; text-decoration: none; background: transparent; border: none; 
             font-size: 15px; cursor: pointer; transition: var(--transition);
         }
-
         .menu a:hover, .drop-btn:hover { background: rgba(255,255,255,0.05); color: #fff; }
-        .menu .item.open > .drop-btn { color: var(--primary); background: rgba(59, 130, 246, 0.1); }
-        
-        .arrow { margin-left: auto; font-size: 10px; transition: var(--transition); }
+        .arrow { margin-left: auto; font-size: 12px; transition: var(--transition); }
 
-        /* ===== DYNAMIC STATUS INDICATOR ===== */
-        .status-pill { 
-            display: inline-flex; align-items: center; gap: 10px; 
-            background: #fff; padding: 8px 18px; border-radius: 30px; 
-            font-size: 13px; font-weight: 500;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-            border: 1px solid rgba(0,0,0,0.03);
-        }
-        .dot { width: 10px; height: 10px; border-radius: 50%; position: relative; }
-        .dot-pulse {
-            position: absolute; width: 100%; height: 100%; border-radius: 50%;
-            animation: pulse 2s infinite; opacity: 0.6;
-        }
-        @keyframes pulse {
-            0% { transform: scale(1); opacity: 0.8; }
-            100% { transform: scale(2.5); opacity: 0; }
-        }
-
-        /* Status Colors */
-        .status-loading .dot, .status-loading .dot-pulse { background: var(--warning); }
-        .status-success .dot, .status-success .dot-pulse { background: var(--success); }
-        .status-error .dot, .status-error .dot-pulse { background: var(--danger); }
-        .status-idle .dot { background: #cbd5e1; } .status-idle .dot-pulse { display: none; }
-
-        /* ===== UX/UI CARDS & INPUTS ===== */
+        /* ===== UI CARDS & INPUTS ===== */
         .top-nav { 
             position: sticky; top: 0; background: rgba(255,255,255,0.7); 
-            backdrop-filter: blur(15px); padding: 15px 25px; 
+            backdrop-filter: blur(12px); padding: 12px 20px; 
             display: flex; align-items: center; justify-content: space-between; 
-            z-index: 1000; border-bottom: 1px solid rgba(0,0,0,0.05); 
+            z-index: 1000; border-bottom: 1px solid rgba(0,0,0,0.05);
         }
 
-        .main-container { padding: 30px 20px; transition: var(--transition); max-width: 1300px; margin: 0 auto; }
-        
-        .target-card { 
-            background: var(--card-bg); border-radius: var(--radius-lg); 
-            padding: 30px; box-shadow: 0 15px 35px -10px rgba(0,0,0,0.05); 
-            border: 1px solid rgba(0,0,0,0.02); transition: var(--transition); 
+        .main-container { padding: 25px; transition: var(--transition); max-width: 1200px; margin: 0 auto; }
+        @media(min-width: 992px) { 
+            .sidebar { transform: translateX(0); } 
+            .main-container { margin-left: var(--sidebar-w); }
+            .menu-toggle { display: none; }
         }
-        .target-card:hover { transform: translateY(-8px); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.1); }
+
+        .target-card { 
+            background: var(--card-bg); border-radius: var(--radius-xl); 
+            padding: 28px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.04); 
+            border: 1px solid rgba(0,0,0,0.03); transition: var(--transition);
+            margin-bottom: 25px;
+        }
+        .target-card:hover { transform: translateY(-5px); box-shadow: 0 20px 30px -10px rgba(0,0,0,0.08); }
 
         .unit-label { 
-            margin: 25px 0 15px 0; padding: 12px 20px; 
-            border-radius: var(--radius-md); font-weight: 600; font-size: 13px; letter-spacing: 0.5px;
+            margin: 20px 0 12px; padding: 12px 18px; border-radius: var(--radius-lg); 
+            font-weight: 600; font-size: 14px;
         }
 
         input[type="text"] { 
-            width: 110px; text-align: right; padding: 10px 15px; 
-            border-radius: 12px; border: 2px solid #f1f5f9; 
-            background: #f8fafc; font-weight: 600; outline: none; transition: var(--transition); 
+            width: 110px; text-align: right; padding: 10px 14px; 
+            border-radius: 14px; border: 2px solid #f1f5f9; 
+            background: #f8fafc; font-weight: 600; transition: var(--transition); outline: none;
         }
-        input.editable { border-color: #e2e8f0; background: #fff; cursor: pointer; }
-        input.editable:hover { border-color: var(--primary); background: #fff; }
-        input.editable:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); transform: scale(1.05); }
+        input.editable { border-color: #e2e8f0; background: #fff; }
+        input.editable:focus { border-color: var(--primary); transform: scale(1.05); box-shadow: 0 0 0 4px var(--primary-soft); }
 
-        .total-black { 
-            background: #0f172a !important; color: #fff !important; 
-            border: none !important; width: 130px !important; font-size: 20px; border-radius: 14px;
-        }
+        .total-black { background: #0f172a !important; color: #fff !important; border: none !important; width: 130px !important; font-size: 19px; }
 
         .btn {
             padding: 14px 28px; border-radius: 16px; font-weight: 600;
-            cursor: pointer; border: none; transition: var(--transition); display: flex; align-items: center; gap: 10px;
+            cursor: pointer; border: none; transition: var(--transition); 
+            display: flex; align-items: center; gap: 10px;
         }
         .btn-edit { background: #0f172a; color: white; }
         .btn-save { background: var(--success); color: white; display: none; }
-        .btn:hover { transform: translateY(-4px) scale(1.02); filter: brightness(1.1); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        .btn:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); filter: brightness(1.1); }
 
-        @media(min-width: 992px) { 
-            .sidebar { transform: translateX(0); } 
-            .main-container { margin-left: var(--sidebar-w); } 
-            .menu-toggle { display: none; } 
-        }
-
-        /* Scrollbar */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: none; z-index: 1500; backdrop-filter: blur(4px); }
+        .overlay.show { display: block; }
     </style>
 </head>
-<body class="status-idle">
-
-<div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
-
-<aside class="sidebar" id="sidebar">
-    <div class="sidebar-header">
-        <h2 style="margin:0; color:var(--primary)">BIG C</h2>
-        <small style="color:#64748b">Management System</small>
-    </div>
-    <div class="menu" id="menu-content">
-        </div>
-</aside>
+<body class="status-syncing"> <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+<aside class="sidebar" id="sidebar"></aside>
 
 <nav class="top-nav">
-    <div class="menu-toggle" onclick="toggleSidebar()"><i class="fa-solid fa-bars-staggered"></i></div>
+    <div class="menu-toggle" onclick="toggleSidebar()"><i class="fa-solid fa-bars-staggered" style="font-size: 20px;"></i></div>
     <div class="status-pill" id="status-container">
-        <div class="dot"><div class="dot-pulse"></div></div>
-        <span id="status-text">พร้อมใช้งาน</span>
+        <div class="dot-container">
+            <span class="dot-ping" id="status-ping"></span>
+            <span class="dot" id="sync-dot"></span>
+        </div>
+        <span id="status-text">กำลังตรวจสอบสถานะ...</span>
     </div>
 </nav>
 
 <main class="main-container">
-    <div class="header-section" style="text-align:center; margin-bottom:40px;">
-        <h1 style="margin:0; font-size: 32px; font-weight:600;">Target Dashboard</h1>
-        <p style="color:var(--text-sub);">สาขาประชาอุทิศ • จัดการเป้าหมายและสรุปยอด</p>
+    <div class="header-section" style="text-align: center; margin-bottom: 40px;">
+        <h1 style="margin:0 0 8px 0; font-size: 32px; font-weight: 600;">Target Dashboard</h1>
+        <p style="color:var(--text-sub);">BigC Prachauthit • Sales Performance Tracking</p>
         
-        <div class="btn-group" style="display:flex; justify-content:center; gap:15px; margin-top:25px;">
+        <div class="btn-group" style="display: flex; justify-content: center; gap: 15px; margin-top: 25px;">
             <button class="btn btn-edit" id="editBtn" onclick="unlock()">
-                <i class="fa-solid fa-pen-nib"></i> แก้ไขข้อมูล
+                <i class="fa-solid fa-pen-to-square"></i> แก้ไขข้อมูล
             </button>
             <button class="btn btn-save" id="saveBtn" onclick="saveAll()">
-                <i class="fa-solid fa-check-double"></i> บันทึกข้อมูล
+                <i class="fa-solid fa-cloud-arrow-up"></i> บันทึกยอด
             </button>
         </div>
     </div>
 
     
 
-    <div class="grid-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 30px;">
+    <div class="grid-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 30px;">
         <div class="target-card" style="border-top: 6px solid var(--primary);">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h3 style="margin:0; font-size:18px;">Postpay Summary</h3>
-                <input type="text" class="total-black" id="postpay_total" value="0" readonly>
+            <div class="staff-item" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <strong style="font-size:1.2rem">Postpay Total</strong>
+                <input type="text" class="total-black" id="postpay_total" readonly value="0">
             </div>
 
-            <div class="unit-label bg-blue" style="background:var(--primary-light); color:var(--primary)">
-                <i class="fa-solid fa-sim-card"></i> &nbsp; NEW SIM ACQUISITION
+            <div class="unit-label" style="background: var(--primary-soft); color: var(--primary-dark);">
+                <i class="fa-solid fa-sim-card"></i> NEW SIM
             </div>
-            <div class="staff-item" style="display:flex; justify-content:space-between; align-items:center; margin:12px 0;">
-                <span>นวพล</span><input type="text" id="pp_nawa_n" value="0">
-            </div>
-            <div class="staff-item" style="display:flex; justify-content:space-between; align-items:center; margin:12px 0;">
-                <span>ปิยะพร</span><input type="text" id="pp_piya_n" value="0">
-            </div>
-            <div class="staff-item" style="display:flex; justify-content:space-between; align-items:center; margin:12px 0;">
-                <span>กรทักษ์</span><input type="text" id="pp_korn_n" value="0">
-            </div>
-            <div style="margin-top:15px; padding-top:15px; border-top:1px solid #f1f5f9; display:flex; justify-content:space-between; font-weight:600;">
-                <span>TOTAL NEW SIM</span><input type="text" id="pp_new_total" style="border:none; background:transparent" readonly>
+            <div class="staff-item" style="display: flex; justify-content: space-between; align-items: center; margin: 12px 0;"><span>นวพล</span><input type="text" id="pp_nawa_n"></div>
+            <div class="staff-item" style="display: flex; justify-content: space-between; align-items: center; margin: 12px 0;"><span>ปิยะพร</span><input type="text" id="pp_piya_n"></div>
+            <div class="staff-item" style="display: flex; justify-content: space-between; align-items: center; margin: 12px 0;"><span>กรทักษ์</span><input type="text" id="pp_korn_n"></div>
+            <div class="staff-item" style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed #e2e8f0; display: flex; justify-content: space-between; font-weight: 600;">
+                <span>รวม New Sim</span><input type="text" id="pp_new_total" style="border:none; background:transparent" readonly>
             </div>
 
-            <div class="unit-label bg-blue" style="background:#f0fdf4; color:#166534; margin-top:30px;">
-                <i class="fa-solid fa-arrows-rotate"></i> &nbsp; EXISTING CUSTOMERS
+            <div class="unit-label" style="background: var(--primary-soft); color: var(--primary-dark);">
+                <i class="fa-solid fa-user-check"></i> EXISTING
             </div>
-            <div class="staff-item" style="display:flex; justify-content:space-between; align-items:center; margin:12px 0;">
-                <span>นวพล</span><input type="text" id="pp_nawa_e" value="0">
-            </div>
-            <div class="staff-item" style="display:flex; justify-content:space-between; align-items:center; margin:12px 0;">
-                <span>ปิยะพร</span><input type="text" id="pp_piya_e" value="0">
-            </div>
-            <div class="staff-item" style="display:flex; justify-content:space-between; align-items:center; margin:12px 0;">
-                <span>กรทักษ์</span><input type="text" id="pp_korn_e" value="0">
-            </div>
+            <div class="staff-item" style="display: flex; justify-content: space-between; align-items: center; margin: 12px 0;"><span>นวพล</span><input type="text" id="pp_nawa_e"></div>
+            <div class="staff-item" style="display: flex; justify-content: space-between; align-items: center; margin: 12px 0;"><span>ปิยะพร</span><input type="text" id="pp_piya_e"></div>
+            <div class="staff-item" style="display: flex; justify-content: space-between; align-items: center; margin: 12px 0;"><span>กรทักษ์</span><input type="text" id="pp_korn_e"></div>
         </div>
 
-        <div class="target-card" style="border-top: 6px solid #8b5cf6;">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h3 style="margin:0; font-size:18px;">Device Summary</h3>
-                <input type="text" class="total-black" id="device_total" value="0" readonly style="background:#5b21b6 !important">
+        <div class="target-card" style="border-top: 6px solid var(--secondary);">
+            <div class="staff-item" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <strong style="font-size:1.2rem">Device Total</strong>
+                <input type="text" class="total-black" id="device_total" readonly style="background: var(--secondary) !important;" value="0">
             </div>
 
-            <div class="unit-label" style="background:#f5f3ff; color:#5b21b6">
-                <i class="fa-brands fa-apple"></i> &nbsp; APPLE PRODUCTS
+            <div class="unit-label" style="background: #f5f3ff; color: #5b21b6;">
+                <i class="fa-brands fa-apple"></i> APPLE DEVICE
             </div>
-            <div class="staff-item" style="display:flex; justify-content:space-between; align-items:center; margin:12px 0;">
-                <span>นวพล</span><input type="text" id="dev_nawa_a" value="0">
-            </div>
-            <div class="staff-item" style="display:flex; justify-content:space-between; align-items:center; margin:12px 0;">
-                <span>ปิยะพร</span><input type="text" id="dev_piya_a" value="0">
-            </div>
-            <div class="staff-item" style="display:flex; justify-content:space-between; align-items:center; margin:12px 0;">
-                <span>กรทักษ์</span><input type="text" id="dev_korn_a" value="0">
-            </div>
+            <div class="staff-item" style="display: flex; justify-content: space-between; align-items: center; margin: 12px 0;"><span>นวพล</span><input type="text" id="dev_nawa_a"></div>
+            <div class="staff-item" style="display: flex; justify-content: space-between; align-items: center; margin: 12px 0;"><span>ปิยะพร</span><input type="text" id="dev_piya_a"></div>
+            <div class="staff-item" style="display: flex; justify-content: space-between; align-items: center; margin: 12px 0;"><span>กรทักษ์</span><input type="text" id="dev_korn_a"></div>
 
-            <div class="unit-label" style="background:#fff7ed; color:#9a3412; margin-top:30px;">
-                <i class="fa-solid fa-mobile-screen-button"></i> &nbsp; OTHER SMARTPHONES
+            <div class="unit-label" style="background: #f5f3ff; color: #5b21b6;">
+                <i class="fa-solid fa-mobile-screen-button"></i> SMARTPHONE
             </div>
-            <div class="staff-item" style="display:flex; justify-content:space-between; align-items:center; margin:12px 0;">
-                <span>นวพล</span><input type="text" id="dev_nawa_s" value="0">
-            </div>
-            <div class="staff-item" style="display:flex; justify-content:space-between; align-items:center; margin:12px 0;">
-                <span>ปิยะพร</span><input type="text" id="dev_piya_s" value="0">
-            </div>
-            <div class="staff-item" style="display:flex; justify-content:space-between; align-items:center; margin:12px 0;">
-                <span>กรทักษ์</span><input type="text" id="dev_korn_s" value="0">
-            </div>
+            <div class="staff-item" style="display: flex; justify-content: space-between; align-items: center; margin: 12px 0;"><span>นวพล</span><input type="text" id="dev_nawa_s"></div>
+            <div class="staff-item" style="display: flex; justify-content: space-between; align-items: center; margin: 12px 0;"><span>ปิยะพร</span><input type="text" id="dev_piya_s"></div>
+            <div class="staff-item" style="display: flex; justify-content: space-between; align-items: center; margin: 12px 0;"><span>กรทักษ์</span><input type="text" id="dev_korn_s"></div>
         </div>
     </div>
 </main>
@@ -249,41 +208,39 @@
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz4jD9tgF3eR-j5xEyq2HUlQ2r7eYyHFo7pwvkV_EHBLz33Srnez2Vy9q7i-biUvtvmgQ/exec";
 
-    // แก้ไขระบบ Sidebar ให้หุบได้
-    function toggleSidebar() {
-        document.getElementById("sidebar").classList.toggle("show");
-        document.getElementById("overlay").classList.toggle("show");
-    }
-
-    // แก้ไขระบบ Dropdown (Accordion) ให้เปิด-ปิดสลับได้
-    window.toggleDrop = function(btn, id) {
-        const item = btn.closest('.item');
-        const parent = item.parentElement;
-        
-        // ถ้าต้องการให้เปิดได้ทีละอันเดียว (Optional)
-        // parent.querySelectorAll('.item').forEach(i => { if(i !== item) i.classList.remove('open'); });
-
-        const isOpen = item.classList.toggle("open");
-        if (id) localStorage.setItem('menu-' + id, isOpen);
-    }
-
-    // ฟังก์ชันช่วยเปลี่ยนสถานะจุดไฟ
-    function updateStatus(type, message) {
+    // --- ฟังก์ชันควบคุมสถานะ (UI Feedback) ---
+    function setStatus(state, message) {
         const body = document.body;
         const text = document.getElementById("status-text");
-        body.classList.remove("status-idle", "status-loading", "status-success", "status-error");
-        body.classList.add(`status-${type}`);
+        body.className = "status-" + state; // online, syncing, error
         text.innerText = message;
     }
 
+    // --- ฟังก์ชันจัดการ Sidebar ---
     function includeSidebar() {
         const version = new Date().getTime();
         fetch('sidebar.html?v=' + version)
             .then(res => res.text())
             .then(data => {
-                document.getElementById('menu-content').innerHTML = data;
+                document.getElementById('sidebar').innerHTML = data;
                 restoreMenuState();
             });
+    }
+
+    function toggleSidebar() {
+        document.getElementById("sidebar").classList.toggle("show");
+        document.getElementById("overlay").classList.toggle("show");
+    }
+
+    // แก้ไข Accordion ให้หุบได้
+    window.toggleDrop = function(btn, id) {
+        const item = btn.closest('.item'); 
+        const isOpen = item.classList.toggle("open");
+        if (id) localStorage.setItem('menu-' + id, isOpen);
+        
+        // หมุนลูกศร (ถ้าใน sidebar.html มีไอคอน arrow)
+        const icon = btn.querySelector('.fa-chevron-right');
+        if(icon) icon.style.transform = isOpen ? 'rotate(90deg)' : 'rotate(0deg)';
     }
 
     function restoreMenuState() {
@@ -295,15 +252,15 @@
         });
     }
 
+    // --- ฟังก์ชันจัดการข้อมูล ---
     function unlock() {
         document.querySelectorAll("input:not([readonly])").forEach(i => i.classList.add("editable"));
         document.getElementById("saveBtn").style.display = "flex";
         document.getElementById("editBtn").style.display = "none";
-        updateStatus("idle", "กำลังแก้ไขข้อมูล...");
     }
 
     async function loadData() {
-        updateStatus("loading", "กำลังดึงข้อมูล...");
+        setStatus("syncing", "กำลังดึงข้อมูลล่าสุด...");
         try {
             const res = await fetch(SCRIPT_URL);
             const data = await res.json();
@@ -311,18 +268,17 @@
                 const el = document.getElementById(k);
                 if (el) el.value = data[k];
             });
-            updateStatus("success", "เชื่อมต่อฐานข้อมูลแล้ว");
+            setStatus("online", "เชื่อมต่อฐานข้อมูลเรียบร้อย");
         } catch (e) {
-            updateStatus("error", "การเชื่อมต่อล้มเหลว");
+            setStatus("error", "การเชื่อมต่อล้มเหลว");
         }
     }
 
     async function saveAll() {
         const btn = document.getElementById("saveBtn");
         btn.disabled = true;
-        btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> บันทึก...`;
-        
-        updateStatus("loading", "กำลังบันทึกข้อมูล...");
+        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> กำลังบันทึก...`;
+        setStatus("syncing", "กำลังส่งข้อมูลไปที่ Server...");
 
         const payload = {};
         document.querySelectorAll("input").forEach(i => {
@@ -336,13 +292,14 @@
             });
             const result = await response.json();
             if (result.status === "Success") {
-                updateStatus("success", "บันทึกข้อมูลสำเร็จ!");
-                setTimeout(() => location.reload(), 1500);
+                setStatus("online", "บันทึกสำเร็จ!");
+                setTimeout(() => location.reload(), 1200);
             } else { throw new Error(); }
         } catch (e) {
-            updateStatus("error", "บันทึกล้มเหลว");
+            alert("❌ บันทึกไม่สำเร็จ กรุณาลองใหม่");
             btn.disabled = false;
-            btn.innerHTML = `<i class="fa-solid fa-check-double"></i> บันทึกข้อมูล`;
+            btn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> บันทึกยอด`;
+            setStatus("error", "เกิดข้อผิดพลาดในการบันทึก");
         }
     }
 
