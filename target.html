@@ -128,7 +128,7 @@
 </main>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx6M-ioCdqzgU3MvzO3ij7pnJiq3dZ6JFYrKJfA2WU48uYdFp5rABwoRuxt3AbqeJJF/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw0707nyF1A5k4rz84nJ4RClheZ2ZUK3T0rEwYEGOGWq7Oj7DSE9obKL5wiDq-0FPHsGQ/exec";
 
     // ----- SIDEBAR LOGIC (FIXED) -----
     function toggleSidebar() {
@@ -239,20 +239,39 @@
         } catch (e) { txt.innerText = "การเชื่อมต่อผิดพลาด"; }
     }
 
-    async function saveAll() {
-        const btn = document.getElementById('btn-save');
-        const oldText = btn.innerText;
-        btn.innerText = "⏳ กำลังบันทึก..."; btn.disabled = true;
-        const payload = {};
-        document.querySelectorAll('input[type="text"]').forEach(el => payload[el.id] = el.value);
-        try {
-            const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
-            if (await res.text() === "Success") { location.reload(); }
-        } catch (e) { 
-            btn.disabled = false; btn.innerText = oldText;
-            alert("บันทึกไม่สำเร็จ กรุณาลองใหม่");
+   async function saveAll() {
+    const btn = document.getElementById('btn-save');
+    const oldText = btn.innerText;
+    btn.innerText = "⏳ กำลังบันทึก...";
+    btn.disabled = true;
+
+    const payload = {};
+    document.querySelectorAll('input[type="text"]').forEach(el => {
+        payload[el.id] = el.value;
+    });
+
+    try {
+        const res = await fetch(SCRIPT_URL, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const text = await res.text();
+        if (text === "Success") {
+            location.reload();
+        } else {
+            throw new Error(text);
         }
+
+    } catch (e) {
+        alert("❌ บันทึกไม่สำเร็จ\n" + e.message);
+        btn.disabled = false;
+        btn.innerText = oldText;
     }
+}
 
     // Keyboard Listeners
     document.addEventListener('keydown', (e) => {
@@ -265,5 +284,6 @@
 </script>
 </body>
 </html>
+
 
 
