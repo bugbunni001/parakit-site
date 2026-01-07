@@ -14,58 +14,25 @@
             --sidebar-width: 260px; 
             --sidebar-bg: #1e293b;
             --sidebar-hover: #334155;
+            --sidebar-text: #cbd5e1;
         }
         * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
         
         html, body { margin: 0; padding: 0; width: 100%; background-color: var(--bg); color: var(--text-dark); min-height: 100vh; }
-        body { display: flex; }
+        body { display: flex; transition: background 0.3s; }
 
-        /* ===== SIDEBAR SYSTEM (บังคับสไตล์ให้ Sidebar ที่ดึงมา) ===== */
+        /* ===== SIDEBAR SYSTEM ===== */
         #sidebar-container { 
             width: var(--sidebar-width); 
             background: var(--sidebar-bg); 
             height: 100vh;
             position: fixed;
             left: 0; top: 0;
-            transition: all 0.3s ease;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 2000;
             overflow-y: auto;
-            display: flex;
-            flex-direction: column; /* บังคับเนื้อหาข้างในเรียงลงมาแนวตั้ง */
-        }
-
-        /* สไตล์สำหรับเนื้อหาที่จะอยู่ใน sidebar.html */
-        .sidebar-brand {
-            padding: 25px 20px;
-            font-size: 22px;
-            font-weight: 600;
-            color: var(--primary);
-            text-align: center;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .sidebar-menu {
-            display: flex;
-            flex-direction: column; /* บังคับเมนูเรียงเป็นแถว */
-            padding: 15px 0;
-        }
-
-        .sidebar-menu a {
-            padding: 12px 25px;
-            color: #cbd5e1;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 16px;
-            transition: all 0.2s;
-            border-left: 4px solid transparent;
-        }
-
-        .sidebar-menu a:hover {
-            background: var(--sidebar-hover);
-            color: var(--primary);
-            border-left-color: var(--primary);
+            overflow-x: hidden;
+            box-shadow: 4px 0 10px rgba(0,0,0,0.1);
         }
 
         /* สำหรับหน้าจอคอมพิวเตอร์ตอนพับเมนู */
@@ -76,40 +43,47 @@
         .main-content { 
             flex-grow: 1; 
             margin-left: var(--sidebar-width);
-            padding: 15px; 
+            padding: 20px; 
             width: calc(100% - var(--sidebar-width));
             transition: all 0.3s ease;
+            min-height: 100vh;
         }
 
-        .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: none; backdrop-filter: blur(4px); z-index: 1500; }
+        .overlay { 
+            position: fixed; inset: 0; 
+            background: rgba(15, 23, 42, 0.6); 
+            display: none; backdrop-filter: blur(4px); 
+            z-index: 1500; 
+        }
         .overlay.show { display: block; }
 
-        /* Card & Table Styles */
-        .card { background: var(--white); border-radius: 15px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid #edf2f7; margin-bottom: 15px; }
-        .card-header { padding: 12px 18px; color: white; font-weight: 600; background: var(--primary); display: flex; justify-content: space-between; font-size: 18px; }
+        /* Sidebar Item Styles (ใช้ร่วมกับ sidebar.html) */
+        .menu-item { color: var(--sidebar-text); text-decoration: none; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; transition: 0.2s; cursor: pointer; border-left: 4px solid transparent; }
+        .menu-item:hover { background: var(--sidebar-hover); color: var(--primary); }
+        .menu-item.active { background: var(--sidebar-hover); color: var(--primary); border-left-color: var(--primary); }
         
-        .row-summary { background-color: rgba(91, 183, 170, 0.15) !important; }
-        .row-summary td { font-weight: 800 !important; font-size: 18px !important; color: #1a202c; border-bottom: 2px solid var(--primary); }
+        .sub-menu { background: #0f172a; display: none; overflow: hidden; }
+        .sub-menu.show { display: block; }
+        .sub-menu a { padding: 10px 20px 10px 50px; font-size: 14px; display: block; color: var(--sidebar-text); text-decoration: none; }
+        .sub-menu a:hover { color: var(--primary); }
 
-        .header-bar { background: var(--white); padding: 12px 20px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .btn-fetch { background: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; }
-
-        .bottom-stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 15px; background: #fafbfc; border-top: 1px solid #edf2f7; }
-        .stat-item { background: #ffffff; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0; border-left: 6px solid var(--primary); }
-        .stat-main { font-size: 26px; font-weight: 800; }
-        .stat-sub-val { font-size: 26px; font-weight: 800; color: #d53f3f; }
-
-        .loading { position: fixed; inset: 0; background: rgba(255,255,255,0.8); display: none; justify-content: center; align-items: center; z-index: 3000; font-weight: 600; }
-
+        /* Responsive */
         @media (max-width: 900px) {
-            .main-content { margin-left: 0; width: 100%; padding: 10px; }
+            .main-content { margin-left: 0; width: 100%; }
             #sidebar-container { transform: translateX(-100%); }
             body.show-sidebar #sidebar-container { transform: translateX(0); }
-            .header-bar { flex-direction: column; gap: 15px; }
+            body.collapsed #sidebar-container { transform: translateX(-100%); } /* บนมือถือ collapsed คือปิด */
         }
+
+        /* อื่นๆ */
+        .header-bar { background: var(--white); padding: 15px 20px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .card { background: var(--white); border-radius: 15px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid #edf2f7; margin-bottom: 15px; }
+        .btn-fetch { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+        .loading { position: fixed; inset: 0; background: rgba(255,255,255,0.8); display: none; justify-content: center; align-items: center; z-index: 3000; }
     </style>
 </head>
 <body id="mainBody">
+
 <div class="loading" id="loader">🔄 กำลังอัปเดตข้อมูล...</div>
 <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 
@@ -119,11 +93,11 @@
     <div class="container">
         <div class="header-bar">
             <div style="display:flex; align-items:center; gap:12px;">
-                <button onclick="toggleSidebar()" style="background:var(--sidebar-bg); color:white; border:none; padding:8px 12px; border-radius:8px; cursor:pointer;">☰</button>
+                <button onclick="toggleSidebar()" style="background:var(--sidebar-bg); color:white; border:none; padding:10px; border-radius:8px; cursor:pointer;">☰</button>
                 <h2 style="margin:0; font-size:18px; color:var(--primary);">Performance Report</h2>
             </div>
             <div class="action-group">
-                <select id="staffSelect" style="padding: 8px; border-radius: 8px; border: 1px solid #e2e8f0; min-width: 120px;">
+                <select id="staffSelect" style="padding: 8px; border-radius: 8px; border: 1px solid #e2e8f0;">
                     <option value="นวพล2">👤 นวพล</option>
                     <option value="ปิยะพร2">👤 ปิยะพร</option>
                     <option value="กรทักษ์2">👤 กรทักษ์</option>
@@ -133,55 +107,33 @@
         </div>
 
         <div id="dashboardData" style="display:none;">
-            <div style="display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 15px;" class="main-grid">
-                <div class="card">
-                    <div class="card-header">📍 สรุปยอดขาย <span id="labelL"></span></div>
-                    <div style="overflow-x:auto;">
-                        <table style="width:100%; border-collapse:collapse;">
-                            <thead>
-                                <tr style="background:#fafbfc;">
-                                    <th style="padding:15px; text-align:left;">Type การขาย</th>
-                                    <th style="padding:15px; text-align:right;">ยอด PostPay</th>
-                                    <th style="padding:15px; text-align:right;">จำนวน</th>
-                                </tr>
-                            </thead>
-                            <tbody id="summaryBody"></tbody>
-                        </table>
-                    </div>
-                    <div class="bottom-stats-grid" id="bottomStats"></div>
-                </div>
-
-                <div class="side-panel">
-                    <div class="card">
-                        <div class="card-header">🎯 Focus: <span id="labelR"></span></div>
-                        <table style="width:100%; border-collapse:collapse;">
-                            <tbody id="focusBody"></tbody>
-                        </table>
-                    </div>
-                    <div class="card">
-                        <div class="card-header" style="background:#2d3748;">🏁 เป้าหมายรายเดือน</div>
-                        <div id="targetBody"></div>
-                    </div>
-                </div>
-            </div>
+            <div class="card" style="padding: 20px; text-align: center;">
+                <h3>ยินดีต้อนรับสู่ระบบ Dashboard</h3>
+                <p>ข้อมูลของ <span id="labelL" style="color:var(--primary); font-weight: bold;"></span> พร้อมใช้งานแล้ว</p>
+             </div>
         </div>
-        
-        <div id="noData" style="text-align: center; padding: 50px; color: #a0aec0;">
-            <p>กรุณาเลือกชื่อพนักงานแล้วกดปุ่ม <b>"ดึงข้อมูล"</b></p>
+
+        <div id="noData" style="text-align: center; padding: 100px 20px; color: #a0aec0;">
+            <p>กรุณาเลือกชื่อพนักงานแล้วกดปุ่ม <b>"ดึงข้อมูล"</b> เพื่อเริ่มต้น</p>
         </div>
     </div>
 </main>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbytOut29HJPTaaSjeg2HaLhWSoxNzNu-PM71oDQTI8fUjUPu_vw5eYJlC8qxqzEZrCZBA/exec"; 
+    // === 1. การจัดการสถานะ Sidebar (Persistence) ===
+    function initSidebarState() {
+        const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+        if (isCollapsed && window.innerWidth > 900) {
+            document.body.classList.add('collapsed');
+        }
+    }
 
-    // โหลดไฟล์ Sidebar
     async function loadSidebar() {
         try {
             const res = await fetch('sidebar.html');
             if (res.ok) {
-                const html = await res.text();
-                document.getElementById('sidebar-container').innerHTML = html;
+                document.getElementById('sidebar-container').innerHTML = await res.text();
+                restoreSubMenuState(); // คืนค่าเมนูย่อยที่เคยกางไว้
             }
         } catch (e) { console.error("Sidebar load error", e); }
     }
@@ -189,70 +141,55 @@
     function toggleSidebar() {
         const body = document.getElementById('mainBody');
         const overlay = document.getElementById('overlay');
-        if (window.innerWidth > 900) body.classList.toggle('collapsed');
-        else { body.classList.toggle('show-sidebar'); overlay.classList.toggle('show'); }
-    }
-
-    async function loadData() {
-        const loader = document.getElementById('loader');
-        const sheet = document.getElementById('staffSelect').value;
-        loader.style.display = 'flex';
         
-        try {
-            const res = await fetch(`${SCRIPT_URL}?sheetName=${sheet}`);
-            const data = await res.json();
-            if(data.result === "success") {
-                document.getElementById('labelL').innerText = data.staffName;
-                document.getElementById('labelR').innerText = data.staffName;
-
-                document.getElementById('summaryBody').innerHTML = data.summary.map(r => {
-                    const isTotal = r[0].includes("รวมยอด");
-                    return `<tr class="${isTotal ? 'row-summary' : ''}">
-                        <td style="padding:12px 15px;">${r[0]}</td>
-                        <td style="padding:12px 15px; text-align:right;">${r[1]}</td>
-                        <td style="padding:12px 15px; text-align:right;">${r[2]}</td>
-                    </tr>`;
-                }).join('');
-
-                document.getElementById('focusBody').innerHTML = data.focus
-                    .filter(r => !(r[0] === "Target" && r[1] === "Actual"))
-                    .map(r => `<tr><td style="padding:12px 15px;">${r[0]}</td><td style="padding:12px 15px; text-align:right; color:#e53e3e; font-weight:800;">${r[1]}</td></tr>`).join('');
-
-                const tDiv = document.getElementById('targetBody');
-                tDiv.innerHTML = "";
-                data.targets.forEach(r => {
-                    if(r[0].includes("คำนวณ Target")) {
-                        let color = r[0].includes("NEW") ? "bg-amber" : r[0].includes("BDBC") ? "bg-orange" : r[0].includes("Apple") ? "bg-slate" : "bg-teal";
-                        tDiv.innerHTML += `<div class="target-group-header ${color}" style="padding:10px 15px; color:white; font-weight:600;">${r[0]}</div>`;
-                    } else if(r[0]) {
-                        tDiv.innerHTML += `<div style="display:flex;justify-content:space-between;padding:12px 18px;border-bottom:1px solid #f1f5f9;"><span>${r[0]}</span><span style="font-weight:700;">${r[1]}</span></div>`;
-                    }
-                });
-
-                const s = data.topStats;
-                const statsMap = [
-                    { label: s[0][0], main: s[1][0], diff: s[1][1], color: '#ffb100' },
-                    { label: s[0][2], main: s[1][2], diff: s[1][3], color: '#ff5722' },
-                    { label: s[0][4], main: s[1][4], diff: s[1][5], color: '#4a5568' },
-                    { label: s[0][6], main: s[1][6], diff: s[1][7], color: '#38b2ac' }
-                ];
-                document.getElementById('bottomStats').innerHTML = statsMap.map(item => `
-                    <div class="stat-item" style="border-left-color: ${item.color};">
-                        <span style="font-size:14px; font-weight:600;">${item.label}</span>
-                        <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:5px;">
-                            <span class="stat-main">${item.main}</span>
-                            <div style="text-align:right;"><small>ขาด/เกิน</small><br><span class="stat-sub-val">${item.diff}</span></div>
-                        </div>
-                    </div>`).join('');
-
-                document.getElementById('dashboardData').style.display = 'block';
-                document.getElementById('noData').style.display = 'none';
-            }
-        } catch (e) { alert("Error loading data"); }
-        finally { loader.style.display = 'none'; }
+        if (window.innerWidth > 900) {
+            body.classList.toggle('collapsed');
+            localStorage.setItem('sidebarCollapsed', body.classList.contains('collapsed'));
+        } else {
+            body.classList.toggle('show-sidebar');
+            overlay.classList.toggle('show');
+        }
     }
 
-    window.onload = loadSidebar;
+    // === 2. External Logic: รองรับ Sub-menu จากไฟล์ภายนอก ===
+    window.toggleDrop = function(id) {
+        const el = document.getElementById(id);
+        if (el) {
+            el.classList.toggle('show');
+            // จำสถานะเมนูย่อย
+            const openMenus = JSON.parse(localStorage.getItem('openSubMenus') || '{}');
+            openMenus[id] = el.classList.contains('show');
+            localStorage.setItem('openSubMenus', JSON.stringify(openMenus));
+        }
+    }
+
+    function restoreSubMenuState() {
+        const openMenus = JSON.parse(localStorage.getItem('openSubMenus') || '{}');
+        for (const id in openMenus) {
+            if (openMenus[id]) {
+                const el = document.getElementById(id);
+                if (el) el.classList.add('show');
+            }
+        }
+    }
+
+    // === 3. Data Fetching (ตัวอย่าง) ===
+    async function loadData() {
+        const sheet = document.getElementById('staffSelect').value;
+        document.getElementById('loader').style.display = 'flex';
+        
+        // จำลองการโหลด
+        setTimeout(() => {
+            document.getElementById('labelL').innerText = sheet;
+            document.getElementById('dashboardData').style.display = 'block';
+            document.getElementById('noData').style.display = 'none';
+            document.getElementById('loader').style.display = 'none';
+        }, 800);
+    }
+
+    // เรียกใช้งานเมื่อโหลดหน้า
+    initSidebarState();
+    loadSidebar();
 </script>
 </body>
 </html>
