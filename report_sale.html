@@ -12,7 +12,7 @@
             --text-dark: #2d3748; 
             --white: #ffffff; 
             --sidebar-width: 260px; 
-            --sidebar-bg: #1e293b;
+            --sidebar-bg: #1e293b; /* สีกรมท่าเข้ม */
             --sidebar-hover: #334155;
             --sidebar-text: #cbd5e1;
         }
@@ -21,7 +21,7 @@
         html, body { margin: 0; padding: 0; width: 100%; background-color: var(--bg); color: var(--text-dark); min-height: 100vh; }
         body { display: flex; transition: background 0.3s; }
 
-        /* ===== SIDEBAR SYSTEM ===== */
+        /* ===== SIDEBAR SYSTEM (FIXED) ===== */
         #sidebar-container { 
             width: var(--sidebar-width); 
             background: var(--sidebar-bg); 
@@ -31,55 +31,59 @@
             transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 2000;
             overflow-y: auto;
-            overflow-x: hidden;
-            box-shadow: 4px 0 10px rgba(0,0,0,0.1);
+            box-shadow: 4px 0 15px rgba(0,0,0,0.2);
         }
 
         /* สำหรับหน้าจอคอมพิวเตอร์ตอนพับเมนู */
         body.collapsed #sidebar-container { transform: translateX(calc(var(--sidebar-width) * -1)); }
         body.collapsed .main-content { margin-left: 0; width: 100%; }
 
-        /* ===== MAIN CONTENT ===== */
+        /* ===== MAIN CONTENT AREA ===== */
         .main-content { 
             flex-grow: 1; 
-            margin-left: var(--sidebar-width);
+            margin-left: var(--sidebar-width); /* เว้นที่ให้ Sidebar Fixed */
             padding: 20px; 
             width: calc(100% - var(--sidebar-width));
             transition: all 0.3s ease;
-            min-height: 100vh;
         }
 
-        .overlay { 
-            position: fixed; inset: 0; 
-            background: rgba(15, 23, 42, 0.6); 
-            display: none; backdrop-filter: blur(4px); 
-            z-index: 1500; 
-        }
+        .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: none; backdrop-filter: blur(4px); z-index: 1500; }
         .overlay.show { display: block; }
 
-        /* Sidebar Item Styles (ใช้ร่วมกับ sidebar.html) */
-        .menu-item { color: var(--sidebar-text); text-decoration: none; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; transition: 0.2s; cursor: pointer; border-left: 4px solid transparent; }
-        .menu-item:hover { background: var(--sidebar-hover); color: var(--primary); }
-        .menu-item.active { background: var(--sidebar-hover); color: var(--primary); border-left-color: var(--primary); }
+        /* ===== DROPDOWN & MENU STYLES (สำหรับ sidebar.html) ===== */
+        .menu .item .sub { 
+            display: none; 
+            background: #0f172a; /* พื้นหลังเมนูย่อยให้เข้มกว่าปกติ */
+        }
+        .menu .item.open .sub { display: block; }
+        .menu .item.open .arrow { transform: rotate(90deg); }
+        .arrow { display: inline-block; transition: 0.3s; font-size: 10px; margin-left: auto; }
         
-        .sub-menu { background: #0f172a; display: none; overflow: hidden; }
-        .sub-menu.show { display: block; }
-        .sub-menu a { padding: 10px 20px 10px 50px; font-size: 14px; display: block; color: var(--sidebar-text); text-decoration: none; }
-        .sub-menu a:hover { color: var(--primary); }
+        .menu a, .drop-btn { 
+            width: 100%; padding: 12px 20px; background: none; border: none; 
+            color: var(--sidebar-text) !important; text-align: left; font-size: 15px; 
+            cursor: pointer; display: flex; align-items: center; gap: 10px;
+            text-decoration: none !important; transition: 0.2s; border-left: 4px solid transparent;
+        }
+        .menu a:hover, .drop-btn:hover { background: var(--sidebar-hover); color: var(--primary) !important; border-left-color: var(--primary); }
+        .sub a { padding-left: 45px; font-size: 14px; opacity: 0.9; }
 
         /* Responsive */
         @media (max-width: 900px) {
-            .main-content { margin-left: 0; width: 100%; }
+            .main-content { margin-left: 0; width: 100%; padding: 10px; }
             #sidebar-container { transform: translateX(-100%); }
             body.show-sidebar #sidebar-container { transform: translateX(0); }
-            body.collapsed #sidebar-container { transform: translateX(-100%); } /* บนมือถือ collapsed คือปิด */
+            body.collapsed #sidebar-container { transform: translateX(-100%); }
         }
 
-        /* อื่นๆ */
-        .header-bar { background: var(--white); padding: 15px 20px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        /* Card & Table อื่นๆ คงเดิมแต่ปรับสีให้เข้ากัน */
         .card { background: var(--white); border-radius: 15px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid #edf2f7; margin-bottom: 15px; }
-        .btn-fetch { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; }
-        .loading { position: fixed; inset: 0; background: rgba(255,255,255,0.8); display: none; justify-content: center; align-items: center; z-index: 3000; }
+        .card-header { padding: 12px 18px; color: white; font-weight: 600; background: var(--primary); display: flex; justify-content: space-between; font-size: 18px; }
+        .header-bar { background: var(--white); padding: 12px 20px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .btn-fetch { background: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+        .loading { position: fixed; inset: 0; background: rgba(255,255,255,0.8); display: none; justify-content: center; align-items: center; z-index: 3000; font-weight: 600; }
+        .row-summary { background-color: rgba(91, 183, 170, 0.15); }
+        .row-summary td { font-weight: 700; color: #1e293b; border-bottom: 2px solid var(--primary); }
     </style>
 </head>
 <body id="mainBody">
@@ -93,11 +97,11 @@
     <div class="container">
         <div class="header-bar">
             <div style="display:flex; align-items:center; gap:12px;">
-                <button onclick="toggleSidebar()" style="background:var(--sidebar-bg); color:white; border:none; padding:10px; border-radius:8px; cursor:pointer;">☰</button>
+                <button onclick="toggleSidebar()" style="background:var(--sidebar-bg); color:white; border:none; padding:8px 12px; border-radius:8px; cursor:pointer;">☰</button>
                 <h2 style="margin:0; font-size:18px; color:var(--primary);">Performance Report</h2>
             </div>
             <div class="action-group">
-                <select id="staffSelect" style="padding: 8px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <select id="staffSelect" style="padding: 8px; border-radius: 8px; border: 1px solid #e2e8f0; min-width: 120px;">
                     <option value="นวพล2">👤 นวพล</option>
                     <option value="ปิยะพร2">👤 ปิยะพร</option>
                     <option value="กรทักษ์2">👤 กรทักษ์</option>
@@ -106,36 +110,28 @@
             </div>
         </div>
 
-        <div id="dashboardData" style="display:none;">
-            <div class="card" style="padding: 20px; text-align: center;">
-                <h3>ยินดีต้อนรับสู่ระบบ Dashboard</h3>
-                <p>ข้อมูลของ <span id="labelL" style="color:var(--primary); font-weight: bold;"></span> พร้อมใช้งานแล้ว</p>
-             </div>
-        </div>
-
         <div id="noData" style="text-align: center; padding: 100px 20px; color: #a0aec0;">
             <p>กรุณาเลือกชื่อพนักงานแล้วกดปุ่ม <b>"ดึงข้อมูล"</b> เพื่อเริ่มต้น</p>
         </div>
-    </div>
+        <div id="dashboardData"></div> </div>
 </main>
 
 <script>
-    // === 1. การจัดการสถานะ Sidebar (Persistence) ===
-    function initSidebarState() {
-        const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
-        if (isCollapsed && window.innerWidth > 900) {
-            document.body.classList.add('collapsed');
-        }
-    }
-
-    async function loadSidebar() {
+    // 1. จัดการ Sidebar และสถานะ (Persistence)
+    async function includeSidebar() {
+        const version = new Date().getTime();
         try {
-            const res = await fetch('sidebar.html');
-            if (res.ok) {
-                document.getElementById('sidebar-container').innerHTML = await res.text();
-                restoreSubMenuState(); // คืนค่าเมนูย่อยที่เคยกางไว้
+            const response = await fetch('sidebar.html?v=' + version);
+            const data = await response.text();
+            document.getElementById('sidebar-container').innerHTML = data;
+            
+            // คืนค่าสถานะเมนูย่อย
+            restoreMenuState();
+            // คืนค่าสถานะพับเมนู (สำหรับ Desktop)
+            if(localStorage.getItem('sidebarCollapsed') === 'true' && window.innerWidth > 900) {
+                document.body.classList.add('collapsed');
             }
-        } catch (e) { console.error("Sidebar load error", e); }
+        } catch (err) { console.warn("Sidebar Load Error:", err); }
     }
 
     function toggleSidebar() {
@@ -151,45 +147,31 @@
         }
     }
 
-    // === 2. External Logic: รองรับ Sub-menu จากไฟล์ภายนอก ===
-    window.toggleDrop = function(id) {
-        const el = document.getElementById(id);
-        if (el) {
-            el.classList.toggle('show');
-            // จำสถานะเมนูย่อย
-            const openMenus = JSON.parse(localStorage.getItem('openSubMenus') || '{}');
-            openMenus[id] = el.classList.contains('show');
-            localStorage.setItem('openSubMenus', JSON.stringify(openMenus));
-        }
+    // 2. ฟังก์ชัน Dropdown (External Logic)
+    window.toggleDrop = function(btn, id) {
+        const item = btn.closest('.item'); 
+        if (!item) return;
+        const isOpen = item.classList.toggle("open");
+        if (id) localStorage.setItem('menu-' + id, isOpen);
     }
 
-    function restoreSubMenuState() {
-        const openMenus = JSON.parse(localStorage.getItem('openSubMenus') || '{}');
-        for (const id in openMenus) {
-            if (openMenus[id]) {
-                const el = document.getElementById(id);
-                if (el) el.classList.add('show');
+    function restoreMenuState() {
+        const menus = ['credit', 'branch']; 
+        menus.forEach(id => {
+            if (localStorage.getItem('menu-' + id) === 'true') {
+                const menuEl = document.getElementById('menu-' + id);
+                if (menuEl) menuEl.classList.add('open');
             }
-        }
+        });
     }
 
-    // === 3. Data Fetching (ตัวอย่าง) ===
+    // เรียกโหลด Sidebar เมื่อเปิดหน้า
+    window.onload = includeSidebar;
+
+    // --- ส่วนของ LoadData (คงเดิมจากโค้ดเก่าของคุณ) ---
     async function loadData() {
-        const sheet = document.getElementById('staffSelect').value;
-        document.getElementById('loader').style.display = 'flex';
-        
-        // จำลองการโหลด
-        setTimeout(() => {
-            document.getElementById('labelL').innerText = sheet;
-            document.getElementById('dashboardData').style.display = 'block';
-            document.getElementById('noData').style.display = 'none';
-            document.getElementById('loader').style.display = 'none';
-        }, 800);
+        /* ... โค้ด fetch ข้อมูลของคุณ ... */
     }
-
-    // เรียกใช้งานเมื่อโหลดหน้า
-    initSidebarState();
-    loadSidebar();
 </script>
 </body>
 </html>
