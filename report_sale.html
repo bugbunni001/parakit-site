@@ -3,178 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📊 รายงานยอดขายพนักงานรายบุคคล</title>
+    <title>📊 รายงานยอดขายพนักงาน</title>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
+        /* จัดแต่งหน้าตาให้เหมือนในรูปตัวอย่าง */
         * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
-        body { margin: 0; background: #f1f5f9; color: #334155; }
+        body { margin: 0; background: #f8fafc; color: #334155; }
+        .report-card { max-width: 600px; margin: 40px auto; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+        select { width: 100%; padding: 12px; border-radius: 10px; border: 2px solid #e2e8f0; margin-bottom: 20px; font-size: 16px; }
+        .btn-fetch { width: 100%; padding: 15px; border: none; background: #1e293b; color: white; border-radius: 10px; font-weight: 600; cursor: pointer; transition: 0.3s; }
+        .btn-fetch:hover { background: #334155; }
         
-        /* Sidebar Layout */
-        .top-toggle { position: fixed; top: 15px; left: 15px; z-index: 1400; width: 45px; height: 45px; border-radius: 12px; border: none; background: #1e293b; color: #fff; font-size: 20px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; }
-        .sidebar { position: fixed; top: 0; left: 0; width: 260px; height: 100vh; background: #1e293b; transform: translateX(-260px); transition: 0.3s; z-index: 2000; overflow-y: auto; }
-        .sidebar.show { transform: translateX(0); }
-        .content { padding: 80px 20px 40px; transition: margin-left 0.3s; }
-        @media(min-width:769px) { .sidebar { transform: translateX(0); } .content { margin-left: 260px; } .top-toggle { display: none; } }
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; z-index: 1500; backdrop-filter: blur(4px); }
-        .overlay.show { display: block; }
-
-        /* Report Card */
-        .report-card { max-width: 700px; margin: auto; background: #fff; padding: 30px; border-radius: 24px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.05); }
-        h2 { text-align: center; color: #1e293b; margin-bottom: 25px; display: flex; align-items: center; justify-content: center; gap: 10px; }
-        
-        .form-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; font-weight: 500; color: #64748b; }
-        select { width: 100%; padding: 12px 15px; border-radius: 12px; border: 2px solid #e2e8f0; font-size: 16px; outline: none; transition: 0.2s; cursor: pointer; background: #f8fafc; }
-        select:focus { border-color: #4db6ac; background: #fff; }
-        
-        .btn-fetch { width: 100%; padding: 15px; border-radius: 12px; border: none; background: #1e293b; color: #fff; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.3s; margin-bottom: 25px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-        .btn-fetch:hover { background: #334155; transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
-        .btn-fetch:active { transform: translateY(0); }
-
-        /* Table Styling */
-        .table-container { overflow-x: auto; display: none; margin-top: 10px; border-radius: 15px; border: 1px solid #e2e8f0; }
-        table { width: 100%; border-collapse: collapse; min-width: 500px; }
-        th { background: #4db6ac; color: white; padding: 14px; font-weight: 400; text-align: center; }
-        td { padding: 12px; border-bottom: 1px solid #f1f5f9; text-align: center; font-size: 15px; }
-        
-        /* Row Highlighting based on image_970ea3.png */
-        .row-new { background-color: #c8e6c9 !important; font-weight: 600; }
-        .row-bdbc { background-color: #d1ecf1 !important; font-weight: 600; }
-        
-        #loader { text-align: center; display: none; color: #64748b; margin: 20px 0; font-weight: 500; }
-        footer { text-align: center; margin-top: 30px; color: #94a3b8; font-size: 12px; }
+        /* ตารางตามภาพ */
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; display: none; }
+        th { background: #4db6ac; color: white; padding: 12px; border: 1px solid #e2e8f0; }
+        td { padding: 10px; border: 1px solid #e2e8f0; text-align: center; }
+        .row-new { background: #c8e6c9 !important; font-weight: 600; } /* แถวรวมยอด New */
+        .row-bdbc { background: #d1ecf1 !important; font-weight: 600; } /* แถวรวมยอด BDBC */
+        #loader { text-align: center; display: none; margin: 15px; }
     </style>
 </head>
 <body>
 
-<button class="top-toggle" onclick="toggleSidebar()">☰</button>
-<div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
-<aside class="sidebar" id="sidebar"></aside>
+<div class="report-card">
+    <h2 style="text-align:center">📊 รายงานยอดขายรายบุคคล</h2>
+    <select id="staffSelect">
+        <option value="นวพล2">👤 นวพล</option>
+        <option value="ปิยะพร2">👤 ปิยะพร</option>
+        <option value="กรทักษ์2">👤 กรทักษ์</option>
+    </select>
+    <button class="btn-fetch" onclick="getPersonalSales()">🔄 ดึงยอดขายล่าสุด</button>
+    
+    <div id="loader">⏳ กำลังประมวลผลข้อมูล...</div>
 
-<main class="content">
-    <div class="report-card">
-        <h2>📊 รายงานยอดขายรายบุคคล</h2>
-        
-        <div class="form-group">
-            <label>เลือกชื่อพนักงาน</label>
-            <select id="staffSelect">
-                <option value="นวพล2">👤 นวพล</option>
-                <option value="ปิยะพร2">👤 ปิยะพร</option>
-                <option value="กรทักษ์2">👤 กรทักษ์</option>
-            </select>
-        </div>
-        
-        <button class="btn-fetch" onclick="getPersonalSales()">🔄 ดึงยอดขายล่าสุด</button>
-        
-        <div id="loader">⏳ กำลังประมวลผลข้อมูล...</div>
-
-        <div class="table-container" id="tableContainer">
-            <table id="reportTable">
-                <thead>
-                    <tr><th colspan="3" id="tableTitle">สรุปยอดขาย</th></tr>
-                    <tr style="background:#f1f5f9; color:#334155;">
-                        <th style="background:#f1f5f9; color:#334155;">Type การขาย</th>
-                        <th style="background:#f1f5f9; color:#334155;">ยอด PostPay</th>
-                        <th style="background:#f1f5f9; color:#334155;">จำนวน</th>
-                    </tr>
-                </thead>
-                <tbody id="reportData"></tbody>
-            </table>
-        </div>
-    </div>
-    <footer>© 2026 Copy Right By Angerina Frog</footer>
-</main>
+    <table id="reportTable">
+        <thead>
+            <tr id="headerTitle"><th colspan="3">สรุปยอด</th></tr>
+            <tr style="background:#f1f5f9; color: #333;">
+                <th>Type การขาย</th><th>ยอด PostPay</th><th>จำนวน</th>
+            </tr>
+        </thead>
+        <tbody id="reportData"></tbody>
+    </table>
+</div>
 
 <script>
-    // แทนที่ด้วย URL ของคุณหลังจาก Deploy Apps Script
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxEJTf_YM_Ay0bjbo9RW2Fe1WFFeMRiSAVqh1YwxwYXzrRlAq05Zeb8FLdc_ZYRzpmqsw/exec"; 
+    // เปลี่ยนเป็น URL ของคุณที่ได้จากการ Deploy ใหม่
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzCJJnlQ77IW2ZKekrz_VGCF2Av600jlCNzcTjm2ULyZTNw4xdMQ3lX8DcJIF52V71dZw/exec"; 
 
-    function toggleSidebar() {
-        document.getElementById("sidebar").classList.toggle("show");
-        document.getElementById("overlay").classList.toggle("show");
-    }
-
-    // โหลด Sidebar และระบบ Sidebar Event
-    async function initPage() {
-        try {
-            const res = await fetch('sidebar.html');
-            if(res.ok) {
-                const html = await res.text();
-                document.getElementById('sidebar').innerHTML = html;
-                setupSidebarEvents();
-            }
-        } catch(e) { console.warn("Sidebar not found"); }
-    }
-
-    function setupSidebarEvents() {
-        document.querySelectorAll('.drop-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const item = this.parentElement;
-                const menuId = this.getAttribute('data-id') || this.innerText.trim();
-                const isOpen = item.classList.toggle('open');
-                localStorage.setItem('menu_' + menuId, isOpen);
-            });
-        });
-        restoreMenuState();
-    }
-
-    function restoreMenuState() {
-        document.querySelectorAll('.drop-btn').forEach(btn => {
-            const menuId = btn.getAttribute('data-id') || btn.innerText.trim();
-            if(localStorage.getItem('menu_' + menuId) === 'true') {
-                btn.parentElement.classList.add('open');
-            }
-        });
-    }
-
-    // ฟังก์ชันดึงข้อมูลยอดขายตามชื่อชีตพนักงาน
-   async function getPersonalSales() {
-    const sheetName = document.getElementById('staffSelect').value;
-    const loader = document.getElementById('loader');
-    const container = document.getElementById('tableContainer');
-    const tbody = document.getElementById('reportData');
-    
-    loader.style.display = 'block';
-    container.style.display = 'none';
-
-    try {
-        // ส่ง query parameter ชื่อ sheetName ไปยัง Apps Script
-        const response = await fetch(`${SCRIPT_URL}?sheetName=${encodeURIComponent(sheetName)}`);
-        const result = await response.json();
+    async function getPersonalSales() {
+        const sheetName = document.getElementById('staffSelect').value;
+        const staffName = document.getElementById('staffSelect').options[document.getElementById('staffSelect').selectedIndex].text;
+        const loader = document.getElementById('loader');
+        const table = document.getElementById('reportTable');
+        const tbody = document.getElementById('reportData');
         
-        if (result.result === "error") {
-            throw new Error(result.error);
-        }
+        loader.style.display = 'block';
+        table.style.display = 'none';
 
-        tbody.innerHTML = "";
-        // แสดงผลข้อมูลช่วง B5:D15
-        result.values.forEach(row => {
-            if(!row[0]) return; // ข้ามถ้าแถวว่าง
-            const tr = document.createElement('tr');
+        try {
+            const response = await fetch(`${SCRIPT_URL}?sheetName=${encodeURIComponent(sheetName)}`);
+            const result = await response.json();
             
-            // ใส่สีตามเงื่อนไข (รวมยอด New = เขียว, รวมยอด BDBC = ฟ้า)
-            if(row[0].includes("รวมยอด New")) tr.className = 'row-new';
-            if(row[0].includes("รวมยอด BDBC")) tr.className = 'row-bdbc';
-            
-            row.forEach(cell => {
-                const td = document.createElement('td');
-                td.innerText = cell;
-                tr.appendChild(td);
+            if (result.result === "error") throw new Error(result.error);
+
+            document.getElementById('headerTitle').innerHTML = `<th colspan="3">สรุปยอด ${staffName}</th>`;
+            tbody.innerHTML = "";
+
+            result.values.forEach(row => {
+                if(!row[0]) return;
+                const tr = document.createElement('tr');
+                
+                // ใส่สีตามภาพต้นฉบับ
+                if(row[0].includes("รวมยอด New")) tr.className = 'row-new';
+                if(row[0].includes("รวมยอด BDBC")) tr.className = 'row-bdbc';
+                
+                row.forEach(cell => {
+                    const td = document.createElement('td');
+                    td.innerText = cell || "0";
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
             });
-            tbody.appendChild(tr);
-        });
 
-        container.style.display = 'block';
-    } catch (e) {
-        console.error(e);
-        // แสดงข้อความ Error ให้ผู้ใช้ทราบ
-        alert("❌ บันทึกผิดพลาด: " + e.message);
-    } finally {
-        loader.style.display = 'none';
+            table.style.display = 'table';
+        } catch (e) {
+            // แก้ไขข้อความ Error ให้ตรงตามที่คุณเจอ
+            alert("❌ บันทึกผิดพลาด: " + e.message);
+        } finally {
+            loader.style.display = 'none';
+        }
     }
-}
-
-    window.onload = initPage;
 </script>
 </body>
 </html>
