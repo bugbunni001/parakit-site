@@ -6,75 +6,122 @@
     <title>📊 รายงานยอดขายพนักงาน</title>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        /* จัดแต่งหน้าตาให้เหมือนในรูปตัวอย่าง */
         * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
-        body { margin: 0; background: #f8fafc; color: #334155; }
-        .report-card { max-width: 600px; margin: 40px auto; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
-        select { width: 100%; padding: 12px; border-radius: 10px; border: 2px solid #e2e8f0; margin-bottom: 20px; font-size: 16px; }
-        .btn-fetch { width: 100%; padding: 15px; border: none; background: #1e293b; color: white; border-radius: 10px; font-weight: 600; cursor: pointer; transition: 0.3s; }
-        .btn-fetch:hover { background: #334155; }
+        body { margin: 0; background: #f1f5f9; color: #334155; display: flex; }
         
-        /* ตารางตามภาพ */
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; display: none; }
-        th { background: #4db6ac; color: white; padding: 12px; border: 1px solid #e2e8f0; }
-        td { padding: 10px; border: 1px solid #e2e8f0; text-align: center; }
-        .row-new { background: #c8e6c9 !important; font-weight: 600; } /* แถวรวมยอด New */
-        .row-bdbc { background: #d1ecf1 !important; font-weight: 600; } /* แถวรวมยอด BDBC */
-        #loader { text-align: center; display: none; margin: 15px; }
+        /* --- Sidebar Style --- */
+        .sidebar { position: fixed; top: 0; left: 0; width: 260px; height: 100vh; background: #1e293b; color: white; transition: 0.3s; z-index: 2000; overflow-y: auto; transform: translateX(-260px); }
+        .sidebar.show { transform: translateX(0); }
+        .top-toggle { position: fixed; top: 15px; left: 15px; z-index: 1500; width: 45px; height: 45px; border-radius: 12px; border: none; background: #1e293b; color: white; cursor: pointer; font-size: 20px; display: flex; align-items: center; justify-content: center; }
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; z-index: 1000; backdrop-filter: blur(4px); }
+        .overlay.show { display: block; }
+
+        @media(min-width: 769px) {
+            .sidebar { transform: translateX(0); }
+            .content { margin-left: 260px; width: calc(100% - 260px); }
+            .top-toggle { display: none; }
+        }
+
+        /* --- Main Content --- */
+        .content { flex: 1; padding: 60px 20px; transition: 0.3s; }
+        .report-card { max-width: 700px; margin: auto; background: white; padding: 30px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        
+        select { width: 100%; padding: 12px; border-radius: 12px; border: 2px solid #e2e8f0; margin-bottom: 20px; font-size: 16px; background: #f8fafc; cursor: pointer; }
+        .btn-fetch { width: 100%; padding: 15px; border: none; background: #1e293b; color: white; border-radius: 12px; font-weight: 600; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .btn-fetch:hover { background: #334155; transform: translateY(-1px); }
+
+        /* --- Table Style --- */
+        .table-container { margin-top: 25px; display: none; border-radius: 15px; overflow: hidden; border: 1px solid #e2e8f0; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #4db6ac; color: white; padding: 15px; font-weight: 400; border: 1px solid #e2e8f0; }
+        td { padding: 12px; border: 1px solid #f1f5f9; text-align: center; }
+        
+        .row-new { background: #c8e6c9 !important; font-weight: 600; } /* */
+        .row-bdbc { background: #d1ecf1 !important; font-weight: 600; } /* */
+        #loader { text-align: center; display: none; margin: 20px 0; color: #64748b; }
     </style>
 </head>
 <body>
 
-<div class="report-card">
-    <h2 style="text-align:center">📊 รายงานยอดขายรายบุคคล</h2>
-    <select id="staffSelect">
-        <option value="นวพล2">👤 นวพล</option>
-        <option value="ปิยะพร2">👤 ปิยะพร</option>
-        <option value="กรทักษ์2">👤 กรทักษ์</option>
-    </select>
-    <button class="btn-fetch" onclick="getPersonalSales()">🔄 ดึงยอดขายล่าสุด</button>
-    
-    <div id="loader">⏳ กำลังประมวลผลข้อมูล...</div>
+<button class="top-toggle" onclick="toggleSidebar()">☰</button>
+<div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+<aside class="sidebar" id="sidebar"></aside>
 
-    <table id="reportTable">
-        <thead>
-            <tr id="headerTitle"><th colspan="3">สรุปยอด</th></tr>
-            <tr style="background:#f1f5f9; color: #333;">
-                <th>Type การขาย</th><th>ยอด PostPay</th><th>จำนวน</th>
-            </tr>
-        </thead>
-        <tbody id="reportData"></tbody>
-    </table>
-</div>
+<main class="content">
+    <div class="report-card">
+        <h2 style="text-align:center">📊 รายงานยอดขายรายบุคคล</h2>
+        <select id="staffSelect">
+            <option value="นวพล2">👤 นวพล</option>
+            <option value="ปิยะพร2">👤 ปิยะพร</option>
+            <option value="กรทักษ์2">👤 กรทักษ์</option>
+        </select>
+        <button class="btn-fetch" onclick="getPersonalSales()">🔄 ดึงยอดขายล่าสุด</button>
+        
+        <div id="loader">⏳ กำลังติดต่อ Server...</div>
+
+        <div class="table-container" id="tableContainer">
+            <table id="reportTable">
+                <thead>
+                    <tr id="headerTitle"><th colspan="3">สรุปยอด</th></tr>
+                    <tr style="background:#f1f5f9; color: #333;">
+                        <th>Type การขาย</th><th>ยอด PostPay</th><th>จำนวน</th>
+                    </tr>
+                </thead>
+                <tbody id="reportData"></tbody>
+            </table>
+        </div>
+    </div>
+</main>
 
 <script>
-    // เปลี่ยนเป็น URL ของคุณที่ได้จากการ Deploy ใหม่
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxjK2--2Ka0kxNglF1-HnonTWYTKL3JnzVk8wGbZrg1r4tS66slONjQyrA4K069bvXE4A/exec"; 
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw4Y6tMuSvAG-3FMoa92QSqWMzlA75n47eZ7IzpnlDAKX2ZnKS_9lY0Bw00kNLjGlRAKw/exec";
 
+    // --- Sidebar Logic ---
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('show');
+        document.getElementById('overlay').classList.toggle('show');
+    }
+
+    async function loadSidebar() {
+        try {
+            const res = await fetch('sidebar.html');
+            if (res.ok) {
+                const html = await res.text();
+                document.getElementById('sidebar').innerHTML = html;
+            }
+        } catch (e) { console.warn("ไม่พบไฟล์ sidebar.html"); }
+    }
+
+    // --- Data Fetching Logic ---
     async function getPersonalSales() {
         const sheetName = document.getElementById('staffSelect').value;
         const staffName = document.getElementById('staffSelect').options[document.getElementById('staffSelect').selectedIndex].text;
         const loader = document.getElementById('loader');
-        const table = document.getElementById('reportTable');
+        const container = document.getElementById('tableContainer');
         const tbody = document.getElementById('reportData');
         
         loader.style.display = 'block';
-        table.style.display = 'none';
+        container.style.display = 'none';
 
         try {
             const response = await fetch(`${SCRIPT_URL}?sheetName=${encodeURIComponent(sheetName)}`);
             const result = await response.json();
             
-            if (result.result === "error") throw new Error(result.error);
+            // ตรวจสอบว่ามีค่า result.values มาจริงไหม ป้องกัน Error reading forEach
+            if (result.result === "error" || !result.values) {
+                throw new Error(result.error || "ไม่ได้รับข้อมูลจากระบบ");
+            }
 
             document.getElementById('headerTitle').innerHTML = `<th colspan="3">สรุปยอด ${staffName}</th>`;
             tbody.innerHTML = "";
 
-            result.values.forEach(row => {
-                if(!row[0]) return;
-                const tr = document.createElement('tr');
+            // ใช้ .slice(1) เพื่อตัดบรรทัดหัวข้อ "Type การขาย" ที่ซ้ำซ้อนออก
+            const cleanData = result.values.slice(1);
+
+            cleanData.forEach(row => {
+                if(!row[0] || row[0].trim() === "") return;
                 
-                // ใส่สีตามภาพต้นฉบับ
+                const tr = document.createElement('tr');
                 if(row[0].includes("รวมยอด New")) tr.className = 'row-new';
                 if(row[0].includes("รวมยอด BDBC")) tr.className = 'row-bdbc';
                 
@@ -86,14 +133,15 @@
                 tbody.appendChild(tr);
             });
 
-            table.style.display = 'table';
+            container.style.display = 'block';
         } catch (e) {
-            // แก้ไขข้อความ Error ให้ตรงตามที่คุณเจอ
-            alert("❌ บันทึกผิดพลาด: " + e.message);
+            alert("❌ เกิดข้อผิดพลาด: " + e.message); // แก้ปัญหาแจ้งเตือนคลุมเครือ
         } finally {
             loader.style.display = 'none';
         }
     }
+
+    window.onload = loadSidebar;
 </script>
 </body>
 </html>
