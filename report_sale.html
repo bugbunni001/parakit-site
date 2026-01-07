@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Performance Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
@@ -16,16 +16,19 @@
         }
         * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
         
-        body { 
-            background-color: var(--bg); 
+        html, body { 
             margin: 0; 
-            display: flex; 
+            padding: 0;
+            width: 100%;
+            background-color: var(--bg); 
             color: var(--text-dark); 
             overflow-x: hidden;
             min-height: 100vh;
         }
 
-        /* ===== SIDEBAR SYSTEM (FIXED) ===== */
+        body { display: flex; }
+
+        /* ===== SIDEBAR SYSTEM ===== */
         #sidebar-container { 
             width: var(--sidebar-width); 
             background: var(--sidebar-bg); 
@@ -39,20 +42,10 @@
             box-shadow: 4px 0 15px rgba(0,0,0,0.2);
         }
 
-        /* Sidebar Internal Elements (For External HTML) */
-        #sidebar-container .sidebar-header { padding: 25px 20px; font-size: 18px; font-weight: 600; background: #0f172a; color: var(--primary); border-bottom: 1px solid rgba(255,255,255,0.05); text-align: center; }
-        #sidebar-container .menu { display: flex; flex-direction: column; padding: 10px 0; }
+        #sidebar-container .sidebar-header { padding: 25px 20px; font-size: 18px; font-weight: 600; background: #0f172a; color: var(--primary); text-align: center; }
         #sidebar-container .menu a, #sidebar-container .drop-btn { width: 100%; padding: 15px 20px; background: none; border: none; color: #cbd5e1 !important; text-align: left; font-size: 15px; cursor: pointer; display: flex; align-items: center; text-decoration: none !important; transition: 0.3s; }
-        #sidebar-container .menu a:hover, #sidebar-container .drop-btn:hover { background: #334155; color: var(--primary) !important; padding-left: 28px; }
-        
-        /* Sub-menu Setup */
-        #sidebar-container .sub { display: none; background: #0f172a; padding: 5px 0; }
-        #sidebar-container .item.open .sub { display: block; }
-        #sidebar-container .sub a { padding-left: 50px !important; font-size: 14px; color: #94a3b8 !important; }
-        #sidebar-container .arrow { margin-left: auto; transition: 0.3s; font-size: 10px; opacity: 0.6; }
-        #sidebar-container .item.open .arrow { transform: rotate(90deg); color: var(--primary); opacity: 1; }
+        #sidebar-container .menu a:hover, #sidebar-container .drop-btn:hover { background: #334155; color: var(--primary) !important; }
 
-        /* Overlay สำหรับมือถือ */
         .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: none; backdrop-filter: blur(4px); z-index: 1500; }
         .overlay.show { display: block; }
 
@@ -65,83 +58,168 @@
             transition: all 0.3s ease;
         }
 
-        /* สถานะตอนหุบเมนู (Collapsed) */
         body.collapsed #sidebar-container { transform: translateX(calc(var(--sidebar-width) * -1)); }
         body.collapsed .main-content { margin-left: 0; width: 100%; }
 
-        /* [REST OF YOUR STYLES - CARDS, TABLES, ETC.] */
-        .container { max-width: 1100px; margin: 0 auto; }
-        .header-bar { background: var(--white); padding: 12px 20px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .btn-toggle { background: var(--sidebar-bg); color: white; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 18px; }
+        .container { max-width: 1200px; margin: 0 auto; width: 100%; }
         
+        .header-bar { 
+            background: var(--white); 
+            padding: 12px 20px; 
+            border-radius: 12px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 15px; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05); 
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .action-group { display: flex; align-items: center; gap: 10px; }
+        .btn-fetch { 
+            background: var(--primary); 
+            color: white; 
+            border: none; 
+            padding: 8px 16px; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-weight: 500;
+            transition: 0.2s;
+        }
+        .btn-fetch:hover { filter: brightness(0.9); }
+
         .main-grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 15px; }
-        .card { background: var(--white); border-radius: 15px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid #edf2f7; margin-bottom: 15px;}
-        .card-header { padding: 10px 18px; color: white; font-weight: 500; background: var(--primary); display: flex; gap: 8px; }
+        #dashboardData { display: none; } 
+
+        .card { background: var(--white); border-radius: 15px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid #edf2f7; margin-bottom: 15px; width: 100%; }
+        .card-header { padding: 12px 18px; color: white; font-weight: 600; background: var(--primary); display: flex; justify-content: space-between; font-size: 18px; }
         
-        table { width: 100%; border-collapse: collapse; }
-        th { padding: 10px 18px; text-align: left; font-size: 13px; color: #718096; border-bottom: 1px solid #f1f5f9; background: #fafbfc; }
-        td { padding: 9px 18px; border-bottom: 1px solid #f7fafc; font-size: 14.5px; }
+        .table-wrapper { width: 100%; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 300px; }
+        
+        th { 
+            padding: 15px; 
+            text-align: left; 
+            font-size: 16px; 
+            font-weight: 600; 
+            color: #4a5568; 
+            border-bottom: 2px solid #edf2f7; 
+            background: #fafbfc; 
+        }
+        
+        td { padding: 12px 15px; border-bottom: 1px solid #f7fafc; font-size: 15px; }
         .text-right { text-align: right; }
+
+        /* Style ใหม่สำหรับแถวสรุปยอด */
+        .row-summary {
+            background-color: rgba(91, 183, 170, 0.15); /* สีจางๆ คาดแถว */
+        }
+        .row-summary td {
+            font-weight: 700 !important;
+            font-size: 18px !important; /* ตัวหนังสือใหญ่กว่าปกติ */
+            color: #1a202c;
+            border-bottom: 2px solid var(--primary);
+        }
         
-        .bottom-stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 15px; border-top: 2px solid #f1f5f9; background: #fafbfc; }
-        .stat-item { background: #ffffff; padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0; border-left: 6px solid var(--primary); }
-        .stat-main { font-size: 20px; font-weight: 700; }
-        .stat-sub-val { font-size: 22px; font-weight: 800; color: #d53f3f; }
+        .bottom-stats-grid { 
+            display: grid; 
+            grid-template-columns: repeat(2, 1fr); 
+            gap: 12px; 
+            padding: 15px; 
+            background: #fafbfc; 
+            border-top: 1px solid #edf2f7;
+        }
+        .stat-item { background: #ffffff; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0; border-left: 6px solid var(--primary); }
+        .stat-label { font-size: 15px; color: #2d3748; font-weight: 600; display: block; margin-bottom: 5px; }
+        .stat-main { font-size: 24px; font-weight: 800; color: var(--text-dark); display: block; }
+        .stat-sub-label { font-size: 12px; color: #a0aec0; display: block; font-weight: 400; }
+        .stat-sub-val { font-size: 24px; font-weight: 800; color: #d53f3f; }
 
-        .target-group-header { padding: 8px 15px; font-weight: 600; color: white; font-size: 13.5px; }
+        .target-group-header { padding: 10px 15px; font-weight: 600; color: white; font-size: 15px; }
         .bg-amber { background: #ffb100; } .bg-orange { background: #ff5722; } .bg-slate { background: #4a5568; } .bg-teal { background: #38b2ac; }
-        .loading { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); display: none; justify-content: center; align-items: center; z-index: 3000; }
+        
+        .loading { position: fixed; inset: 0; background: rgba(255,255,255,0.8); display: none; justify-content: center; align-items: center; z-index: 3000; font-weight: 600; }
 
-        /* Responsive */
         @media (max-width: 900px) {
-            .main-content { margin-left: 0; width: 100%; }
-            .main-grid { grid-template-columns: 1fr; }
+            .main-content { margin-left: 0; width: 100%; padding: 10px; }
             #sidebar-container { transform: translateX(-100%); }
             body.show-sidebar #sidebar-container { transform: translateX(0); }
+            .main-grid { grid-template-columns: 1fr; }
+            .header-bar { flex-direction: column; align-items: stretch; }
+            .bottom-stats-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body id="mainBody">
-<div class="loading" id="loader">🔄 อัปเดตข้อมูล...</div>
+<div class="loading" id="loader">🔄 กำลังอัปเดตข้อมูล...</div>
 <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
-
-<aside id="sidebar-container">
-    </aside>
+<aside id="sidebar-container"></aside>
 
 <main class="main-content">
     <div class="container">
         <div class="header-bar">
             <div style="display:flex; align-items:center; gap:12px;">
-                <button class="btn-toggle" onclick="toggleSidebar()">☰</button>
-                <h2 style="margin:0; font-size:19px; color:var(--primary);">Performance Report</h2>
+                <button class="btn-toggle" onclick="toggleSidebar()" style="background:var(--sidebar-bg); color:white; border:none; padding:8px 12px; border-radius:8px; cursor:pointer;">☰</button>
+                <h2 style="margin:0; font-size:18px; color:var(--primary);">Performance Report</h2>
             </div>
-            <select id="staffSelect" onchange="loadData()" style="padding: 8px; border-radius: 8px; border: 1px solid #e2e8f0;">
-                <option value="นวพล2">👤 นวพล</option>
-                <option value="ปิยะพร2">👤 ปิยะพร</option>
-                <option value="กรทักษ์2">👤 กรทักษ์</option>
-            </select>
+            <div class="action-group">
+                <select id="staffSelect" style="padding: 8px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                    <option value="นวพล2">👤 นวพล</option>
+                    <option value="ปิยะพร2">👤 ปิยะพร</option>
+                    <option value="กรทักษ์2">👤 กรทักษ์</option>
+                </select>
+                <button class="btn-fetch" onclick="loadData()">🚀 ดึงข้อมูล</button>
+            </div>
         </div>
 
-        <div class="main-grid">
-            <div class="card">
-                <div class="card-header">📍 สรุปยอดขาย: <span id="labelL"></span></div>
-                <table>
-                    <thead><tr><th>Type การขาย</th><th class="text-right">ยอด PostPay</th><th class="text-right">จำนวน</th></tr></thead>
-                    <tbody id="summaryBody"></tbody>
-                </table>
-                <div class="bottom-stats-grid" id="bottomStats"></div>
-            </div>
+        <div id="dashboardData">
+            <div class="main-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <span>📍 สรุปยอดขาย</span>
+                        <span id="labelL" style="opacity: 0.9; font-size: 14px;"></span>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Type การขาย</th>
+                                    <th class="text-right">ยอด PostPay</th>
+                                    <th class="text-right">จำนวน</th>
+                                </tr>
+                            </thead>
+                            <tbody id="summaryBody"></tbody>
+                        </table>
+                    </div>
+                    <div class="bottom-stats-grid" id="bottomStats"></div>
+                </div>
 
-            <div class="side-panel">
-                <div class="card">
-                    <div class="card-header">🎯 Focus: <span id="labelR"></span></div>
-                    <table><thead><tr><th>Target</th><th class="text-right">Actual</th></tr></thead><tbody id="focusBody"></tbody></table>
-                </div>
-                <div class="card">
-                    <div class="card-header" style="background:#2d3748;">🏁 เป้าหมายรายเดือน</div>
-                    <div id="targetBody"></div>
+                <div class="side-panel">
+                    <div class="card">
+                        <div class="card-header">🎯 Focus: <span id="labelR"></span></div>
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Target</th>
+                                        <th class="text-right">Actual</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="focusBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header" style="background:#2d3748;">🏁 เป้าหมายรายเดือน</div>
+                        <div id="targetBody"></div>
+                    </div>
                 </div>
             </div>
+        </div>
+        
+        <div id="noData" style="text-align: center; padding: 50px; color: #a0aec0;">
+            <p>กรุณาเลือกชื่อพนักงานแล้วกดปุ่ม <b>"ดึงข้อมูล"</b> เพื่อแสดงผล</p>
         </div>
     </div>
 </main>
@@ -149,61 +227,47 @@
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbytOut29HJPTaaSjeg2HaLhWSoxNzNu-PM71oDQTI8fUjUPu_vw5eYJlC8qxqzEZrCZBA/exec"; 
 
-    // 1. ระบบ Sidebar & Dropdown
-    window.toggleDrop = function(btn, id) {
-        const item = btn.closest('.item');
-        const isOpen = item.classList.toggle('open');
-        if(id) localStorage.setItem('subMenu-' + id, isOpen ? 'open' : 'closed');
-    };
-
     function toggleSidebar() {
         const body = document.getElementById('mainBody');
         const overlay = document.getElementById('overlay');
-        
-        if (window.innerWidth > 900) {
-            body.classList.toggle('collapsed');
-            localStorage.setItem('sidebarStatus', body.classList.contains('collapsed') ? 'closed' : 'open');
-        } else {
-            body.classList.toggle('show-sidebar');
-            overlay.classList.toggle('show');
-        }
+        if (window.innerWidth > 900) { body.classList.toggle('collapsed'); } 
+        else { body.classList.toggle('show-sidebar'); overlay.classList.toggle('show'); }
     }
 
-    async function loadSidebar() {
-        try {
-            const version = new Date().getTime();
-            const res = await fetch('sidebar.html?v=' + version);
-            const html = await res.text();
-            document.getElementById('sidebar-container').innerHTML = html;
-            
-            // Restore States
-            if (localStorage.getItem('sidebarStatus') === 'closed' && window.innerWidth > 900) {
-                document.getElementById('mainBody').classList.add('collapsed');
-            }
-            document.querySelectorAll('.item[id]').forEach(item => {
-                const shortId = item.id.replace('menu-', '');
-                if (localStorage.getItem('subMenu-' + shortId) === 'open') item.classList.add('open');
-            });
-        } catch (e) { console.error("Sidebar load error"); }
-    }
-
-    // 2. ระบบดึงข้อมูล Dashboard
     async function loadData() {
         const loader = document.getElementById('loader');
         const sheet = document.getElementById('staffSelect').value;
+        const dashContainer = document.getElementById('dashboardData');
+        const noData = document.getElementById('noData');
+        
         loader.style.display = 'flex';
+        
         try {
             const res = await fetch(`${SCRIPT_URL}?sheetName=${sheet}`);
             const data = await res.json();
+            
             if(data.result === "success") {
                 document.getElementById('labelL').innerText = data.staffName;
                 document.getElementById('labelR').innerText = data.staffName;
 
+                // แก้ไขการแสดงผล summaryBody ให้มีแถบสีเมื่อเจอคำว่า "รวมยอด"
                 document.getElementById('summaryBody').innerHTML = data.summary.map(r => {
-                    return `<tr><td>${r[0]}</td><td class="text-right">${r[1]}</td><td class="text-right">${r[2]}</td></tr>`;
+                    const isTotalRow = r[0].includes("รวมยอด");
+                    const rowClass = isTotalRow ? 'class="row-summary"' : '';
+                    return `
+                        <tr ${rowClass}>
+                            <td>${r[0]}</td>
+                            <td class="text-right">${r[1]}</td>
+                            <td class="text-right">${r[2]}</td>
+                        </tr>
+                    `;
                 }).join('');
 
-                document.getElementById('focusBody').innerHTML = data.focus.map(r => `<tr><td>${r[0]}</td><td class="text-right" style="color:#e53e3e; font-weight:700;">${r[1]}</td></tr>`).join('');
+                document.getElementById('focusBody').innerHTML = data.focus
+                    .filter(r => !(r[0] === "Target" && r[1] === "Actual")) 
+                    .map(r => `
+                    <tr><td>${r[0]}</td><td class="text-right" style="color:#e53e3e; font-weight:800; font-size:16px;">${r[1]}</td></tr>
+                `).join('');
 
                 const tDiv = document.getElementById('targetBody');
                 tDiv.innerHTML = "";
@@ -212,7 +276,7 @@
                         let color = r[0].includes("NEW") ? "bg-amber" : r[0].includes("BDBC") ? "bg-orange" : r[0].includes("Apple") ? "bg-slate" : "bg-teal";
                         tDiv.innerHTML += `<div class="target-group-header ${color}">${r[0]}</div>`;
                     } else if(r[0]) {
-                        tDiv.innerHTML += `<div style="display:flex;justify-content:space-between;padding:10px 18px;border-bottom:1px solid #f1f5f9;font-size:14px;"><span>${r[0]}</span><span style="font-weight:600;">${r[1]}</span></div>`;
+                        tDiv.innerHTML += `<div style="display:flex;justify-content:space-between;padding:12px 18px;border-bottom:1px solid #f1f5f9;font-size:15px; font-weight:500;"><span>${r[0]}</span><span style="font-weight:700;">${r[1]}</span></div>`;
                     }
                 });
 
@@ -223,28 +287,26 @@
                     { label: s[0][4], main: s[1][4], diff: s[1][5], color: '#4a5568' },
                     { label: s[0][6], main: s[1][6], diff: s[1][7], color: '#38b2ac' }
                 ];
+                
                 document.getElementById('bottomStats').innerHTML = statsMap.map(item => `
                     <div class="stat-item" style="border-left-color: ${item.color};">
-                        <span style="font-size: 13px; color: #4a5568; font-weight: 600; display: block; margin-bottom: 5px;">${item.label}</span>
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span class="stat-label">${item.label}</span>
+                        <div style="display: flex; justify-content: space-between; align-items: flex-end;">
                             <span class="stat-main">${item.main}</span>
                             <div style="text-align: right;">
-                                <small style="font-size: 11px; color: #718096; display: block;">ขาด/เกิน</small>
+                                <span class="stat-sub-label">ขาด/เกิน</span>
                                 <div class="stat-sub-val">${item.diff}</div>
                             </div>
                         </div>
                     </div>
                 `).join('');
+
+                dashContainer.style.display = 'block';
+                noData.style.display = 'none';
             }
-        } catch (e) { console.error(e); } 
+        } catch (e) { alert("เกิดข้อผิดพลาดในการดึงข้อมูล"); } 
         finally { loader.style.display = 'none'; }
     }
-
-    // เริ่มทำงาน
-    window.onload = () => {
-        loadSidebar();
-        loadData();
-    };
 </script>
 </body>
 </html>
