@@ -42,9 +42,11 @@
             box-shadow: 4px 0 15px rgba(0,0,0,0.2);
         }
 
-        #sidebar-container .sidebar-header { padding: 25px 20px; font-size: 18px; font-weight: 600; background: #0f172a; color: var(--primary); text-align: center; }
-        #sidebar-container .menu a, #sidebar-container .drop-btn { width: 100%; padding: 15px 20px; background: none; border: none; color: #cbd5e1 !important; text-align: left; font-size: 15px; cursor: pointer; display: flex; align-items: center; text-decoration: none !important; transition: 0.3s; }
-        #sidebar-container .menu a:hover, #sidebar-container .drop-btn:hover { background: #334155; color: var(--primary) !important; }
+        .sidebar-header { padding: 25px 20px; font-size: 20px; font-weight: 600; background: #0f172a; color: var(--primary); text-align: center; border-bottom: 1px solid #334155; }
+        .menu { padding: 10px 0; }
+        .menu a { width: 100%; padding: 15px 20px; color: #cbd5e1 !important; display: flex; align-items: center; text-decoration: none !important; transition: 0.3s; font-size: 15px; border-left: 4px solid transparent; }
+        .menu a:hover { background: #334155; color: var(--primary) !important; border-left: 4px solid var(--primary); }
+        .menu a.active { background: #1e293b; color: var(--primary) !important; border-left: 4px solid var(--primary); font-weight: 500; }
 
         .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: none; backdrop-filter: blur(4px); z-index: 1500; }
         .overlay.show { display: block; }
@@ -84,10 +86,10 @@
             padding: 8px 16px; 
             border-radius: 8px; 
             cursor: pointer; 
-            font-weight: 500;
+            font-weight: 600;
             transition: 0.2s;
         }
-        .btn-fetch:hover { filter: brightness(0.9); }
+        .btn-fetch:hover { filter: brightness(0.9); transform: translateY(-1px); }
 
         .main-grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 15px; }
         #dashboardData { display: none; } 
@@ -111,13 +113,13 @@
         td { padding: 12px 15px; border-bottom: 1px solid #f7fafc; font-size: 15px; }
         .text-right { text-align: right; }
 
-        /* Style ใหม่สำหรับแถวสรุปยอด */
+        /* ===== สไตล์แถวสรุปยอด (Highlight) ===== */
         .row-summary {
-            background-color: rgba(91, 183, 170, 0.15); /* สีจางๆ คาดแถว */
+            background-color: rgba(91, 183, 170, 0.12) !important; /* แถบสีจางๆ */
         }
         .row-summary td {
             font-weight: 700 !important;
-            font-size: 18px !important; /* ตัวหนังสือใหญ่กว่าปกติ */
+            font-size: 18px !important; /* ตัวหนังสือใหญ่ขึ้น */
             color: #1a202c;
             border-bottom: 2px solid var(--primary);
         }
@@ -132,9 +134,9 @@
         }
         .stat-item { background: #ffffff; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0; border-left: 6px solid var(--primary); }
         .stat-label { font-size: 15px; color: #2d3748; font-weight: 600; display: block; margin-bottom: 5px; }
-        .stat-main { font-size: 24px; font-weight: 800; color: var(--text-dark); display: block; }
+        .stat-main { font-size: 26px; font-weight: 800; color: var(--text-dark); display: block; }
         .stat-sub-label { font-size: 12px; color: #a0aec0; display: block; font-weight: 400; }
-        .stat-sub-val { font-size: 24px; font-weight: 800; color: #d53f3f; }
+        .stat-sub-val { font-size: 26px; font-weight: 800; color: #d53f3f; }
 
         .target-group-header { padding: 10px 15px; font-weight: 600; color: white; font-size: 15px; }
         .bg-amber { background: #ffb100; } .bg-orange { background: #ff5722; } .bg-slate { background: #4a5568; } .bg-teal { background: #38b2ac; }
@@ -154,7 +156,16 @@
 <body id="mainBody">
 <div class="loading" id="loader">🔄 กำลังอัปเดตข้อมูล...</div>
 <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
-<aside id="sidebar-container"></aside>
+
+<aside id="sidebar-container">
+    <div class="sidebar-header">MENU</div>
+    <nav class="menu">
+        <a href="#" class="active">📊 Dashboard</a>
+        <a href="#">📈 Sales Report</a>
+        <a href="#">👥 Staff Performance</a>
+        <a href="#">⚙️ Settings</a>
+    </nav>
+</aside>
 
 <main class="main-content">
     <div class="container">
@@ -164,7 +175,7 @@
                 <h2 style="margin:0; font-size:18px; color:var(--primary);">Performance Report</h2>
             </div>
             <div class="action-group">
-                <select id="staffSelect" style="padding: 8px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <select id="staffSelect" style="padding: 8px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 14px;">
                     <option value="นวพล2">👤 นวพล</option>
                     <option value="ปิยะพร2">👤 ปิยะพร</option>
                     <option value="กรทักษ์2">👤 กรทักษ์</option>
@@ -250,7 +261,7 @@
                 document.getElementById('labelL').innerText = data.staffName;
                 document.getElementById('labelR').innerText = data.staffName;
 
-                // แก้ไขการแสดงผล summaryBody ให้มีแถบสีเมื่อเจอคำว่า "รวมยอด"
+                // ตรวจสอบคำว่า "รวมยอด" เพื่อใส่แถบสี
                 document.getElementById('summaryBody').innerHTML = data.summary.map(r => {
                     const isTotalRow = r[0].includes("รวมยอด");
                     const rowClass = isTotalRow ? 'class="row-summary"' : '';
@@ -266,7 +277,7 @@
                 document.getElementById('focusBody').innerHTML = data.focus
                     .filter(r => !(r[0] === "Target" && r[1] === "Actual")) 
                     .map(r => `
-                    <tr><td>${r[0]}</td><td class="text-right" style="color:#e53e3e; font-weight:800; font-size:16px;">${r[1]}</td></tr>
+                    <tr><td>${r[0]}</td><td class="text-right" style="color:#e53e3e; font-weight:800; font-size:17px;">${r[1]}</td></tr>
                 `).join('');
 
                 const tDiv = document.getElementById('targetBody');
