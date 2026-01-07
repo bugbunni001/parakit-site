@@ -1,110 +1,25 @@
-<style>
-    /* ส่วนหัว Sidebar */
-    .sidebar-header {
-        padding: 22px 15px;
-        font-size: 1.1rem;
-        font-weight: 600;
-        color: #5bb7aa;
-        text-transform: uppercase;
-        letter-spacing: 1.5px;
-        border-bottom: 1px solid rgba(255,255,255,0.08);
-        text-align: center;
-        background: rgba(0,0,0,0.1);
-    }
+<div class="sidebar-header">MENU</div>
 
-    .menu-list { padding: 10px 0; margin: 0; list-style: none; }
-    .menu-item { border-bottom: 1px solid rgba(255,255,255,0.03); overflow: hidden; }
-    
-    /* ปุ่มหลักและลิงก์ */
-    .menu-link, .drop-btn { 
-        display: flex; 
-        align-items: center; 
-        padding: 15px 20px; 
-        color: #cbd5e1 !important; 
-        text-decoration: none !important; 
-        cursor: pointer; 
-        transition: all 0.2s ease; 
-        background: transparent; 
-        border: none; 
-        width: 100%; 
-        text-align: left; 
-        font-size: 15px;
-        outline: none;
-    }
+<div class="menu">
+    <a href="index.html">🏠 หน้าหลัก</a>
 
-    .menu-link:hover, .drop-btn:hover { 
-        background: #334155 !important; 
-        color: #5bb7aa !important;
-        padding-left: 25px;
-    }
-
-    /* จัดการเมนูย่อย */
-    .sub-menu { 
-        display: none; /* เริ่มต้นซ่อน */
-        background: #1a222f; 
-        list-style: none;
-        padding: 0;
-        margin: 0;
-    }
-
-    /* เมื่อมี class active ให้แสดงเมนูย่อย */
-    .menu-item.active .sub-menu { 
-        display: block; 
-    }
-
-    .sub-menu a {
-        display: block;
-        padding: 12px 20px 12px 50px;
-        font-size: 14px;
-        color: #94a3b8 !important;
-        text-decoration: none !important;
-        transition: 0.2s;
-    }
-
-    .sub-menu a:hover {
-        color: #ffffff !important;
-        background: rgba(255,255,255,0.05);
-    }
-
-    /* ลูกศร */
-    .arrow-icon { 
-        margin-left: auto; 
-        transition: transform 0.3s ease; 
-        pointer-events: none; /* ป้องกันการคลิกโดนไอคอนแล้วฟังก์ชันไม่รัน */
-    }
-
-    .menu-item.active .arrow-icon { 
-        transform: rotate(90deg); 
-        color: #5bb7aa;
-    }
-</style>
-
-<div class="sidebar-header">Main Menu</div>
-
-<div class="menu-list">
-    <div class="menu-item">
-        <a href="index.html" class="menu-link">🏠 หน้าหลัก</a>
-    </div>
-
-    <div class="menu-item" id="item-credit">
-        <button type="button" class="drop-btn" onclick="toggleMe('item-credit')">
-            📊 บันทึกสินเชื่อ <span class="arrow-icon">▶</span>
+    <div class="item" id="menu-credit">
+        <button type="button" class="drop-btn" onclick="toggleDrop(this, 'credit')">
+            📊 บันทึกสินเชื่อ <span class="arrow">▶</span>
         </button>
-        <div class="sub-menu">
+        <div class="sub">
             <a href="https://docs.google.com/forms/d/e/1FAIpQLSerK-IQFH4StGmvrOxb8M2DOC9VyrToSycYBxWrzSVOq67SOw/viewform" target="_blank">📈 ลงสินเชื่อส่วนกลาง</a>
             <a href="https://lookerstudio.google.com/reporting/8eee598b-7f10-4d88-8162-8ac554e50b9e" target="_blank">📑 Report สินเชื่อส่วนกลาง</a>
         </div>
     </div>
 
-    <div class="menu-item">
-        <a href="download.html" class="menu-link">⬇️ ดาวน์โหลด</a>
-    </div>
+    <a href="download.html">⬇️ ดาวน์โหลด</a>
 
-    <div class="menu-item" id="item-branch">
-        <button type="button" class="drop-btn" onclick="toggleMe('item-branch')">
-            📍 เฉพาะประชาอุทิศ <span class="arrow-icon">▶</span>
+    <div class="item" id="menu-branch">
+        <button type="button" class="drop-btn" onclick="toggleDrop(this, 'branch')">
+            📍 เฉพาะประชาอุทิศ <span class="arrow">▶</span>
         </button>
-        <div class="sub-menu">
+        <div class="sub">
             <a href="schedule_dec25.html">📆 ตารางงาน ธ.ค. 25</a>
             <a href="schedule_jan26.html">📆 ตารางงาน ม.ค. 26</a>
             <a href="mat.html">📱 เช็ค Mat เครื่อง</a>
@@ -117,22 +32,54 @@
 </div>
 
 <script>
-    /**
-     * ฟังก์ชันจัดการ Toggle แบบระบุ ID โดยตรง (ลดความผิดพลาดจาก closest)
-     */
-    function toggleMe(itemId) {
-        var element = document.getElementById(itemId);
-        var wasActive = element.classList.contains('active');
+    // 1. ฟังก์ชันโหลด Sidebar เข้ามาในหน้าเว็บ
+    function includeSidebar() {
+        const version = new Date().getTime(); // ป้องกัน Cache
+        fetch('sidebar.html?v=' + version)
+            .then(response => {
+                if (!response.ok) throw new Error('ไม่พบไฟล์ sidebar.html');
+                return response.text();
+            })
+            .then(data => {
+                document.getElementById('sidebar').innerHTML = data;
+                // หลังจากโหลดเสร็จ ให้คืนค่าเมนูที่เปิดค้างไว้
+                restoreMenuState();
+            })
+            .catch(err => console.warn("Sidebar Load Error:", err));
+    }
 
-        // ปิดเมนูอื่นๆ ทั้งหมดก่อน
-        var allItems = document.querySelectorAll('.menu-item');
-        for (var i = 0; i < allItems.length; i++) {
-            allItems[i].classList.remove('active');
-        }
+    // 2. ฟังก์ชันเปิด-ปิดแถบ Sidebar (ฝั่งซ้าย)
+    function toggleSidebar() {
+        document.getElementById("sidebar").classList.toggle("show");
+        document.getElementById("overlay").classList.toggle("show");
+    }
 
-        // ถ้าของเดิมไม่ได้เปิด ให้เปิดตัวที่คลิก
-        if (!wasActive) {
-            element.classList.add('active');
+    // 3. ฟังก์ชัน กาง-หุบ เมนูย่อย (Dropdown)
+    // ใช้ window. เพื่อให้มั่นใจว่าฟังก์ชันเรียกใช้ได้แม้โหลดผ่าน Fetch
+    window.toggleDrop = function(btn, id) {
+        const item = btn.closest('.item'); 
+        if (!item) return;
+
+        // สลับ Class 'open'
+        const isOpen = item.classList.toggle("open");
+        
+        // บันทึกสถานะลง localStorage
+        if (id) {
+            localStorage.setItem('menu-' + id, isOpen);
         }
     }
+
+    // 4. ฟังก์ชันคืนค่าสถานะเมนูที่เคยเปิดไว้เมื่อ Refresh หน้า
+    function restoreMenuState() {
+        const menus = ['credit', 'branch']; 
+        menus.forEach(id => {
+            if (localStorage.getItem('menu-' + id) === 'true') {
+                const menuEl = document.getElementById('menu-' + id);
+                if (menuEl) menuEl.classList.add('open');
+            }
+        });
+    }
+
+    // เริ่มทำงานเมื่อโหลดหน้าเสร็จ
+    window.onload = includeSidebar;
 </script>
