@@ -70,8 +70,16 @@
             transition: all 0.3s ease;
         }
 
+        /* Logic สำหรับการยุบ/ขยาย */
         body.collapsed #sidebar-container { transform: translateX(calc(var(--sidebar-width) * -1)); }
         body.collapsed .main-content { margin-left: 0; width: 100%; }
+
+        /* Mobile Sidebar */
+        @media (max-width: 900px) {
+            #sidebar-container { transform: translateX(calc(var(--sidebar-width) * -1)); }
+            .main-content { margin-left: 0; width: 100%; }
+            body.show-sidebar #sidebar-container { transform: translateX(0); }
+        }
 
         .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: none; backdrop-filter: blur(4px); z-index: 1500; }
         .overlay.show { display: block; }
@@ -185,7 +193,7 @@
                 </select>
                 <button class="btn-fetch" onclick="loadData()">🚀 ดึงข้อมูล</button>
                 <button class="btn-pdf" onclick="exportPDF()">📄 PDF</button>
-                <button class="btn-excel" onclick="exportExcel()">📊 Excel</button>
+                <button class="btn-excel" onclick="exportExcel()">📊 Excel All</button>
             </div>
         </div>
 
@@ -263,12 +271,15 @@
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxzyL0BRCXvgfk2spoO4JLasqtMxhViclJTaBpb8DPF8x1AuNU8B1kwA2o3QnfNTqJqaw/exec"; 
 
+    // --- Sidebar System ---
     async function includeSidebar() {
         const version = new Date().getTime();
         try {
             const response = await fetch('sidebar.html?v=' + version);
             const data = await response.text();
             document.getElementById('sidebar-container').innerHTML = data;
+            
+            // ตรวจสอบสถานะการยุบเมนูจาก LocalStorage
             if(localStorage.getItem('sidebarCollapsed') === 'true' && window.innerWidth > 900) {
                 document.body.classList.add('collapsed');
             }
@@ -279,10 +290,13 @@
     function toggleSidebar() {
         const body = document.getElementById('mainBody');
         const overlay = document.getElementById('overlay');
+        
         if (window.innerWidth > 900) {
+            // โหมด PC: ยุบ/ขยาย
             body.classList.toggle('collapsed');
             localStorage.setItem('sidebarCollapsed', body.classList.contains('collapsed'));
         } else {
+            // โหมด Mobile: เปิด/ปิด Slide
             body.classList.toggle('show-sidebar');
             overlay.classList.toggle('show');
         }
@@ -305,6 +319,7 @@
         });
     }
 
+    // --- Data Loading ---
     async function loadData() {
         const loader = document.getElementById('loader');
         const sheet = document.getElementById('staffSelect').value;
@@ -320,13 +335,19 @@
                 document.getElementById('labelL').innerText = data.staffName;
                 document.getElementById('labelR').innerText = data.staffName;
                 document.getElementById('labelStaff').innerText = data.staffName;
+                
+                // Summary Table
                 document.getElementById('summaryBody').innerHTML = data.summary.map(r => {
                     const isTotalRow = r[0].includes("รวมยอด");
                     return `<tr ${isTotalRow ? 'class="row-summary"' : ''}><td>${r[0]}</td><td class="text-right">${r[1]}</td><td class="text-right">${r[2]}</td></tr>`;
                 }).join('');
+                
+                // Focus Table
                 document.getElementById('focusBody').innerHTML = data.focus
                     .filter(r => !(r[0] === "Target" && r[1] === "Actual")) 
                     .map(r => `<tr><td>${r[0]}</td><td class="text-right" style="color:#e53e3e; font-weight:800; font-size:16px;">${r[1]}</td></tr>`).join('');
+                
+                // Targets Div
                 const tDiv = document.getElementById('targetBody');
                 tDiv.innerHTML = "";
                 data.targets.forEach(r => {
@@ -337,6 +358,8 @@
                         tDiv.innerHTML += `<div style="display:flex;justify-content:space-between;padding:12px 18px;border-bottom:1px solid #f1f5f9;font-size:15px; font-weight:500;"><span>${r[0]}</span><span style="font-weight:700;">${r[1]}</span></div>`;
                     }
                 });
+
+                // Bottom Stats
                 const s = data.topStats;
                 const statsMap = [
                     { label: s[0][0], main: s[1][0], diff: s[1][1], color: '#ffb100' },
@@ -352,6 +375,8 @@
                             <div style="text-align: right;"><span class="stat-sub-label">ขาด/เกิน</span><div class="stat-sub-val">${item.diff}</div></div>
                         </div>
                     </div>`).join('');
+
+                // Daily Table
                 const dailyCard = document.getElementById('dailyCard');
                 if (data.dailyRow && selectedDay) {
                     dailyCard.style.display = 'block';
@@ -365,13 +390,14 @@
                         <td class="v-sep val-actual">${dr[7]}</td><td class="val-diff">${dr[8]}</td>
                         <td class="v-sep val-total">${dr[9]}</td><td class="val-total">${dr[10]}</td></tr>`;
                 } else { dailyCard.style.display = 'none'; }
+                
                 dashContainer.style.display = 'block';
                 noData.style.display = 'none';
             }
         } catch (e) { alert("เกิดข้อผิดพลาดในการดึงข้อมูล"); } finally { loader.style.display = 'none'; }
     }
 
-    // ===== Export Functions =====
+    // --- Export Functions ---
     function exportPDF() {
         const element = document.getElementById('dashboardData');
         if (element.style.display === 'none') return alert('กรุณาดึงข้อมูลก่อน export');
@@ -389,20 +415,49 @@
     function exportExcel() {
         const dash = document.getElementById('dashboardData');
         if (dash.style.display === 'none') return alert('กรุณาดึงข้อมูลก่อน export');
-        const wb = XLSX.utils.book_new();
-        const staff = document.getElementById('staffSelect').value;
         
-        // แผ่นที่ 1: รายวัน (ถ้ามี)
-        if(document.getElementById('dailyCard').style.display !== 'none') {
-            const ws1 = XLSX.utils.table_to_sheet(document.getElementById('tableDaily'));
-            XLSX.utils.book_append_sheet(wb, ws1, "Daily_Report");
+        const loader = document.getElementById('loader');
+        loader.style.display = 'flex';
+        
+        try {
+            const wb = XLSX.utils.book_new();
+            const staff = document.getElementById('staffSelect').value;
+            const date = new Date().toLocaleDateString('th-TH').replace(/\//g, '-');
+
+            // 1. ตารางรายวัน (ถ้ามีข้อมูล)
+            if(document.getElementById('dailyCard').style.display !== 'none') {
+                const ws1 = XLSX.utils.table_to_sheet(document.getElementById('tableDaily'));
+                XLSX.utils.book_append_sheet(wb, ws1, "Daily_Report");
+            }
+
+            // 2. ตารางสรุปยอดขาย
+            const ws2 = XLSX.utils.table_to_sheet(document.getElementById('tableSummary'));
+            XLSX.utils.book_append_sheet(wb, ws2, "Summary_Report");
+
+            // 3. ตาราง Focus
+            const ws3 = XLSX.utils.table_to_sheet(document.getElementById('tableFocus'));
+            XLSX.utils.book_append_sheet(wb, ws3, "Focus_Report");
+
+            // 4. เป้าหมายรายเดือน (สร้างจากข้อมูลใน Div)
+            const targetRows = [['ประเภทเป้าหมาย', 'เป้าหมาย/ผลลัพธ์']];
+            const targetBodyItems = document.querySelectorAll('#targetBody > div');
+            targetBodyItems.forEach(item => {
+                if(item.classList.contains('target-group-header')) {
+                    targetRows.push([item.innerText, '--- กลุ่ม ---']);
+                } else {
+                    const spans = item.querySelectorAll('span');
+                    if(spans.length === 2) targetRows.push([spans[0].innerText, spans[1].innerText]);
+                }
+            });
+            const ws4 = XLSX.utils.aoa_to_sheet(targetRows);
+            XLSX.utils.book_append_sheet(wb, ws4, "Monthly_Targets");
+
+            XLSX.writeFile(wb, `Report_All_${staff}_${date}.xlsx`);
+        } catch (err) {
+            alert('ไม่สามารถส่งออก Excel ได้');
+        } finally {
+            loader.style.display = 'none';
         }
-        
-        // แผ่นที่ 2: สรุปยอด
-        const ws2 = XLSX.utils.table_to_sheet(document.getElementById('tableSummary'));
-        XLSX.utils.book_append_sheet(wb, ws2, "Summary_Report");
-        
-        XLSX.writeFile(wb, `Performance_${staff}.xlsx`);
     }
 
     window.onload = includeSidebar;
