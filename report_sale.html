@@ -3,125 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Performance Dashboard Compact</title>
+    <title>Performance Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --primary: #5bb7aa;
-            --bg: #f5f7fa;
-            --text-dark: #2d3748;
-            --white: #ffffff;
-            --sidebar-width: 250px; /* ความกว้างตอนกาง */
-            --sidebar-collapsed: 0px; /* ความกว้างตอนหุบ (หรือเปลี่ยนเป็น 60px ถ้ามีไอคอน) */
-            --highlight-new: rgba(255, 177, 0, 0.08); 
-            --highlight-bdbc: rgba(255, 87, 34, 0.08); 
-        }
-
+        :root { --primary: #5bb7aa; --bg: #f5f7fa; --text-dark: #2d3748; --white: #ffffff; --sidebar-width: 250px; --sidebar-collapsed: 0px; }
         * { box-sizing: border-box; font-family: 'Kanit', sans-serif; }
         body { background-color: var(--bg); margin: 0; display: flex; color: var(--text-dark); transition: all 0.3s; }
-
-        /* Sidebar Structure */
-        #sidebar-container {
-            width: var(--sidebar-width);
-            min-height: 100vh;
-            background: #2d3748; /* สีพื้นหลัง sidebar */
-            transition: all 0.3s ease;
-            overflow-x: hidden;
-            flex-shrink: 0;
-            z-index: 1000;
-        }
-
-        body.collapsed #sidebar-container {
-            width: var(--sidebar-collapsed);
-        }
-
-        /* Main Content */
-        .main-content {
-            flex-grow: 1;
-            padding: 15px;
-            width: calc(100% - var(--sidebar-width));
-            transition: all 0.3s ease;
-        }
-
+        #sidebar-container { width: var(--sidebar-width); min-height: 100vh; background: #2d3748; transition: all 0.3s ease; overflow-x: hidden; flex-shrink: 0; z-index: 1000; }
+        body.collapsed #sidebar-container { width: var(--sidebar-collapsed); }
+        .main-content { flex-grow: 1; padding: 15px; width: calc(100% - var(--sidebar-width)); transition: all 0.3s ease; }
         .container { max-width: 1100px; margin: 0 auto; }
-        
-        /* Header ปรับให้เล็กลงและกระชับขึ้น */
-        .header-bar {
-            background: var(--white); padding: 12px 20px; border-radius: 12px; 
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-        .header-left { display: flex; align-items: center; gap: 12px; }
-        h2 { margin: 0; font-weight: 600; font-size: 19px; color: var(--primary); }
-
-        /* ปุ่ม Toggle Sidebar */
-        .btn-toggle {
-            background: var(--primary); color: white; border: none; padding: 6px 10px;
-            border-radius: 6px; cursor: pointer; display: flex; align-items: center;
-        }
-
-        select {
-            padding: 7px 15px; border-radius: 8px; border: 1px solid #e2e8f0;
-            font-size: 14.5px; outline: none; cursor: pointer; background: white;
-        }
-
-        /* Layout */
+        .header-bar { background: var(--white); padding: 12px 20px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .btn-toggle { background: var(--primary); color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; }
+        select { padding: 7px 15px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 14.5px; cursor: pointer; }
         .main-grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 15px; }
-
         .card { background: var(--white); border-radius: 15px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid #edf2f7; }
-        .card-header { 
-            padding: 10px 18px; color: white; font-weight: 500; font-size: 15px; 
-            background: var(--primary); display: flex; align-items: center; gap: 8px;
-        }
-
-        /* Table ปรับให้กระชับขึ้น (Compact) */
+        .card-header { padding: 10px 18px; color: white; font-weight: 500; background: var(--primary); display: flex; gap: 8px; }
         table { width: 100%; border-collapse: collapse; }
-        th { 
-            padding: 10px 18px; text-align: left; font-size: 13px; 
-            color: #718096; border-bottom: 1px solid #f1f5f9; font-weight: 600;
-            background: #fafbfc;
-        }
+        th { padding: 10px 18px; text-align: left; font-size: 13px; color: #718096; border-bottom: 1px solid #f1f5f9; background: #fafbfc; }
         td { padding: 9px 18px; border-bottom: 1px solid #f7fafc; font-size: 14.5px; }
-        
         .text-right { text-align: right; }
-        .font-bold { font-weight: 600; }
+        .row-total-new { background-color: rgba(255, 177, 0, 0.08) !important; font-weight: 600; color: #b45309; }
+        .row-total-bdbc { background-color: rgba(255, 87, 34, 0.08) !important; font-weight: 600; color: #c2410c; }
+        
+        /* สไตล์ส่วน Quick Stats ที่ปรับใหม่ */
+        .bottom-stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 15px; border-top: 2px solid #f1f5f9; background: #fafbfc; }
+        .stat-item { background: #ffffff; padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0; border-left: 6px solid var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+        .stat-label { font-size: 13px; color: #4a5568; font-weight: 600; display: block; margin-bottom: 5px; }
+        .stat-values { display: flex; justify-content: space-between; align-items: center; }
+        .stat-main { font-size: 20px; font-weight: 700; color: #2d3748; }
+        
+        /* ปรับแต่งตัวเลข ขาด/เกิน ให้ใหญ่และเด่น */
+        .stat-sub { text-align: right; }
+        .stat-sub small { font-size: 11px; color: #718096; display: block; font-weight: 400; margin-bottom: -2px; }
+        .stat-sub-val { font-size: 22px; font-weight: 800; color: #d53f3f; line-height: 1; } /* เน้นตัวเลขสีแดง */
 
-        /* ไฮไลท์แถบสีจาง */
-        .row-total-new { background-color: var(--highlight-new) !important; font-weight: 600; color: #b45309; }
-        .row-total-bdbc { background-color: var(--highlight-bdbc) !important; font-weight: 600; color: #c2410c; }
-
-        /* Focus & Target */
         .target-group-header { padding: 8px 15px; font-weight: 600; color: white; font-size: 13.5px; }
-        .bg-amber { background: #ffb100; }
-        .bg-orange { background: #ff5722; }
-        .bg-slate { background: #4a5568; }
-        .bg-teal { background: #38b2ac; }
-
-        .actual-val { color: #e53e3e; font-weight: 700; font-size: 16px; }
-
-        .loading { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); display: none; justify-content: center; align-items: center; z-index: 2000; font-size: 16px; }
-
-        @media (max-width: 900px) { 
-            .main-grid { grid-template-columns: 1fr; }
-            #sidebar-container { position: absolute; left: -250px; }
-            body.collapsed #sidebar-container { left: 0; }
-        }
+        .bg-amber { background: #ffb100; } .bg-orange { background: #ff5722; } .bg-slate { background: #4a5568; } .bg-teal { background: #38b2ac; }
+        .loading { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); display: none; justify-content: center; align-items: center; z-index: 2000; }
     </style>
 </head>
 <body id="mainBody">
-
 <div class="loading" id="loader">🔄 อัปเดตข้อมูล...</div>
-
-<div id="sidebar-container">
-    <?!= include('Sidebar'); ?>
-</div>
+<div id="sidebar-container"><?!= include('Sidebar'); ?></div>
 
 <div class="main-content">
     <div class="container">
         <div class="header-bar">
-            <div class="header-left">
+            <div style="display:flex; align-items:center; gap:12px;">
                 <button class="btn-toggle" onclick="toggleSidebar()">☰</button>
-                <h2>Performance Report</h2>
+                <h2 style="margin:0; font-size:19px; color:var(--primary);">Performance Report</h2>
             </div>
             <select id="staffSelect" onchange="loadData()">
                 <option value="นวพล2">👤 นวพล</option>
@@ -134,30 +65,19 @@
             <div class="card">
                 <div class="card-header">📍 สรุปยอดขาย: <span id="labelL"></span></div>
                 <table>
-                    <thead>
-                        <tr>
-                            <th>Type การขาย</th>
-                            <th class="text-right">ยอด PostPay</th>
-                            <th class="text-right">จำนวน</th>
-                        </tr>
-                    </thead>
+                    <thead><tr><th>Type การขาย</th><th class="text-right">ยอด PostPay</th><th class="text-right">จำนวน</th></tr></thead>
                     <tbody id="summaryBody"></tbody>
                 </table>
+                <div class="bottom-stats-grid" id="bottomStats"></div>
             </div>
 
             <div class="side-panel">
-                <div class="card" style="margin-bottom: 15px;">
+                <div class="card" style="margin-bottom:15px;">
                     <div class="card-header">🎯 Focus: <span id="labelR"></span></div>
-                    <table>
-                        <thead>
-                            <tr><th>Target</th><th class="text-right">Actual</th></tr>
-                        </thead>
-                        <tbody id="focusBody"></tbody>
-                    </table>
+                    <table><thead><tr><th>Target</th><th class="text-right">Actual</th></tr></thead><tbody id="focusBody"></tbody></table>
                 </div>
-
                 <div class="card">
-                    <div class="card-header" style="background: #2d3748;">🏁 เป้าหมายรายเดือน</div>
+                    <div class="card-header" style="background:#2d3748;">🏁 เป้าหมายรายเดือน</div>
                     <div id="targetBody"></div>
                 </div>
             </div>
@@ -166,20 +86,16 @@
 </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw5I3f8Ul1dkIfDfYEfU9-GEs1ssUF-aByBYpX40qS2VZbjSOyr8RtauO5cRSEhkd06/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbytOut29HJPTaaSjeg2HaLhWSoxNzNu-PM71oDQTI8fUjUPu_vw5eYJlC8qxqzEZrCZBA/exec"; 
 
-    // ระบบ Sidebar Toggle & Memory
     function toggleSidebar() {
         const body = document.getElementById('mainBody');
         body.classList.toggle('collapsed');
         localStorage.setItem('sidebarStatus', body.classList.contains('collapsed') ? 'closed' : 'open');
     }
 
-    // โหลดสถานะล่าสุดของ Sidebar
     window.addEventListener('DOMContentLoaded', () => {
-        if(localStorage.getItem('sidebarStatus') === 'closed') {
-            document.getElementById('mainBody').classList.add('collapsed');
-        }
+        if(localStorage.getItem('sidebarStatus') === 'closed') document.getElementById('mainBody').classList.add('collapsed');
         loadData();
     });
 
@@ -187,39 +103,50 @@
         const loader = document.getElementById('loader');
         const sheet = document.getElementById('staffSelect').value;
         loader.style.display = 'flex';
-
         try {
             const res = await fetch(`${SCRIPT_URL}?sheetName=${sheet}`);
             const data = await res.json();
-            
             if(data.result === "success") {
                 document.getElementById('labelL').innerText = data.staffName;
                 document.getElementById('labelR').innerText = data.staffName;
 
                 document.getElementById('summaryBody').innerHTML = data.summary.map(r => {
-                    let rowClass = "";
-                    if (r[0].includes("รวมยอด New")) rowClass = "row-total-new";
-                    if (r[0].includes("รวมยอด BDBC")) rowClass = "row-total-bdbc";
+                    let rowClass = r[0].includes("รวมยอด New") ? "row-total-new" : r[0].includes("รวมยอด BDBC") ? "row-total-bdbc" : "";
                     return `<tr class="${rowClass}"><td>${r[0]}</td><td class="text-right">${r[1]}</td><td class="text-right">${r[2]}</td></tr>`;
                 }).join('');
 
-                document.getElementById('focusBody').innerHTML = data.focus.map(r => `
-                    <tr><td>${r[0]}</td><td class="text-right actual-val">${r[1]}</td></tr>
-                `).join('');
+                document.getElementById('focusBody').innerHTML = data.focus.map(r => `<tr><td>${r[0]}</td><td class="text-right" style="color:#e53e3e; font-weight:700;">${r[1]}</td></tr>`).join('');
 
                 const tDiv = document.getElementById('targetBody');
                 tDiv.innerHTML = "";
                 data.targets.forEach(r => {
                     if(r[0].includes("คำนวณ Target")) {
-                        let colorClass = r[0].includes("NEW") ? "bg-amber" : r[0].includes("BDBC") ? "bg-orange" : r[0].includes("Apple") ? "bg-slate" : "bg-teal";
-                        tDiv.innerHTML += `<div class="target-group-header ${colorClass}">${r[0]}</div>`;
+                        let color = r[0].includes("NEW") ? "bg-amber" : r[0].includes("BDBC") ? "bg-orange" : r[0].includes("Apple") ? "bg-slate" : "bg-teal";
+                        tDiv.innerHTML += `<div class="target-group-header ${color}">${r[0]}</div>`;
                     } else if(r[0]) {
-                        tDiv.innerHTML += `
-                        <div style="display:flex; justify-content:space-between; padding:10px 18px; border-bottom:1px solid #f1f5f9; font-size:14px;">
-                            <span>${r[0]}</span><span style="font-weight:600;">${r[1]}</span>
-                        </div>`;
+                        tDiv.innerHTML += `<div style="display:flex;justify-content:space-between;padding:10px 18px;border-bottom:1px solid #f1f5f9;font-size:14px;"><span>${r[0]}</span><span style="font-weight:600;">${r[1]}</span></div>`;
                     }
                 });
+
+                const s = data.topStats;
+                const statsMap = [
+                    { label: s[0][0], main: s[1][0], diff: s[1][1], color: '#ffb100' },
+                    { label: s[0][2], main: s[1][2], diff: s[1][3], color: '#ff5722' },
+                    { label: s[0][4], main: s[1][4], diff: s[1][5], color: '#4a5568' },
+                    { label: s[0][6], main: s[1][6], diff: s[1][7], color: '#38b2ac' }
+                ];
+                document.getElementById('bottomStats').innerHTML = statsMap.map(item => `
+                    <div class="stat-item" style="border-left-color: ${item.color};">
+                        <span class="stat-label">${item.label}</span>
+                        <div class="stat-values">
+                            <span class="stat-main">${item.main}</span>
+                            <div class="stat-sub">
+                                <small>ขาด/เกิน</small>
+                                <div class="stat-sub-val">${item.diff}</div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
             }
         } catch (e) { console.error(e); } 
         finally { loader.style.display = 'none'; }
