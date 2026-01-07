@@ -17,29 +17,59 @@
         * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
         
         html, body { 
-            margin: 0; 
-            padding: 0;
-            width: 100%;
-            background-color: var(--bg); 
-            color: var(--text-dark); 
-            overflow-x: hidden;
+            margin: 0; padding: 0; width: 100%;
+            background-color: var(--bg); color: var(--text-dark); 
             min-height: 100vh;
         }
 
         body { display: flex; }
 
-        /* ===== SIDEBAR CONTAINER ===== */
+        /* ===== SIDEBAR STYLES (แก้ปัญหาเมนูไม่เรียงแถว) ===== */
         #sidebar-container { 
             width: var(--sidebar-width); 
             background: var(--sidebar-bg); 
             height: 100vh;
             position: fixed;
-            left: 0;
-            top: 0;
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            overflow-y: auto;
+            left: 0; top: 0;
+            transition: transform 0.3s ease;
             z-index: 2000;
-            box-shadow: 4px 0 15px rgba(0,0,0,0.2);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column; /* บังคับเรียงแนวตั้ง */
+        }
+
+        /* สไตล์สำหรับเนื้อหาข้างในที่ดึงมาจาก sidebar.html */
+        .sidebar-header {
+            padding: 25px 20px;
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--primary);
+            background: #0f172a;
+            text-align: center;
+            border-bottom: 1px solid #334155;
+        }
+
+        .menu-list {
+            display: flex;
+            flex-direction: column; /* บังคับเมนูเรียงลงมาเป็นแถว */
+            padding: 10px 0;
+        }
+
+        .menu-list a {
+            padding: 15px 20px;
+            color: #cbd5e1 !important;
+            text-decoration: none !important;
+            display: flex;
+            align-items: center;
+            transition: 0.3s;
+            border-left: 4px solid transparent;
+            font-size: 15px;
+        }
+
+        .menu-list a:hover {
+            background: #334155;
+            color: var(--primary) !important;
+            border-left-color: var(--primary);
         }
 
         .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: none; backdrop-filter: blur(4px); z-index: 1500; }
@@ -57,92 +87,27 @@
         body.collapsed #sidebar-container { transform: translateX(calc(var(--sidebar-width) * -1)); }
         body.collapsed .main-content { margin-left: 0; width: 100%; }
 
-        .container { max-width: 1200px; margin: 0 auto; width: 100%; }
+        /* คลาสสำหรับตารางและ Card (เหมือนเดิม) */
+        .card { background: var(--white); border-radius: 15px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid #edf2f7; margin-bottom: 15px; }
+        .card-header { padding: 12px 18px; color: white; font-weight: 600; background: var(--primary); display: flex; justify-content: space-between; }
         
-        .header-bar { 
-            background: var(--white); 
-            padding: 12px 20px; 
-            border-radius: 12px; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            margin-bottom: 15px; 
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05); 
-            flex-wrap: wrap;
-            gap: 10px;
-        }
+        .row-summary { background-color: rgba(91, 183, 170, 0.15) !important; }
+        .row-summary td { font-weight: 800 !important; font-size: 18px !important; color: #1a202c; border-bottom: 2px solid var(--primary); }
 
-        .action-group { display: flex; align-items: center; gap: 10px; }
-        .btn-fetch { 
-            background: var(--primary); 
-            color: white; 
-            border: none; 
-            padding: 8px 16px; 
-            border-radius: 8px; 
-            cursor: pointer; 
-            font-weight: 600;
-            transition: 0.2s;
-        }
-        .btn-fetch:hover { filter: brightness(0.9); }
+        .header-bar { background: var(--white); padding: 12px 20px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .btn-fetch { background: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; }
 
-        .main-grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 15px; }
-        #dashboardData { display: none; } 
-
-        .card { background: var(--white); border-radius: 15px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid #edf2f7; margin-bottom: 15px; width: 100%; }
-        .card-header { padding: 12px 18px; color: white; font-weight: 600; background: var(--primary); display: flex; justify-content: space-between; font-size: 18px; }
-        
-        .table-wrapper { width: 100%; overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; min-width: 300px; }
-        
-        th { 
-            padding: 15px; 
-            text-align: left; 
-            font-size: 16px; 
-            font-weight: 600; 
-            color: #4a5568; 
-            border-bottom: 2px solid #edf2f7; 
-            background: #fafbfc; 
-        }
-        
-        td { padding: 12px 15px; border-bottom: 1px solid #f7fafc; font-size: 15px; }
-        .text-right { text-align: right; }
-
-        /* ===== สไตล์ไฮไลท์แถว "รวมยอด" ===== */
-        .row-summary {
-            background-color: rgba(91, 183, 170, 0.15) !important; /* แถบสีจาง */
-        }
-        .row-summary td {
-            font-weight: 800 !important; /* หนาพิเศษ */
-            font-size: 18px !important; /* ใหญ่ขึ้น */
-            color: #1a202c;
-            border-bottom: 2px solid var(--primary);
-        }
-        
-        .bottom-stats-grid { 
-            display: grid; 
-            grid-template-columns: repeat(2, 1fr); 
-            gap: 12px; 
-            padding: 15px; 
-            background: #fafbfc; 
-            border-top: 1px solid #edf2f7;
-        }
+        .bottom-stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 15px; background: #fafbfc; border-top: 1px solid #edf2f7; }
         .stat-item { background: #ffffff; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0; border-left: 6px solid var(--primary); }
-        .stat-label { font-size: 15px; color: #2d3748; font-weight: 600; display: block; margin-bottom: 5px; }
-        .stat-main { font-size: 26px; font-weight: 800; color: var(--text-dark); display: block; }
-        .stat-sub-label { font-size: 12px; color: #a0aec0; display: block; font-weight: 400; }
+        .stat-main { font-size: 26px; font-weight: 800; color: var(--text-dark); }
         .stat-sub-val { font-size: 26px; font-weight: 800; color: #d53f3f; }
 
-        .target-group-header { padding: 10px 15px; font-weight: 600; color: white; font-size: 15px; }
-        .bg-amber { background: #ffb100; } .bg-orange { background: #ff5722; } .bg-slate { background: #4a5568; } .bg-teal { background: #38b2ac; }
-        
         .loading { position: fixed; inset: 0; background: rgba(255,255,255,0.8); display: none; justify-content: center; align-items: center; z-index: 3000; font-weight: 600; }
 
         @media (max-width: 900px) {
             .main-content { margin-left: 0; width: 100%; padding: 10px; }
             #sidebar-container { transform: translateX(-100%); }
             body.show-sidebar #sidebar-container { transform: translateX(0); }
-            .main-grid { grid-template-columns: 1fr; }
-            .header-bar { flex-direction: column; align-items: stretch; }
         }
     </style>
 </head>
@@ -156,7 +121,7 @@
     <div class="container">
         <div class="header-bar">
             <div style="display:flex; align-items:center; gap:12px;">
-                <button class="btn-toggle" onclick="toggleSidebar()" style="background:var(--sidebar-bg); color:white; border:none; padding:8px 12px; border-radius:8px; cursor:pointer;">☰</button>
+                <button onclick="toggleSidebar()" style="background:var(--sidebar-bg); color:white; border:none; padding:8px 12px; border-radius:8px; cursor:pointer;">☰</button>
                 <h2 style="margin:0; font-size:18px; color:var(--primary);">Performance Report</h2>
             </div>
             <div class="action-group">
@@ -169,20 +134,17 @@
             </div>
         </div>
 
-        <div id="dashboardData">
-            <div class="main-grid">
+        <div id="dashboardData" style="display:none;">
+            <div style="display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 15px;" class="main-grid">
                 <div class="card">
-                    <div class="card-header">
-                        <span>📍 สรุปยอดขาย</span>
-                        <span id="labelL" style="opacity: 0.9; font-size: 14px;"></span>
-                    </div>
-                    <div class="table-wrapper">
-                        <table>
+                    <div class="card-header">📍 สรุปยอดขาย <span id="labelL"></span></div>
+                    <div style="overflow-x:auto;">
+                        <table style="width:100%; border-collapse:collapse;">
                             <thead>
-                                <tr>
-                                    <th>Type การขาย</th>
-                                    <th class="text-right">ยอด PostPay</th>
-                                    <th class="text-right">จำนวน</th>
+                                <tr style="background:#fafbfc;">
+                                    <th style="padding:15px; text-align:left;">Type การขาย</th>
+                                    <th style="padding:15px; text-align:right;">ยอด PostPay</th>
+                                    <th style="padding:15px; text-align:right;">จำนวน</th>
                                 </tr>
                             </thead>
                             <tbody id="summaryBody"></tbody>
@@ -194,17 +156,9 @@
                 <div class="side-panel">
                     <div class="card">
                         <div class="card-header">🎯 Focus: <span id="labelR"></span></div>
-                        <div class="table-wrapper">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Target</th>
-                                        <th class="text-right">Actual</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="focusBody"></tbody>
-                            </table>
-                        </div>
+                        <table style="width:100%; border-collapse:collapse;">
+                            <tbody id="focusBody"></tbody>
+                        </table>
                     </div>
                     <div class="card">
                         <div class="card-header" style="background:#2d3748;">🏁 เป้าหมายรายเดือน</div>
@@ -213,9 +167,9 @@
                 </div>
             </div>
         </div>
-        
+
         <div id="noData" style="text-align: center; padding: 50px; color: #a0aec0;">
-            <p>กรุณาเลือกชื่อพนักงานแล้วกดปุ่ม <b>"ดึงข้อมูล"</b> เพื่อแสดงผล</p>
+            <p>กรุณาเลือกชื่อพนักงานแล้วกดปุ่ม <b>"ดึงข้อมูล"</b></p>
         </div>
     </div>
 </main>
@@ -223,75 +177,56 @@
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbytOut29HJPTaaSjeg2HaLhWSoxNzNu-PM71oDQTI8fUjUPu_vw5eYJlC8qxqzEZrCZBA/exec"; 
 
-    // ฟังก์ชันโหลด Sidebar จากไฟล์ภายนอก
     async function loadSidebar() {
         try {
             const res = await fetch('sidebar.html?v=' + new Date().getTime());
             if (res.ok) {
                 const html = await res.text();
                 document.getElementById('sidebar-container').innerHTML = html;
-            } else {
-                console.error("Failed to load sidebar.html Status:", res.status);
             }
-        } catch (e) {
-            console.error("Sidebar load error:", e);
-        }
+        } catch (e) { console.error("Sidebar load error", e); }
     }
 
     function toggleSidebar() {
         const body = document.getElementById('mainBody');
         const overlay = document.getElementById('overlay');
-        if (window.innerWidth > 900) {
-            body.classList.toggle('collapsed');
-        } else {
-            body.classList.toggle('show-sidebar');
-            overlay.classList.toggle('show');
-        }
+        if (window.innerWidth > 900) body.classList.toggle('collapsed');
+        else { body.classList.toggle('show-sidebar'); overlay.classList.toggle('show'); }
     }
 
     async function loadData() {
         const loader = document.getElementById('loader');
         const sheet = document.getElementById('staffSelect').value;
-        const dashContainer = document.getElementById('dashboardData');
-        const noData = document.getElementById('noData');
-        
         loader.style.display = 'flex';
         
         try {
             const res = await fetch(`${SCRIPT_URL}?sheetName=${sheet}`);
             const data = await res.json();
-            
             if(data.result === "success") {
                 document.getElementById('labelL').innerText = data.staffName;
                 document.getElementById('labelR').innerText = data.staffName;
 
-                // ไฮไลท์แถว "รวมยอด" และปรับตัวหนังสือ
                 document.getElementById('summaryBody').innerHTML = data.summary.map(r => {
-                    const isTotalRow = r[0].includes("รวมยอด");
-                    const rowClass = isTotalRow ? 'class="row-summary"' : '';
-                    return `
-                        <tr ${rowClass}>
-                            <td>${r[0]}</td>
-                            <td class="text-right">${r[1]}</td>
-                            <td class="text-right">${r[2]}</td>
-                        </tr>
-                    `;
+                    const isTotal = r[0].includes("รวมยอด");
+                    return `<tr class="${isTotal ? 'row-summary' : ''}">
+                        <td style="padding:12px 15px;">${r[0]}</td>
+                        <td style="padding:12px 15px; text-align:right;">${r[1]}</td>
+                        <td style="padding:12px 15px; text-align:right;">${r[2]}</td>
+                    </tr>`;
                 }).join('');
 
                 document.getElementById('focusBody').innerHTML = data.focus
-                    .filter(r => !(r[0] === "Target" && r[1] === "Actual")) 
-                    .map(r => `
-                    <tr><td>${r[0]}</td><td class="text-right" style="color:#e53e3e; font-weight:800; font-size:16px;">${r[1]}</td></tr>
-                `).join('');
+                    .filter(r => !(r[0] === "Target" && r[1] === "Actual"))
+                    .map(r => `<tr><td style="padding:12px 15px;">${r[0]}</td><td style="padding:12px 15px; text-align:right; color:#e53e3e; font-weight:800;">${r[1]}</td></tr>`).join('');
 
                 const tDiv = document.getElementById('targetBody');
                 tDiv.innerHTML = "";
                 data.targets.forEach(r => {
                     if(r[0].includes("คำนวณ Target")) {
                         let color = r[0].includes("NEW") ? "bg-amber" : r[0].includes("BDBC") ? "bg-orange" : r[0].includes("Apple") ? "bg-slate" : "bg-teal";
-                        tDiv.innerHTML += `<div class="target-group-header ${color}">${r[0]}</div>`;
+                        tDiv.innerHTML += `<div class="target-group-header ${color}" style="padding:10px 15px; color:white; font-weight:600;">${r[0]}</div>`;
                     } else if(r[0]) {
-                        tDiv.innerHTML += `<div style="display:flex;justify-content:space-between;padding:12px 18px;border-bottom:1px solid #f1f5f9;font-size:15px; font-weight:500;"><span>${r[0]}</span><span style="font-weight:700;">${r[1]}</span></div>`;
+                        tDiv.innerHTML += `<div style="display:flex;justify-content:space-between;padding:12px 18px;border-bottom:1px solid #f1f5f9;"><span>${r[0]}</span><span style="font-weight:700;">${r[1]}</span></div>`;
                     }
                 });
 
@@ -302,32 +237,22 @@
                     { label: s[0][4], main: s[1][4], diff: s[1][5], color: '#4a5568' },
                     { label: s[0][6], main: s[1][6], diff: s[1][7], color: '#38b2ac' }
                 ];
-                
                 document.getElementById('bottomStats').innerHTML = statsMap.map(item => `
                     <div class="stat-item" style="border-left-color: ${item.color};">
-                        <span class="stat-label">${item.label}</span>
-                        <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+                        <span style="font-size:14px; font-weight:600;">${item.label}</span>
+                        <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:5px;">
                             <span class="stat-main">${item.main}</span>
-                            <div style="text-align: right;">
-                                <span class="stat-sub-label">ขาด/เกิน</span>
-                                <div class="stat-sub-val">${item.diff}</div>
-                            </div>
+                            <div style="text-align:right;"><small>ขาด/เกิน</small><br><span class="stat-sub-val">${item.diff}</span></div>
                         </div>
-                    </div>
-                `).join('');
+                    </div>`).join('');
 
-                dashContainer.style.display = 'block';
-                noData.style.display = 'none';
+                document.getElementById('dashboardData').style.display = 'block';
+                document.getElementById('noData').style.display = 'none';
             }
-        } catch (e) { 
-            console.error(e);
-            alert("เกิดข้อผิดพลาดในการดึงข้อมูล"); 
-        } finally { 
-            loader.style.display = 'none'; 
-        }
+        } catch (e) { alert("Error loading data"); }
+        finally { loader.style.display = 'none'; }
     }
 
-    // เรียกโหลด Sidebar ทันทีที่เปิดหน้าเว็บ
     window.onload = loadSidebar;
 </script>
 </body>
