@@ -3,132 +3,133 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📊 รายงานยอดขายพนักงาน</title>
+    <title>📊 ระบบรายงานผลงานพนักงาน</title>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
+        /* --- CSS ส่วนการจัดวาง --- */
         * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
-        body { margin: 0; background: #f8fafc; color: #334155; }
-        
-        .content { padding: 20px; min-height: 100vh; }
-        .report-card { max-width: 1000px; margin: 0 auto; background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        
-        /* Layout จัดวางตารางข้างกัน */
-        .tables-grid { 
-            display: flex; 
-            gap: 20px; 
-            flex-wrap: wrap; /* บนมือถือจะตกลงมาต่อกัน */
-            margin-top: 20px;
-        }
-        .table-section { flex: 1; min-width: 300px; }
+        body { margin: 0; background: #f4f7f6; color: #334155; padding: 20px; }
+        .report-card { max-width: 1200px; margin: 0 auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        .controls { text-align: center; margin-bottom: 30px; padding: 20px; background: #f8fafc; border-radius: 10px; }
+        select { padding: 10px; width: 250px; border-radius: 8px; border: 1px solid #ddd; font-size: 16px; margin-right: 10px; }
+        .btn-fetch { padding: 10px 25px; background: #1e293b; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; transition: 0.3s; }
+        .btn-fetch:hover { background: #334155; }
 
-        select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 10px; }
-        .btn-fetch { width: 100%; padding: 12px; border: none; background: #1e293b; color: white; border-radius: 8px; font-weight: 600; cursor: pointer; }
+        /* การจัดตารางแบบ Side-by-Side */
+        .tables-container { display: flex; gap: 20px; flex-wrap: wrap; }
+        .table-box { flex: 1; min-width: 350px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; border: 1px solid #eee; }
+        th, td { padding: 10px; border: 1px solid #eee; text-align: center; font-size: 14px; }
+        th { background: #4db6ac; color: white; font-weight: 500; }
 
-        /* การแต่งตาราง */
-        table { width: 100%; border-collapse: collapse; font-size: 14px; border: 1px solid #e2e8f0; }
-        th { background: #4db6ac; color: white; padding: 10px; }
-        td { padding: 8px; border: 1px solid #f1f5f9; text-align: center; }
+        /* --- สีตามรูปแบบในภาพ (Target) --- */
+        .head-focus { background: #4dd0e1 !important; font-weight: bold; }
+        .head-new { background: #ffca28 !important; font-weight: bold; }
+        .head-bdbc { background: #ff6f00 !important; color: white; font-weight: bold; }
+        .head-apple { background: #bdbdbd !important; font-weight: bold; }
+        .text-red { color: red !important; font-weight: bold; }
+        .row-total { background: #e0f2f1; font-weight: bold; }
 
-        /* สีพิเศษสำหรับตารางขวา (Target) */
-        .bg-teal { background: #4dd0e1; font-weight: bold; }
-        .bg-yellow { background: #ffca28; font-weight: bold; }
-        .bg-orange { background: #ff6f00; color: white; font-weight: bold; }
-        .bg-gray { background: #bdbdbd; font-weight: bold; }
-        .text-red { color: red; font-weight: bold; }
-
-        #loader { text-align: center; display: none; margin: 10px; }
+        #loader { display: none; text-align: center; margin: 20px; font-weight: bold; color: #64748b; }
     </style>
 </head>
 <body>
 
-<main class="content">
-    <div class="report-card">
-        <h2 style="text-align:center">📊 รายงานยอดขายและเป้าหมาย</h2>
-        
+<div class="report-card">
+    <h2>📊 รายงานสรุปผลงานรายบุคคล</h2>
+    
+    <div class="controls">
         <select id="staffSelect">
             <option value="นวพล2">👤 นวพล</option>
             <option value="ปิยะพร2">👤 ปิยะพร</option>
             <option value="กรทักษ์2">👤 กรทักษ์</option>
         </select>
-        
-        <button class="btn-fetch" onclick="getPersonalSales()">🔄 ดึงข้อมูลทั้งหมด</button>
-        <div id="loader">⏳ กำลังโหลดข้อมูล...</div>
+        <button class="btn-fetch" onclick="fetchData()">🔄 ดึงข้อมูลล่าสุด</button>
+    </div>
 
-        <div class="tables-grid" id="mainDisplay" style="display:none;">
-            <div class="table-section">
-                <h3 style="font-size:15px;">📍 สรุปยอดขาย</h3>
-                <table>
-                    <thead>
-                        <tr style="background:#f1f5f9;"><th>รายการ</th><th>ยอดขาย</th><th>จำนวน</th></tr>
-                    </thead>
-                    <tbody id="salesBody"></tbody>
-                </table>
-            </div>
+    <div id="loader">⏳ กำลังเชื่อมต่อฐานข้อมูล...</div>
 
-            <div class="table-section">
-                <h3 style="font-size:15px;">🎯 เป้าหมาย (Target)</h3>
-                <table id="targetTable">
-                    <tbody id="targetBody"></tbody>
-                </table>
-            </div>
+    <div class="tables-container" id="reportArea" style="display:none;">
+        <div class="table-box">
+            <h3 id="staffLabelLeft" style="color:#4db6ac">📍 สรุปยอดขาย</h3>
+            <table>
+                <thead>
+                    <tr><th>Type การขาย</th><th>ยอดเงิน</th><th>จำนวน</th></tr>
+                </thead>
+                <tbody id="salesTableBody"></tbody>
+            </table>
+        </div>
+
+        <div class="table-box">
+            <h3 id="staffLabelRight" style="color:#1e293b">🎯 เป้าหมาย (Targets)</h3>
+            <table id="targetTable">
+                <tbody id="targetTableBody"></tbody>
+            </table>
         </div>
     </div>
-</main>
+</div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwY7FVcy9hzmCsP-PP5tIsNh6t45wHkIX3JYCoBZKXRsA58vVmDT9k7rxdPRRUWHQwc_g/exec"; 
+    // 🔥 วาง Web App URL ที่ได้จากการ Deploy Apps Script ตรงนี้ครับ 🔥
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxgy9nD9BIK1q4R7lTs6fdeBe14jzOpnOfzChK3kQySFvrdfm16iCQhjqK8X_ziLIwjNA/exec";
 
-    async function getPersonalSales() {
+    async function fetchData() {
         const sheetName = document.getElementById('staffSelect').value;
+        const staffName = document.getElementById('staffSelect').options[document.getElementById('staffSelect').selectedIndex].text;
         const loader = document.getElementById('loader');
-        const mainDisplay = document.getElementById('mainDisplay');
-        
+        const reportArea = document.getElementById('reportArea');
+
         loader.style.display = 'block';
-        mainDisplay.style.display = 'none';
+        reportArea.style.display = 'none';
 
         try {
             const response = await fetch(`${SCRIPT_URL}?sheetName=${encodeURIComponent(sheetName)}`);
             const data = await response.json();
 
-            // 1. เติมข้อมูลตารางซ้าย (Sales)
-            const salesBody = document.getElementById('salesBody');
-            salesBody.innerHTML = "";
-            data.sales.slice(1).forEach(row => {
-                if(!row[0]) return;
-                let tr = `<tr><td>${row[0]}</td><td>${row[1]||0}</td><td>${row[2]||0}</td></tr>`;
-                salesBody.innerHTML += tr;
-            });
+            if (data.result === "success") {
+                // 1. แสดงชื่อพนักงานบนหัวตาราง
+                document.getElementById('staffLabelLeft').innerText = `📍 สรุปยอด ${staffName}`;
+                document.getElementById('staffLabelRight').innerText = `🎯 Focus ${staffName}`;
 
-            // 2. เติมข้อมูลตารางขวา (Target F4:G23)
-            const targetBody = document.getElementById('targetBody');
-            targetBody.innerHTML = "";
-            data.targets.forEach(row => {
-                if(!row[0] && !row[1]) return;
-                let label = row[0];
-                let val = row[1];
-                let rowClass = "";
-                let valClass = "";
+                // 2. จัดการตารางยอดขาย (ซ้าย)
+                const sBody = document.getElementById('salesTableBody');
+                sBody.innerHTML = "";
+                data.sales.forEach(row => {
+                    if (!row[0]) return;
+                    let tr = document.createElement('tr');
+                    if (row[0].includes("รวมยอด")) tr.className = "row-total";
+                    tr.innerHTML = `<td>${row[0]}</td><td>${row[1] || 0}</td><td>${row[2] || 0}</td>`;
+                    sBody.appendChild(tr);
+                });
 
-                // ใส่สีตามเงื่อนไขหัวข้อ
-                if(label.includes("Focus")) rowClass = "bg-teal";
-                else if(label.includes("Target NEW")) rowClass = "bg-yellow";
-                else if(label.includes("Target BDBC")) rowClass = "bg-orange";
-                else if(label.includes("Target Apple")) rowClass = "bg-gray";
-                else if(label.includes("Target SmartPhone")) rowClass = "bg-teal";
+                // 3. จัดการตาราง Target (ขวา)
+                const tBody = document.getElementById('targetTableBody');
+                tBody.innerHTML = "";
+                data.targets.forEach(row => {
+                    if (!row[0] && !row[1]) return;
+                    let tr = document.createElement('tr');
+                    let label = row[0].toString();
+                    let val = row[1].toString();
 
-                // ถ้าเป็นแถวที่มีค่า Actual ใน Focus ให้เลขเป็นสีแดง
-                if(["ราหู","พลังดาว","MyPlan"].some(k => label.includes(k))) valClass = "text-red";
+                    if (label.includes("Focus")) {
+                        tr.innerHTML = `<td colspan="2" class="head-focus">${label}</td>`;
+                    } else if (label.includes("Target NEW")) {
+                        tr.innerHTML = `<td colspan="2" class="head-new">${label}</td>`;
+                    } else if (label.includes("Target BDBC")) {
+                        tr.innerHTML = `<td colspan="2" class="head-bdbc">${label}</td>`;
+                    } else if (label.includes("Target Apple")) {
+                        tr.innerHTML = `<td colspan="2" class="head-apple">${label}</td>`;
+                    } else {
+                        let valClass = (label.includes("ราหู") || label.includes("พลังดาว")) ? "text-red" : "";
+                        tr.innerHTML = `<td style="text-align:left">${label}</td><td class="${valClass}">${val}</td>`;
+                    }
+                    tBody.appendChild(tr);
+                });
 
-                if(rowClass !== "") {
-                    targetBody.innerHTML += `<tr class="${rowClass}"><td colspan="2">${label}</td></tr>`;
-                } else {
-                    targetBody.innerHTML += `<tr><td style="text-align:left">${label}</td><td class="${valClass}">${val}</td></tr>`;
-                }
-            });
-
-            mainDisplay.style.display = 'flex';
+                reportArea.style.display = 'flex';
+            }
         } catch (e) {
-            alert("เกิดข้อผิดพลาด: " + e.message);
+            alert("❌ เกิดข้อผิดพลาด: " + e.message);
         } finally {
             loader.style.display = 'none';
         }
