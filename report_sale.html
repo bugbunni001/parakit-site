@@ -12,16 +12,16 @@
             --text-dark: #2d3748; 
             --white: #ffffff; 
             --sidebar-width: 260px; 
-            --sidebar-bg: #1e293b; /* สีกรมท่าเข้ม */
+            --sidebar-bg: #1e293b;
             --sidebar-hover: #334155;
             --sidebar-text: #cbd5e1;
+            --accent: #5bb7aa;
         }
         * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
-        
         html, body { margin: 0; padding: 0; width: 100%; background-color: var(--bg); color: var(--text-dark); min-height: 100vh; }
         body { display: flex; transition: background 0.3s; }
 
-        /* ===== SIDEBAR SYSTEM (FIXED) ===== */
+        /* ===== SIDEBAR SYSTEM ===== */
         #sidebar-container { 
             width: var(--sidebar-width); 
             background: var(--sidebar-bg); 
@@ -34,39 +34,41 @@
             box-shadow: 4px 0 15px rgba(0,0,0,0.2);
         }
 
-        /* สำหรับหน้าจอคอมพิวเตอร์ตอนพับเมนู */
         body.collapsed #sidebar-container { transform: translateX(calc(var(--sidebar-width) * -1)); }
         body.collapsed .main-content { margin-left: 0; width: 100%; }
 
-        /* ===== MAIN CONTENT AREA ===== */
         .main-content { 
             flex-grow: 1; 
-            margin-left: var(--sidebar-width); /* เว้นที่ให้ Sidebar Fixed */
+            margin-left: var(--sidebar-width);
             padding: 20px; 
             width: calc(100% - var(--sidebar-width));
             transition: all 0.3s ease;
         }
 
-        .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: none; backdrop-filter: blur(4px); z-index: 1500; }
-        .overlay.show { display: block; }
-
-        /* ===== DROPDOWN & MENU STYLES (สำหรับ sidebar.html) ===== */
-        .menu .item .sub { 
-            display: none; 
-            background: #0f172a; /* พื้นหลังเมนูย่อยให้เข้มกว่าปกติ */
-        }
-        .menu .item.open .sub { display: block; }
-        .menu .item.open .arrow { transform: rotate(90deg); }
-        .arrow { display: inline-block; transition: 0.3s; font-size: 10px; margin-left: auto; }
-        
+        /* ===== ROLLOVER & MENU STYLES ===== */
         .menu a, .drop-btn { 
-            width: 100%; padding: 12px 20px; background: none; border: none; 
+            width: 100%; padding: 14px 20px; background: none; border: none; 
             color: var(--sidebar-text) !important; text-align: left; font-size: 15px; 
-            cursor: pointer; display: flex; align-items: center; gap: 10px;
-            text-decoration: none !important; transition: 0.2s; border-left: 4px solid transparent;
+            cursor: pointer; display: flex; align-items: center; gap: 12px;
+            text-decoration: none !important; transition: all 0.2s ease-in-out;
+            border-left: 4px solid transparent;
+            position: relative;
+            overflow: hidden;
         }
-        .menu a:hover, .drop-btn:hover { background: var(--sidebar-hover); color: var(--primary) !important; border-left-color: var(--primary); }
-        .sub a { padding-left: 45px; font-size: 14px; opacity: 0.9; }
+
+        /* Rollover Effect: แสงวิ่งเมื่อ Hover */
+        .menu a:hover, .drop-btn:hover { 
+            background: var(--sidebar-hover); 
+            color: var(--white) !important; 
+            border-left-color: var(--primary);
+            padding-left: 25px; /* ขยับตัวอักษรเล็กน้อย */
+        }
+
+        /* เมนูย่อย */
+        .menu .item .sub { display: none; background: #0f172a; }
+        .menu .item.open .sub { display: block; }
+        .menu .item.open .arrow { transform: rotate(90deg); color: var(--primary); }
+        .arrow { margin-left: auto; font-size: 10px; transition: 0.3s; }
 
         /* Responsive */
         @media (max-width: 900px) {
@@ -76,21 +78,26 @@
             body.collapsed #sidebar-container { transform: translateX(-100%); }
         }
 
-        /* Card & Table อื่นๆ คงเดิมแต่ปรับสีให้เข้ากัน */
+        /* Card & Table */
         .card { background: var(--white); border-radius: 15px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid #edf2f7; margin-bottom: 15px; }
-        .card-header { padding: 12px 18px; color: white; font-weight: 600; background: var(--primary); display: flex; justify-content: space-between; font-size: 18px; }
+        .card-header { padding: 12px 18px; color: white; font-weight: 600; background: var(--primary); display: flex; justify-content: space-between; }
         .header-bar { background: var(--white); padding: 12px 20px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .btn-fetch { background: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; }
-        .loading { position: fixed; inset: 0; background: rgba(255,255,255,0.8); display: none; justify-content: center; align-items: center; z-index: 3000; font-weight: 600; }
-        .row-summary { background-color: rgba(91, 183, 170, 0.15); }
-        .row-summary td { font-weight: 700; color: #1e293b; border-bottom: 2px solid var(--primary); }
+        .btn-fetch { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.3s; }
+        .btn-fetch:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(91, 183, 170, 0.3); }
+        .loading { position: fixed; inset: 0; background: rgba(255,255,255,0.8); display: none; justify-content: center; align-items: center; z-index: 3000; }
+        
+        /* สไตล์ตาราง */
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 12px; background: #fafbfc; border-bottom: 2px solid #edf2f7; }
+        td { padding: 12px; border-bottom: 1px solid #f7fafc; }
+        .text-right { text-align: right; }
+        .row-summary { background-color: rgba(91, 183, 170, 0.1); font-weight: bold; }
     </style>
 </head>
 <body id="mainBody">
 
 <div class="loading" id="loader">🔄 กำลังอัปเดตข้อมูล...</div>
 <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
-
 <aside id="sidebar-container"></aside>
 
 <main class="main-content">
@@ -113,21 +120,28 @@
         <div id="noData" style="text-align: center; padding: 100px 20px; color: #a0aec0;">
             <p>กรุณาเลือกชื่อพนักงานแล้วกดปุ่ม <b>"ดึงข้อมูล"</b> เพื่อเริ่มต้น</p>
         </div>
-        <div id="dashboardData"></div> </div>
+        
+        <div id="dashboardData" style="display:none;">
+            <div class="card">
+                <div class="card-header">📊 สรุปผลงาน: <span id="labelL"></span></div>
+                <div id="tableContent"></div>
+            </div>
+        </div>
+    </div>
 </main>
 
 <script>
-    // 1. จัดการ Sidebar และสถานะ (Persistence)
+    // URL ของ Google Apps Script (ตรวจสอบให้แน่ใจว่า URL นี้ถูกต้อง)
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbytOut29HJPTaaSjeg2HaLhWSoxNzNu-PM71oDQTI8fUjUPu_vw5eYJlC8qxqzEZrCZBA/exec"; 
+
+    // 1. จัดการ Sidebar
     async function includeSidebar() {
         const version = new Date().getTime();
         try {
             const response = await fetch('sidebar.html?v=' + version);
             const data = await response.text();
             document.getElementById('sidebar-container').innerHTML = data;
-            
-            // คืนค่าสถานะเมนูย่อย
             restoreMenuState();
-            // คืนค่าสถานะพับเมนู (สำหรับ Desktop)
             if(localStorage.getItem('sidebarCollapsed') === 'true' && window.innerWidth > 900) {
                 document.body.classList.add('collapsed');
             }
@@ -136,18 +150,15 @@
 
     function toggleSidebar() {
         const body = document.getElementById('mainBody');
-        const overlay = document.getElementById('overlay');
-        
         if (window.innerWidth > 900) {
             body.classList.toggle('collapsed');
             localStorage.setItem('sidebarCollapsed', body.classList.contains('collapsed'));
         } else {
             body.classList.toggle('show-sidebar');
-            overlay.classList.toggle('show');
+            document.getElementById('overlay').classList.toggle('show');
         }
     }
 
-    // 2. ฟังก์ชัน Dropdown (External Logic)
     window.toggleDrop = function(btn, id) {
         const item = btn.closest('.item'); 
         if (!item) return;
@@ -165,13 +176,47 @@
         });
     }
 
-    // เรียกโหลด Sidebar เมื่อเปิดหน้า
-    window.onload = includeSidebar;
-
-    // --- ส่วนของ LoadData (คงเดิมจากโค้ดเก่าของคุณ) ---
+    // 2. ฟังก์ชันดึงข้อมูล (Load Data) - แก้ไขให้กลับมาทำงานได้
     async function loadData() {
-        /* ... โค้ด fetch ข้อมูลของคุณ ... */
+        const loader = document.getElementById('loader');
+        const staffName = document.getElementById('staffSelect').value;
+        const noData = document.getElementById('noData');
+        const dashContainer = document.getElementById('dashboardData');
+        
+        loader.style.display = 'flex';
+        
+        try {
+            const response = await fetch(`${SCRIPT_URL}?sheetName=${staffName}`);
+            const data = await response.json();
+            
+            if(data.result === "success") {
+                document.getElementById('labelL').innerText = data.staffName;
+                
+                // สร้างตารางข้อมูล
+                let tableHtml = `<table><thead><tr><th>รายการ</th><th class="text-right">ยอด</th><th class="text-right">จำนวน</th></tr></thead><tbody>`;
+                data.summary.forEach(r => {
+                    const isTotal = r[0].includes("รวมยอด");
+                    tableHtml += `<tr class="${isTotal ? 'row-summary' : ''}">
+                        <td>${r[0]}</td>
+                        <td class="text-right">${r[1]}</td>
+                        <td class="text-right">${r[2]}</td>
+                    </tr>`;
+                });
+                tableHtml += `</tbody></table>`;
+                
+                document.getElementById('tableContent').innerHTML = tableHtml;
+                dashContainer.style.display = 'block';
+                noData.style.display = 'none';
+            }
+        } catch (e) {
+            alert("ไม่สามารถดึงข้อมูลได้ โปรดลองอีกครั้ง");
+            console.error(e);
+        } finally {
+            loader.style.display = 'none';
+        }
     }
+
+    window.onload = includeSidebar;
 </script>
 </body>
 </html>
