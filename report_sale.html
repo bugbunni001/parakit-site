@@ -87,7 +87,7 @@
 
 <script>
     // แทนที่ด้วย URL ของคุณหลังจาก Deploy Apps Script
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz8ndAVal540NgB3cTJi9UX1moqLwLBDuBNbyeYlkUmxLTLHxbW1PdIDeVfuHLUp4zqdw/exec"; 
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxEJTf_YM_Ay0bjbo9RW2Fe1WFFeMRiSAVqh1YwxwYXzrRlAq05Zeb8FLdc_ZYRzpmqsw/exec"; 
 
     function toggleSidebar() {
         document.getElementById("sidebar").classList.toggle("show");
@@ -128,50 +128,51 @@
     }
 
     // ฟังก์ชันดึงข้อมูลยอดขายตามชื่อชีตพนักงาน
-    async function getPersonalSales() {
-        const sheetName = document.getElementById('staffSelect').value;
-        const staffName = document.getElementById('staffSelect').options[document.getElementById('staffSelect').selectedIndex].text;
-        const loader = document.getElementById('loader');
-        const container = document.getElementById('tableContainer');
-        const tbody = document.getElementById('reportData');
+   async function getPersonalSales() {
+    const sheetName = document.getElementById('staffSelect').value;
+    const loader = document.getElementById('loader');
+    const container = document.getElementById('tableContainer');
+    const tbody = document.getElementById('reportData');
+    
+    loader.style.display = 'block';
+    container.style.display = 'none';
+
+    try {
+        // ส่ง query parameter ชื่อ sheetName ไปยัง Apps Script
+        const response = await fetch(`${SCRIPT_URL}?sheetName=${encodeURIComponent(sheetName)}`);
+        const result = await response.json();
         
-        loader.style.display = 'block';
-        container.style.display = 'none';
-        tbody.innerHTML = "";
-
-        try {
-            const response = await fetch(`${SCRIPT_URL}?sheetName=${encodeURIComponent(sheetName)}`);
-            const result = await response.json();
-            
-            if (result.error) throw new Error(result.error);
-
-            document.getElementById('tableTitle').innerText = `สรุปยอดขาย: ${staffName}`;
-            
-            // วนลูปสร้างแถวข้อมูล (B5:D15)
-            result.values.forEach(row => {
-                if(!row[0] && !row[1]) return; // ข้ามแถวว่าง
-                
-                const tr = document.createElement('tr');
-                // กำหนดสีไฮไลท์ตามเงื่อนไขในภาพ
-                if(row[0].includes("รวมยอด New")) tr.className = 'row-new';
-                if(row[0].includes("รวมยอด BDBC")) tr.className = 'row-bdbc';
-                
-                row.forEach(cellValue => {
-                    const td = document.createElement('td');
-                    td.innerText = cellValue || "0";
-                    tr.appendChild(td);
-                });
-                tbody.appendChild(tr);
-            });
-
-            container.style.display = 'block';
-        } catch (e) {
-            console.error(e);
-            alert("❌ บันทึกผิดพลาด: Server Error หรือไม่พบชื่อชีต");
-        } finally {
-            loader.style.display = 'none';
+        if (result.result === "error") {
+            throw new Error(result.error);
         }
+
+        tbody.innerHTML = "";
+        // แสดงผลข้อมูลช่วง B5:D15
+        result.values.forEach(row => {
+            if(!row[0]) return; // ข้ามถ้าแถวว่าง
+            const tr = document.createElement('tr');
+            
+            // ใส่สีตามเงื่อนไข (รวมยอด New = เขียว, รวมยอด BDBC = ฟ้า)
+            if(row[0].includes("รวมยอด New")) tr.className = 'row-new';
+            if(row[0].includes("รวมยอด BDBC")) tr.className = 'row-bdbc';
+            
+            row.forEach(cell => {
+                const td = document.createElement('td');
+                td.innerText = cell;
+                tr.appendChild(td);
+            });
+            tbody.appendChild(tr);
+        });
+
+        container.style.display = 'block';
+    } catch (e) {
+        console.error(e);
+        // แสดงข้อความ Error ให้ผู้ใช้ทราบ
+        alert("❌ บันทึกผิดพลาด: " + e.message);
+    } finally {
+        loader.style.display = 'none';
     }
+}
 
     window.onload = initPage;
 </script>
