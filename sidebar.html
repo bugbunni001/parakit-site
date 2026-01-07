@@ -1,5 +1,5 @@
 <style>
-    /* ตั้งค่าเริ่มต้นสำหรับ Sidebar */
+    /* ส่วนหัว Sidebar */
     .sidebar-header {
         padding: 22px 15px;
         font-size: 1.1rem;
@@ -13,10 +13,9 @@
     }
 
     .menu-list { padding: 10px 0; margin: 0; list-style: none; }
+    .menu-item { border-bottom: 1px solid rgba(255,255,255,0.03); overflow: hidden; }
     
-    /* สไตล์ปุ่มหลัก */
-    .menu-item { border-bottom: 1px solid rgba(255,255,255,0.03); }
-    
+    /* ปุ่มหลักและลิงก์ */
     .menu-link, .drop-btn { 
         display: flex; 
         align-items: center; 
@@ -30,33 +29,29 @@
         width: 100%; 
         text-align: left; 
         font-size: 15px;
+        outline: none;
     }
 
-    /* Hover Effect */
     .menu-link:hover, .drop-btn:hover { 
         background: #334155 !important; 
         color: #5bb7aa !important;
         padding-left: 25px;
     }
 
-    /* Sub-menu (กล่องเมนูย่อย) */
+    /* จัดการเมนูย่อย */
     .sub-menu { 
-        max-height: 0; 
-        overflow: hidden; 
+        display: none; /* เริ่มต้นซ่อน */
         background: #1a222f; 
-        transition: max-height 0.3s ease-out; 
         list-style: none;
         padding: 0;
         margin: 0;
     }
 
-    /* เมื่อกดกางเมนู */
+    /* เมื่อมี class active ให้แสดงเมนูย่อย */
     .menu-item.active .sub-menu { 
-        max-height: 500px; /* ปรับให้พอดีกับจำนวนเมนูย่อย */
-        transition: max-height 0.5s ease-in;
+        display: block; 
     }
 
-    /* ลิงก์ข้างในเมนูย่อย */
     .sub-menu a {
         display: block;
         padding: 12px 20px 12px 50px;
@@ -65,22 +60,22 @@
         text-decoration: none !important;
         transition: 0.2s;
     }
+
     .sub-menu a:hover {
         color: #ffffff !important;
         background: rgba(255,255,255,0.05);
     }
 
-    /* ลูกศร ▶ */
+    /* ลูกศร */
     .arrow-icon { 
         margin-left: auto; 
         transition: transform 0.3s ease; 
-        font-size: 11px; 
-        opacity: 0.6; 
+        pointer-events: none; /* ป้องกันการคลิกโดนไอคอนแล้วฟังก์ชันไม่รัน */
     }
+
     .menu-item.active .arrow-icon { 
         transform: rotate(90deg); 
         color: #5bb7aa;
-        opacity: 1;
     }
 </style>
 
@@ -88,11 +83,11 @@
 
 <div class="menu-list">
     <div class="menu-item">
-        <a href="download.html" class="menu-link">⬇️ ดาวน์โหลด</a>
+        <a href="index.html" class="menu-link">🏠 หน้าหลัก</a>
     </div>
 
-    <div class="menu-item">
-        <button type="button" class="drop-btn" onclick="handleToggle(this)">
+    <div class="menu-item" id="item-credit">
+        <button type="button" class="drop-btn" onclick="toggleMe('item-credit')">
             📊 บันทึกสินเชื่อ <span class="arrow-icon">▶</span>
         </button>
         <div class="sub-menu">
@@ -105,13 +100,13 @@
         <a href="download.html" class="menu-link">⬇️ ดาวน์โหลด</a>
     </div>
 
-    <div class="menu-item">
-        <button type="button" class="drop-btn" onclick="handleToggle(this)">
+    <div class="menu-item" id="item-branch">
+        <button type="button" class="drop-btn" onclick="toggleMe('item-branch')">
             📍 เฉพาะประชาอุทิศ <span class="arrow-icon">▶</span>
         </button>
         <div class="sub-menu">
-            <a href="schedule_dec25">📆 ตารางงาน ธ.ค. 25</a>
-            <a href="schedule_jan26">📆 ตารางงาน ม.ค. 26</a>
+            <a href="schedule_dec25.html">📆 ตารางงาน ธ.ค. 25</a>
+            <a href="schedule_jan26.html">📆 ตารางงาน ม.ค. 26</a>
             <a href="mat.html">📱 เช็ค Mat เครื่อง</a>
             <a href="input_sale.html">✏️ ลงยอดขาย</a>
             <a href="report_sale.html">📑 รายงานยอดขาย</a>
@@ -123,24 +118,21 @@
 
 <script>
     /**
-     * ฟังก์ชันจัดการการเปิด-ปิดเมนูย่อย
+     * ฟังก์ชันจัดการ Toggle แบบระบุ ID โดยตรง (ลดความผิดพลาดจาก closest)
      */
-    function handleToggle(buttonElement) {
-        // หาตัวคลุม .menu-item ของปุ่มที่กด
-        const parent = buttonElement.closest('.menu-item');
-        
-        // ตรวจสอบสถานะปัจจุบัน
-        const isOpen = parent.classList.contains('active');
+    function toggleMe(itemId) {
+        var element = document.getElementById(itemId);
+        var wasActive = element.classList.contains('active');
 
-        // ปิดเมนูอื่นๆ ที่เปิดค้างไว้ (เพื่อให้กางได้ทีละเมนูเดียว)
-        document.querySelectorAll('.menu-item').forEach(item => {
-            item.classList.remove('active');
-        });
+        // ปิดเมนูอื่นๆ ทั้งหมดก่อน
+        var allItems = document.querySelectorAll('.menu-item');
+        for (var i = 0; i < allItems.length; i++) {
+            allItems[i].classList.remove('active');
+        }
 
-        // ถ้าของเดิมปิดอยู่ ให้เปิดตัวที่กด
-        if (!isOpen) {
-            parent.classList.add('active');
+        // ถ้าของเดิมไม่ได้เปิด ให้เปิดตัวที่คลิก
+        if (!wasActive) {
+            element.classList.add('active');
         }
     }
 </script>
-
