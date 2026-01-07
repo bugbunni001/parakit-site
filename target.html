@@ -26,7 +26,7 @@
         * { box-sizing: border-box; font-family: 'Kanit', sans-serif; }
         body { margin: 0; background: var(--bg); color: var(--text-main); overflow-x: hidden; }
 
-        /* ===== SIDEBAR & ACCORDION FIX ===== */
+        /* ===== SIDEBAR & ACCORDION ===== */
         .sidebar {
             position: fixed; top: 0; left: 0; width: var(--sidebar-w); height: 100vh;
             background: #1e293b; color: #fff; transform: translateX(-100%);
@@ -71,21 +71,19 @@
             box-shadow: 0 10px 25px rgba(0,0,0,0.05); position: relative; 
             overflow: hidden; border: 1px solid rgba(0,0,0,0.03); transition: var(--transition);
         }
-        .target-card:hover { transform: translateY(-5px); box-shadow: 0 20px 40px rgba(0,0,0,0.08); }
         .card-postpay::before { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 8px; background: var(--primary); }
         .card-device::before { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 8px; background: var(--secondary); }
 
         input[type="text"] { 
             width: 110px; text-align: right; padding: 10px 14px; border-radius: 12px; 
-            border: 2px solid #f1f5f9; background: #f8fafc; font-weight: 600; 
+            border: 2px solid #e2e8f0; background: #fff; font-weight: 600; 
             transition: var(--transition); outline: none; 
         }
-        input.editable { border-color: #e2e8f0; background: #fff; }
-        input.editable:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); transform: scale(1.05); }
+        input[type="text"]:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); transform: scale(1.05); }
+        input[readonly] { background: #f1f5f9; border-color: #f1f5f9; cursor: not-allowed; }
 
         .btn { padding: 14px 28px; border-radius: 16px; font-weight: 600; cursor: pointer; border: none; transition: var(--transition); display: flex; align-items: center; gap: 10px; }
-        .btn-edit { background: #1e293b; color: white; }
-        .btn-save { background: var(--success); color: white; display: none; }
+        .btn-save { background: var(--success); color: white; width: 100%; justify-content: center; }
         .btn:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); filter: brightness(1.1); }
 
         .unit-label { margin-top: 20px; padding: 12px 18px; border-radius: 14px; font-weight: 600; font-size: 14px; }
@@ -103,7 +101,7 @@
     <div class="loader-box">
         <i class="fa-solid fa-circle-notch fa-spin fa-3x" style="color: var(--primary); margin-bottom: 15px;"></i>
         <h2 style="margin: 0;">กำลังบันทึกข้อมูล...</h2>
-        <p style="color: var(--text-sub); margin-top: 10px;">กรุณารอสักครู่ ระบบกำลังอัปเดตฐานข้อมูล</p>
+        <p style="color: var(--text-sub); margin-top: 10px;">กรุณารอสักครู่ ระบบกำลังส่งข้อมูลไปที่ Google Sheet</p>
     </div>
 </div>
 
@@ -114,71 +112,92 @@
     <div class="menu-toggle" onclick="toggleSidebar()"><i class="fa-solid fa-bars-staggered"></i></div>
     <div class="status-pill">
         <span class="dot" id="sync-dot"></span>
-        <span id="status-text">กำลังโหลด...</span>
+        <span id="status-text">กำลังโหลดข้อมูลล่าสุด...</span>
     </div>
 </nav>
 
 <main class="main-container">
     <div class="header-section" style="text-align: center; margin-bottom: 40px;">
         <h1 style="font-size: 32px; margin-bottom: 10px;">Target BigC Prachauthit</h1>
-        <p style="color: var(--text-sub);">จัดการเป้าหมายและสรุปยอดขายด้วยความเร็วสูง</p>
-        <div style="display: flex; justify-content: center; gap: 15px; margin-top: 25px;">
-            <button class="btn btn-edit" id="editBtn" onclick="unlock()">
-                <i class="fa-solid fa-pen-to-square"></i> แก้ไขข้อมูล
-            </button>
-            <button class="btn btn-save" id="saveBtn" onclick="saveAll()">
-                <i class="fa-solid fa-cloud-arrow-up"></i> บันทึกข้อมูล
-            </button>
-        </div>
+        <p style="color: var(--text-sub);">กรอกข้อมูลยอดขาย และระบบจะสรุปยอดให้อัตโนมัติ</p>
     </div>
 
     <div class="grid-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 25px;">
         <div class="target-card card-postpay">
             <div class="staff-item">
                 <strong style="font-size:1.1rem">Postpay Total</strong>
-                <input type="text" class="total-black" id="postpay_total" readonly>
+                <input type="text" class="total-black" id="postpay_total" readonly value="0">
             </div>
+
             <div class="unit-label bg-blue">NEW SIM</div>
-            <div class="staff-item"><span>นวพล</span><input type="text" id="pp_nawa_n"></div>
-            <div class="staff-item"><span>ปิยะพร</span><input type="text" id="pp_piya_n"></div>
-            <div class="staff-item"><span>กรทักษ์</span><input type="text" id="pp_korn_n"></div>
+            <div class="staff-item"><span>นวพล</span><input type="text" id="pp_nawa_n" oninput="calculate()"></div>
+            <div class="staff-item"><span>ปิยะพร</span><input type="text" id="pp_piya_n" oninput="calculate()"></div>
+            <div class="staff-item"><span>กรทักษ์</span><input type="text" id="pp_korn_n" oninput="calculate()"></div>
             <div class="staff-item" style="border-top:1px dashed #e2e8f0; padding-top:10px;">
-                <strong>รวม New Sim</strong><input type="text" id="pp_new_total" readonly>
+                <strong>รวม New Sim</strong><input type="text" id="pp_new_total" readonly value="0">
             </div>
+
             <div class="unit-label bg-blue">EXISTING</div>
-            <div class="staff-item"><span>นวพล</span><input type="text" id="pp_nawa_e"></div>
-            <div class="staff-item"><span>ปิยะพร</span><input type="text" id="pp_piya_e"></div>
-            <div class="staff-item"><span>กรทักษ์</span><input type="text" id="pp_korn_e"></div>
+            <div class="staff-item"><span>นวพล</span><input type="text" id="pp_nawa_e" oninput="calculate()"></div>
+            <div class="staff-item"><span>ปิยะพร</span><input type="text" id="pp_piya_e" oninput="calculate()"></div>
+            <div class="staff-item"><span>กรทักษ์</span><input type="text" id="pp_korn_e" oninput="calculate()"></div>
             <div class="staff-item" style="border-top:1px dashed #e2e8f0; padding-top:10px;">
-                <strong>รวม Existing</strong><input type="text" id="pp_ext_total" readonly>
+                <strong>รวม Existing</strong><input type="text" id="pp_ext_total" readonly value="0">
             </div>
         </div>
 
         <div class="target-card card-device">
             <div class="staff-item">
                 <strong style="font-size:1.1rem">Device Total</strong>
-                <input type="text" class="total-black" id="device_total" readonly>
+                <input type="text" class="total-black" id="device_total" readonly value="0">
             </div>
+
             <div class="unit-label bg-purple">APPLE DEVICE</div>
-            <div class="staff-item"><span>นวพล</span><input type="text" id="dev_nawa_a"></div>
-            <div class="staff-item"><span>ปิยะพร</span><input type="text" id="dev_piya_a"></div>
-            <div class="staff-item"><span>กรทักษ์</span><input type="text" id="dev_korn_a"></div>
+            <div class="staff-item"><span>นวพล</span><input type="text" id="dev_nawa_a" oninput="calculate()"></div>
+            <div class="staff-item"><span>ปิยะพร</span><input type="text" id="dev_piya_a" oninput="calculate()"></div>
+            <div class="staff-item"><span>กรทักษ์</span><input type="text" id="dev_korn_a" oninput="calculate()"></div>
             <div class="staff-item" style="border-top:1px dashed #e2e8f0; padding-top:10px;">
-                <strong>รวม Apple</strong><input type="text" id="dev_apple_total" readonly>
+                <strong>รวม Apple</strong><input type="text" id="dev_apple_total" readonly value="0">
             </div>
+
             <div class="unit-label bg-purple">SMARTPHONE</div>
-            <div class="staff-item"><span>นวพล</span><input type="text" id="dev_nawa_s"></div>
-            <div class="staff-item"><span>ปิยะพร</span><input type="text" id="dev_piya_s"></div>
-            <div class="staff-item"><span>กรทักษ์</span><input type="text" id="dev_korn_s"></div>
+            <div class="staff-item"><span>นวพล</span><input type="text" id="dev_nawa_s" oninput="calculate()"></div>
+            <div class="staff-item"><span>ปิยะพร</span><input type="text" id="dev_piya_s" oninput="calculate()"></div>
+            <div class="staff-item"><span>กรทักษ์</span><input type="text" id="dev_korn_s" oninput="calculate()"></div>
             <div class="staff-item" style="border-top:1px dashed #e2e8f0; padding-top:10px;">
-                <strong>รวม Smartphone</strong><input type="text" id="dev_smart_total" readonly>
+                <strong>รวม Smartphone</strong><input type="text" id="dev_smart_total" readonly value="0">
             </div>
         </div>
+    </div>
+
+    <div style="margin-top: 30px;">
+        <button class="btn btn-save" id="saveBtn" onclick="saveAll()">
+            <i class="fa-solid fa-cloud-arrow-up"></i> บันทึกข้อมูลทั้งหมดเข้า Google Sheet
+        </button>
     </div>
 </main>
 
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz4jD9tgF3eR-j5xEyq2HUlQ2r7eYyHFo7pwvkV_EHBLz33Srnez2Vy9q7i-biUvtvmgQ/exec";
+
+    // ฟังก์ชันคำนวณอัตโนมัติขณะพิมพ์
+    function calculate() {
+        const getVal = id => parseInt(document.getElementById(id).value) || 0;
+
+        // คำนวณ Postpay
+        const ppNew = getVal('pp_nawa_n') + getVal('pp_piya_n') + getVal('pp_korn_n');
+        const ppExt = getVal('pp_nawa_e') + getVal('pp_piya_e') + getVal('pp_korn_e');
+        document.getElementById('pp_new_total').value = ppNew;
+        document.getElementById('pp_ext_total').value = ppExt;
+        document.getElementById('postpay_total').value = ppNew + ppExt;
+
+        // คำนวณ Device
+        const devApple = getVal('dev_nawa_a') + getVal('dev_piya_a') + getVal('dev_korn_a');
+        const devSmart = getVal('dev_nawa_s') + getVal('dev_piya_s') + getVal('dev_korn_s');
+        document.getElementById('dev_apple_total').value = devApple;
+        document.getElementById('dev_smart_total').value = devSmart;
+        document.getElementById('device_total').value = devApple + devSmart;
+    }
 
     function updateSyncStatus(type) {
         const dot = document.getElementById("sync-dot");
@@ -187,13 +206,13 @@
         if (type === 'syncing') {
             dot.style.background = "#f59e0b";
             dot.classList.add("pulse");
-            txt.innerText = "กำลังประมวลผล...";
+            txt.innerText = "กำลังรับ-ส่งข้อมูล...";
         } else if (type === 'success') {
             dot.style.background = "#10b981";
-            txt.innerText = "เชื่อมต่อเสถียร";
+            txt.innerText = "เชื่อมต่อข้อมูลสำเร็จ";
         } else if (type === 'error') {
             dot.style.background = "#ef4444";
-            txt.innerText = "การเชื่อมต่อขัดข้อง";
+            txt.innerText = "เกิดข้อผิดพลาดในการเชื่อมต่อ";
         }
     }
 
@@ -226,12 +245,7 @@
         });
     }
 
-    function unlock() {
-        document.querySelectorAll("input:not([readonly])").forEach(i => i.classList.add("editable"));
-        document.getElementById("saveBtn").style.display = "flex";
-        document.getElementById("editBtn").style.display = "none";
-    }
-
+    // ดึงข้อมูลเริ่มต้นจาก Google Sheet
     async function loadData() {
         updateSyncStatus('syncing');
         try {
@@ -241,6 +255,7 @@
                 const el = document.getElementById(k);
                 if (el) el.value = data[k];
             });
+            calculate(); // คำนวณยอดรวมหลังโหลดข้อมูล
             updateSyncStatus('success');
         } catch (e) {
             updateSyncStatus('error');
@@ -249,8 +264,11 @@
 
     async function saveAll() {
         const popup = document.getElementById("savePopup");
+        const btn = document.getElementById("saveBtn");
+        
         updateSyncStatus('syncing');
         popup.classList.add("active");
+        btn.disabled = true;
 
         const payload = {};
         document.querySelectorAll("input").forEach(i => {
@@ -265,11 +283,16 @@
             const result = await response.json();
             if (result.status === "Success") {
                 updateSyncStatus('success');
-                setTimeout(() => location.reload(), 500);
+                setTimeout(() => {
+                    popup.classList.remove("active");
+                    btn.disabled = false;
+                    location.reload();
+                }, 1000);
             } else { throw new Error(); }
         } catch (e) {
             popup.classList.remove("active");
-            alert("❌ ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่");
+            btn.disabled = false;
+            alert("❌ ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง");
             updateSyncStatus('error');
         }
     }
