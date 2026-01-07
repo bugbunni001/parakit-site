@@ -12,46 +12,67 @@
             --text-dark: #2d3748; 
             --white: #ffffff; 
             --sidebar-width: 260px; 
+            --sidebar-bg: #1e293b;
         }
-        * { box-sizing: border-box; font-family: 'Kanit', sans-serif; }
+        * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
         
         body { 
             background-color: var(--bg); 
             margin: 0; 
-            display: flex; /* สำคัญ: เพื่อให้ Sidebar อยู่ซ้าย Content อยู่ขวา */
+            display: flex; 
             color: var(--text-dark); 
             overflow-x: hidden;
             min-height: 100vh;
         }
 
-        /* Sidebar Styling */
+        /* ===== SIDEBAR SYSTEM (FIXED) ===== */
         #sidebar-container { 
             width: var(--sidebar-width); 
-            background: #2d3748; 
-            transition: margin-left 0.3s ease; /* ใช้ transition ที่ margin */
+            background: var(--sidebar-bg); 
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             overflow-y: auto;
-            flex-shrink: 0; 
-            z-index: 1000;
-            color: white;
+            z-index: 2000;
+            box-shadow: 4px 0 15px rgba(0,0,0,0.2);
         }
 
-        /* สถานะตอนปิด (หุบเมนู) */
-        body.collapsed #sidebar-container { 
-            margin-left: calc(var(--sidebar-width) * -1); 
-        }
+        /* Sidebar Internal Elements (For External HTML) */
+        #sidebar-container .sidebar-header { padding: 25px 20px; font-size: 18px; font-weight: 600; background: #0f172a; color: var(--primary); border-bottom: 1px solid rgba(255,255,255,0.05); text-align: center; }
+        #sidebar-container .menu { display: flex; flex-direction: column; padding: 10px 0; }
+        #sidebar-container .menu a, #sidebar-container .drop-btn { width: 100%; padding: 15px 20px; background: none; border: none; color: #cbd5e1 !important; text-align: left; font-size: 15px; cursor: pointer; display: flex; align-items: center; text-decoration: none !important; transition: 0.3s; }
+        #sidebar-container .menu a:hover, #sidebar-container .drop-btn:hover { background: #334155; color: var(--primary) !important; padding-left: 28px; }
+        
+        /* Sub-menu Setup */
+        #sidebar-container .sub { display: none; background: #0f172a; padding: 5px 0; }
+        #sidebar-container .item.open .sub { display: block; }
+        #sidebar-container .sub a { padding-left: 50px !important; font-size: 14px; color: #94a3b8 !important; }
+        #sidebar-container .arrow { margin-left: auto; transition: 0.3s; font-size: 10px; opacity: 0.6; }
+        #sidebar-container .item.open .arrow { transform: rotate(90deg); color: var(--primary); opacity: 1; }
 
+        /* Overlay สำหรับมือถือ */
+        .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: none; backdrop-filter: blur(4px); z-index: 1500; }
+        .overlay.show { display: block; }
+
+        /* ===== MAIN CONTENT AREA ===== */
         .main-content { 
             flex-grow: 1; 
+            margin-left: var(--sidebar-width);
             padding: 15px; 
-            width: 100%;
+            width: calc(100% - var(--sidebar-width));
             transition: all 0.3s ease;
-            min-width: 0; /* ป้องกัน content ดัน sidebar */
         }
 
-        /* ปรับแต่งส่วนอื่นๆ ให้เหมือนเดิม */
+        /* สถานะตอนหุบเมนู (Collapsed) */
+        body.collapsed #sidebar-container { transform: translateX(calc(var(--sidebar-width) * -1)); }
+        body.collapsed .main-content { margin-left: 0; width: 100%; }
+
+        /* [REST OF YOUR STYLES - CARDS, TABLES, ETC.] */
         .container { max-width: 1100px; margin: 0 auto; }
         .header-bar { background: var(--white); padding: 12px 20px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .btn-toggle { background: var(--primary); color: white; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 18px; }
+        .btn-toggle { background: var(--sidebar-bg); color: white; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 18px; }
         
         .main-grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 15px; }
         .card { background: var(--white); border-radius: 15px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid #edf2f7; margin-bottom: 15px;}
@@ -69,21 +90,23 @@
 
         .target-group-header { padding: 8px 15px; font-weight: 600; color: white; font-size: 13.5px; }
         .bg-amber { background: #ffb100; } .bg-orange { background: #ff5722; } .bg-slate { background: #4a5568; } .bg-teal { background: #38b2ac; }
-        .loading { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); display: none; justify-content: center; align-items: center; z-index: 2000; }
+        .loading { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); display: none; justify-content: center; align-items: center; z-index: 3000; }
 
+        /* Responsive */
         @media (max-width: 900px) {
+            .main-content { margin-left: 0; width: 100%; }
             .main-grid { grid-template-columns: 1fr; }
-            #sidebar-container { position: fixed; height: 100vh; }
-            body.collapsed #sidebar-container { margin-left: -260px; }
+            #sidebar-container { transform: translateX(-100%); }
+            body.show-sidebar #sidebar-container { transform: translateX(0); }
         }
     </style>
 </head>
 <body id="mainBody">
 <div class="loading" id="loader">🔄 อัปเดตข้อมูล...</div>
+<div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 
 <aside id="sidebar-container">
-    <?!= include('Sidebar'); ?>
-</aside>
+    </aside>
 
 <main class="main-content">
     <div class="container">
@@ -92,7 +115,7 @@
                 <button class="btn-toggle" onclick="toggleSidebar()">☰</button>
                 <h2 style="margin:0; font-size:19px; color:var(--primary);">Performance Report</h2>
             </div>
-            <select id="staffSelect" onchange="loadData()">
+            <select id="staffSelect" onchange="loadData()" style="padding: 8px; border-radius: 8px; border: 1px solid #e2e8f0;">
                 <option value="นวพล2">👤 นวพล</option>
                 <option value="ปิยะพร2">👤 ปิยะพร</option>
                 <option value="กรทักษ์2">👤 กรทักษ์</option>
@@ -126,23 +149,45 @@
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbytOut29HJPTaaSjeg2HaLhWSoxNzNu-PM71oDQTI8fUjUPu_vw5eYJlC8qxqzEZrCZBA/exec"; 
 
-    // ตรวจสอบสถานะ Sidebar ทันทีที่สคริปต์เริ่มทำงาน (ลดอาการกระพริบ)
-    (function() {
-        const savedStatus = localStorage.getItem('sidebarStatus');
-        if (savedStatus === 'closed') {
-            document.getElementById('mainBody').classList.add('collapsed');
-        }
-    })();
+    // 1. ระบบ Sidebar & Dropdown
+    window.toggleDrop = function(btn, id) {
+        const item = btn.closest('.item');
+        const isOpen = item.classList.toggle('open');
+        if(id) localStorage.setItem('subMenu-' + id, isOpen ? 'open' : 'closed');
+    };
 
     function toggleSidebar() {
         const body = document.getElementById('mainBody');
-        body.classList.toggle('collapsed');
-        const status = body.classList.contains('collapsed') ? 'closed' : 'open';
-        localStorage.setItem('sidebarStatus', status);
+        const overlay = document.getElementById('overlay');
+        
+        if (window.innerWidth > 900) {
+            body.classList.toggle('collapsed');
+            localStorage.setItem('sidebarStatus', body.classList.contains('collapsed') ? 'closed' : 'open');
+        } else {
+            body.classList.toggle('show-sidebar');
+            overlay.classList.toggle('show');
+        }
     }
 
-    window.addEventListener('DOMContentLoaded', loadData);
+    async function loadSidebar() {
+        try {
+            const version = new Date().getTime();
+            const res = await fetch('sidebar.html?v=' + version);
+            const html = await res.text();
+            document.getElementById('sidebar-container').innerHTML = html;
+            
+            // Restore States
+            if (localStorage.getItem('sidebarStatus') === 'closed' && window.innerWidth > 900) {
+                document.getElementById('mainBody').classList.add('collapsed');
+            }
+            document.querySelectorAll('.item[id]').forEach(item => {
+                const shortId = item.id.replace('menu-', '');
+                if (localStorage.getItem('subMenu-' + shortId) === 'open') item.classList.add('open');
+            });
+        } catch (e) { console.error("Sidebar load error"); }
+    }
 
+    // 2. ระบบดึงข้อมูล Dashboard
     async function loadData() {
         const loader = document.getElementById('loader');
         const sheet = document.getElementById('staffSelect').value;
@@ -155,8 +200,7 @@
                 document.getElementById('labelR').innerText = data.staffName;
 
                 document.getElementById('summaryBody').innerHTML = data.summary.map(r => {
-                    let rowClass = r[0].includes("รวมยอด New") ? "row-total-new" : r[0].includes("รวมยอด BDBC") ? "row-total-bdbc" : "";
-                    return `<tr class="${rowClass}"><td>${r[0]}</td><td class="text-right">${r[1]}</td><td class="text-right">${r[2]}</td></tr>`;
+                    return `<tr><td>${r[0]}</td><td class="text-right">${r[1]}</td><td class="text-right">${r[2]}</td></tr>`;
                 }).join('');
 
                 document.getElementById('focusBody').innerHTML = data.focus.map(r => `<tr><td>${r[0]}</td><td class="text-right" style="color:#e53e3e; font-weight:700;">${r[1]}</td></tr>`).join('');
@@ -195,6 +239,12 @@
         } catch (e) { console.error(e); } 
         finally { loader.style.display = 'none'; }
     }
+
+    // เริ่มทำงาน
+    window.onload = () => {
+        loadSidebar();
+        loadData();
+    };
 </script>
 </body>
 </html>
