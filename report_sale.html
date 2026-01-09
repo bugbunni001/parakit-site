@@ -28,38 +28,44 @@
         html, body { margin: 0; padding: 0; width: 100%; background-color: var(--bg); color: var(--text-dark); min-height: 100vh; overflow-x: hidden; }
         body { display: flex; }
 
-        /* ===== SIDEBAR SYSTEM ===== */
-        #sidebar-container { 
-            width: var(--sidebar-width); 
-            background: var(--sidebar-bg); 
-            height: 100vh;
-            position: fixed;
-            left: 0; top: 0;
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 2000;
-            overflow-y: auto;
-            box-shadow: 4px 0 15px rgba(0,0,0,0.2);
-        }
+       /* ===== GLOBAL RESET & SIDEBAR STRUCTURE ===== */
+        * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
+        body { margin: 0; background: #f8fafc; padding-bottom: 80px; color: #334155; -webkit-font-smoothing: antialiased; }
+        
+        .top-toggle { position: fixed; top: 15px; left: 15px; z-index: 1400; width: 45px; height: 45px; border-radius: 12px; border: none; background: #1e293b; color: #fff; font-size: 20px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; }
+        @media(min-width:769px) { .top-toggle { display: none; } }
+        
+        .sidebar { position: fixed; top: 0; left: 0; width: 260px; height: 100vh; background: #1e293b; color: #fff; overflow-y: auto; transform: translateX(-260px); transition: all .3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 2000; }
+        .sidebar.show { transform: translateX(0); }
+        .content { padding: 80px 20px 40px; transition: margin-left .3s; }
+        @media(min-width:769px) { .sidebar { transform: translateX(0); } .content { margin-left: 260px; } }
+        
+        .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: none; backdrop-filter: blur(4px); z-index: 1500; }
+        .overlay.show { display: block; }
 
-        .menu .item .sub { display: none; background: #0f172a; }
-        .menu .item.open .sub { display: block; }
-        .menu .item.open .arrow { transform: rotate(90deg); }
-        .arrow { margin-left: auto; transition: 0.3s; font-size: 10px; }
-
-        .menu a, .drop-btn { 
-            width: 100%; padding: 15px 20px; background: none; border: none; 
-            color: var(--sidebar-text) !important; text-align: left; font-size: 15px; 
-            cursor: pointer; display: flex; align-items: center; gap: 10px;
-            text-decoration: none !important; transition: all 0.2s ease;
-            border-left: 4px solid transparent;
+        /* ===== [FIXED] SIDEBAR INTERNAL MENU STYLE ===== */
+        .sidebar-header { padding: 25px 20px; font-size: 18px; font-weight: 600; background: #0f172a; color: #fff; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .menu { display: flex; flex-direction: column; padding: 10px 0; }
+        .item { border-bottom: 1px solid rgba(255,255,255,0.03); }
+        
+        /* สไตล์ปุ่มเมนูหลัก + ฟีเจอร์เมาส์ชี้แล้วขยับ */
+        .menu a, .menu .drop-btn { 
+            width: 100%; min-height: 50px; padding: 12px 20px; background: none; border: none; 
+            color: #cbd5e1; text-align: left; font-size: 15px; cursor: pointer; display: flex; 
+            align-items: center; text-decoration: none; transition: all 0.3s ease; 
         }
+        /* แก้ไขจุดนี้: เมาส์ชี้แล้วขยับไปทางขวา */
+        .menu a:hover, .menu .drop-btn:hover { background: #334155; color: #fff; padding-left: 30px; }
+        
+        /* เมนูย่อย + เมาส์ชี้แล้วขยับ */
+        .sub { display: none; background: #0f172a; padding: 5px 0; }
+        .item.open .sub { display: block; }
+        .sub a { padding-left: 45px; font-size: 14px; color: #94a3b8; min-height: 40px; transition: all 0.3s ease; }
+        .sub a:hover { color: #5bbf8a; padding-left: 55px; }
 
-        .menu a:hover, .drop-btn:hover { 
-            background: var(--sidebar-hover); 
-            color: var(--primary) !important; 
-            border-left: 4px solid var(--primary);
-            padding-left: 25px;
-        }
+        /* ลูกศร */
+        .arrow { margin-left: auto; transition: 0.3s; font-size: 10px; opacity: 0.6; }
+        .item.open .arrow { transform: rotate(90deg); }
 
         /* ===== MAIN CONTENT AREA ===== */
         .main-content { 
