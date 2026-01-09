@@ -1,3 +1,129 @@
+<style>
+    /* 1. จัดการโครงสร้างหลักของ Sidebar ให้เลื่อนได้ */
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 260px;
+        /* ใช้ dvh เพื่อให้หักลบแถบ URL ของ Browser มือถือออก */
+        height: 100vh; 
+        height: 100dvh; 
+        background: #1e293b;
+        color: #fff;
+        z-index: 2000;
+        transform: translateX(-260px);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        
+        /* เปิดการเลื่อนแนวตั้ง */
+        overflow-y: auto;
+        overflow-x: hidden;
+        display: flex;
+        flex-direction: column;
+        
+        /* ทำให้เลื่อนลื่นใน iOS */
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .sidebar.show {
+        transform: translateX(0);
+    }
+
+    /* 2. หัวข้อ Sidebar ให้ติดอยู่กับที่เวลาเลื่อน (Sticky) */
+    .sidebar-header {
+        padding: 25px 20px;
+        font-size: 18px;
+        font-weight: 600;
+        background: #0f172a;
+        color: #fff;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    /* 3. จัดการรายการเมนู */
+    .menu {
+        display: flex;
+        flex-direction: column;
+        padding: 10px 0 100px 0; /* เพิ่มพื้นที่ด้านล่างเพื่อให้เมนูสุดท้ายเลื่อนพ้นขอบมือถือ */
+    }
+
+    .item {
+        border-bottom: 1px solid rgba(255,255,255,0.03);
+    }
+
+    .menu a, .menu .drop-btn {
+        width: 100%;
+        min-height: 50px;
+        padding: 12px 20px;
+        background: none;
+        border: none;
+        color: #cbd5e1;
+        text-align: left;
+        font-size: 15px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    /* Effect เมื่อเอาเมาส์ชี้ หรือ กดค้าง */
+    .menu a:hover, .menu .drop-btn:hover {
+        background: #334155;
+        color: #fff;
+        padding-left: 28px;
+    }
+
+    /* เมนูย่อย */
+    .sub {
+        display: none;
+        background: #0f172a;
+        padding: 5px 0;
+    }
+
+    .item.open .sub {
+        display: block;
+    }
+
+    .sub a {
+        padding-left: 45px;
+        font-size: 14px;
+        color: #94a3b8;
+        min-height: 40px;
+    }
+
+    .sub a:hover {
+        color: #5bbf8a;
+        padding-left: 55px;
+    }
+
+    /* ลูกศร */
+    .arrow {
+        margin-left: auto;
+        transition: 0.3s;
+        font-size: 10px;
+        opacity: 0.6;
+    }
+
+    .item.open .arrow {
+        transform: rotate(90deg);
+    }
+
+    /* ปรับแต่ง Scrollbar ของ Sidebar ให้ดูไม่เกะกะ */
+    .sidebar::-webkit-scrollbar {
+        width: 4px;
+    }
+    .sidebar::-webkit-scrollbar-thumb {
+        background: rgba(255,255,255,0.1);
+        border-radius: 10px;
+    }
+</style>
+
+<div class="sidebar-header">
+    <i class="fa-solid fa-layer-group"></i> BigC Prachauthit
+</div>
+
 <div class="menu">
     <a href="index.html">🏠 หน้าหลัก</a>
 
@@ -31,44 +157,19 @@
 </div>
 
 <script>
-    // 1. ฟังก์ชันโหลด Sidebar เข้ามาในหน้าเว็บ
-    function includeSidebar() {
-        const version = new Date().getTime(); // ป้องกัน Cache
-        fetch('sidebar.html?v=' + version)
-            .then(response => {
-                if (!response.ok) throw new Error('ไม่พบไฟล์ sidebar.html');
-                return response.text();
-            })
-            .then(data => {
-                document.getElementById('sidebar').innerHTML = data;
-                // หลังจากโหลดเสร็จ ให้คืนค่าเมนูที่เปิดค้างไว้
-                restoreMenuState();
-            })
-            .catch(err => console.warn("Sidebar Load Error:", err));
-    }
-
-    // 2. ฟังก์ชันเปิด-ปิดแถบ Sidebar (ฝั่งซ้าย)
-    function toggleSidebar() {
-        document.getElementById("sidebar").classList.toggle("show");
-        document.getElementById("overlay").classList.toggle("show");
-    }
-
-    // 3. ฟังก์ชัน กาง-หุบ เมนูย่อย (Dropdown)
-    // ใช้ window. เพื่อให้มั่นใจว่าฟังก์ชันเรียกใช้ได้แม้โหลดผ่าน Fetch
+    // ฟังก์ชัน กาง-หุบ เมนูย่อย (Dropdown) และบันทึกสถานะ
     window.toggleDrop = function(btn, id) {
         const item = btn.closest('.item'); 
         if (!item) return;
 
-        // สลับ Class 'open'
         const isOpen = item.classList.toggle("open");
         
-        // บันทึกสถานะลง localStorage
         if (id) {
             localStorage.setItem('menu-' + id, isOpen);
         }
     }
 
-    // 4. ฟังก์ชันคืนค่าสถานะเมนูที่เคยเปิดไว้เมื่อ Refresh หน้า
+    // ฟังก์ชันคืนค่าสถานะเมนูที่เคยเปิดไว้
     function restoreMenuState() {
         const menus = ['credit', 'branch']; 
         menus.forEach(id => {
@@ -79,9 +180,6 @@
         });
     }
 
-    // เริ่มทำงานเมื่อโหลดหน้าเสร็จ
-    window.onload = includeSidebar;
+    // รันหลังจากโหลดเสร็จ
+    restoreMenuState();
 </script>
-
-
-
