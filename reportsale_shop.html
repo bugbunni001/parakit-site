@@ -130,14 +130,18 @@
         .row-summary { background-color: rgba(91, 183, 170, 0.1); }
         .row-summary td { font-weight: 700 !important; color: #1a202c; border-bottom: 2px solid var(--primary); }
         
-        /* ===== สถิติ 4 BOX (ปรับขนาดใหญ่ขึ้น) ===== */
+        /* ===== สถิติ 4 BOX (ปรับปรุงตำแหน่ง %Achieve ไปด้านซ้าย) ===== */
         .bottom-stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 15px; background: #fafbfc; border-top: 1px solid #edf2f7; }
         .stat-item { background: #ffffff; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0; border-left: 6px solid var(--primary); transition: var(--transition); cursor: pointer; }
         .stat-item:hover { transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); background: #fff; }
-        .stat-label { font-size: 16px; font-weight: 600; color: #4a5568; }
-        .stat-main { font-size: 30px; font-weight: 800; } /* ขยายตัวเลขหลัก */
-        .stat-sub-val { color: #dc2626; font-weight: 700; font-size: 18px; } /* ขยายตัวเลขขาดเกิน */
-        .stat-achieve { color: var(--success); font-weight: 700; font-size: 20px; } /* ขยายตัวเลข % Achieve */
+        .stat-label { font-size: 16px; font-weight: 600; color: #4a5568; margin-bottom: 8px; display: block; }
+        .stat-content { display: flex; justify-content: space-between; align-items: flex-end; }
+        .stat-left { display: flex; flex-direction: column; gap: 2px; }
+        .stat-main { font-size: 32px; font-weight: 800; line-height: 1; }
+        .stat-achieve { color: var(--success); font-weight: 700; font-size: 22px; } /* เปอร์เซ็นต์อยู่ด้านซ้าย */
+        .stat-right { text-align: right; }
+        .stat-sub-val { color: #dc2626; font-weight: 700; font-size: 20px; display: block; }
+        .stat-sub-label { font-size: 12px; color: #718096; font-weight: 600; }
 
         .target-group-header { padding: 10px 15px; font-weight: 600; color: white; transition: var(--transition); }
         .target-group-header:hover { filter: brightness(1.2); padding-left: 20px; cursor: default; }
@@ -269,6 +273,7 @@
 </main>
 
 <script>
+    // URL สำหรับดึงข้อมูลจาก Apps Script
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbztsizuL287dT1RpRqVSztSBaydCfsb-9TBEZRSOFj3CGfB2dNLHzGqOmpRVpG9mfNC8A/exec"; 
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -379,14 +384,17 @@
                     { l: s[0][6], v: s[1][6], d: s[1][7], a: ach.smartPhone, c: '#38b2ac' }
                 ];
 
+                // ส่วนการแสดงผล 4 BOX (ปรับปรุงการย้าย %achieve ไปด้านซ้าย)
                 document.getElementById('bottomStats').innerHTML = stats.map(i => `
                     <div class="stat-item" style="border-left-color:${i.c}">
-                        <span class="stat-label">${i.l}</span><br>
-                        <div style="display:flex;justify-content:space-between;align-items:flex-end; margin-top:5px;">
-                            <span class="stat-main">${i.v}</span>
-                            <div class="text-right">
-                                <span class="stat-achieve">${i.a}%</span><br>
-                                <small style="font-size:12px; color:#718096; font-weight:600;">ขาด/เกิน</small><br>
+                        <span class="stat-label">${i.l}</span>
+                        <div class="stat-content">
+                            <div class="stat-left">
+                                <span class="stat-main">${i.v}</span>
+                                <span class="stat-achieve">${i.a}%</span>
+                            </div>
+                            <div class="stat-right">
+                                <span class="stat-sub-label">ขาด/เกิน</span>
                                 <span class="stat-sub-val">${i.d}</span>
                             </div>
                         </div>
