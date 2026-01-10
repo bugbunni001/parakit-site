@@ -1,34 +1,44 @@
 <style>
-    /* 1. จัดการโครงสร้างหลักของ Sidebar ให้เลื่อนได้ */
+    /* 1. โครงสร้างหลักของ Sidebar */
     .sidebar {
         position: fixed;
         top: 0;
         left: 0;
         width: 260px;
-        /* ใช้ dvh เพื่อให้หักลบแถบ URL ของ Browser มือถือออก */
-        height: 100vh; 
-        height: 100dvh; 
+        height: 100vh;
+        height: 100dvh;
         background: #1e293b;
         color: #fff;
         z-index: 2000;
-        transform: translateX(-260px);
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        
-        /* เปิดการเลื่อนแนวตั้ง */
-        overflow-y: auto;
-        overflow-x: hidden;
         display: flex;
         flex-direction: column;
-        
-        /* ทำให้เลื่อนลื่นใน iOS */
+        overflow-y: auto;
+        overflow-x: hidden;
         -webkit-overflow-scrolling: touch;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    .sidebar.show {
-        transform: translateX(0);
+    /* 2. การตั้งค่าแยก Desktop และ Mobile */
+    
+    /* สำหรับมือถือ (หน้าจอเล็กกว่า 992px) */
+    @media (max-width: 991.98px) {
+        .sidebar {
+            transform: translateX(-260px); /* ซ่อนไว้ */
+        }
+        .sidebar.show {
+            transform: translateX(0); /* แสดงเมื่อกดปุ่ม toggle */
+        }
     }
 
-    /* 2. หัวข้อ Sidebar ให้ติดอยู่กับที่เวลาเลื่อน (Sticky) */
+    /* สำหรับคอมพิวเตอร์ (หน้าจอใหญ่กว่า 992px) */
+    @media (min-width: 992px) {
+        .sidebar {
+            transform: translateX(0); /* แสดงค้างไว้ตลอด */
+            border-right: 1px solid rgba(255,255,255,0.05);
+        }
+    }
+
+    /* 3. ส่วนหัว Sidebar */
     .sidebar-header {
         padding: 25px 20px;
         font-size: 18px;
@@ -39,13 +49,16 @@
         position: sticky;
         top: 0;
         z-index: 10;
+        display: flex;
+        align-items: center;
+        gap: 10px;
     }
 
-    /* 3. จัดการรายการเมนู */
+    /* 4. รายการเมนู */
     .menu {
         display: flex;
         flex-direction: column;
-        padding: 10px 0 100px 0; /* เพิ่มพื้นที่ด้านล่างเพื่อให้เมนูสุดท้ายเลื่อนพ้นขอบมือถือ */
+        padding: 10px 0 100px 0;
     }
 
     .item {
@@ -65,14 +78,13 @@
         display: flex;
         align-items: center;
         text-decoration: none;
-        transition: all 0.3s ease;
+        transition: all 0.2s ease;
     }
 
-    /* Effect เมื่อเอาเมาส์ชี้ หรือ กดค้าง */
     .menu a:hover, .menu .drop-btn:hover {
         background: #334155;
         color: #fff;
-        padding-left: 28px;
+        padding-left: 25px;
     }
 
     /* เมนูย่อย */
@@ -95,7 +107,7 @@
 
     .sub a:hover {
         color: #5bbf8a;
-        padding-left: 55px;
+        padding-left: 50px;
     }
 
     /* ลูกศร */
@@ -103,14 +115,14 @@
         margin-left: auto;
         transition: 0.3s;
         font-size: 10px;
-        opacity: 0.6;
+        opacity: 0.5;
     }
 
     .item.open .arrow {
         transform: rotate(90deg);
     }
 
-    /* ปรับแต่ง Scrollbar ของ Sidebar ให้ดูไม่เกะกะ */
+    /* สกロールบาร์ */
     .sidebar::-webkit-scrollbar {
         width: 4px;
     }
@@ -121,6 +133,8 @@
 </style>
 
 <div class="sidebar-header">
+    <i class="fa-solid fa-store"></i>
+    <span>BigC Prachauthit</span>
 </div>
 
 <div class="menu">
@@ -156,7 +170,7 @@
 </div>
 
 <script>
-    // ฟังก์ชัน กาง-หุบ เมนูย่อย (Dropdown) และบันทึกสถานะ
+    // ฟังก์ชัน กาง-หุบ เมนูย่อย
     window.toggleDrop = function(btn, id) {
         const item = btn.closest('.item'); 
         if (!item) return;
@@ -179,7 +193,6 @@
         });
     }
 
-    // รันหลังจากโหลดเสร็จ
+    // รันฟังก์ชันคืนค่าสถานะ
     restoreMenuState();
 </script>
-
