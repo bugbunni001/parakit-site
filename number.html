@@ -14,7 +14,6 @@
     * { box-sizing: border-box; font-family: 'Kanit', sans-serif; }
     body { background: var(--bg); margin: 0; padding: 0; display: flex; min-height: 100vh; transition: var(--transition); }
 
-    /* SIDEBAR STYLES */
     #sidebar-container { 
         width: var(--sidebar-width); background: var(--sidebar-bg); height: 100vh; 
         position: fixed; left: 0; top: 0; transition: transform 0.3s ease; z-index: 2000; 
@@ -29,7 +28,6 @@
     body.collapsed #sidebar-container { transform: translateX(calc(var(--sidebar-width) * -1)); }
     body.collapsed .main-content { margin-left: 0; width: 100%; }
 
-    /* Mobile Sidebar */
     @media (max-width: 900px) {
         #sidebar-container { transform: translateX(calc(var(--sidebar-width) * -1)); }
         .main-content { margin-left: 0; width: 100%; }
@@ -39,7 +37,6 @@
     .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; z-index: 1500; backdrop-filter: blur(4px); }
     body.show-sidebar .overlay { display: block; }
 
-    /* UI Components */
     .menu-btn {
         position: fixed; top: 20px; left: 20px; z-index: 1000;
         background: var(--primary); color: white; border: none; 
@@ -68,7 +65,6 @@
     .item-card.is-used { background: #f1f5f9; opacity: 0.6; pointer-events: none; }
     .item-card.is-used .phone-num { text-decoration: line-through; }
 
-    /* Modal */
     .modal-overlay {
         position: fixed; inset: 0; background: rgba(0,0,0,0.4); 
         display: none; align-items: center; justify-content: center; z-index: 3000;
@@ -79,13 +75,13 @@
     .btn-cancel { background: #e2e8f0; color: var(--text-dark); border: none; flex: 1; padding: 12px; border-radius: 10px; cursor: pointer; }
 </style>
 </head>
+
 <body id="mainBody">
 
 <div class="overlay" onclick="toggleSidebar()"></div>
 
-<aside id="sidebar-container">
-    <?!= include('sidebar'); ?>
-</aside>
+<!-- 🔥 Sidebar จะถูกโหลดจาก sidebar.html -->
+<aside id="sidebar-container"></aside>
 
 <main class="main-content">
     <button class="menu-btn" onclick="toggleSidebar()">☰ เมนู</button>
@@ -112,7 +108,14 @@
 <script>
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw2Zip_1F4g2sMHK_UbMyU7Vv4A3rOPfzLAHh20tlqMMk4jH5OoFHOKCu6L8CyVf5LVjA/exec";
 
-// ฟังก์ชันเปิด/ปิด Sidebar พร้อมบันทึกสถานะ
+/* ✅ โหลด sidebar.html */
+fetch("sidebar.html")
+  .then(res => res.text())
+  .then(html => {
+      document.getElementById("sidebar-container").innerHTML = html;
+      restoreSidebarState();
+  });
+
 function toggleSidebar() {
     const body = document.getElementById('mainBody');
     if (window.innerWidth <= 900) {
@@ -123,32 +126,27 @@ function toggleSidebar() {
     }
 }
 
-// คืนค่าสถานะ Sidebar และสถานะ Dropdown เมื่อโหลดหน้า
 function restoreSidebarState() {
     const body = document.getElementById('mainBody');
     const container = document.getElementById('sidebar-container');
     
-    // คืนค่าการ ยุบ/ขยาย Sidebar
     if (window.innerWidth > 900) {
         const isCollapsed = localStorage.getItem('sidebar-collapsed');
         if (isCollapsed === 'true') body.classList.add('collapsed');
     }
 
-    // คืนค่าสถานะ Dropdown ใน Menu
     container.querySelectorAll('.item').forEach((item, index) => {
         const isOpened = localStorage.getItem('dropdown-' + index);
         if (isOpened === 'true') item.classList.add('open');
     });
 }
 
-// Logic Sidebar Dropdown พร้อมบันทึกสถานะ
 document.addEventListener('click', function (e) {
     const dropBtn = e.target.closest('.drop-btn');
     if (dropBtn) {
         const parent = dropBtn.parentElement;
         parent.classList.toggle('open');
         
-        // บันทึกสถานะว่า index ไหนถูกเปิดอยู่
         const allItems = document.querySelectorAll('#sidebar-container .item');
         allItems.forEach((item, index) => {
             localStorage.setItem('dropdown-' + index, item.classList.contains('open'));
@@ -156,10 +154,7 @@ document.addEventListener('click', function (e) {
     }
 });
 
-window.onload = () => {
-    restoreSidebarState();
-    fetchData();
-};
+window.onload = () => fetchData();
 
 function fetchData() {
     fetch(WEB_APP_URL + "?action=getData")
@@ -201,5 +196,6 @@ function use(r) {
     });
 }
 </script>
+
 </body>
 </html>
