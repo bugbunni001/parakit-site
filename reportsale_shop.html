@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>รายงานยอดขายของสาขา</title>
+    <title>Performance Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -24,10 +24,38 @@
             --excel: #166534;
             --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
+        
         * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
         
         html, body { margin: 0; padding: 0; width: 100%; background-color: var(--bg); color: var(--text-dark); min-height: 100vh; overflow-x: hidden; }
         body { display: flex; }
+
+        /* ===== LOADING SPINNER CUSTOM ===== */
+        .loading { 
+            position: fixed; 
+            inset: 0; 
+            background: rgba(255,255,255,0.9); 
+            display: none; 
+            flex-direction: column;
+            justify-content: center; 
+            align-items: center; 
+            z-index: 3000; 
+            backdrop-filter: blur(5px);
+        }
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .loading-text { color: var(--text-dark); font-weight: 500; font-size: 16px; letter-spacing: 1px; }
 
         /* ===== SIDEBAR SYSTEM ===== */
         #sidebar-container { 
@@ -70,115 +98,149 @@
         .main-content { 
             flex-grow: 1; 
             margin-left: var(--sidebar-width);
-            padding: 20px; 
+            padding: 0; /* แก้ไข: เอา padding ออกเพื่อให้เมนูชิดบน */
             width: calc(100% - var(--sidebar-width));
             transition: var(--transition);
+            min-height: 100vh;
         }
 
         body.collapsed #sidebar-container { transform: translateX(calc(var(--sidebar-width) * -1)); }
         body.collapsed .main-content { margin-left: 0; width: 100%; }
 
-        /* Mobile Adjustments */
+        /* Mobile Responsive */
         @media (max-width: 900px) {
             #sidebar-container { transform: translateX(calc(var(--sidebar-width) * -1)); }
-            .main-content { margin-left: 0; width: 100%; padding: 10px; }
+            .main-content { margin-left: 0; width: 100%; padding: 0; }
             body.show-sidebar #sidebar-container { transform: translateX(0); }
             body.collapsed #sidebar-container { transform: translateX(calc(var(--sidebar-width) * -1)); }
             
-            .header-bar { padding: 10px !important; flex-direction: column; align-items: stretch !important; }
-            .action-group { width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-            .btn-fetch { grid-column: span 2; width: 100%; justify-content: center; }
-            .btn-pdf, .btn-excel { justify-content: center; }
+            .header-bar { padding: 12px !important; border-radius: 0 !important; }
+            .action-group { width: 100%; display: grid !important; grid-template-columns: 1fr 1fr; gap: 8px; }
+            #daySelect { grid-column: span 2; }
+            .btn-fetch { grid-column: span 2; }
+            .btn-pdf, .btn-excel { font-size: 14px; justify-content: center; }
             
-            .main-grid { grid-template-columns: 1fr !important; }
             .bottom-stats-grid { grid-template-columns: 1fr !important; }
-            .stat-main { font-size: 24px !important; }
+            .stat-main { font-size: 28px !important; }
+            .container { padding: 10px; }
         }
 
         .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: none; backdrop-filter: blur(4px); z-index: 1500; }
         .overlay.show { display: block; }
 
-        .header-bar { 
-            background: var(--primary); padding: 15px 20px; border-radius: 14px; display: flex; 
-            justify-content: space-between; align-items: center; margin-bottom: 20px; 
-            box-shadow: 0 4px 15px rgba(91, 183, 170, 0.2); gap: 15px; 
-        }
-        .header-bar h2 { color: white !important; font-weight: 500; margin: 0; font-size: 18px; }
-
-        .action-group { display: flex; align-items: center; gap: 8px; }
-        #daySelect { padding: 10px; border-radius: 8px; border: none; font-size: 14px; min-width: 120px; }
-
         .btn-fetch, .btn-pdf, .btn-excel {
-            border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; 
-            font-weight: 500; display: flex; align-items: center; gap: 6px; font-size: 14px;
             transition: var(--transition);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
-        .btn-fetch { background: #2d3748; color: white; }
-        .btn-pdf { background: var(--pdf); color: white; }
-        .btn-excel { background: var(--excel); color: white; }
+        .btn-fetch:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(91, 183, 170, 0.4); filter: brightness(1.1); }
+        .btn-pdf:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(225, 29, 72, 0.4); filter: brightness(1.1); }
+        .btn-excel:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(22, 101, 52, 0.4); filter: brightness(1.1); }
 
-        /* Grid System */
-        .main-grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 20px; align-items: start; }
-
-        .card { background: var(--white); border-radius: 15px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid #edf2f7; margin-bottom: 20px; }
-        .card-header { padding: 12px 18px; color: white; font-weight: 500; background: var(--primary); display: flex; justify-content: space-between; font-size: 16px; }
+        .container { width: 100%; max-width: 1400px; margin: 0 auto; padding: 0 20px 20px 20px; }
         
-        /* Table Responsive */
+        .header-bar { 
+            background: var(--primary); 
+            padding: 15px 25px; 
+            border-radius: 0 0 14px 14px; /* แก้ไข: ให้ด้านบนตรง ชิดขอบบน */
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 20px; 
+            box-shadow: 0 4px 15px rgba(91, 183, 170, 0.2); 
+            flex-wrap: wrap; 
+            gap: 15px; 
+            width: 100%;
+        }
+        .header-bar h2 { color: white !important; font-weight: 500; letter-spacing: 0.5px; margin: 0; }
+
+        .action-group { display: flex; align-items: center; gap: 10px; }
+        #daySelect { padding: 10px 16px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.3); font-size: 16px; background-color: white; cursor: pointer; transition: var(--transition); }
+
+        .btn-fetch { background: #2d3748; color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 8px; }
+        .btn-pdf { background: var(--pdf); color: white; border: none; padding: 10px 16px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+        .btn-excel { background: var(--excel); color: white; border: none; padding: 10px 16px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+
+        .main-grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 20px; }
+        @media (max-width: 1100px) { .main-grid { grid-template-columns: 1fr; } }
+
+        #dashboardData { display: none; animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .card { background: var(--white); border-radius: 15px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid #edf2f7; margin-bottom: 20px; transition: var(--transition); }
+        .card:hover { box-shadow: 0 8px 25px rgba(0,0,0,0.07); }
+        .card-header { padding: 14px 20px; color: white; font-weight: 500; background: var(--primary); display: flex; justify-content: space-between; align-items: center; font-size: 18px; }
+        
         .table-wrapper { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-        table { width: 100%; border-collapse: collapse; min-width: 400px; }
-        .daily-table { min-width: 800px; } /* บังคับความกว้างขั้นต่ำเพื่อให้เลื่อนดูในมือถือได้ */
+        table { width: 100%; border-collapse: collapse; min-width: 500px; }
+        th { padding: 15px; text-align: left; font-size: 15px; background: #fafbfc; border-bottom: 2px solid #edf2f7; color: #4a5568; font-weight: 600; }
+        td { padding: 12px 15px; border-bottom: 1px solid #f7fafc; font-size: 15px; transition: var(--transition); color: #2d3748; }
         
-        th { padding: 12px; text-align: left; font-size: 14px; background: #fafbfc; border-bottom: 2px solid #edf2f7; color: #4a5568; }
-        td { padding: 10px 12px; border-bottom: 1px solid #f7fafc; font-size: 14px; }
+        tr:hover td { background: rgba(91, 183, 170, 0.05); }
         .text-right { text-align: right; }
+        .row-summary { background-color: rgba(91, 183, 170, 0.08); }
+        .row-summary td { font-weight: 700 !important; color: #1a202c; border-bottom: 2px solid var(--primary); }
         
-        /* Stat Cards */
-        .bottom-stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 15px; background: #fafbfc; }
-        .stat-item { background: #fff; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0; border-left: 6px solid var(--primary); }
-        .stat-label { font-size: 13px; color: #718096; display: block; margin-bottom: 5px; }
-        .stat-content { display: flex; justify-content: space-between; align-items: center; }
-        .stat-main { font-size: 28px; font-weight: 700; color: var(--text-dark); }
-        .stat-achieve { color: var(--success); font-weight: 700; }
-        .stat-sub-val { color: var(--danger); font-weight: 700; display: block; }
-        .stat-sub-label { font-size: 10px; color: #a0aec0; }
+        .bottom-stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 20px; background: #fafbfc; border-top: 1px solid #edf2f7; }
+        .stat-item { background: #ffffff; padding: 18px; border-radius: 12px; border: 1px solid #e2e8f0; border-left: 6px solid var(--primary); transition: var(--transition); }
+        .stat-item:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
+        .stat-label { font-size: 14px; font-weight: 600; color: #718096; margin-bottom: 10px; display: block; }
+        .stat-content { display: flex; justify-content: space-between; align-items: flex-end; }
+        .stat-main { font-size: 32px; font-weight: 700; line-height: 1; color: var(--text-dark); }
+        .stat-achieve { color: var(--success); font-weight: 700; font-size: 18px; margin-top: 5px; }
+        .stat-sub-val { color: #dc2626; font-weight: 700; font-size: 18px; display: block; }
+        .stat-sub-label { font-size: 11px; color: #a0aec0; font-weight: 600; text-transform: uppercase; }
 
-        /* Target Rows */
-        .target-group-header { padding: 10px 15px; font-weight: 600; color: white; font-size: 14px; }
-        .target-row { display: flex; justify-content: space-between; padding: 10px 15px; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
-        
-        .bg-grad-yellow { background: #f59e0b; }
-        .bg-grad-orange-light { background: #f97316; }
-        .bg-grad-orange-dark { background: #ea580c; }
-        .bg-grad-blue-dark { background: #334155; }
-        .bg-grad-blue-slate { background: #475569; }
-        .bg-grad-blue-teal { background: #0d9488; }
-        
-        .bg-amber { background: #ffb100; } .bg-orange { background: #ff5722; } 
-        .bg-slate { background: #4a5568; } .bg-teal { background: #38b2ac; }
+        .brand-summary-wrapper { padding: 15px; background: #f8fafc; }
+        .brand-table { width: 100%; background: white; border-radius: 10px; border-collapse: collapse; min-width: 100%; }
+        .brand-table th { background: #f8fafc !important; color: #4a5568 !important; border-bottom: 2px solid #edf2f7; }
 
-        .loading { position: fixed; inset: 0; background: rgba(255,255,255,0.8); display: none; justify-content: center; align-items: center; z-index: 3000; font-weight: 600; }
+        .target-group-header { padding: 12px 15px; font-weight: 600; color: white; }
+        .target-row { display:flex; justify-content:space-between; padding:12px 18px; border-bottom:1px solid #f1f5f9; transition: 0.2s; }
+        .target-row:hover { background: #f8fafc; padding-left: 22px; color: var(--primary); }
+        
+        .bg-grad-yellow { background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%); }
+        .bg-grad-orange-light { background: linear-gradient(90deg, #f97316 0%, #fb923c 100%); }
+        .bg-grad-orange-dark { background: linear-gradient(90deg, #ea580c 0%, #f97316 100%); }
+        .bg-grad-blue-dark { background: linear-gradient(90deg, #334155 0%, #475569 100%); }
+        .bg-grad-blue-slate { background: linear-gradient(90deg, #475569 0%, #64748b 100%); }
+        .bg-grad-blue-teal { background: linear-gradient(90deg, #0d9488 0%, #14b8a6 100%); }
+        
+        .bg-amber { background: #ffb100; } 
+        .bg-orange { background: #ff5722; } 
+        .bg-slate { background: #4a5568; } 
+        .bg-teal { background: #38b2ac; }
+        
+        .daily-table { min-width: 800px; }
+        .daily-table thead tr:first-child th { color: #ffffff; text-align: center; padding: 10px; font-weight: 500; }
+        .daily-table thead tr:last-child th { background: #f1f5f9; color: #475569; text-align: center; font-size: 12px; }
+        .daily-table td { text-align: center; border-right: 1px solid #f1f5f9; }
         .val-actual { color: var(--primary); font-weight: 700; }
         .val-diff { color: #dc2626; font-weight: 700; }
         .v-sep { border-left: 2px solid #e2e8f0 !important; }
-        .row-summary { background-color: rgba(91, 183, 170, 0.1); font-weight: bold; }
     </style>
 </head>
 <body id="mainBody">
 
-<div class="loading" id="loader">🔄 กำลังประมวลผล...</div>
+<div class="loading" id="loader">
+    <div class="spinner"></div>
+    <div class="loading-text">กำลังประมวลผลข้อมูล...</div>
+</div>
+
 <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 
 <aside id="sidebar-container">
     <nav class="menu" id="dynamic-menu">
-        <div style="padding: 20px; color: var(--sidebar-text); text-align: center; font-size: 14px;">⌛ กำลังโหลดเมนู...</div>
+        <div style="padding: 20px; color: var(--sidebar-text); text-align: center; font-size: 14px;">
+            ⌛ กำลังโหลดเมนู...
+        </div>
     </nav>
 </aside>
 
 <main class="main-content">
     <div class="header-bar">
         <div style="display:flex; align-items:center; gap:12px;">
-            <button onclick="toggleSidebar()" style="background:rgba(255,255,255,0.2); border:none; padding:8px 12px; border-radius:8px; color:white; cursor:pointer;">☰</button>
-            <h2>Performance Report</h2>
+            <button onclick="toggleSidebar()" style="background:rgba(255,255,255,0.2); border:none; padding:10px 14px; border-radius:10px; cursor:pointer; color:white; font-size:18px;">☰</button>
+            <h2>รายงานยอดขายของสาขา</h2>
         </div>
         <div class="action-group">
             <select id="daySelect">
@@ -193,81 +255,90 @@
         </div>
     </div>
 
-    <div id="noData" style="text-align: center; padding: 60px 20px; color: #a0aec0; background: white; border-radius: 20px; border: 2px dashed #e2e8f0;">
-        <p>กรุณาเลือกวันที่และกดปุ่ม <b>"ดึงข้อมูล"</b></p>
-    </div>
-
-    <div id="dashboardData" style="display: none;">
-        <div class="card">
-            <div class="card-header">
-                <span>📅 ข้อมูลวันที่ <span id="dailyDateNum"></span></span>
-                <span id="labelStaff" style="font-size: 12px; opacity: 0.8;"></span>
-            </div>
-            <div class="table-wrapper">
-                <table class="daily-table">
-                    <thead>
-                        <tr style="text-align:center;">
-                            <th rowspan="2" style="background:#4a5568; color:white; text-align:center;">วันที่</th>
-                            <th colspan="2" class="bg-amber" style="color:white; text-align:center;">New Post</th>
-                            <th colspan="2" class="bg-orange" style="color:white; text-align:center;">BDBC</th>
-                            <th colspan="2" class="bg-slate" style="color:white; text-align:center;">Apple</th>
-                            <th colspan="2" class="bg-teal" style="color:white; text-align:center;">SmartPhone</th>
-                            <th colspan="2" style="background:#2d3748; color:white; text-align:center;">Total</th>
-                        </tr>
-                        <tr style="text-align:center; background:#f1f5f9;">
-                            <th class="v-sep">Actual</th><th>Diff</th>
-                            <th class="v-sep">Actual</th><th>Diff</th>
-                            <th class="v-sep">Actual</th><th>Diff</th>
-                            <th class="v-sep">Actual</th><th>Diff</th>
-                            <th class="v-sep">Post</th><th>Device</th>
-                        </tr>
-                    </thead>
-                    <tbody id="dailyBody" style="text-align:center;"></tbody>
-                </table>
-            </div>
+    <div class="container">
+        <div id="noData" style="text-align: center; padding: 80px 20px; color: #a0aec0; background: white; border-radius: 20px; border: 2px dashed #e2e8f0; margin-top: 20px;">
+            <div style="font-size: 50px; margin-bottom: 15px;">📊</div>
+            <p style="font-size: 18px;">กรุณาเลือกวันที่และกดปุ่ม <b>"ดึงข้อมูล"</b> เพื่อแสดงรายงาน</p>
         </div>
 
-        <div class="main-grid">
-            <div class="left-panel">
-                <div class="card">
-                    <div class="card-header">📍 สรุปยอดขาย: <span id="labelL"></span></div>
-                    <div class="table-wrapper">
-                        <table id="tableSummary">
-                            <thead>
-                                <tr><th>Type การขาย</th><th class="text-right">ยอด PostPay</th><th class="text-right">จำนวน</th></tr>
-                            </thead>
-                            <tbody id="summaryBody"></tbody>
-                        </table>
-                    </div>
-                    <div class="bottom-stats-grid" id="bottomStats"></div>
+        <div id="dashboardData">
+            <div class="card" id="dailyCard">
+                <div class="card-header">
+                    <span>📅 ข้อมูลรายวัน (วันที่ <span id="dailyDateNum"></span>)</span>
+                    <span id="labelStaff" style="font-size: 14px; background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 20px;"></span>
                 </div>
-
-                <div class="card">
-                    <div class="card-header">📊 ยอดขายแยกตามแบรนด์</div>
-                    <div class="table-wrapper">
-                        <table id="tableBrand">
-                            <thead>
-                                <tr><th>แบรนด์</th><th class="text-right">ยอดขาย</th><th class="text-right">จำนวน</th></tr>
-                            </thead>
-                            <tbody id="brandBody"></tbody>
-                        </table>
-                    </div>
+                <div class="table-wrapper">
+                    <table class="daily-table" id="tableDaily">
+                        <thead>
+                            <tr>
+                                <th rowspan="2" style="background:#4a5568; color:white; text-align:center;">วันที่</th>
+                                <th colspan="2" class="bg-amber" style="color:white;">New Post</th>
+                                <th colspan="2" class="bg-orange" style="color:white;">BDBC</th>
+                                <th colspan="2" class="bg-slate" style="color:white;">Apple</th>
+                                <th colspan="2" class="bg-teal" style="color:white;">SmartPhone</th>
+                                <th colspan="2" style="background:#2d3748; color:white;">Total</th>
+                            </tr>
+                            <tr>
+                                <th class="v-sep">Actual</th><th>Diff</th>
+                                <th class="v-sep">Actual</th><th>Diff</th>
+                                <th class="v-sep">Actual</th><th>Diff</th>
+                                <th class="v-sep">Actual</th><th>Diff</th>
+                                <th class="v-sep">Post</th><th>Device</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dailyBody"></tbody>
+                    </table>
                 </div>
             </div>
 
-            <div class="side-panel">
-                <div class="card">
-                    <div class="card-header">🎯 Focus: <span id="labelR"></span></div>
-                    <div class="table-wrapper">
-                        <table id="tableFocus">
-                            <thead><tr><th>Target</th><th class="text-right">Actual</th></tr></thead>
-                            <tbody id="focusBody"></tbody>
-                        </table>
+            <div class="main-grid">
+                <div class="left-panel">
+                    <div class="card">
+                        <div class="card-header">📍 สรุปยอดขาย: <span id="labelL"></span></div>
+                        <div class="table-wrapper">
+                            <table id="tableSummary">
+                                <thead>
+                                    <tr><th>Type การขาย</th><th class="text-right">ยอด PostPay</th><th class="text-right">จำนวน</th></tr>
+                                </thead>
+                                <tbody id="summaryBody"></tbody>
+                            </table>
+                        </div>
+                        <div class="bottom-stats-grid" id="bottomStats"></div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">📊 ยอดขายแยกตามแบรนด์</div>
+                        <div class="brand-summary-wrapper">
+                            <div class="table-wrapper">
+                                <table class="brand-table">
+                                    <thead>
+                                        <tr>
+                                            <th>แบรนด์</th>
+                                            <th class="text-right">ยอดขาย</th>
+                                            <th class="text-right">จำนวน</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="brandBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="card">
-                    <div class="card-header" style="background:#2d3748;">🏁 เป้าหมายรายเดือน</div>
-                    <div id="targetBody"></div>
+
+                <div class="side-panel">
+                    <div class="card">
+                        <div class="card-header">🎯 Focus: <span id="labelR"></span></div>
+                        <div class="table-wrapper">
+                            <table id="tableFocus">
+                                <thead><tr><th>Target</th><th class="text-right">Actual</th></tr></thead>
+                                <tbody id="focusBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header" style="background:#2d3748;">🏁 เป้าหมายรายเดือน</div>
+                        <div id="targetBody"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -279,7 +350,8 @@
 
     document.addEventListener('DOMContentLoaded', () => {
         loadSidebar(); 
-        if (localStorage.getItem('sidebarCollapsed') === 'true' && window.innerWidth > 900) {
+        const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+        if (isCollapsed && window.innerWidth > 900) {
             document.getElementById('mainBody').classList.add('collapsed');
         }
     });
@@ -289,13 +361,15 @@
         try {
             const response = await fetch('sidebar.html');
             if (response.ok) {
-                menuContainer.innerHTML = await response.text();
+                const html = await response.text();
+                menuContainer.innerHTML = html;
                 restoreMenuState();
             } else {
-                menuContainer.innerHTML = '<div style="padding:20px; color:white; font-size:12px;">Sidebar file not found.</div>';
+                menuContainer.innerHTML = '<div style="padding:20px; color:white;">กรุณาเปิดผ่าน Server เพื่อโหลดเมนู</div>';
             }
-        } catch (e) {
-            menuContainer.innerHTML = '<div style="padding:20px; color:white;">Error loading menu</div>';
+        } catch (error) {
+            console.error("Sidebar error:", error);
+            menuContainer.innerHTML = '<div style="padding:20px; color:white;">Error loading sidebar</div>';
         }
     }
 
@@ -319,10 +393,11 @@
     }
 
     function restoreMenuState() {
-        ['credit', 'branch'].forEach(id => {
+        const menus = ['credit', 'branch']; 
+        menus.forEach(id => {
             if (localStorage.getItem('menu-' + id) === 'true') {
-                const el = document.getElementById('menu-' + id);
-                if (el) el.classList.add('open');
+                const menuEl = document.getElementById('menu-' + id);
+                if (menuEl) menuEl.classList.add('open');
             }
         });
     }
@@ -334,7 +409,8 @@
 
         loader.style.display = 'flex';
         try {
-            const res = await fetch(`${SCRIPT_URL}?sheetName=SHOP&targetDay=${selectedDay}`);
+            const fetchUrl = `${SCRIPT_URL}?sheetName=${encodeURIComponent("SHOP")}&targetDay=${selectedDay}`;
+            const res = await fetch(fetchUrl);
             const data = await res.json();
 
             if(data.result === "success") {
@@ -350,23 +426,26 @@
 
                 document.getElementById('brandBody').innerHTML = data.brandSummary.map(r => {
                     const isTotal = r[0].includes("รวม");
-                    return `<tr style="${isTotal?'font-weight:700; background:#f1f5f9;':''}"><td>${r[0]}</td><td class="text-right">${r[1]}</td><td class="text-right">${r[2]}</td></tr>`;
+                    const rowStyle = isTotal ? 'font-weight:700; background:#f1f5f9;' : '';
+                    return `<tr style="${rowStyle}"><td>${r[0]}</td><td class="text-right">${r[1]}</td><td class="text-right">${r[2]}</td></tr>`;
                 }).join('');
 
-                document.getElementById('focusBody').innerHTML = data.focus.filter(r => r[0] && r[0] !== "Target")
+                document.getElementById('focusBody').innerHTML = data.focus
+                    .filter(r => r[0] && r[0] !== "Target")
                     .map(r => `<tr><td>${r[0]}</td><td class="text-right" style="color:#dc2626; font-weight:700;">${r[1]}</td></tr>`).join('');
 
                 const tDiv = document.getElementById('targetBody');
                 tDiv.innerHTML = "";
                 data.targets.forEach(r => {
                     if(r[0].includes("คำนวณ Target")) {
-                        let cls = "bg-slate";
+                        let cls = "";
                         if(r[0].includes("All Post")) cls = "bg-grad-yellow";
                         else if(r[0].includes("New Post")) cls = "bg-grad-orange-light";
                         else if(r[0].includes("BDBC")) cls = "bg-grad-orange-dark";
                         else if(r[0].includes("All Device")) cls = "bg-grad-blue-dark";
                         else if(r[0].includes("Apple")) cls = "bg-grad-blue-slate";
                         else if(r[0].includes("SmartPhone")) cls = "bg-grad-blue-teal";
+                        else cls = "bg-slate";
                         tDiv.innerHTML += `<div class="target-group-header ${cls}">${r[0]}</div>`;
                     } else if(r[0] && r[0] !== "Target") {
                         tDiv.innerHTML += `<div class="target-row"><span>${r[0]}</span><b>${r[1]}</b></div>`;
@@ -375,25 +454,32 @@
 
                 const s = data.topStats;
                 const ach = data.achieve; 
-                const statsConfig = [
+                const stats = [
                     { l: s[0][0], v: s[1][0], d: s[1][1], a: ach.newPost, c: '#ffb100' },
                     { l: s[0][2], v: s[1][2], d: s[1][3], a: ach.bdbc, c: '#ff5722' },
                     { l: s[0][4], v: s[1][4], d: s[1][5], a: ach.apple, c: '#4a5568' },
                     { l: s[0][6], v: s[1][6], d: s[1][7], a: ach.smartPhone, c: '#38b2ac' }
                 ];
-                document.getElementById('bottomStats').innerHTML = statsConfig.map(i => `
+
+                document.getElementById('bottomStats').innerHTML = stats.map(i => `
                     <div class="stat-item" style="border-left-color:${i.c}">
                         <span class="stat-label">${i.l}</span>
                         <div class="stat-content">
-                            <div><span class="stat-main">${i.v}</span> <span class="stat-achieve">${i.a}%</span></div>
-                            <div class="text-right"><span class="stat-sub-label">ขาด/เกิน</span><span class="stat-sub-val">${i.d}</span></div>
+                            <div class="stat-left">
+                                <span class="stat-main">${i.v}</span>
+                                <span class="stat-achieve">${i.a}%</span>
+                            </div>
+                            <div class="stat-right">
+                                <span class="stat-sub-label">ขาด/เกิน</span>
+                                <span class="stat-sub-val">${i.d}</span>
+                            </div>
                         </div>
                     </div>`).join('');
 
                 if(data.dailyRow) {
                     const dr = data.dailyRow;
                     document.getElementById('dailyBody').innerHTML = `
-                        <tr><td style="background:#f8fafc; font-weight:bold;">${dr[0]}</td>
+                        <tr><td style="background:#f8fafc;">${dr[0]}</td>
                         <td class="v-sep val-actual">${dr[1]}</td><td class="val-diff">${dr[2]}</td>
                         <td class="v-sep val-actual">${dr[3]}</td><td class="val-diff">${dr[4]}</td>
                         <td class="v-sep val-actual">${dr[5]}</td><td class="val-diff">${dr[6]}</td>
@@ -405,7 +491,7 @@
                 document.getElementById('noData').style.display = 'none';
             }
         } catch (e) {
-            alert("เกิดข้อผิดพลาดในการโหลดข้อมูล");
+            alert("ไม่สามารถดึงข้อมูลได้ โปรดตรวจสอบการตั้งค่า App Script ของคุณ");
         } finally {
             loader.style.display = 'none';
         }
@@ -413,14 +499,21 @@
 
     function exportPDF() {
         const element = document.getElementById('dashboardData');
-        html2pdf().set({ margin: 5, filename: 'Report.pdf', jsPDF: { orientation: 'landscape' } }).from(element).save();
+        const opt = {
+            margin: 10,
+            filename: 'Performance_Report.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+        };
+        html2pdf().set(opt).from(element).save();
     }
 
     function exportExcel() {
         const wb = XLSX.utils.book_new();
         const ws = XLSX.utils.table_to_sheet(document.getElementById('tableSummary'));
         XLSX.utils.book_append_sheet(wb, ws, "Summary");
-        XLSX.writeFile(wb, "Report.xlsx");
+        XLSX.writeFile(wb, "Performance_Report.xlsx");
     }
 </script>
 </body>
