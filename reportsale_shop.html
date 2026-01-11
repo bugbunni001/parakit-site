@@ -27,18 +27,10 @@
         
         * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
         
-        html, body { 
-            margin: 0; 
-            padding: 0; 
-            width: 100%; 
-            background-color: var(--bg); 
-            color: var(--text-dark); 
-            min-height: 100vh; 
-            overflow-x: hidden; 
-        }
-        body { display: flex; align-items: stretch; }
+        html, body { margin: 0; padding: 0; width: 100%; background-color: var(--bg); color: var(--text-dark); min-height: 100vh; overflow-x: hidden; }
+        body { display: flex; }
 
-        /* ===== LOADING SPINNER ===== */
+        /* ===== LOADING SPINNER CUSTOM ===== */
         .loading { 
             position: fixed; 
             inset: 0; 
@@ -51,14 +43,19 @@
             backdrop-filter: blur(5px);
         }
         .spinner {
-            width: 50px; height: 50px;
+            width: 50px;
+            height: 50px;
             border: 5px solid #f3f3f3;
             border-top: 5px solid var(--primary);
             border-radius: 50%;
             animation: spin 1s linear infinite;
             margin-bottom: 15px;
         }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .loading-text { color: var(--text-dark); font-weight: 500; font-size: 16px; letter-spacing: 1px; }
 
         /* ===== SIDEBAR SYSTEM ===== */
         #sidebar-container { 
@@ -71,7 +68,7 @@
             z-index: 2000;
             overflow-y: auto;
             box-shadow: 4px 0 15px rgba(0,0,0,0.2);
-            padding-top: 10px;
+            padding-top: 20px;
         }
 
         .menu .item .sub { display: none; background: #0f172a; }
@@ -95,6 +92,7 @@
         }
 
         .sub a { padding-left: 45px; font-size: 14px; opacity: 0.8; }
+        .sub a:hover { opacity: 1; padding-left: 50px; background: rgba(91, 183, 170, 0.1); }
 
         /* ===== MAIN CONTENT AREA ===== */
         .main-content { 
@@ -104,99 +102,140 @@
             width: calc(100% - var(--sidebar-width));
             transition: var(--transition);
             min-height: 100vh;
-            display: flex;
-            flex-direction: column;
         }
 
         body.collapsed #sidebar-container { transform: translateX(calc(var(--sidebar-width) * -1)); }
         body.collapsed .main-content { margin-left: 0; width: 100%; }
 
-        /* Header Bar - แก้ไขให้ชิดบนสุดและเต็มความกว้าง */
+        /* ===== IMPROVED HEADER BAR (Larger & More Responsive) ===== */
         .header-bar { 
             background: var(--primary); 
-            padding: 10px 20px;
+            padding: 20px 30px; /* เพิ่ม Padding ให้ใหญ่ขึ้น */
+            border-radius: 0 0 25px 25px; 
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+            margin-bottom: 30px; 
+            box-shadow: 0 6px 20px rgba(91, 183, 170, 0.4); 
             flex-wrap: wrap; 
-            gap: 15px; 
-            width: 100%;
-            margin: 0; /* เอา margin ออกเพื่อให้ชิดบนสุด */
-            min-height: 60px;
-            z-index: 1000;
+            gap: 20px; 
+            width: 95%;
+            max-width: 1300px;
+            margin-left: auto;
+            margin-right: auto;
+            min-height: 80px; /* เพิ่มความสูงขั้นต่ำ */
         }
-        .header-bar h2 { color: white !important; font-weight: 500; margin: 0; font-size: 18px; }
+        .header-bar h2 { 
+            color: white !important; 
+            font-weight: 600; 
+            letter-spacing: 0.8px; 
+            margin: 0; 
+            font-size: 24px; /* ขนาดตัวอักษรใหญ่ขึ้น */
+        }
 
-        .action-group { display: flex; align-items: center; gap: 8px; }
-        #daySelect { padding: 6px 10px; border-radius: 6px; border: none; font-size: 14px; background: white; }
-
-        .btn-fetch { background: #2d3748; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; }
-        .btn-pdf { background: var(--pdf); color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; }
-        .btn-excel { background: var(--excel); color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; }
-
-        /* Container & Grid */
-        .container { width: 100%; padding: 15px; flex-grow: 1; }
-        .main-grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 15px; }
-
-        #dashboardData { display: none; animation: fadeIn 0.4s ease; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        .card { background: var(--white); border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid #edf2f7; margin-bottom: 15px; }
-        .card-header { padding: 12px 15px; color: white; font-weight: 500; background: var(--primary); display: flex; justify-content: space-between; align-items: center; font-size: 16px; }
-        
-        .table-wrapper { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-        table { width: 100%; border-collapse: collapse; }
-        th { padding: 12px; text-align: left; font-size: 14px; background: #fafbfc; border-bottom: 2px solid #edf2f7; color: #4a5568; }
-        td { padding: 10px 12px; border-bottom: 1px solid #f7fafc; font-size: 14px; color: #2d3748; }
-        
-        .text-right { text-align: right; }
-        .row-summary { background-color: rgba(91, 183, 170, 0.08); font-weight: 700; }
-        
-        .bottom-stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 15px; background: #fafbfc; }
-        .stat-item { background: #ffffff; padding: 12px; border-radius: 10px; border: 1px solid #e2e8f0; border-left: 4px solid var(--primary); }
-        .stat-label { font-size: 12px; font-weight: 600; color: #718096; display: block; margin-bottom: 5px; }
-        .stat-main { font-size: 24px; font-weight: 700; color: var(--text-dark); }
-        .stat-achieve { color: var(--success); font-weight: 700; font-size: 14px; }
-        .stat-sub-val { color: #dc2626; font-weight: 700; font-size: 14px; }
-        .stat-sub-label { font-size: 10px; color: #a0aec0; }
-
-        .target-group-header { padding: 10px 15px; font-weight: 600; color: white; font-size: 14px; }
-        .target-row { display:flex; justify-content:space-between; padding:10px 15px; border-bottom:1px solid #f1f5f9; font-size: 14px; }
-        
-        .bg-grad-yellow { background: #f59e0b; }
-        .bg-grad-orange-light { background: #f97316; }
-        .bg-grad-orange-dark { background: #ea580c; }
-        .bg-grad-blue-dark { background: #334155; }
-        .bg-grad-blue-slate { background: #475569; }
-        .bg-grad-blue-teal { background: #0d9488; }
-        
-        .bg-amber { background: #ffb100; } .bg-orange { background: #ff5722; } 
-        .bg-slate { background: #4a5568; } .bg-teal { background: #38b2ac; }
-        
-        .daily-table thead tr:first-child th { color: #ffffff; text-align: center; padding: 8px; font-size: 13px; }
-        .daily-table thead tr:last-child th { background: #f1f5f9; font-size: 11px; text-align: center; }
-        .daily-table td { text-align: center; font-size: 13px; }
-        .v-sep { border-left: 1px solid #e2e8f0 !important; }
-
-        /* Mobile Responsive */
+        /* Mobile Responsive adjustments */
         @media (max-width: 900px) {
             #sidebar-container { transform: translateX(calc(var(--sidebar-width) * -1)); }
-            .main-content { margin-left: 0; width: 100%; }
+            .main-content { margin-left: 0; width: 100%; padding: 0; }
             body.show-sidebar #sidebar-container { transform: translateX(0); }
             
-            .header-bar { padding: 10px; }
-            .action-group { width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
-            #daySelect { grid-column: span 2; }
-            .btn-fetch { grid-column: span 2; }
-
-            .main-grid { grid-template-columns: 1fr; }
-            .bottom-stats-grid { grid-template-columns: 1fr; }
+            .header-bar { 
+                padding: 15px 20px; 
+                border-radius: 0; 
+                max-width: 100%; 
+                width: 100%;
+                margin-top: 0;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            .header-bar h2 { font-size: 20px; }
+            .action-group { width: 100%; display: grid !important; grid-template-columns: 1fr 1fr; gap: 8px; }
+            #daySelect { grid-column: span 2; padding: 10px; font-size: 16px; }
+            .btn-fetch { grid-column: span 2; padding: 10px; font-size: 16px; }
+            
+            .bottom-stats-grid { grid-template-columns: 1fr !important; }
+            .stat-main { font-size: 28px !important; }
             .container { padding: 10px; }
+            .main-grid { grid-template-columns: 1fr !important; }
         }
 
         .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: none; backdrop-filter: blur(4px); z-index: 1500; }
         .overlay.show { display: block; }
+
+        .btn-fetch, .btn-pdf, .btn-excel {
+            transition: var(--transition);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .btn-fetch:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(91, 183, 170, 0.4); filter: brightness(1.1); }
+        .btn-pdf:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(225, 29, 72, 0.4); filter: brightness(1.1); }
+        .btn-excel:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(22, 101, 52, 0.4); filter: brightness(1.1); }
+
+        .container { width: 100%; max-width: 1400px; margin: 0 auto; padding: 0 20px 20px 20px; }
+        
+        .action-group { display: flex; align-items: center; gap: 10px; }
+        #daySelect { padding: 8px 15px; border-radius: 10px; border: 1px solid rgba(0,0,0,0.1); font-size: 15px; background-color: white; cursor: pointer; transition: var(--transition); height: 40px; }
+
+        .btn-fetch { background: #2d3748; color: white; border: none; padding: 0 20px; border-radius: 10px; cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 8px; font-size: 15px; height: 40px; }
+        .btn-pdf { background: var(--pdf); color: white; border: none; padding: 0 15px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 15px; height: 40px; }
+        .btn-excel { background: var(--excel); color: white; border: none; padding: 0 15px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 15px; height: 40px; }
+
+        .main-grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 20px; }
+
+        #dashboardData { display: none; animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .card { background: var(--white); border-radius: 15px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid #edf2f7; margin-bottom: 20px; transition: var(--transition); }
+        .card:hover { box-shadow: 0 8px 25px rgba(0,0,0,0.07); }
+        .card-header { padding: 14px 20px; color: white; font-weight: 500; background: var(--primary); display: flex; justify-content: space-between; align-items: center; font-size: 18px; }
+        
+        .table-wrapper { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; border-collapse: collapse; min-width: 500px; }
+        th { padding: 15px; text-align: left; font-size: 15px; background: #fafbfc; border-bottom: 2px solid #edf2f7; color: #4a5568; font-weight: 600; }
+        td { padding: 12px 15px; border-bottom: 1px solid #f7fafc; font-size: 15px; transition: var(--transition); color: #2d3748; }
+        
+        tr:hover td { background: rgba(91, 183, 170, 0.05); }
+        .text-right { text-align: right; }
+        .row-summary { background-color: rgba(91, 183, 170, 0.08); }
+        .row-summary td { font-weight: 700 !important; color: #1a202c; border-bottom: 2px solid var(--primary); }
+        
+        .bottom-stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 20px; background: #fafbfc; border-top: 1px solid #edf2f7; }
+        .stat-item { background: #ffffff; padding: 18px; border-radius: 12px; border: 1px solid #e2e8f0; border-left: 6px solid var(--primary); transition: var(--transition); }
+        .stat-item:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
+        .stat-label { font-size: 14px; font-weight: 600; color: #718096; margin-bottom: 10px; display: block; }
+        .stat-content { display: flex; justify-content: space-between; align-items: flex-end; }
+        .stat-main { font-size: 32px; font-weight: 700; line-height: 1; color: var(--text-dark); }
+        .stat-achieve { color: var(--success); font-weight: 700; font-size: 18px; margin-top: 5px; }
+        .stat-sub-val { color: #dc2626; font-weight: 700; font-size: 18px; display: block; }
+        .stat-sub-label { font-size: 11px; color: #a0aec0; font-weight: 600; text-transform: uppercase; }
+
+        .brand-summary-wrapper { padding: 15px; background: #f8fafc; }
+        .brand-table { width: 100%; background: white; border-radius: 10px; border-collapse: collapse; min-width: 100%; }
+        .brand-table th { background: #f8fafc !important; color: #4a5568 !important; border-bottom: 2px solid #edf2f7; }
+
+        .target-group-header { padding: 12px 15px; font-weight: 600; color: white; }
+        .target-row { display:flex; justify-content:space-between; padding:12px 18px; border-bottom:1px solid #f1f5f9; transition: 0.2s; }
+        .target-row:hover { background: #f8fafc; padding-left: 22px; color: var(--primary); }
+        
+        .bg-grad-yellow { background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%); }
+        .bg-grad-orange-light { background: linear-gradient(90deg, #f97316 0%, #fb923c 100%); }
+        .bg-grad-orange-dark { background: linear-gradient(90deg, #ea580c 0%, #f97316 100%); }
+        .bg-grad-blue-dark { background: linear-gradient(90deg, #334155 0%, #475569 100%); }
+        .bg-grad-blue-slate { background: linear-gradient(90deg, #475569 0%, #64748b 100%); }
+        .bg-grad-blue-teal { background: linear-gradient(90deg, #0d9488 0%, #14b8a6 100%); }
+        
+        .bg-amber { background: #ffb100; } 
+        .bg-orange { background: #ff5722; } 
+        .bg-slate { background: #4a5568; } 
+        .bg-teal { background: #38b2ac; }
+        
+        .daily-table { min-width: 800px; }
+        .daily-table thead tr:first-child th { color: #ffffff; text-align: center; padding: 10px; font-weight: 500; }
+        .daily-table thead tr:last-child th { background: #f1f5f9; color: #475569; text-align: center; font-size: 12px; }
+        .daily-table td { text-align: center; border-right: 1px solid #f1f5f9; }
+        .val-actual { color: var(--primary); font-weight: 700; }
+        .val-diff { color: #dc2626; font-weight: 700; }
+        .v-sep { border-left: 2px solid #e2e8f0 !important; }
     </style>
 </head>
 <body id="mainBody">
@@ -210,15 +249,17 @@
 
 <aside id="sidebar-container">
     <nav class="menu" id="dynamic-menu">
-        <div style="padding: 20px; color: var(--sidebar-text); text-align: center; font-size: 14px;">⌛ กำลังโหลด...</div>
+        <div style="padding: 20px; color: var(--sidebar-text); text-align: center; font-size: 14px;">
+            ⌛ กำลังโหลดเมนู...
+        </div>
     </nav>
 </aside>
 
 <main class="main-content">
     <div class="header-bar">
-        <div style="display:flex; align-items:center; gap:10px;">
-            <button onclick="toggleSidebar()" style="background:rgba(255,255,255,0.2); border:none; padding:6px 10px; border-radius:6px; cursor:pointer; color:white;">☰</button>
-            <h2>Performance Report</h2>
+        <div style="display:flex; align-items:center; gap:15px;">
+            <button onclick="toggleSidebar()" style="background:rgba(255,255,255,0.2); border:none; width: 45px; height: 45px; border-radius:12px; cursor:pointer; color:white; font-size:22px; display:flex; align-items:center; justify-content:center;">☰</button>
+            <h2>รายงานผลการดำเนินงาน (Performance Report)</h2>
         </div>
         <div class="action-group">
             <select id="daySelect">
@@ -234,34 +275,34 @@
     </div>
 
     <div class="container">
-        <div id="noData" style="text-align: center; padding: 60px 20px; color: #a0aec0; background: white; border-radius: 15px; border: 2px dashed #e2e8f0;">
-            <div style="font-size: 40px; margin-bottom: 10px;">📊</div>
-            <p>กรุณาเลือกวันที่และกดปุ่ม <b>"ดึงข้อมูล"</b> เพื่อแสดงรายงาน</p>
+        <div id="noData" style="text-align: center; padding: 80px 20px; color: #a0aec0; background: white; border-radius: 20px; border: 2px dashed #e2e8f0; margin-top: 20px;">
+            <div style="font-size: 60px; margin-bottom: 20px;">📊</div>
+            <p style="font-size: 20px; color: #4a5568;">กรุณาเลือกวันที่และกดปุ่ม <b>"ดึงข้อมูล"</b> เพื่อแสดงรายงาน</p>
         </div>
 
         <div id="dashboardData">
-            <div class="card">
+            <div class="card" id="dailyCard">
                 <div class="card-header">
-                    <span>📅 รายวัน (วันที่ <span id="dailyDateNum"></span>)</span>
-                    <span id="labelStaff" style="font-size: 12px; background: rgba(255,255,255,0.2); padding: 2px 10px; border-radius: 10px;"></span>
+                    <span>📅 ข้อมูลรายวัน (วันที่ <span id="dailyDateNum"></span>)</span>
+                    <span id="labelStaff" style="font-size: 14px; background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 20px;"></span>
                 </div>
                 <div class="table-wrapper">
                     <table class="daily-table" id="tableDaily">
                         <thead>
                             <tr>
-                                <th rowspan="2" style="background:#4a5568; color:white;">วันที่</th>
-                                <th colspan="2" class="bg-amber">New Post</th>
-                                <th colspan="2" class="bg-orange">BDBC</th>
-                                <th colspan="2" class="bg-slate">Apple</th>
-                                <th colspan="2" class="bg-teal">SmartPhone</th>
-                                <th colspan="2" style="background:#2d3748;">Total</th>
+                                <th rowspan="2" style="background:#4a5568; color:white; text-align:center;">วันที่</th>
+                                <th colspan="2" class="bg-amber" style="color:white;">New Post</th>
+                                <th colspan="2" class="bg-orange" style="color:white;">BDBC</th>
+                                <th colspan="2" class="bg-slate" style="color:white;">Apple</th>
+                                <th colspan="2" class="bg-teal" style="color:white;">SmartPhone</th>
+                                <th colspan="2" style="background:#2d3748; color:white;">Total</th>
                             </tr>
                             <tr>
-                                <th class="v-sep">Act</th><th>Diff</th>
-                                <th class="v-sep">Act</th><th>Diff</th>
-                                <th class="v-sep">Act</th><th>Diff</th>
-                                <th class="v-sep">Act</th><th>Diff</th>
-                                <th class="v-sep">Post</th><th>Dev</th>
+                                <th class="v-sep">Actual</th><th>Diff</th>
+                                <th class="v-sep">Actual</th><th>Diff</th>
+                                <th class="v-sep">Actual</th><th>Diff</th>
+                                <th class="v-sep">Actual</th><th>Diff</th>
+                                <th class="v-sep">Post</th><th>Device</th>
                             </tr>
                         </thead>
                         <tbody id="dailyBody"></tbody>
@@ -276,7 +317,7 @@
                         <div class="table-wrapper">
                             <table id="tableSummary">
                                 <thead>
-                                    <tr><th>Type</th><th class="text-right">PostPay</th><th class="text-right">จำนวน</th></tr>
+                                    <tr><th>Type การขาย</th><th class="text-right">ยอด PostPay</th><th class="text-right">จำนวน</th></tr>
                                 </thead>
                                 <tbody id="summaryBody"></tbody>
                             </table>
@@ -285,12 +326,20 @@
                     </div>
 
                     <div class="card">
-                        <div class="card-header">📊 แยกตามแบรนด์</div>
-                        <div class="table-wrapper">
-                            <table>
-                                <thead><tr><th>แบรนด์</th><th class="text-right">ยอดขาย</th><th class="text-right">จำนวน</th></tr></thead>
-                                <tbody id="brandBody"></tbody>
-                            </table>
+                        <div class="card-header">📊 ยอดขายแยกตามแบรนด์</div>
+                        <div class="brand-summary-wrapper">
+                            <div class="table-wrapper">
+                                <table class="brand-table">
+                                    <thead>
+                                        <tr>
+                                            <th>แบรนด์</th>
+                                            <th class="text-right">ยอดขาย</th>
+                                            <th class="text-right">จำนวน</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="brandBody"></tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -320,7 +369,8 @@
 
     document.addEventListener('DOMContentLoaded', () => {
         loadSidebar(); 
-        if (localStorage.getItem('sidebarCollapsed') === 'true' && window.innerWidth > 900) {
+        const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+        if (isCollapsed && window.innerWidth > 900) {
             document.getElementById('mainBody').classList.add('collapsed');
         }
     });
@@ -330,12 +380,14 @@
         try {
             const response = await fetch('sidebar.html');
             if (response.ok) {
-                menuContainer.innerHTML = await response.text();
+                const html = await response.text();
+                menuContainer.innerHTML = html;
                 restoreMenuState();
             } else {
-                menuContainer.innerHTML = '<div style="padding:20px; color:white;">Sidebar Not Found</div>';
+                menuContainer.innerHTML = '<div style="padding:20px; color:white;">กรุณาเปิดผ่าน Server เพื่อโหลดเมนู</div>';
             }
         } catch (error) {
+            console.error("Sidebar error:", error);
             menuContainer.innerHTML = '<div style="padding:20px; color:white;">Error loading sidebar</div>';
         }
     }
@@ -360,7 +412,8 @@
     }
 
     function restoreMenuState() {
-        ['credit', 'branch'].forEach(id => {
+        const menus = ['credit', 'branch']; 
+        menus.forEach(id => {
             if (localStorage.getItem('menu-' + id) === 'true') {
                 const menuEl = document.getElementById('menu-' + id);
                 if (menuEl) menuEl.classList.add('open');
@@ -375,7 +428,8 @@
 
         loader.style.display = 'flex';
         try {
-            const res = await fetch(`${SCRIPT_URL}?sheetName=SHOP&targetDay=${selectedDay}`);
+            const fetchUrl = `${SCRIPT_URL}?sheetName=${encodeURIComponent("SHOP")}&targetDay=${selectedDay}`;
+            const res = await fetch(fetchUrl);
             const data = await res.json();
 
             if(data.result === "success") {
@@ -384,15 +438,16 @@
                 document.getElementById('labelStaff').innerText = data.staffName;
                 document.getElementById('dailyDateNum').innerText = selectedDay;
 
-                document.getElementById('summaryBody').innerHTML = data.summary.map(r => `
-                    <tr class="${r[0].includes("รวมยอด")?'row-summary':''}">
-                        <td>${r[0]}</td><td class="text-right">${r[1]}</td><td class="text-right">${r[2]}</td>
-                    </tr>`).join('');
+                document.getElementById('summaryBody').innerHTML = data.summary.map(r => {
+                    const isTotal = r[0].includes("รวมยอด");
+                    return `<tr class="${isTotal?'row-summary':''}"><td>${r[0]}</td><td class="text-right">${r[1]}</td><td class="text-right">${r[2]}</td></tr>`;
+                }).join('');
 
-                document.getElementById('brandBody').innerHTML = data.brandSummary.map(r => `
-                    <tr style="${r[0].includes("รวม") ? 'font-weight:700; background:#f8fafc;' : ''}">
-                        <td>${r[0]}</td><td class="text-right">${r[1]}</td><td class="text-right">${r[2]}</td>
-                    </tr>`).join('');
+                document.getElementById('brandBody').innerHTML = data.brandSummary.map(r => {
+                    const isTotal = r[0].includes("รวม");
+                    const rowStyle = isTotal ? 'font-weight:700; background:#f1f5f9;' : '';
+                    return `<tr style="${rowStyle}"><td>${r[0]}</td><td class="text-right">${r[1]}</td><td class="text-right">${r[2]}</td></tr>`;
+                }).join('');
 
                 document.getElementById('focusBody').innerHTML = data.focus
                     .filter(r => r[0] && r[0] !== "Target")
@@ -402,12 +457,14 @@
                 tDiv.innerHTML = "";
                 data.targets.forEach(r => {
                     if(r[0].includes("คำนวณ Target")) {
-                        let cls = "bg-grad-blue-dark";
+                        let cls = "";
                         if(r[0].includes("All Post")) cls = "bg-grad-yellow";
                         else if(r[0].includes("New Post")) cls = "bg-grad-orange-light";
                         else if(r[0].includes("BDBC")) cls = "bg-grad-orange-dark";
+                        else if(r[0].includes("All Device")) cls = "bg-grad-blue-dark";
                         else if(r[0].includes("Apple")) cls = "bg-grad-blue-slate";
                         else if(r[0].includes("SmartPhone")) cls = "bg-grad-blue-teal";
+                        else cls = "bg-slate";
                         tDiv.innerHTML += `<div class="target-group-header ${cls}">${r[0]}</div>`;
                     } else if(r[0] && r[0] !== "Target") {
                         tDiv.innerHTML += `<div class="target-row"><span>${r[0]}</span><b>${r[1]}</b></div>`;
@@ -422,12 +479,19 @@
                     { l: s[0][4], v: s[1][4], d: s[1][5], a: ach.apple, c: '#4a5568' },
                     { l: s[0][6], v: s[1][6], d: s[1][7], a: ach.smartPhone, c: '#38b2ac' }
                 ];
+
                 document.getElementById('bottomStats').innerHTML = stats.map(i => `
                     <div class="stat-item" style="border-left-color:${i.c}">
                         <span class="stat-label">${i.l}</span>
-                        <div style="display:flex; justify-content:space-between; align-items:flex-end;">
-                            <div><div class="stat-main">${i.v}</div><div class="stat-achieve">${i.a}%</div></div>
-                            <div class="text-right"><div class="stat-sub-label">ขาด/เกิน</div><div class="stat-sub-val">${i.d}</div></div>
+                        <div class="stat-content">
+                            <div class="stat-left">
+                                <span class="stat-main">${i.v}</span>
+                                <span class="stat-achieve">${i.a}%</span>
+                            </div>
+                            <div class="stat-right">
+                                <span class="stat-sub-label">ขาด/เกิน</span>
+                                <span class="stat-sub-val">${i.d}</span>
+                            </div>
                         </div>
                     </div>`).join('');
 
@@ -435,10 +499,10 @@
                     const dr = data.dailyRow;
                     document.getElementById('dailyBody').innerHTML = `
                         <tr><td style="background:#f8fafc;">${dr[0]}</td>
-                        <td class="v-sep" style="color:var(--primary); font-weight:700;">${dr[1]}</td><td style="color:red; font-weight:700;">${dr[2]}</td>
-                        <td class="v-sep" style="color:var(--primary); font-weight:700;">${dr[3]}</td><td style="color:red; font-weight:700;">${dr[4]}</td>
-                        <td class="v-sep" style="color:var(--primary); font-weight:700;">${dr[5]}</td><td style="color:red; font-weight:700;">${dr[6]}</td>
-                        <td class="v-sep" style="color:var(--primary); font-weight:700;">${dr[7]}</td><td style="color:red; font-weight:700;">${dr[8]}</td>
+                        <td class="v-sep val-actual">${dr[1]}</td><td class="val-diff">${dr[2]}</td>
+                        <td class="v-sep val-actual">${dr[3]}</td><td class="val-diff">${dr[4]}</td>
+                        <td class="v-sep val-actual">${dr[5]}</td><td class="val-diff">${dr[6]}</td>
+                        <td class="v-sep val-actual">${dr[7]}</td><td class="val-diff">${dr[8]}</td>
                         <td class="v-sep"><b>${dr[9]}</b></td><td><b>${dr[10]}</b></td></tr>`;
                 }
 
@@ -446,7 +510,7 @@
                 document.getElementById('noData').style.display = 'none';
             }
         } catch (e) {
-            alert("Error: ไม่สามารถดึงข้อมูลได้");
+            alert("ไม่สามารถดึงข้อมูลได้ โปรดตรวจสอบการตั้งค่า App Script ของคุณ");
         } finally {
             loader.style.display = 'none';
         }
@@ -455,8 +519,11 @@
     function exportPDF() {
         const element = document.getElementById('dashboardData');
         const opt = {
-            margin: 5, filename: 'Report.pdf', image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+            margin: 10,
+            filename: 'Performance_Report.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
         };
         html2pdf().set(opt).from(element).save();
     }
@@ -465,7 +532,7 @@
         const wb = XLSX.utils.book_new();
         const ws = XLSX.utils.table_to_sheet(document.getElementById('tableSummary'));
         XLSX.utils.book_append_sheet(wb, ws, "Summary");
-        XLSX.writeFile(wb, "Report.xlsx");
+        XLSX.writeFile(wb, "Performance_Report.xlsx");
     }
 </script>
 </body>
