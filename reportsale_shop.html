@@ -68,6 +68,7 @@
             padding-top: 20px;
         }
 
+        /* สำหรับรองรับสไตล์จาก sidebar.html */
         .menu .item .sub { display: none; background: #0f172a; }
         .menu .item.open .sub { display: block; }
         .menu .item.open .arrow { transform: rotate(90deg); }
@@ -321,6 +322,7 @@
 
     document.addEventListener('DOMContentLoaded', () => {
         loadSidebar(); 
+        // ตรวจสอบค่าที่บันทึกไว้ใน localStorage
         const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
         if (isCollapsed && window.innerWidth > 900) {
             document.getElementById('mainBody').classList.add('collapsed');
@@ -334,20 +336,29 @@
             if (response.ok) {
                 const html = await response.text();
                 menuContainer.innerHTML = html;
-                restoreMenuState();
+                
+                // หลังจากโหลด HTML มาแล้ว ให้ผูกเหตุการณ์คลิกสำหรับเมนู Dropdown (ถ้ามีใน sidebar.html)
+                const dropBtns = menuContainer.querySelectorAll('.drop-btn');
+                dropBtns.forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        this.parentElement.classList.toggle('open');
+                    });
+                });
             } else {
-                menuContainer.innerHTML = '<div style="padding:20px; color:white; text-align:center;">เมนู (Demo)</div>';
+                menuContainer.innerHTML = '<div style="padding:20px; color:white; text-align:center;">ไม่พบไฟล์เมนู</div>';
             }
         } catch (error) {
-            menuContainer.innerHTML = '<div style="padding:20px; color:white;">Error loading sidebar</div>';
+            menuContainer.innerHTML = '<div style="padding:20px; color:white; text-align:center;">Error loading sidebar</div>';
         }
     }
 
     function toggleSidebar() {
         const body = document.getElementById('mainBody');
         const overlay = document.getElementById('overlay');
+        
         if (window.innerWidth > 900) {
             body.classList.toggle('collapsed');
+            // บันทึกสถานะลงใน localStorage
             localStorage.setItem('sidebarCollapsed', body.classList.contains('collapsed'));
         } else {
             body.classList.toggle('show-sidebar');
