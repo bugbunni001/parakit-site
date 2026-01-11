@@ -177,7 +177,32 @@
         .bg-slate { background: #4a5568; } 
         .bg-teal { background: #38b2ac; }
         
-        .loading { position: fixed; inset: 0; background: rgba(255,255,255,0.8); display: none; justify-content: center; align-items: center; z-index: 3000; font-weight: 600; }
+        /* UI UX Improvements for Loading State */
+        .loading { 
+            position: fixed; inset: 0; 
+            background: rgba(255,255,255,0.7); 
+            display: none; justify-content: center; align-items: center; 
+            z-index: 3000; backdrop-filter: blur(8px);
+            flex-direction: column; gap: 15px;
+        }
+        .spinner {
+            width: 50px; height: 50px;
+            border: 5px solid #e2e8f0;
+            border-top: 5px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Skeleton Screen */
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #f8f8f8 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: skeleton-loading 1.5s infinite;
+            border-radius: 4px;
+        }
+        @keyframes skeleton-loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        
         .daily-table thead tr:first-child th { color: #ffffff; text-align: center; padding: 8px; font-weight: 500; }
         .daily-table thead tr:last-child th { background: #f1f5f9; color: #475569; text-align: center; font-size: 12px; }
         .daily-table td { text-align: center; border-right: 1px solid #f1f5f9; }
@@ -188,7 +213,11 @@
 </head>
 <body id="mainBody">
 
-<div class="loading" id="loader">🔄 กำลังประมวลผล...</div>
+<div class="loading" id="loader">
+    <div class="spinner"></div>
+    <div style="font-weight: 500; color: var(--primary); font-size: 18px;">กำลังดึงข้อมูล...</div>
+</div>
+
 <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 
 <aside id="sidebar-container">
@@ -203,7 +232,7 @@
     <div class="container">
         <div class="header-bar">
             <div style="display:flex; align-items:center; gap:12px;">
-                <button onclick="toggleSidebar()" style="border:none; padding:10px 14px; border-radius:10px; cursor:pointer; transition: 0.3s;">☰</button>
+                <button onclick="toggleSidebar()" style="border:none; padding:10px 14px; border-radius:10px; cursor:pointer; transition: 0.3s; background: rgba(255,255,255,0.2); color:white;">☰</button>
                 <h2 style="margin:0; font-size:20px;">Performance Report</h2>
             </div>
             <div class="action-group">
@@ -219,8 +248,30 @@
             </div>
         </div>
 
-        <div id="noData" style="text-align: center; padding: 60px 20px; color: #a0aec0; background: white; border-radius: 20px; border: 2px dashed #e2e8f0;">
-            <p>กรุณาเลือกวันที่และกดปุ่ม <b>"ดึงข้อมูล"</b></p>
+        <div id="noData" style="text-align: center; padding: 60px 20px; color: #a0aec0; background: white; border-radius: 20px; border: 2px dashed #e2e8f0; transition: var(--transition);">
+            <div style="font-size: 50px; margin-bottom: 15px; opacity: 0.5;">📊</div>
+            <p style="font-size: 18px; margin:0;">กรุณาเลือกวันที่และกดปุ่ม <b>"ดึงข้อมูล"</b></p>
+            <p style="font-size: 14px; opacity: 0.7;">เพื่อแสดงรายงานผลการดำเนินงาน</p>
+        </div>
+
+        <div id="skeletonLoader" style="display: none;">
+            <div class="card" style="height: 150px; background: white; padding: 20px;">
+                <div class="skeleton" style="height: 30px; width: 40%; mb: 20px; margin-bottom: 15px;"></div>
+                <div class="skeleton" style="height: 60px; width: 100%;"></div>
+            </div>
+            <div class="main-grid">
+                <div class="card" style="height: 400px; padding: 20px;">
+                    <div class="skeleton" style="height: 30px; width: 60%; margin-bottom: 20px;"></div>
+                    <div class="skeleton" style="height: 20px; width: 100%; margin-bottom: 10px;"></div>
+                    <div class="skeleton" style="height: 20px; width: 100%; margin-bottom: 10px;"></div>
+                    <div class="skeleton" style="height: 20px; width: 100%; margin-bottom: 10px;"></div>
+                </div>
+                <div class="card" style="height: 400px; padding: 20px;">
+                    <div class="skeleton" style="height: 30px; width: 60%; margin-bottom: 20px;"></div>
+                    <div class="skeleton" style="height: 80px; width: 100%; margin-bottom: 15px;"></div>
+                    <div class="skeleton" style="height: 80px; width: 100%;"></div>
+                </div>
+            </div>
         </div>
 
         <div id="dashboardData">
@@ -368,10 +419,19 @@
 
     async function loadData() {
         const loader = document.getElementById('loader');
+        const skeleton = document.getElementById('skeletonLoader');
+        const dashboard = document.getElementById('dashboardData');
+        const noData = document.getElementById('noData');
         const selectedDay = document.getElementById('daySelect').value;
+        
         if(!selectedDay) return alert("โปรดเลือกวันที่");
 
+        // UI UX: Show Loading and Skeletons
         loader.style.display = 'flex';
+        noData.style.display = 'none';
+        dashboard.style.display = 'none';
+        skeleton.style.display = 'block';
+
         try {
             const fetchUrl = `${SCRIPT_URL}?sheetName=${encodeURIComponent("SHOP")}&targetDay=${selectedDay}`;
             const res = await fetch(fetchUrl);
@@ -383,13 +443,13 @@
                 document.getElementById('labelStaff').innerText = data.staffName;
                 document.getElementById('dailyDateNum').innerText = selectedDay;
 
-                // 1. สรุปยอดขาย (Card บน)
+                // 1. สรุปยอดขาย
                 document.getElementById('summaryBody').innerHTML = data.summary.map(r => {
                     const isTotal = r[0].includes("รวมยอด");
                     return `<tr class="${isTotal?'row-summary':''}"><td>${r[0]}</td><td class="text-right">${r[1]}</td><td class="text-right">${r[2]}</td></tr>`;
                 }).join('');
 
-                // 2. ยอดแยกแบรนด์ (Card ล่าง)
+                // 2. ยอดแยกแบรนด์
                 document.getElementById('brandBody').innerHTML = data.brandSummary.map(r => {
                     const isTotal = r[0].includes("รวม");
                     const rowStyle = isTotal ? 'font-weight:700; background:#f1f5f9;' : '';
@@ -459,13 +519,15 @@
                         <td class="v-sep"><b>${dr[9]}</b></td><td><b>${dr[10]}</b></td></tr>`;
                 }
 
-                document.getElementById('dashboardData').style.display = 'block';
-                document.getElementById('noData').style.display = 'none';
+                dashboard.style.display = 'block';
+                skeleton.style.display = 'none';
             }
         } catch (e) {
             alert("ไม่สามารถดึงข้อมูลได้ โปรดตรวจสอบการตั้งค่า App Script ของคุณ");
+            noData.style.display = 'block';
         } finally {
             loader.style.display = 'none';
+            skeleton.style.display = 'none';
         }
     }
 
