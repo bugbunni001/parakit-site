@@ -29,42 +29,37 @@
         html, body { margin: 0; padding: 0; width: 100%; background-color: var(--bg); color: var(--text-dark); min-height: 100vh; overflow-x: hidden; }
         body { display: flex; }
 
-        /* ===== NEW LOADING UI ===== */
+        /* ===== NEW LOADING SPINNER UI ===== */
         .loading { 
             position: fixed; 
             inset: 0; 
-            background: rgba(255, 255, 255, 0.7); 
-            backdrop-filter: blur(8px);
+            background: rgba(255, 255, 255, 0.85); 
             display: none; 
             flex-direction: column;
             justify-content: center; 
             align-items: center; 
             z-index: 9999; 
+            backdrop-filter: blur(5px);
         }
         .spinner {
             width: 50px;
             height: 50px;
-            border: 5px solid #f3f3f3;
+            border: 5px solid #e2e8f0;
             border-top: 5px solid var(--primary);
             border-radius: 50%;
             animation: spin 1s linear infinite;
             margin-bottom: 15px;
-            box-shadow: 0 0 15px rgba(91, 183, 170, 0.2);
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            box-shadow: 0 4px 10px rgba(91, 183, 170, 0.2);
         }
         .loading-text {
             color: var(--text-dark);
             font-weight: 500;
-            font-size: 18px;
             letter-spacing: 1px;
-            animation: pulse 1.5s ease-in-out infinite;
+            font-size: 16px;
         }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         /* ===== SIDEBAR SYSTEM ===== */
@@ -227,7 +222,7 @@
 
 <div class="loading" id="loader">
     <div class="spinner"></div>
-    <div class="loading-text">กำลังประมวลผลข้อมูล...</div>
+    <div class="loading-text">🔄 กำลังประมวลผลข้อมูล...</div>
 </div>
 
 <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
@@ -424,13 +419,11 @@
                 document.getElementById('labelStaff').innerText = data.staffName;
                 document.getElementById('dailyDateNum').innerText = selectedDay;
 
-                // 1. สรุปยอดขาย (Card บน)
                 document.getElementById('summaryBody').innerHTML = data.summary.map(r => {
                     const isTotal = r[0].includes("รวมยอด");
                     return `<tr class="${isTotal?'row-summary':''}"><td>${r[0]}</td><td class="text-right">${r[1]}</td><td class="text-right">${r[2]}</td></tr>`;
                 }).join('');
 
-                // 2. ยอดแยกแบรนด์ (Card ล่าง)
                 document.getElementById('brandBody').innerHTML = data.brandSummary.map(r => {
                     const isTotal = r[0].includes("รวม");
                     const rowStyle = isTotal ? 'font-weight:700; background:#f1f5f9;' : '';
@@ -439,12 +432,10 @@
                     </tr>`;
                 }).join('');
 
-                // 3. Focus Panel
                 document.getElementById('focusBody').innerHTML = data.focus
                     .filter(r => r[0] && r[0] !== "Target")
                     .map(r => `<tr><td>${r[0]}</td><td class="text-right" style="color:#dc2626; font-weight:700;">${r[1]}</td></tr>`).join('');
 
-                // 4. Target Panel
                 const tDiv = document.getElementById('targetBody');
                 tDiv.innerHTML = "";
                 data.targets.forEach(r => {
@@ -463,7 +454,6 @@
                     }
                 });
 
-                // 5. Bottom Stats
                 const s = data.topStats;
                 const ach = data.achieve; 
                 const stats = [
@@ -488,7 +478,6 @@
                         </div>
                     </div>`).join('');
 
-                // 6. Daily Table
                 if(data.dailyRow) {
                     const dr = data.dailyRow;
                     document.getElementById('dailyBody').innerHTML = `
