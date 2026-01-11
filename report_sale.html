@@ -19,20 +19,62 @@
         html, body { margin: 0; padding: 0; width: 100%; background-color: var(--bg); color: var(--text-dark); min-height: 100vh; overflow-x: hidden; }
         body { display: flex; }
 
-        /* Sidebar Styles */
-        #sidebar-container { width: var(--sidebar-width); background: var(--sidebar-bg); height: 100vh; position: fixed; left: 0; top: 0; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 2000; overflow-y: auto; box-shadow: 4px 0 15px rgba(0,0,0,0.2); }
-        .menu .item .sub { display: none; background: #0f172a; }
-        .menu .item.open .sub { display: block; }
-        .menu .item.open .arrow { transform: rotate(90deg); }
-        .arrow { margin-left: auto; transition: 0.3s; font-size: 10px; }
-        .menu a, .drop-btn { width: 100%; padding: 15px 20px; background: none; border: none; color: var(--sidebar-text) !important; text-align: left; font-size: 15px; cursor: pointer; display: flex; align-items: center; gap: 10px; text-decoration: none !important; transition: var(--transition); border-left: 4px solid transparent; }
-        .menu a:hover, .drop-btn:hover, .menu a.active { background: var(--sidebar-hover); color: var(--primary) !important; border-left: 4px solid var(--primary); }
-        .sub a { padding-left: 50px; font-size: 14px; opacity: 0.8; }
+        /* --- CSS SIDEBAR --- */
+        #sidebar-container { 
+            width: var(--sidebar-width); 
+            background: var(--sidebar-bg); 
+            height: 100vh; 
+            position: fixed; 
+            left: 0; 
+            top: 0; 
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+            z-index: 2000; 
+            overflow-y: auto; 
+            box-shadow: 4px 0 15px rgba(0,0,0,0.2); 
+        }
 
-        /* Content Adjustment */
-        .main-content { flex-grow: 1; margin-left: var(--sidebar-width); padding: 15px; width: calc(100% - var(--sidebar-width)); transition: margin-left 0.3s ease, width 0.3s ease; }
+        /* Sidebar Header */
+        .sidebar-header {
+            padding: 25px 20px;
+            font-size: 18px;
+            font-weight: 600;
+            background: #0f172a;
+            color: #fff;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Menu Styles */
+        .menu { display: flex; flex-direction: column; padding: 10px 0; }
+        .menu a, .drop-btn { 
+            width: 100%; padding: 15px 20px; background: none; border: none; 
+            color: var(--sidebar-text) !important; text-align: left; font-size: 15px; 
+            cursor: pointer; display: flex; align-items: center; gap: 10px; 
+            text-decoration: none !important; transition: var(--transition); 
+            border-left: 4px solid transparent; 
+        }
+        .menu a:hover, .drop-btn:hover { background: var(--sidebar-hover); color: #fff !important; padding-left: 25px; }
+        .menu a.active { background: var(--sidebar-hover); color: var(--primary) !important; border-left: 4px solid var(--primary); }
+
+        /* Sub Menu (Dropdown) */
+        .sub { display: none; background: #0f172a; padding: 5px 0; }
+        .item.open .sub { display: block; }
+        .item.open .arrow { transform: rotate(90deg); }
+        .sub a { padding-left: 50px; font-size: 14px; opacity: 0.8; }
+        .arrow { margin-left: auto; transition: 0.3s; font-size: 10px; opacity: 0.5; }
+
+        /* --- Layout Control --- */
+        .main-content { 
+            flex-grow: 1; 
+            margin-left: var(--sidebar-width); 
+            padding: 15px; 
+            width: calc(100% - var(--sidebar-width)); 
+            transition: margin-left 0.3s ease, width 0.3s ease; 
+        }
         
-        /* State: Collapsed (Desktop) */
+        /* Desktop Collapsed State */
         body.collapsed #sidebar-container { transform: translateX(calc(var(--sidebar-width) * -1)); }
         body.collapsed .main-content { margin-left: 0; width: 100%; }
 
@@ -41,252 +83,10 @@
             #sidebar-container { transform: translateX(calc(var(--sidebar-width) * -1)); } 
             .main-content { margin-left: 0; width: 100%; padding: 10px; } 
             body.show-sidebar #sidebar-container { transform: translateX(0); }
-            body.collapsed #sidebar-container { transform: translateX(calc(var(--sidebar-width) * -1)); } /* Reset collapsed for mobile */
         }
 
         .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: none; backdrop-filter: blur(4px); z-index: 1500; }
         body.show-sidebar .overlay { display: block; }
 
-        .container { max-width: 1200px; margin: 0 auto; width: 100%; }
-        .header-bar { background: var(--white); padding: 15px 20px; border-radius: 14px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); flex-wrap: wrap; gap: 15px; }
-        .action-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-        #staffSelect, #daySelect { padding: 10px 16px; border-radius: 10px; border: 1px solid #e2e8f0; font-size: 16px; background-color: #f8fafc; color: var(--text-dark); cursor: pointer; transition: var(--transition); flex-grow: 1; }
-        
-        /* Rollover Effects */
-        .btn-fetch, .btn-pdf, .btn-excel { cursor: pointer; transition: var(--transition); font-weight: 500; display: flex; align-items: center; gap: 6px; }
-        .btn-fetch:hover, .btn-pdf:hover, .btn-excel:hover { transform: translateY(-2px); filter: brightness(1.1); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-        
-        .btn-fetch { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 10px; box-shadow: 0 4px 12px rgba(91, 183, 170, 0.25); flex-grow: 1; justify-content: center; }
-        .btn-pdf { background: var(--pdf); color: white; border: none; padding: 10px 16px; border-radius: 10px; flex-grow: 1; justify-content: center; }
-        .btn-excel { background: var(--excel); color: white; border: none; padding: 10px 16px; border-radius: 10px; flex-grow: 1; justify-content: center; }
-
-        .card { background: var(--white); border-radius: 15px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid #edf2f7; margin-bottom: 15px; width: 100%; transition: var(--transition); }
-        .card:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(0,0,0,0.08); }
-        .card-header { padding: 12px 18px; color: white; font-weight: 600; background: var(--primary); display: flex; justify-content: space-between; font-size: 18px; flex-wrap: wrap; gap: 5px; }
-
-        tr:hover td { background-color: rgba(91, 183, 170, 0.05); color: var(--primary); }
-        td { padding: 12px 15px; border-bottom: 1px solid #f7fafc; font-size: 15px; transition: var(--transition); }
-        .text-right { text-align: right; }
-        
-        .stat-item { background: #ffffff; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0; border-left: 6px solid var(--primary); transition: var(--transition); }
-        .stat-item:hover { background: #f0fff4; transform: scale(1.02); border-color: var(--primary); }
-
-        .target-row-item { display:flex; justify-content:space-between; padding:12px 18px; border-bottom:1px solid #f1f5f9; font-size:15px; font-weight:500; transition: var(--transition); }
-        .target-row-item:hover { background: #f8fafc; padding-left: 25px; border-left: 4px solid #4a5568; }
-
-        /* Others */
-        .loading { position: fixed; inset: 0; background: rgba(255,255,255,0.8); display: none; justify-content: center; align-items: center; z-index: 3000; font-weight: 600; }
-        .main-grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 15px; }
-        #dashboardData { display: none; }
-    </style>
-</head>
-<body id="mainBody">
-
-<div class="loading" id="loader">🔄 กำลังประมวลผล...</div>
-<div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
-
-<aside id="sidebar-container"></aside>
-
-<main class="main-content">
-    <div class="container">
-        <div class="header-bar">
-            <div style="display:flex; align-items:center; gap:12px;">
-                <button onclick="toggleSidebar()" style="background:var(--sidebar-bg); color:white; border:none; padding:10px 14px; border-radius:10px; cursor:pointer; font-size:18px;">☰</button>
-                <h2 style="margin:0; font-size:18px; color:var(--primary);">Performance Report</h2>
-            </div>
-            <div class="action-group">
-                <select id="staffSelect">
-                    <option value="นวพล2">👤 นวพล</option>
-                    <option value="ปิยะพร2">👤 ปิยะพร</option>
-                    <option value="กรทักษ์2">👤 กรทักษ์</option>
-                </select>
-                <select id="daySelect">
-                    <option value="">📅 เลือกวันที่</option>
-                    <script>for(let i=1; i<=31; i++) document.write(`<option value="${i}">วันที่ ${i}</option>`);</script>
-                </select>
-                <button class="btn-fetch" onclick="loadData()">🚀 ดึงข้อมูล</button>
-                <button class="btn-pdf" onclick="exportPDF()">📄 PDF</button>
-                <button class="btn-excel" onclick="exportExcel()">📊 Excel</button>
-            </div>
-        </div>
-
-        <div id="noData" style="text-align: center; padding: 60px 20px; color: #a0aec0; background: white; border-radius: 20px; border: 2px dashed #e2e8f0; margin-top: 20px;">
-            <p>กรุณาเลือกชื่อพนักงานแล้วกดปุ่ม <b>"ดึงข้อมูล"</b></p>
-        </div>
-
-        <div id="dashboardData">
-            <div class="card" id="dailyCard" style="display:none;">
-                <div class="card-header"><span>📅 รายวัน (วันที่ <span id="dailyDateNum"></span>)</span><span id="labelStaff" style="opacity: 0.9; font-size: 13px;"></span></div>
-                <div class="table-wrapper"><table class="daily-table" id="dailyTable"><thead id="dailyHead"></thead><tbody id="dailyBody"></tbody></table></div>
-            </div>
-
-            <div class="main-grid" id="exportArea">
-                <div class="left-panel">
-                    <div class="card">
-                        <div class="card-header"><span>📍 สรุปยอดขาย</span><span id="labelL" style="opacity: 0.9; font-size: 13px;"></span></div>
-                        <div class="table-wrapper">
-                            <table>
-                                <thead><tr><th>Type การขาย</th><th class="text-right">ยอด PostPay</th><th class="text-right">จำนวน</th></tr></thead>
-                                <tbody id="summaryBody"></tbody>
-                            </table>
-                        </div>
-                        <div class="bottom-stats-grid" id="bottomStats"></div>
-                    </div>
-
-                    <div class="card">
-                        <div class="card-header"><span>📱 Device ตามแบรนด์</span></div>
-                        <div class="table-wrapper">
-                            <table>
-                                <thead style="background: #e2e8f0;">
-                                    <tr><th>แบรนด์</th><th class="text-right">ยอดขาย</th><th class="text-right">จำนวน</th></tr>
-                                </thead>
-                                <tbody id="deviceBrandBody"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="side-panel">
-                    <div class="card">
-                        <div class="card-header">🎯 Focus: <span id="labelR"></span></div>
-                        <div class="table-wrapper">
-                            <table>
-                                <thead><tr><th>Target</th><th class="text-right">Actual</th></tr></thead>
-                                <tbody id="focusBody"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                    <div class="card"><div class="card-header" style="background:#2d3748;">🏁 เป้าหมายรายเดือน</div><div id="targetBody"></div></div>
-                </div>
-            </div>
-        </div>
-    </div>
-</main>
-
-<script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwN0XkbMjk9qtpsOFrZPr9qXS9-YLdcI68W2-FTRfnaKY6f5gHIgwv-SRmUMoosDooCiA/exec"; 
-
-    // Sidebar Logic: คืนค่าสถานะเมื่อเปิดหน้า
-    function applySidebarState() {
-        if (window.innerWidth > 900) {
-            const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
-            if (isCollapsed) {
-                document.getElementById('mainBody').classList.add('collapsed');
-            }
-        }
-    }
-
-    function toggleSidebar() {
-        const body = document.getElementById('mainBody');
-        if (window.innerWidth <= 900) {
-            body.classList.toggle('show-sidebar');
-        } else {
-            body.classList.toggle('collapsed');
-            localStorage.setItem('sidebarCollapsed', body.classList.contains('collapsed'));
-        }
-    }
-
-    async function includeSidebar() {
-        const version = new Date().getTime();
-        try {
-            const response = await fetch('sidebar.html?v=' + version);
-            const data = await response.text();
-            const container = document.getElementById('sidebar-container');
-            container.innerHTML = data;
-            
-            const currentPath = window.location.pathname.split('/').pop() || 'index.html';
-            const allLinks = container.querySelectorAll('a');
-            allLinks.forEach(link => {
-                if (link.getAttribute('href') === currentPath) link.classList.add('active');
-            });
-
-            container.addEventListener('click', function (e) {
-                const dropBtn = e.target.closest('.drop-btn');
-                if (dropBtn) dropBtn.parentElement.classList.toggle('open');
-            });
-        } catch (err) { console.warn("Sidebar Load Error"); }
-    }
-
-    async function loadData() {
-        const loader = document.getElementById('loader');
-        const sheet = document.getElementById('staffSelect').value;
-        const selectedDay = document.getElementById('daySelect').value;
-        loader.style.display = 'flex';
-        try {
-            const res = await fetch(`${SCRIPT_URL}?sheetName=${sheet}&targetDay=${selectedDay}`);
-            const data = await res.json();
-            if(data.result === "success") {
-                document.getElementById('labelL').innerText = data.staffName;
-                document.getElementById('labelR').innerText = data.staffName;
-                document.getElementById('labelStaff').innerText = data.staffName;
-                
-                document.getElementById('summaryBody').innerHTML = data.summary.map(r => 
-                    `<tr ${r[0].includes("รวมยอด") ? 'style="background-color:rgba(91,183,170,0.15); font-weight:700;"' : ''}><td>${r[0]}</td><td class="text-right">${r[1]}</td><td class="text-right">${r[2]}</td></tr>`
-                ).join('');
-                
-                document.getElementById('deviceBrandBody').innerHTML = data.deviceByBrand.map(r => 
-                    `<tr><td>${r[0]}</td><td class="text-right">${r[1]}</td><td class="text-right">${r[2]}</td></tr>`
-                ).join('');
-
-                document.getElementById('focusBody').innerHTML = data.focus
-                    .filter(r => !(r[0] === "Target" && r[1] === "Actual")) 
-                    .map(r => `<tr><td>${r[0]}</td><td class="text-right" style="color:#e53e3e; font-weight:800; font-size:16px;">${r[1]}</td></tr>`).join('');
-                
-                const tDiv = document.getElementById('targetBody');
-                tDiv.innerHTML = "";
-                data.targets.forEach(r => {
-                    if(r[0].includes("คำนวณ Target")) {
-                        let grad = (r[0].includes("NEW") || r[0].includes("BDBC")) ? "linear-gradient(90deg, #ffb100, #ff5722)" : "linear-gradient(90deg, #4a5568, #38b2ac)";
-                        tDiv.innerHTML += `<div style="padding:10px 15px; font-weight:600; color:white; font-size:15px; background:${grad};">${r[0]}</div>`;
-                    } else if(r[0]) {
-                        tDiv.innerHTML += `<div class="target-row-item"><span>${r[0]}</span><span style="font-weight:700;">${r[1]}</span></div>`;
-                    }
-                });
-
-                const formatPct = (val) => (!val) ? "0%" : (val.toString().includes('%') ? val : val + '%');
-                const s = data.topStats;
-                const ach = data.achievements;
-                const statsMap = [
-                    { label: s[0][0], main: s[1][0], diff: s[1][1], percent: formatPct(ach.newPost), color: '#ffb100' },
-                    { label: s[0][2], main: s[1][2], diff: s[1][3], percent: formatPct(ach.bdbc), color: '#ff5722' },
-                    { label: s[0][4], main: s[1][4], diff: s[1][5], percent: formatPct(ach.apple), color: '#4a5568' },
-                    { label: s[0][6], main: s[1][6], diff: s[1][7], percent: formatPct(ach.smartPhone), color: '#38b2ac' }
-                ];
-                
-                document.getElementById('bottomStats').innerHTML = statsMap.map(item => `
-                    <div class="stat-item" style="border-left-color: ${item.color};">
-                        <span style="font-size:15px; font-weight:600;">${item.label} Actual</span>
-                        <div style="display: flex; justify-content: space-between; align-items: flex-end;">
-                            <div><span style="font-size:24px; font-weight:800;">${item.main}</span><br><span style="color:#059669; font-weight:700;">${item.percent}</span></div>
-                            <div style="text-align: right;"><span style="font-size:12px; color:#718096;">ขาด/เกิน</span><div style="font-size:24px; font-weight:800; color:#d53f3f;">${item.diff}</div></div>
-                        </div>
-                    </div>`).join('');
-
-                const dailyCard = document.getElementById('dailyCard');
-                if (data.dailyRow && selectedDay) {
-                    dailyCard.style.display = 'block';
-                    document.getElementById('dailyDateNum').innerText = selectedDay;
-                    const dr = data.dailyRow; 
-                    document.getElementById('dailyHead').innerHTML = `
-                        <tr><th rowspan="2" style="background:#4a5568; color:#fff; text-align:center;">วันที่</th><th colspan="2" style="background: #ffb100; color:#fff; text-align:center;">New Post</th><th colspan="2" style="background: #ff5722; color:#fff; text-align:center;">BDBC</th><th colspan="2" style="background: #4a5568; color:#fff; text-align:center;">Apple</th><th colspan="2" style="background: #38b2ac; color:#fff; text-align:center;">SmartPhone</th><th colspan="2" style="background:#2d3748; color:#fff; text-align:center;">Total</th></tr>
-                        <tr><th style="border-left:1px solid #eee;">Act</th><th>Diff</th><th style="border-left:1px solid #eee;">Act</th><th>Diff</th><th style="border-left:1px solid #eee;">Act</th><th>Diff</th><th style="border-left:1px solid #eee;">Act</th><th>Diff</th><th style="border-left:1px solid #eee;">Post</th><th>Dev</th></tr>`;
-                    document.getElementById('dailyBody').innerHTML = `
-                        <tr style="text-align:center; font-weight:600;"><td>${dr[0]}</td><td style="color:var(--primary); border-left:1px solid #eee;">${dr[1]}</td><td style="color:#dc2626;">${dr[2]}</td><td style="color:var(--primary); border-left:1px solid #eee;">${dr[3]}</td><td style="color:#dc2626;">${dr[4]}</td><td style="color:var(--primary); border-left:1px solid #eee;">${dr[5]}</td><td style="color:#dc2626;">${dr[6]}</td><td style="color:var(--primary); border-left:1px solid #eee;">${dr[7]}</td><td style="color:#dc2626;">${dr[8]}</td><td style="border-left:1px solid #eee;">${dr[9]}</td><td>${dr[10]}</td></tr>`;
-                } else { dailyCard.style.display = 'none'; }
-                
-                document.getElementById('dashboardData').style.display = 'block';
-                document.getElementById('noData').style.display = 'none';
-            }
-        } catch (e) { alert("ข้อมูลผิดพลาด"); } finally { loader.style.display = 'none'; }
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-        applySidebarState();
-        includeSidebar();
-    });
-
-    function exportPDF() { /* Logic เดิม */ }
-    function exportExcel() { /* Logic เดิม */ }
-</script>
-</body>
-</html>
+        /* Dashboard Elements */
+        .container { max-width: 1200px; margin: 0 auto; width: 10
