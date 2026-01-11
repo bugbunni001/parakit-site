@@ -1,106 +1,128 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>เบอร์ประจำเดือนมกราคม 2026</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เบอร์ประจำเดือน 2026</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --success: #22c55e;
+            --danger: #ef4444;
+            --bg: #f8fafc;
+        }
 
-<style>
-body{
-  font-family: "Kanit", sans-serif;
-  background:#f4f4f4;
-  margin:0;
-  padding:20px;
-}
+        * { box-sizing: border-box; font-family: 'Kanit', sans-serif; }
+        
+        body { 
+            background: var(--bg); 
+            margin: 0; padding: 20px; 
+            color: #1e293b;
+            display: flex; flex-direction: column; align-items: center;
+        }
 
-h1{
-  text-align:center;
-  margin-bottom:20px;
-}
+        .container { width: 100%; max-width: 500px; }
 
-.list{
-  max-width:600px;
-  margin:auto;
-}
+        h1 { 
+            text-align: center; color: #0f172a; font-size: 24px;
+            margin-bottom: 30px; display: flex; align-items: center; justify-content: center; gap: 10px;
+        }
 
-.item{
-  background:#fff;
-  padding:12px 15px;
-  margin-bottom:10px;
-  border-radius:8px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  box-shadow:0 2px 6px rgba(0,0,0,.08);
-}
+        .list-container { display: flex; flex-direction: column; gap: 12px; }
 
-.used{
-  text-decoration: line-through;
-  color:#888;
-}
+        .item {
+            background: white;
+            padding: 16px 20px;
+            border-radius: 16px;
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid #f1f5f9;
+        }
 
-button{
-  padding:6px 14px;
-  border:none;
-  border-radius:6px;
-  cursor:pointer;
-  background:#4CAF50;
-  color:#fff;
-}
+        .phone-info { display: flex; flex-direction: column; }
+        .phone-number { font-size: 18px; font-weight: 600; color: #334155; }
+        
+        .used-status { 
+            color: var(--danger); font-size: 12px; font-weight: 500;
+            display: none; margin-top: 4px; animation: fadeIn 0.3s ease;
+        }
 
-button:disabled{
-  background:#aaa;
-  cursor:not-allowed;
-}
+        .item.is-used { background: #f1f5f9; transform: scale(0.98); opacity: 0.7; }
+        .item.is-used .phone-number { text-decoration: line-through; color: #94a3b8; }
+        .item.is-used .used-status { display: block; }
 
-.used-text{
-  color:red;
-  font-size:13px;
-  margin-left:10px;
-}
-</style>
+        button {
+            background: var(--primary); color: white; border: none;
+            padding: 10px 18px; border-radius: 12px; font-weight: 600;
+            cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 10px rgba(99, 102, 241, 0.2);
+        }
+
+        button:hover { background: #4f46e5; transform: translateY(-2px); }
+        button:active { transform: translateY(0); }
+        button:disabled { background: #cbd5e1; box-shadow: none; cursor: not-allowed; }
+
+        #loader { text-align: center; color: #64748b; padding: 50px; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
 </head>
-
 <body>
 
-<h1>📞 เบอร์ประจำเดือนมกราคม 2026</h1>
-
-<div class="list" id="list"></div>
+<div class="container">
+    <h1><span>📱</span> เบอร์ประจำเดือนมกราคม 2026</h1>
+    <div id="loader">⏳ กำลังเตรียมข้อมูลเบอร์...</div>
+    <div class="list-container" id="list"></div>
+</div>
 
 <script>
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbykciAvM8Cc7YBnbgf0e8f7s3y3B9WipX8VPZ_GssNXb38kiwdp-tJG0aNWX5MATR7xVg/exec";
+    // ดึงข้อมูลเมื่อโหลดหน้าเว็บ
+    window.onload = () => {
+        google.script.run.withSuccessHandler(renderList).getPhoneNumberData();
+    };
 
-fetch(WEB_APP_URL)
-  .then(res => res.json())
-  .then(data => {
-    const list = document.getElementById("list");
+    function renderList(data) {
+        const list = document.getElementById("list");
+        const loader = document.getElementById("loader");
+        loader.style.display = "none";
+        list.innerHTML = "";
 
-    data.forEach(number => {
-      const div = document.createElement("div");
-      div.className = "item";
+        if (data.length === 0) {
+            list.innerHTML = "<p style='text-align:center; color:#94a3b8;'>ไม่พบเบอร์ที่พร้อมใช้งาน</p>";
+            return;
+        }
 
-      const span = document.createElement("span");
-      span.textContent = number;
+        data.forEach(item => {
+            const div = document.createElement("div");
+            div.className = "item";
+            div.id = `row-${item.row}`;
 
-      const btn = document.createElement("button");
-      btn.textContent = "ใช้งาน";
+            div.innerHTML = `
+                <div class="phone-info">
+                    <span class="phone-number">${item.number}</span>
+                    <span class="used-status">● เบอร์นี้ถูกใช้และลบออกจากระบบแล้ว</span>
+                </div>
+                <button id="btn-${item.row}" onclick="useNumber(${item.row})">ใช้งาน</button>
+            `;
+            list.appendChild(div);
+        });
+    }
 
-      btn.onclick = () => {
-        span.classList.add("used");
+    function useNumber(rowNumber) {
+        const btn = document.getElementById(`btn-${rowNumber}`);
+        const card = document.getElementById(`row-${rowNumber}`);
+        
         btn.disabled = true;
+        btn.textContent = "⏳ กำลังลบ...";
 
-        const usedText = document.createElement("span");
-        usedText.className = "used-text";
-        usedText.textContent = "เบอร์นี้ถูกใช้ไปแล้ว";
-
-        div.appendChild(usedText);
-      };
-
-      div.appendChild(span);
-      div.appendChild(btn);
-      list.appendChild(div);
-    });
-  });
+        // สั่งลบใน Google Sheets
+        google.script.run.withSuccessHandler(() => {
+            card.classList.add("is-used");
+            btn.textContent = "ใช้แล้ว";
+            console.log("Deleted row: " + rowNumber);
+        }).deleteNumberFromSheet(rowNumber);
+    }
 </script>
 
 </body>
