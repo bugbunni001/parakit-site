@@ -108,6 +108,7 @@
             #sidebar-container { transform: translateX(-100%); }
             .main-content { margin-left: 0; width: 100%; padding: 15px 10px; }
             body.show-sidebar #sidebar-container { transform: translateX(0); }
+            body.collapsed #sidebar-container { transform: translateX(-100%); }
         }
 
         .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: none; backdrop-filter: blur(4px); z-index: 1500; }
@@ -321,12 +322,16 @@
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwuHFYlbD8PVy61v_SeJ7bOwm5Tg92DHCbzF4Myrvuogs63r-oYbVagveG8obnkIMuI3Q/exec"; 
 
     document.addEventListener('DOMContentLoaded', () => {
-        loadSidebar(); 
-        // ตรวจสอบค่าที่บันทึกไว้ใน localStorage
+        // ดึงสถานะ Sidebar จาก localStorage (ค่าเริ่มต้นคือ false หากไม่มี)
         const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+        const body = document.getElementById('mainBody');
+        
+        // ถ้าเป็นจอใหญ่และสถานะเป็น collapsed ให้ซ่อนเมนูทันทีที่โหลด
         if (isCollapsed && window.innerWidth > 900) {
-            document.getElementById('mainBody').classList.add('collapsed');
+            body.classList.add('collapsed');
         }
+        
+        loadSidebar(); 
     });
 
     async function loadSidebar() {
@@ -337,7 +342,6 @@
                 const html = await response.text();
                 menuContainer.innerHTML = html;
                 
-                // หลังจากโหลด HTML มาแล้ว ให้ผูกเหตุการณ์คลิกสำหรับเมนู Dropdown (ถ้ามีใน sidebar.html)
                 const dropBtns = menuContainer.querySelectorAll('.drop-btn');
                 dropBtns.forEach(btn => {
                     btn.addEventListener('click', function() {
@@ -358,7 +362,7 @@
         
         if (window.innerWidth > 900) {
             body.classList.toggle('collapsed');
-            // บันทึกสถานะลงใน localStorage
+            // บันทึกสถานะการ "หุบเมนู" ลงใน localStorage
             localStorage.setItem('sidebarCollapsed', body.classList.contains('collapsed'));
         } else {
             body.classList.toggle('show-sidebar');
