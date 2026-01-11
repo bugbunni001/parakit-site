@@ -19,6 +19,7 @@
         html, body { margin: 0; padding: 0; width: 100%; background-color: var(--bg); color: var(--text-dark); min-height: 100vh; overflow-x: hidden; }
         body { display: flex; }
 
+        /* SIDEBAR FIXED */
         #sidebar-container { width: var(--sidebar-width); background: var(--sidebar-bg); height: 100vh; position: fixed; left: 0; top: 0; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 2000; overflow-y: auto; box-shadow: 4px 0 15px rgba(0,0,0,0.2); }
         .menu .item .sub { display: none; background: #0f172a; }
         .menu .item.open .sub { display: block; }
@@ -29,27 +30,32 @@
         .sub a { padding-left: 50px; font-size: 14px; opacity: 0.8; }
 
         .main-content { flex-grow: 1; margin-left: var(--sidebar-width); padding: 15px; width: calc(100% - var(--sidebar-width)); transition: var(--transition); }
+        
+        /* Desktop Collapsed */
         body.collapsed #sidebar-container { transform: translateX(calc(var(--sidebar-width) * -1)); }
         body.collapsed .main-content { margin-left: 0; width: 100%; }
 
+        /* Responsive Logic */
         @media (max-width: 900px) { 
             #sidebar-container { transform: translateX(calc(var(--sidebar-width) * -1)); } 
-            .main-content { margin-left: 0; width: 100%; padding: 10px; } 
+            .main-content { margin-left: 0 !important; width: 100% !important; padding: 10px; } 
             body.show-sidebar #sidebar-container { transform: translateX(0); }
-            body.collapsed #sidebar-container { transform: translateX(calc(var(--sidebar-width) * -1)); }
+            /* เมื่ออยู่ในมือถือ ให้ยกเลิกการใช้คลาส collapsed เพื่อไม่ให้ตีกับ show-sidebar */
+            body.show-sidebar { overflow: hidden; } 
+            
+            .main-grid { grid-template-columns: 1fr !important; } /* มือถือให้เป็น 1 คอลัมน์ */
+            .bottom-stats-grid { grid-template-columns: 1fr !important; } /* กล่องสถิติให้เต็มจอ */
         }
 
         .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: none; backdrop-filter: blur(4px); z-index: 1500; }
         body.show-sidebar .overlay { display: block; }
 
-        .container { max-width: 1200px; margin: 0 auto; width: 100%; }
+        .container { max-width: 1400px; margin: 0 auto; width: 100%; }
         .header-bar { background: var(--white); padding: 15px 20px; border-radius: 14px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); flex-wrap: wrap; gap: 15px; }
         .action-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-        #staffSelect, #daySelect { padding: 10px 16px; border-radius: 10px; border: 1px solid #e2e8f0; font-size: 16px; background-color: #f8fafc; color: var(--text-dark); cursor: pointer; transition: var(--transition); flex-grow: 1; }
+        #staffSelect, #daySelect { padding: 10px 16px; border-radius: 10px; border: 1px solid #e2e8f0; font-size: 16px; background-color: #f8fafc; color: var(--text-dark); cursor: pointer; transition: var(--transition); flex-grow: 1; min-width: 140px; }
         
         .btn-fetch, .btn-pdf, .btn-excel { cursor: pointer; transition: var(--transition); font-weight: 500; display: flex; align-items: center; gap: 6px; }
-        .btn-fetch:hover, .btn-pdf:hover, .btn-excel:hover { transform: translateY(-2px); filter: brightness(1.1); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-        
         .btn-fetch { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 10px; box-shadow: 0 4px 12px rgba(91, 183, 170, 0.25); flex-grow: 1; justify-content: center; }
         .btn-pdf { background: var(--pdf); color: white; border: none; padding: 10px 16px; border-radius: 10px; flex-grow: 1; justify-content: center; }
         .btn-excel { background: var(--excel); color: white; border: none; padding: 10px 16px; border-radius: 10px; flex-grow: 1; justify-content: center; }
@@ -58,28 +64,23 @@
         #dashboardData { display: none; } 
         
         .card { background: var(--white); border-radius: 15px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid #edf2f7; margin-bottom: 15px; width: 100%; transition: var(--transition); }
-        .card:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(0,0,0,0.08); }
         .card-header { padding: 12px 18px; color: white; font-weight: 600; background: var(--primary); display: flex; justify-content: space-between; font-size: 18px; flex-wrap: wrap; gap: 5px; }
         .table-wrapper { width: 100%; overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; }
         th { padding: 15px; text-align: left; font-size: 16px; font-weight: 600; color: #4a5568; border-bottom: 2px solid #edf2f7; background: #fafbfc; }
-        td { padding: 12px 15px; border-bottom: 1px solid #f7fafc; font-size: 15px; transition: var(--transition); }
-        tr:hover td { background-color: rgba(91, 183, 170, 0.05); color: var(--primary); }
+        td { padding: 12px 15px; border-bottom: 1px solid #f7fafc; font-size: 15px; }
         .text-right { text-align: right; }
         .row-summary { background-color: rgba(91, 183, 170, 0.15); }
         .row-summary td { font-weight: 700 !important; font-size: 18px !important; color: #1a202c; border-bottom: 2px solid var(--primary); }
         .bottom-stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 15px; background: #fafbfc; border-top: 1px solid #edf2f7; }
-        .stat-item { background: #ffffff; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0; border-left: 6px solid var(--primary); transition: var(--transition); }
-        .stat-item:hover { background: #f0fff4; transform: scale(1.02); border-color: var(--primary); }
-        .stat-label { font-size: 15px; color: #2d3748; font-weight: 600; display: block; margin-bottom: 5px; }
+        .stat-item { background: #ffffff; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0; border-left: 6px solid var(--primary); }
         .stat-main { font-size: 24px; font-weight: 800; color: var(--text-dark); display: block; }
         .stat-percent { font-size: 18px; font-weight: 700; color: var(--success); display: block; }
         .stat-sub-val { font-size: 24px; font-weight: 800; color: #d53f3f; }
         .grad-yellow-orange { background: linear-gradient(90deg, #ffb100 0%, #ff5722 100%); }
         .grad-slate-teal { background: linear-gradient(90deg, #4a5568 0%, #38b2ac 100%); }
         .target-group-header { padding: 10px 15px; font-weight: 600; color: white; font-size: 15px; }
-        .target-row-item { display:flex; justify-content:space-between; padding:12px 18px; border-bottom:1px solid #f1f5f9; font-size:15px; font-weight:500; transition: var(--transition); }
-        .target-row-item:hover { background: #f8fafc; padding-left: 25px; border-left: 4px solid #4a5568; }
+        .target-row-item { display:flex; justify-content:space-between; padding:12px 18px; border-bottom:1px solid #f1f5f9; font-size:15px; font-weight:500; }
         .loading { position: fixed; inset: 0; background: rgba(255,255,255,0.8); display: none; justify-content: center; align-items: center; z-index: 3000; font-weight: 600; }
         .daily-table thead tr:first-child th { color: #ffffff; font-size: 13px; text-align: center; padding: 8px; }
         .daily-table td { text-align: center; font-weight: 500; border-right: 1px solid #f1f5f9; }
@@ -181,7 +182,6 @@
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz0YP6s-i40jOU_BklK3-ly_1nQyJmzBiGY_HhTlcrW5XM-yWr74bXi_XUgywwXmNn8/exec"; 
 
-    // ฟังก์ชันจัดการ Sidebar และ Dropdown พร้อมบันทึกสถานะ
     async function includeSidebar() {
         const version = new Date().getTime();
         try {
@@ -190,28 +190,21 @@
             const container = document.getElementById('sidebar-container');
             container.innerHTML = data;
             
-            // คืนค่าสถานะไฮไลท์เมนู
             const currentPath = window.location.pathname.split('/').pop() || 'index.html';
-            const allLinks = container.querySelectorAll('a');
-            allLinks.forEach(link => {
+            container.querySelectorAll('a').forEach(link => {
                 if (link.getAttribute('href') === currentPath) link.classList.add('active');
             });
 
-            // คืนค่าสถานะเมนูย่อย (Dropdown) ที่เคยเปิดไว้
-            const dropdownItems = container.querySelectorAll('.item');
-            dropdownItems.forEach((item, index) => {
+            container.querySelectorAll('.item').forEach((item, index) => {
                 const isOpened = localStorage.getItem('dropdown-' + index);
                 if (isOpened === 'true') item.classList.add('open');
             });
 
-            // จัดการ Event Click สำหรับ Dropdown และบันทึกสถานะ
             container.addEventListener('click', function (e) {
                 const dropBtn = e.target.closest('.drop-btn');
                 if (dropBtn) {
                     const parent = dropBtn.parentElement;
                     parent.classList.toggle('open');
-                    
-                    // บันทึกสถานะ Dropdown ทุกตัว
                     container.querySelectorAll('.item').forEach((item, index) => {
                         localStorage.setItem('dropdown-' + index, item.classList.contains('open'));
                     });
@@ -220,27 +213,22 @@
         } catch (err) { console.warn("Sidebar Load Error"); }
     }
 
-    // ฟังก์ชันเปิด-ปิด Sidebar หลักพร้อมบันทึกสถานะ
     function toggleSidebar() {
         const body = document.getElementById('mainBody');
-        const isCollapsed = body.classList.toggle('collapsed');
-        
         if (window.innerWidth <= 900) {
             body.classList.toggle('show-sidebar');
+            body.classList.remove('collapsed'); // ป้องกันการซ้อนทับในมือถือ
         } else {
-            // บันทึกว่าพับ Sidebar อยู่หรือไม่ (สำหรับ Desktop)
+            const isCollapsed = body.classList.toggle('collapsed');
             localStorage.setItem('sidebar-collapsed', isCollapsed);
         }
     }
 
-    // ฟังก์ชันคืนค่า Sidebar ตอนโหลดหน้า (เฉพาะ Desktop)
     function restoreSidebarState() {
         const body = document.getElementById('mainBody');
         if (window.innerWidth > 900) {
             const isCollapsed = localStorage.getItem('sidebar-collapsed');
-            if (isCollapsed === 'true') {
-                body.classList.add('collapsed');
-            }
+            if (isCollapsed === 'true') body.classList.add('collapsed');
         }
     }
 
@@ -317,7 +305,6 @@
         } catch (e) { alert("ข้อมูลผิดพลาด"); } finally { loader.style.display = 'none'; }
     }
 
-    // เรียกฟังก์ชันตอนเริ่มต้น
     document.addEventListener('DOMContentLoaded', () => {
         restoreSidebarState();
         includeSidebar();
