@@ -26,53 +26,62 @@
         * { box-sizing: border-box; font-family: 'Kanit', sans-serif; }
         body { margin: 0; background: var(--bg); color: var(--text-main); min-height: 100vh; display: flex; overflow-x: hidden; }
 
-        /* ===== SIDEBAR - ปรับแก้การแสดงผล ===== */
+        /* ===== SIDEBAR - ปรับปรุงการทำงาน ===== */
         .sidebar { 
             position: fixed; top: 0; left: 0; width: var(--sidebar-w); height: 100vh; 
             background: #1e293b; color: #fff; z-index: 2000;
             transform: translateX(-100%); transition: var(--transition);
-            overflow-y: auto; visibility: hidden; /* ซ่อนไว้ก่อนโหลดเสร็จป้องกันเมนูแวบ */
+            overflow-y: auto; visibility: hidden; /* ป้องกันเมนูแวบตอนโหลด */
         }
-        .sidebar.show { transform: translateX(0); visibility: visible; }
+        /* คลาสที่ใช้สั่งให้กางเมนู */
+        .sidebar.active { transform: translateX(0); visibility: visible; }
 
+        /* Overlay สำหรับมือถือ */
         .overlay { 
             position: fixed; inset: 0; background: rgba(0,0,0,0.5); 
             display: none; z-index: 1500; backdrop-filter: blur(4px); 
         }
-        .overlay.show { display: block; }
+        .overlay.active { display: block; }
 
-        .content-wrapper { flex: 1; display: flex; flex-direction: column; width: 100%; transition: var(--transition); }
-        
-        /* เมื่อกางเมนูในหน้าจอใหญ่ */
+        /* ตัวคุมเนื้อหาหลัก */
+        .content-wrapper { 
+            flex: 1; display: flex; flex-direction: column; width: 100%; 
+            transition: var(--transition); margin-left: 0;
+        }
+
+        /* เมื่อกางเมนูบน Desktop ให้ขยับเนื้อหา */
         @media(min-width: 992px) {
             .content-wrapper.shifted { margin-left: var(--sidebar-w); }
         }
 
-        /* ===== UI COMPONENTS (โครงสร้างเดิม) ===== */
+        /* ===== UI เดิมทั้งหมด (ห้ามลบ) ===== */
         .top-nav { position: sticky; top: 0; background: rgba(255,255,255,0.9); backdrop-filter: blur(10px); padding: 15px 25px; display: flex; align-items: center; justify-content: space-between; z-index: 1000; border-bottom: 1px solid #e2e8f0; }
         .menu-toggle { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: #f1f5f9; border-radius: 10px; cursor: pointer; color: var(--text-main); }
         .status-pill { display: flex; align-items: center; gap: 8px; font-size: 13px; background: #fff; padding: 6px 15px; border-radius: 50px; border: 1px solid #e2e8f0; }
         .dot { width: 8px; height: 8px; border-radius: 50%; background: #cbd5e1; position: relative; }
         .dot.pulse::after { content: ''; position: absolute; inset: -4px; border-radius: 50%; background: inherit; opacity: 0.4; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0% { transform: scale(1); opacity: 0.5; } 100% { transform: scale(2.5); opacity: 0; } }
-
+        .mode-control { display: flex; align-items: center; justify-content: flex-end; margin-bottom: 20px; gap: 10px; }
+        .edit-switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+        .edit-switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; inset: 0; background-color: #cbd5e1; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--primary); }
+        input:checked + .slider:before { transform: translateX(24px); }
         .main-container { padding: 30px 20px; max-width: 1200px; margin: 0 auto; width: 100%; }
         .grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 20px; }
         .target-card { background: var(--card-bg); border-radius: var(--radius); padding: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #fff; }
         .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-        .total-badge { background: #1e293b; color: #fff; padding: 8px 16px; border-radius: 12px; font-size: 20px; font-weight: 600; min-width: 60px; text-align: center; }
+        .total-badge { background: #1e293b; color: #fff; padding: 8px 16px; border-radius: 12px; font-size: 20px; font-weight: 600; width: 80px; text-align: center; }
         .unit-label { margin: 20px 0 12px 0; padding: 6px 12px; border-radius: 8px; font-weight: 600; font-size: 13px; display: inline-block; }
         .bg-blue { background: #eff6ff; color: #3b82f6; }
         .bg-purple { background: #f5f3ff; color: #8b5cf6; }
         .staff-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding: 4px 0; }
-        
         input[type="text"] { width: 70px; text-align: center; padding: 8px; border-radius: 10px; border: 1.5px solid #e2e8f0; background: #f8fafc; color: #64748b; font-weight: 500; }
         input[type="text"]:not([readonly]) { background: #fff; color: var(--text-main); border-color: #cbd5e1; }
         .summary-row { border-top: 1px solid #f1f5f9; padding-top: 12px; font-weight: 600; margin-top: 10px; }
-
         .btn-save { background: var(--success); color: white; width: 100%; max-width: 400px; margin: 40px auto; padding: 18px; border-radius: 16px; border: none; font-size: 16px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.3); }
         .btn-save:disabled { background: #cbd5e1; cursor: not-allowed; box-shadow: none; }
-
         .save-popup { position: fixed; inset: 0; background: rgba(15,23,42,0.7); display: none; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(4px); }
         .save-popup.active { display: flex; }
     </style>
@@ -95,7 +104,7 @@
         <div class="menu-toggle" onclick="toggleSidebar()"><i class="fa-solid fa-bars-staggered"></i></div>
         <div class="status-pill">
             <span class="dot" id="sync-dot"></span>
-            <span id="status-text">เชื่อมต่อระบบ...</span>
+            <span id="status-text">กำลังโหลด...</span>
         </div>
     </nav>
 
@@ -105,8 +114,8 @@
             <p style="color: var(--text-sub);">สรุปยอดขายประจำสาขา แบบเรียลไทม์</p>
         </div>
 
-        <div style="display:flex; justify-content:flex-end; align-items:center; gap:10px; margin-bottom:20px;">
-            <span id="modeLabel" style="font-size:14px; color:var(--text-sub);">โหมดอ่านอย่างเดียว</span>
+        <div class="mode-control">
+            <span id="modeLabel">โหมดอ่านอย่างเดียว</span>
             <label class="edit-switch">
                 <input type="checkbox" id="editToggle" onchange="toggleEditMode()">
                 <span class="slider"></span>
@@ -160,18 +169,22 @@
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz4jD9tgF3eR-j5xEyq2HUlQ2r7eYyHFo7pwvkV_EHBLz33Srnez2Vy9q7i-biUvtvmgQ/exec";
 
-    // --- ส่วนจัดการ Sidebar (แก้ใหม่ให้ทำงานได้จริง) ---
+    // --- ส่วนจัดการ Sidebar (NEW & STABLE) ---
     function toggleSidebar() {
         const sidebar = document.getElementById("sidebar");
         const overlay = document.getElementById("overlay");
         const wrapper = document.getElementById("contentWrapper");
         
-        const isNowShowing = sidebar.classList.toggle("show");
-        overlay.classList.toggle("show");
-        wrapper.classList.toggle("shifted");
+        // สลับ Class
+        const isOpen = sidebar.classList.toggle("active");
+        overlay.classList.toggle("active");
         
-        // บันทึกสถานะกางออกลง LocalStorage
-        localStorage.setItem("sidebarState", isNowShowing ? "open" : "closed");
+        if (window.innerWidth >= 992) {
+            wrapper.classList.toggle("shifted");
+        }
+        
+        // บันทึกสถานะกาง/หุบ ลงใน LocalStorage
+        localStorage.setItem("menuStatus", isOpen ? "open" : "closed");
     }
 
     function includeSidebar() {
@@ -181,22 +194,22 @@
                 const sidebarEl = document.getElementById('sidebar');
                 sidebarEl.innerHTML = html;
                 
-                // ตรวจสอบสถานะเดิมจาก LocalStorage
-                const savedState = localStorage.getItem("sidebarState");
-                if (savedState === "open") {
-                    sidebarEl.classList.add("show");
-                    document.getElementById("contentWrapper").classList.add("shifted");
-                    // สำหรับหน้าจอเล็ก Overlay ไม่ควรโชว์ออโต้ตอนรีเฟรชถ้าไม่ใช่ Desktop
-                    if(window.innerWidth < 992) {
-                        document.getElementById("overlay").classList.add("show");
+                // ตรวจสอบสถานะที่เคยบันทึกไว้
+                const savedStatus = localStorage.getItem("menuStatus");
+                if (savedStatus === "open") {
+                    sidebarEl.classList.add("active");
+                    if (window.innerWidth >= 992) {
+                        document.getElementById("contentWrapper").classList.add("shifted");
+                    } else {
+                        document.getElementById("overlay").classList.add("active");
                     }
                 }
-                sidebarEl.style.visibility = "visible"; // โหลดเสร็จแล้วค่อยโชว์
+                sidebarEl.style.visibility = "visible"; 
             })
-            .catch(err => console.error("โหลดไฟล์ Sidebar ไม่ได้:", err));
+            .catch(err => console.log("ยังไม่มีไฟล์ sidebar.html"));
     }
 
-    // --- ฟังก์ชันคำนวณและจัดการข้อมูล (ห้ามลบ/แก้ไข) ---
+    // --- ส่วนคำนวณและจัดการข้อมูล (คงเดิม 100%) ---
     function toggleEditMode() {
         const isEdit = document.getElementById('editToggle').checked;
         document.querySelectorAll('.data-input').forEach(input => input.readOnly = !isEdit);
@@ -208,14 +221,12 @@
 
     function calculate() {
         const getVal = id => parseInt(document.getElementById(id).value) || 0;
-        // Postpay
         const ppNew = getVal('pp_nawa_n') + getVal('pp_piya_n') + getVal('pp_korn_n');
         const ppExt = getVal('pp_nawa_e') + getVal('pp_piya_e') + getVal('pp_korn_e');
         document.getElementById('pp_new_total').value = ppNew;
         document.getElementById('pp_ext_total').value = ppExt;
         document.getElementById('postpay_total').value = ppNew + ppExt;
         document.getElementById('postpay_total_display').innerText = ppNew + ppExt;
-        // Device
         const devApple = getVal('dev_nawa_a') + getVal('dev_piya_a') + getVal('dev_korn_a');
         const devSmart = getVal('dev_nawa_s') + getVal('dev_piya_s') + getVal('dev_korn_s');
         document.getElementById('dev_apple_total').value = devApple;
@@ -253,7 +264,7 @@
                 document.getElementById('editToggle').checked = false;
                 toggleEditMode();
             }
-        } catch (e) { popup.classList.remove("active"); alert("เกิดข้อผิดพลาด!"); }
+        } catch (e) { popup.classList.remove("active"); alert("Error!"); }
     }
 
     function updateSyncStatus(type) {
