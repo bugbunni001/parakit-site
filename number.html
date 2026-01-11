@@ -1,129 +1,169 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>เบอร์ประจำเดือน 2026</title>
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary: #6366f1;
-            --success: #22c55e;
-            --danger: #ef4444;
-            --bg: #f8fafc;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>เลือกเบอร์ SIMONLY&BUNDLING</title>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+    :root { 
+        --success: #10b981; --success-dark: #059669; --success-light: #ecfdf5; 
+        --bg: #f8fafc; --white: #ffffff; --text-main: #1e293b; --text-muted: #64748b;
+        --sidebar-w: 280px;
+    }
+    * { box-sizing: border-box; font-family: 'Kanit', sans-serif; }
+    body { background: var(--bg); margin: 0; padding: 0; transition: 0.4s; overflow-x: hidden; }
+    
+    /* Hamburger Button */
+    .menu-btn {
+        position: fixed; top: 20px; left: 20px; z-index: 1500; 
+        background: var(--white); border: none; padding: 12px; border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08); cursor: pointer; transition: 0.3s;
+    }
+    .menu-btn:hover { transform: scale(1.05); }
 
-        * { box-sizing: border-box; font-family: 'Kanit', sans-serif; }
-        
-        body { 
-            background: var(--bg); 
-            margin: 0; padding: 20px; 
-            color: #1e293b;
-            display: flex; flex-direction: column; align-items: center;
-        }
+    .container { 
+        padding: 80px 20px 50px; 
+        max-width: 1200px; margin: 0 auto;
+        display: flex; flex-direction: column; align-items: center;
+    }
 
-        .container { width: 100%; max-width: 500px; }
+    .header { text-align: center; margin-bottom: 40px; }
+    .header h1 { color: var(--text-main); font-size: clamp(32px, 5vw, 48px); margin: 0; }
+    .header h1 span { color: var(--success); }
 
-        h1 { 
-            text-align: center; color: #0f172a; font-size: 24px;
-            margin-bottom: 30px; display: flex; align-items: center; justify-content: center; gap: 10px;
-        }
+    .list { 
+        width: 100%; display: grid; 
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); 
+        gap: 20px; display: none; 
+    }
+    
+    .item {
+        background: var(--white); padding: 35px 25px; border-radius: 30px;
+        display: flex; flex-direction: column; align-items: center;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.03); border: 1px solid #edf2f7; transition: 0.3s;
+    }
+    .item:hover { transform: translateY(-8px); border-color: var(--success); }
 
-        .list-container { display: flex; flex-direction: column; gap: 12px; }
+    .phone-text { font-size: 34px; font-weight: 600; color: var(--text-main); margin-bottom: 20px; letter-spacing: 1px; }
+    .btn-use {
+        width: 100%; background: var(--success); color: white; border: none;
+        padding: 15px; border-radius: 18px; cursor: pointer; font-weight: 600; font-size: 18px;
+    }
 
-        .item {
-            background: white;
-            padding: 16px 20px;
-            border-radius: 16px;
-            display: flex; justify-content: space-between; align-items: center;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 1px solid #f1f5f9;
-        }
+    .item.is-used { background: var(--success-light); border-color: var(--success); opacity: 0.8; }
+    .item.is-used .phone-text { text-decoration: line-through; color: var(--success-dark); }
+    .used-tag { color: var(--success-dark); font-weight: 600; margin-top: 15px; display: none; }
+    .item.is-used .used-tag { display: block; }
 
-        .phone-info { display: flex; flex-direction: column; }
-        .phone-number { font-size: 18px; font-weight: 600; color: #334155; }
-        
-        .used-status { 
-            color: var(--danger); font-size: 12px; font-weight: 500;
-            display: none; margin-top: 4px; animation: fadeIn 0.3s ease;
-        }
+    /* Modal */
+    .modal-overlay {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(6px);
+        display: none; align-items: center; justify-content: center; z-index: 3000;
+    }
+    .modal { background: white; padding: 40px; border-radius: 35px; width: 90%; max-width: 400px; text-align: center; }
+    .modal-btns { display: flex; gap: 15px; margin-top: 30px; }
+    .btn-confirm { background: var(--success); color: white; border: none; flex: 1; padding: 16px; border-radius: 15px; font-weight: 600; cursor: pointer; }
+    .btn-cancel { background: #f1f5f9; color: var(--text-muted); border: none; flex: 1; padding: 16px; border-radius: 15px; font-weight: 600; cursor: pointer; }
 
-        .item.is-used { background: #f1f5f9; transform: scale(0.98); opacity: 0.7; }
-        .item.is-used .phone-number { text-decoration: line-through; color: #94a3b8; }
-        .item.is-used .used-status { display: block; }
+    #loader { padding: 100px; text-align: center; color: var(--text-muted); }
 
-        button {
-            background: var(--primary); color: white; border: none;
-            padding: 10px 18px; border-radius: 12px; font-weight: 600;
-            cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 10px rgba(99, 102, 241, 0.2);
-        }
-
-        button:hover { background: #4f46e5; transform: translateY(-2px); }
-        button:active { transform: translateY(0); }
-        button:disabled { background: #cbd5e1; box-shadow: none; cursor: not-allowed; }
-
-        #loader { text-align: center; color: #64748b; padding: 50px; }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
-    </style>
+    @media (max-width: 600px) {
+        .container { padding-top: 90px; }
+        .list { grid-template-columns: 1fr; }
+    }
+</style>
 </head>
-<body>
+<body id="body">
+
+<?!= include('sidebar'); ?>
+
+<button class="menu-btn" onclick="toggleSidebar()">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+</button>
 
 <div class="container">
-    <h1><span>📱</span> เบอร์ประจำเดือนมกราคม 2026</h1>
-    <div id="loader">⏳ กำลังเตรียมข้อมูลเบอร์...</div>
-    <div class="list-container" id="list"></div>
+    <div class="header">
+        <h1>📱 <span>เบอร์ประจำเดือน</span></h1>
+    </div>
+
+    <div id="loader">⌛ กำลังโหลดเบอร์...</div>
+    <div class="list" id="list"></div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+        <h3 style="margin-top:0">ยืนยันการใช้เบอร์?</h3>
+        <p style="color:var(--text-muted)">เบอร์จะถูกลบออกจากไฟล์ Google Sheets ทันที</p>
+        <div class="modal-btns">
+            <button class="btn-cancel" onclick="closeModal()">ยกเลิก</button>
+            <button class="btn-confirm" id="confirmBtn">ยืนยัน</button>
+        </div>
+    </div>
 </div>
 
 <script>
-    // ดึงข้อมูลเมื่อโหลดหน้าเว็บ
-    window.onload = () => {
-        google.script.run.withSuccessHandler(renderList).getPhoneNumberData();
-    };
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyesT9AQmPgj5H8k9Vwvl-gz78yO5XKrnsJz2Odvx0JvSBpajN7gEks062JA508zmLsaA/exec";
 
-    function renderList(data) {
+// Sidebar Toggle & Memory
+function toggleSidebar() {
+    const sb = document.getElementById("mySidebar");
+    const body = document.getElementById("body");
+    const isOpen = sb.style.width === "280px";
+    
+    if(isOpen) {
+        sb.style.width = "0";
+        body.style.paddingLeft = "0";
+        localStorage.setItem("sb_open", "no");
+    } else {
+        sb.style.width = "280px";
+        if(window.innerWidth > 900) body.style.paddingLeft = "280px";
+        localStorage.setItem("sb_open", "yes");
+    }
+}
+
+// Initial Load
+window.onload = () => {
+    if(localStorage.getItem("sb_open") === "yes" && window.innerWidth > 900) toggleSidebar();
+    
+    google.script.run.withSuccessHandler(data => {
+        document.getElementById("loader").style.display = "none";
         const list = document.getElementById("list");
-        const loader = document.getElementById("loader");
-        loader.style.display = "none";
-        list.innerHTML = "";
-
-        if (data.length === 0) {
-            list.innerHTML = "<p style='text-align:center; color:#94a3b8;'>ไม่พบเบอร์ที่พร้อมใช้งาน</p>";
-            return;
-        }
-
+        list.style.display = "grid";
+        
         data.forEach(item => {
             const div = document.createElement("div");
             div.className = "item";
             div.id = `row-${item.row}`;
-
             div.innerHTML = `
-                <div class="phone-info">
-                    <span class="phone-number">${item.number}</span>
-                    <span class="used-status">● เบอร์นี้ถูกใช้และลบออกจากระบบแล้ว</span>
-                </div>
-                <button id="btn-${item.row}" onclick="useNumber(${item.row})">ใช้งาน</button>
+                <div class="phone-text">${item.number}</div>
+                <button class="btn-use" id="btn-${item.row}" onclick="openModal(${item.row})">ใช้งานเบอร์นี้</button>
+                <div class="used-tag">✅ บันทึกสำเร็จ</div>
             `;
             list.appendChild(div);
         });
-    }
+    }).getSheetData();
+};
 
-    function useNumber(rowNumber) {
-        const btn = document.getElementById(`btn-${rowNumber}`);
-        const card = document.getElementById(`row-${rowNumber}`);
-        
-        btn.disabled = true;
-        btn.textContent = "⏳ กำลังลบ...";
+function openModal(r) {
+    document.getElementById("modalOverlay").style.display = "flex";
+    document.getElementById("confirmBtn").onclick = () => use(r);
+}
 
-        // สั่งลบใน Google Sheets
-        google.script.run.withSuccessHandler(() => {
-            card.classList.add("is-used");
-            btn.textContent = "ใช้แล้ว";
-            console.log("Deleted row: " + rowNumber);
-        }).deleteNumberFromSheet(rowNumber);
-    }
+function closeModal() { document.getElementById("modalOverlay").style.display = "none"; }
+
+function use(r) {
+    closeModal();
+    const btn = document.getElementById(`btn-${r}`);
+    btn.disabled = true; btn.textContent = "⌛...";
+    
+    fetch(WEB_APP_URL, { method: "POST", body: JSON.stringify({row: r}) })
+    .then(() => {
+        document.getElementById(`row-${r}`).classList.add("is-used");
+        btn.style.display = "none";
+    });
+}
 </script>
-
 </body>
 </html>
