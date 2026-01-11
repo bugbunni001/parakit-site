@@ -9,15 +9,17 @@
     <style>
         :root {
             --primary: #3b82f6;
-            --primary-light: #eff6ff;
+            --primary-dark: #1d4ed8;
             --secondary: #8b5cf6;
-            --secondary-light: #f5f3ff;
             --success: #10b981;
-            --bg: #f8fafc;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --bg: #f1f5f9;
             --card-bg: #ffffff;
             --text-main: #1e293b;
             --text-sub: #64748b;
             --sidebar-w: 280px;
+            --radius: 16px;
             --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
@@ -27,52 +29,25 @@
             margin: 0; 
             background: var(--bg); 
             color: var(--text-main); 
-            overflow-x: hidden;
-            display: flex; /* ใช้ Flex เพื่อช่วยจัดกึ่งกลางในภาพรวม */
             min-height: 100vh;
+            display: flex;
         }
 
-        /* ===== GLOBAL RESET & SIDEBAR STRUCTURE ===== */
-        * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
-        body { margin: 0; background: #f8fafc; padding-bottom: 80px; color: #334155; -webkit-font-smoothing: antialiased; }
-        
-        .top-toggle { position: fixed; top: 15px; left: 15px; z-index: 1400; width: 45px; height: 45px; border-radius: 12px; border: none; background: #1e293b; color: #fff; font-size: 20px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; }
-        @media(min-width:769px) { .top-toggle { display: none; } }
-        
-        .sidebar { position: fixed; top: 0; left: 0; width: 260px; height: 100vh; background: #1e293b; color: #fff; overflow-y: auto; transform: translateX(-260px); transition: all .3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 2000; }
+        /* ===== SIDEBAR ===== */
+        .sidebar { 
+            position: fixed; top: 0; left: 0; width: var(--sidebar-w); height: 100vh; 
+            background: #1e293b; color: #fff; z-index: 2000;
+            transform: translateX(-100%); transition: var(--transition);
+        }
         .sidebar.show { transform: translateX(0); }
-        .content { padding: 80px 20px 40px; transition: margin-left .3s; }
-        @media(min-width:769px) { .sidebar { transform: translateX(0); } .content { margin-left: 260px; } }
-        
-        .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: none; backdrop-filter: blur(4px); z-index: 1500; }
+
+        /* Mobile Overlay */
+        .overlay { 
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5); 
+            display: none; z-index: 1500; backdrop-filter: blur(4px); 
+        }
         .overlay.show { display: block; }
 
-        /* ===== [FIXED] SIDEBAR INTERNAL MENU STYLE ===== */
-        .sidebar-header { padding: 25px 20px; font-size: 18px; font-weight: 600; background: #0f172a; color: #fff; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .menu { display: flex; flex-direction: column; padding: 10px 0; }
-        .item { border-bottom: 1px solid rgba(255,255,255,0.03); }
-        
-        /* สไตล์ปุ่มเมนูหลัก + ฟีเจอร์เมาส์ชี้แล้วขยับ */
-        .menu a, .menu .drop-btn { 
-            width: 100%; min-height: 50px; padding: 12px 20px; background: none; border: none; 
-            color: #cbd5e1; text-align: left; font-size: 15px; cursor: pointer; display: flex; 
-            align-items: center; text-decoration: none; transition: all 0.3s ease; 
-        }
-        /* แก้ไขจุดนี้: เมาส์ชี้แล้วขยับไปทางขวา */
-        .menu a:hover, .menu .drop-btn:hover { background: #334155; color: #fff; padding-left: 30px; }
-        
-        /* เมนูย่อย + เมาส์ชี้แล้วขยับ */
-        .sub { display: none; background: #0f172a; padding: 5px 0; }
-        .item.open .sub { display: block; }
-        .sub a { padding-left: 45px; font-size: 14px; color: #94a3b8; min-height: 40px; transition: all 0.3s ease; }
-        .sub a:hover { color: #5bbf8a; padding-left: 55px; }
-
-        /* ลูกศร */
-        .arrow { margin-left: auto; transition: 0.3s; font-size: 10px; opacity: 0.6; }
-        .item.open .arrow { transform: rotate(90deg); }
-
-
-        /* ===== MAIN CONTENT AREA ===== */
         .content-wrapper {
             flex: 1;
             display: flex;
@@ -81,164 +56,208 @@
             transition: var(--transition);
         }
 
+        @media(min-width: 992px) {
+            .sidebar { transform: translateX(0); }
+            .content-wrapper { margin-left: var(--sidebar-w); }
+            .overlay { display: none !important; }
+        }
+
+        /* ===== TOP NAV ===== */
         .top-nav { 
-            position: sticky; top: 0; background: rgba(255,255,255,0.85); 
-            backdrop-filter: blur(12px); padding: 12px 20px; display: flex; 
+            position: sticky; top: 0; background: rgba(255,255,255,0.9); 
+            backdrop-filter: blur(10px); padding: 15px 25px; display: flex; 
             align-items: center; justify-content: space-between; z-index: 1000; 
             border-bottom: 1px solid #e2e8f0;
         }
 
-        .main-container { 
-            padding: 30px 15px; 
-            width: 100%; 
-            max-width: 1200px; /* คุมความกว้างสูงสุด */
-            margin: 0 auto; /* จัดกึ่งกลางแนวนอน */
+        .menu-toggle {
+            width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
+            background: #f1f5f9; border-radius: 10px; cursor: pointer; color: var(--text-main);
         }
 
-        @media(min-width: 992px) { 
-            .sidebar { transform: translateX(0); } 
-            .content-wrapper { margin-left: var(--sidebar-w); } 
-            .menu-toggle { display: none; }
-            .main-container { padding: 50px 40px; }
+        .status-pill { 
+            display: flex; align-items: center; gap: 8px; font-size: 13px; 
+            background: #fff; padding: 6px 15px; border-radius: 50px; border: 1px solid #e2e8f0; 
         }
-
-        /* ===== UI CARDS ===== */
-        .header-section { text-align: center; margin-bottom: 40px; }
-        .header-section h1 { font-size: clamp(22px, 5vw, 32px); margin: 0; color: #0f172a; }
-        .header-section p { color: var(--text-sub); margin-top: 10px; }
-
-        .grid-container { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
-            gap: 25px; 
-            justify-content: center; /* จัด Card ให้อยู่กลางถ้ามีเศษ */
-        }
-
-        .target-card { 
-            background: var(--card-bg); border-radius: 24px; padding: 25px; 
-            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); 
-            border: 1px solid #f1f5f9; transition: var(--transition);
-            display: flex; flex-direction: column;
-        }
-
-        /* ===== INPUTS & BUTTONS ===== */
-        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .total-black { 
-            background: #0f172a !important; color: #fff !important; 
-            border: none !important; font-size: 20px !important; width: 100px !important; 
-            padding: 10px !important; border-radius: 12px;
-        }
-
-        .unit-label { 
-            margin: 20px 0 12px 0; padding: 8px 15px; border-radius: 10px; 
-            font-weight: 600; font-size: 13px; text-transform: uppercase;
-        }
-        .bg-blue { background: var(--primary-light); color: var(--primary); }
-        .bg-purple { background: var(--secondary-light); color: var(--secondary); }
-
-        .staff-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-        input[type="text"] { 
-            width: 80px; text-align: right; padding: 10px; border-radius: 12px; 
-            border: 1.5px solid #e2e8f0; outline: none; transition: 0.2s;
-        }
-        input[type="text"]:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
-
-        .summary-row { border-top: 1px dashed #e2e8f0; padding-top: 12px; font-weight: 600; margin-top: 5px; }
-
-        .btn-save { 
-            background: var(--success); color: white; width: 100%; max-width: 400px;
-            margin: 40px auto 0 auto; padding: 18px; border-radius: 16px; border: none; 
-            font-size: 16px; font-weight: 600; cursor: pointer; transition: var(--transition);
-            display: flex; align-items: center; justify-content: center; gap: 10px;
-            box-shadow: 0 10px 20px -5px rgba(16, 185, 129, 0.4);
-        }
-        .btn-save:hover { transform: translateY(-3px); filter: brightness(1.1); }
-
-        /* ===== UTILS ===== */
-        .status-pill { display: flex; align-items: center; gap: 8px; font-size: 13px; background: #fff; padding: 6px 15px; border-radius: 50px; border: 1px solid #e2e8f0; }
         .dot { width: 8px; height: 8px; border-radius: 50%; background: #cbd5e1; position: relative; }
         .dot.pulse::after { content: ''; position: absolute; inset: -4px; border-radius: 50%; background: inherit; opacity: 0.4; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0% { transform: scale(1); opacity: 0.5; } 100% { transform: scale(2.5); opacity: 0; } }
 
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; z-index: 1500; backdrop-filter: blur(4px); }
-        .overlay.show { display: block; }
+        /* ===== EDIT MODE CONTROL ===== */
+        .mode-control {
+            display: flex; align-items: center; justify-content: flex-end;
+            margin-bottom: 20px; gap: 10px;
+        }
+        .edit-switch {
+            position: relative; display: inline-block; width: 50px; height: 26px;
+        }
+        .edit-switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; cursor: pointer; inset: 0; background-color: #cbd5e1;
+            transition: .4s; border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px;
+            background-color: white; transition: .4s; border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--primary); }
+        input:checked + .slider:before { transform: translateX(24px); }
+
+        /* ===== MAIN CONTENT ===== */
+        .main-container { padding: 30px 20px; max-width: 1200px; margin: 0 auto; width: 100%; }
         
-        .save-popup { position: fixed; inset: 0; background: rgba(15,23,42,0.8); display: none; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(8px); }
+        .header-section { margin-bottom: 30px; }
+        .header-section h1 { font-size: 28px; margin: 0; color: #0f172a; font-weight: 600; }
+        
+        .grid-container { 
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); 
+            gap: 20px; 
+        }
+
+        .target-card { 
+            background: var(--card-bg); border-radius: var(--radius); padding: 24px; 
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+            border: 1px solid #fff;
+        }
+
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .total-badge { 
+            background: #1e293b; color: #fff; padding: 8px 16px; border-radius: 12px;
+            font-size: 20px; font-weight: 600; width: 80px; text-align: center;
+        }
+
+        .unit-label { 
+            margin: 20px 0 12px 0; padding: 6px 12px; border-radius: 8px; 
+            font-weight: 600; font-size: 13px; display: inline-block;
+        }
+        .bg-blue { background: #eff6ff; color: #3b82f6; }
+        .bg-purple { background: #f5f3ff; color: #8b5cf6; }
+
+        .staff-item { 
+            display: flex; justify-content: space-between; align-items: center; 
+            margin-bottom: 10px; padding: 4px 0;
+        }
+        
+        /* Input Styling */
+        input[type="text"] { 
+            width: 70px; text-align: center; padding: 8px; border-radius: 10px; 
+            border: 1.5px solid #e2e8f0; background: #f8fafc; color: #64748b;
+            transition: var(--transition); font-weight: 500;
+        }
+        input[type="text"]:not([readonly]) { background: #fff; color: var(--text-main); border-color: #cbd5e1; }
+        input[type="text"]:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+        input[readonly] { cursor: default; border-color: transparent; }
+
+        .summary-row { border-top: 1px solid #f1f5f9; padding-top: 12px; font-weight: 600; margin-top: 10px; color: var(--text-main); }
+
+        .btn-save { 
+            background: var(--success); color: white; width: 100%; max-width: 400px;
+            margin: 40px auto; padding: 18px; border-radius: 16px; border: none; 
+            font-size: 16px; font-weight: 600; cursor: pointer; transition: var(--transition);
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.3);
+        }
+        .btn-save:disabled { background: #cbd5e1; cursor: not-allowed; box-shadow: none; }
+        .btn-save:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.05); }
+
+        /* Loader Popup */
+        .save-popup { position: fixed; inset: 0; background: rgba(15,23,42,0.7); display: none; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(4px); }
         .save-popup.active { display: flex; }
-        .loader-box { background: #fff; padding: 40px; border-radius: 24px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.2); }
+        .loader-box { background: #fff; padding: 40px; border-radius: 24px; text-align: center; width: 90%; max-width: 320px; }
+
+        @media(max-width: 768px) {
+            .grid-container { grid-template-columns: 1fr; }
+            .sidebar-header { padding: 20px; background: #0f172a; }
+        }
     </style>
 </head>
 <body>
 
 <div class="save-popup" id="savePopup">
     <div class="loader-box">
-        <i class="fa-solid fa-circle-notch fa-spin fa-3x" style="color: var(--primary); margin-bottom: 20px;"></i>
-        <h2 style="margin: 0; font-size: 20px;">กำลังบันทึกข้อมูล</h2>
-        <p style="color: var(--text-sub); margin-top: 10px;">ระบบกำลังส่งยอดเข้า Google Sheet กรุณารอสักครู่</p>
+        <i class="fa-solid fa-spinner fa-spin fa-3x" style="color: var(--primary); margin-bottom: 20px;"></i>
+        <h2 style="margin: 0; font-size: 18px;">กำลังประมวลผล</h2>
+        <p style="color: var(--text-sub); font-size: 14px; margin-top: 8px;">กรุณารอสักครู่...</p>
     </div>
 </div>
 
 <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 
-<aside class="sidebar" id="sidebar"></aside>
+<aside class="sidebar" id="sidebar">
+    <div style="padding: 30px 20px;">
+        <h3 style="margin: 0; font-size: 1.2rem;">Menu</h3>
+        <hr style="opacity: 0.1; margin: 20px 0;">
+        <p style="color: #94a3b8; font-size: 14px;">(Sidebar Content Loaded via JS)</p>
+    </div>
+</aside>
 
 <div class="content-wrapper">
     <nav class="top-nav">
         <div class="menu-toggle" onclick="toggleSidebar()"><i class="fa-solid fa-bars-staggered"></i></div>
         <div class="status-pill">
             <span class="dot" id="sync-dot"></span>
-            <span id="status-text">เชื่อมต่อระบบ...</span>
+            <span id="status-text">กำลังโหลด...</span>
         </div>
     </nav>
 
     <main class="main-container">
         <div class="header-section">
             <h1>Target BigC Prachauthit</h1>
-            <p>สรุปยอดขายแบบ Real-time ประจำสาขา</p>
+            <p style="color: var(--text-sub); margin: 5px 0 0 0;">สรุปยอดขายประจำสาขา แบบเรียลไทม์</p>
+        </div>
+
+        <div class="mode-control">
+            <span style="font-size: 14px; font-weight: 500; color: var(--text-sub);" id="modeLabel">โหมดอ่านอย่างเดียว</span>
+            <label class="edit-switch">
+                <input type="checkbox" id="editToggle" onchange="toggleEditMode()">
+                <span class="slider"></span>
+            </label>
         </div>
 
         <div class="grid-container">
             <div class="target-card">
                 <div class="card-header">
-                    <span style="font-weight:600; font-size:18px;"><i class="fa-solid fa-sim-card" style="color:var(--primary); margin-right:8px;"></i> Postpay</span>
-                    <input type="text" class="total-black" id="postpay_total" readonly value="0">
+                    <span style="font-weight:600; font-size:18px;"><i class="fa-solid fa-sim-card" style="color:var(--primary); margin-right:10px;"></i> Postpay</span>
+                    <div class="total-badge" id="postpay_total_display">0</div>
+                    <input type="hidden" id="postpay_total">
                 </div>
 
                 <div class="unit-label bg-blue">New Sim Only</div>
-                <div class="staff-item"><span>นวพล</span><input type="text" id="pp_nawa_n" oninput="calculate()"></div>
-                <div class="staff-item"><span>ปิยะพร</span><input type="text" id="pp_piya_n" oninput="calculate()"></div>
-                <div class="staff-item"><span>กรทักษ์</span><input type="text" id="pp_korn_n" oninput="calculate()"></div>
+                <div class="staff-item"><span>นวพล</span><input type="text" id="pp_nawa_n" class="data-input" oninput="calculate()" readonly></div>
+                <div class="staff-item"><span>ปิยะพร</span><input type="text" id="pp_piya_n" class="data-input" oninput="calculate()" readonly></div>
+                <div class="staff-item"><span>กรทักษ์</span><input type="text" id="pp_korn_n" class="data-input" oninput="calculate()" readonly></div>
                 <div class="staff-item summary-row"><span>รวม New Sim</span><input type="text" id="pp_new_total" readonly value="0"></div>
 
                 <div class="unit-label bg-blue">Existing</div>
-                <div class="staff-item"><span>นวพล</span><input type="text" id="pp_nawa_e" oninput="calculate()"></div>
-                <div class="staff-item"><span>ปิยะพร</span><input type="text" id="pp_piya_e" oninput="calculate()"></div>
-                <div class="staff-item"><span>กรทักษ์</span><input type="text" id="pp_korn_e" oninput="calculate()"></div>
+                <div class="staff-item"><span>นวพล</span><input type="text" id="pp_nawa_e" class="data-input" oninput="calculate()" readonly></div>
+                <div class="staff-item"><span>ปิยะพร</span><input type="text" id="pp_piya_e" class="data-input" oninput="calculate()" readonly></div>
+                <div class="staff-item"><span>กรทักษ์</span><input type="text" id="pp_korn_e" class="data-input" oninput="calculate()" readonly></div>
                 <div class="staff-item summary-row"><span>รวม Existing</span><input type="text" id="pp_ext_total" readonly value="0"></div>
             </div>
 
             <div class="target-card">
                 <div class="card-header">
-                    <span style="font-weight:600; font-size:18px;"><i class="fa-solid fa-mobile-screen" style="color:var(--secondary); margin-right:8px;"></i> Device</span>
-                    <input type="text" class="total-black" id="device_total" readonly value="0">
+                    <span style="font-weight:600; font-size:18px;"><i class="fa-solid fa-mobile-screen" style="color:var(--secondary); margin-right:10px;"></i> Device</span>
+                    <div class="total-badge" id="device_total_display">0</div>
+                    <input type="hidden" id="device_total">
                 </div>
 
                 <div class="unit-label bg-purple">Apple Device</div>
-                <div class="staff-item"><span>นวพล</span><input type="text" id="dev_nawa_a" oninput="calculate()"></div>
-                <div class="staff-item"><span>ปิยะพร</span><input type="text" id="dev_piya_a" oninput="calculate()"></div>
-                <div class="staff-item"><span>กรทักษ์</span><input type="text" id="dev_korn_a" oninput="calculate()"></div>
+                <div class="staff-item"><span>นวพล</span><input type="text" id="dev_nawa_a" class="data-input" oninput="calculate()" readonly></div>
+                <div class="staff-item"><span>ปิยะพร</span><input type="text" id="dev_piya_a" class="data-input" oninput="calculate()" readonly></div>
+                <div class="staff-item"><span>กรทักษ์</span><input type="text" id="dev_korn_a" class="data-input" oninput="calculate()" readonly></div>
                 <div class="staff-item summary-row"><span>รวม Apple</span><input type="text" id="dev_apple_total" readonly value="0"></div>
 
                 <div class="unit-label bg-purple">Smartphone</div>
-                <div class="staff-item"><span>นวพล</span><input type="text" id="dev_nawa_s" oninput="calculate()"></div>
-                <div class="staff-item"><span>ปิยะพร</span><input type="text" id="dev_piya_s" oninput="calculate()"></div>
-                <div class="staff-item"><span>กรทักษ์</span><input type="text" id="dev_korn_s" oninput="calculate()"></div>
+                <div class="staff-item"><span>นวพล</span><input type="text" id="dev_nawa_s" class="data-input" oninput="calculate()" readonly></div>
+                <div class="staff-item"><span>ปิยะพร</span><input type="text" id="dev_piya_s" class="data-input" oninput="calculate()" readonly></div>
+                <div class="staff-item"><span>กรทักษ์</span><input type="text" id="dev_korn_s" class="data-input" oninput="calculate()" readonly></div>
                 <div class="staff-item summary-row"><span>รวม Smartphone</span><input type="text" id="dev_smart_total" readonly value="0"></div>
             </div>
         </div>
 
-        <button class="btn-save" id="saveBtn" onclick="saveAll()">
-            <i class="fa-solid fa-cloud-arrow-up"></i> บันทึกข้อมูลทั้งหมด
+        <button class="btn-save" id="saveBtn" onclick="saveAll()" disabled>
+            <i class="fa-solid fa-cloud-arrow-up"></i> บันทึกยอดขาย
         </button>
     </main>
 </div>
@@ -246,19 +265,42 @@
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz4jD9tgF3eR-j5xEyq2HUlQ2r7eYyHFo7pwvkV_EHBLz33Srnez2Vy9q7i-biUvtvmgQ/exec";
 
+    // --- Core Functions ---
+    
+    function toggleEditMode() {
+        const isEdit = document.getElementById('editToggle').checked;
+        const inputs = document.querySelectorAll('.data-input');
+        const saveBtn = document.getElementById('saveBtn');
+        const modeLabel = document.getElementById('modeLabel');
+
+        inputs.forEach(input => input.readOnly = !isEdit);
+        saveBtn.disabled = !isEdit;
+        modeLabel.innerText = isEdit ? "โหมดแก้ไขข้อมูล" : "โหมดอ่านอย่างเดียว";
+        modeLabel.style.color = isEdit ? "var(--primary)" : "var(--text-sub)";
+    }
+
     function calculate() {
         const getVal = id => parseInt(document.getElementById(id).value) || 0;
+        
+        // Postpay Calculation
         const ppNew = getVal('pp_nawa_n') + getVal('pp_piya_n') + getVal('pp_korn_n');
         const ppExt = getVal('pp_nawa_e') + getVal('pp_piya_e') + getVal('pp_korn_e');
+        const ppTotal = ppNew + ppExt;
+        
         document.getElementById('pp_new_total').value = ppNew;
         document.getElementById('pp_ext_total').value = ppExt;
-        document.getElementById('postpay_total').value = ppNew + ppExt;
+        document.getElementById('postpay_total').value = ppTotal;
+        document.getElementById('postpay_total_display').innerText = ppTotal;
 
+        // Device Calculation
         const devApple = getVal('dev_nawa_a') + getVal('dev_piya_a') + getVal('dev_korn_a');
         const devSmart = getVal('dev_nawa_s') + getVal('dev_piya_s') + getVal('dev_korn_s');
+        const devTotal = devApple + devSmart;
+
         document.getElementById('dev_apple_total').value = devApple;
         document.getElementById('dev_smart_total').value = devSmart;
-        document.getElementById('device_total').value = devApple + devSmart;
+        document.getElementById('device_total').value = devTotal;
+        document.getElementById('device_total_display').innerText = devTotal;
     }
 
     function updateSyncStatus(type) {
@@ -268,7 +310,7 @@
         if (type === 'syncing') {
             dot.style.background = "#f59e0b";
             dot.classList.add("pulse");
-            txt.innerText = "รับ-ส่งข้อมูล...";
+            txt.innerText = "กำลังรับ-ส่งข้อมูล...";
         } else if (type === 'success') {
             dot.style.background = "#10b981";
             txt.innerText = "เชื่อมต่อสำเร็จ";
@@ -278,55 +320,43 @@
         }
     }
 
-    function includeSidebar() {
-        fetch('sidebar.html?v=' + new Date().getTime())
-            .then(res => res.text())
-            .then(data => {
-                const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = data;
-                tempDiv.querySelectorAll('.sub').forEach(sub => {
-                    const container = document.createElement('div');
-                    container.className = 'sub-container';
-                    while (sub.firstChild) container.appendChild(sub.firstChild);
-                    sub.appendChild(container);
-                });
-                document.getElementById('sidebar').innerHTML = tempDiv.innerHTML;
-                restoreMenuState();
-            });
-    }
-
+    // --- Sidebar Handling ---
     function toggleSidebar() {
         document.getElementById("sidebar").classList.toggle("show");
         document.getElementById("overlay").classList.toggle("show");
     }
 
-    window.toggleDrop = function(btn, id) {
-        const item = btn.closest('.item'); 
-        item.classList.toggle("open");
-        if (id) localStorage.setItem('menu-' + id, item.classList.contains("open"));
+    function includeSidebar() {
+        // ดึง Sidebar จากไฟล์ภายนอก (ถ้ามี)
+        fetch('sidebar.html?v=' + new Date().getTime())
+            .then(res => {
+                if(!res.ok) throw new Error();
+                return res.text();
+            })
+            .then(data => {
+                document.getElementById('sidebar').innerHTML = data;
+                // ถ้ามี function restoreMenuState ในไฟล์ sidebar
+                if(typeof restoreMenuState === 'function') restoreMenuState();
+            })
+            .catch(() => console.log("Sidebar file not found, using default."));
     }
 
-    function restoreMenuState() {
-        ['credit', 'branch'].forEach(id => {
-            if (localStorage.getItem('menu-' + id) === 'true') {
-                const el = document.getElementById('menu-' + id);
-                if (el) el.classList.add('open');
-            }
-        });
-    }
-
+    // --- Data Management ---
     async function loadData() {
         updateSyncStatus('syncing');
         try {
             const res = await fetch(SCRIPT_URL);
             const data = await res.json();
+            
             Object.keys(data).forEach(k => {
                 const el = document.getElementById(k);
                 if (el) el.value = data[k];
             });
+            
             calculate();
             updateSyncStatus('success');
         } catch (e) {
+            console.error(e);
             updateSyncStatus('error');
         }
     }
@@ -334,6 +364,9 @@
     async function saveAll() {
         const popup = document.getElementById("savePopup");
         const btn = document.getElementById("saveBtn");
+        
+        if(!confirm("ยืนยันการบันทึกข้อมูลเข้าสู่ระบบ?")) return;
+
         updateSyncStatus('syncing');
         popup.classList.add("active");
         btn.disabled = true;
@@ -349,18 +382,22 @@
                 body: JSON.stringify(payload)
             });
             const result = await response.json();
+            
             if (result.status === "Success") {
                 updateSyncStatus('success');
+                // โหลดข้อมูลใหม่หลังจากบันทึกสำเร็จ
+                await loadData();
                 setTimeout(() => {
                     popup.classList.remove("active");
-                    btn.disabled = false;
-                    location.reload();
+                    // รีเซ็ตโหมดแก้ไข
+                    document.getElementById('editToggle').checked = false;
+                    toggleEditMode();
                 }, 1000);
             } else { throw new Error(); }
         } catch (e) {
             popup.classList.remove("active");
             btn.disabled = false;
-            alert("❌ ไม่สามารถบันทึกข้อมูลได้");
+            alert("❌ ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่");
             updateSyncStatus('error');
         }
     }
@@ -370,7 +407,6 @@
         loadData();
     };
 </script>
+
 </body>
 </html>
-
-
