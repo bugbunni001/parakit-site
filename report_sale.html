@@ -22,14 +22,14 @@
         /* Sidebar System */
         #sidebar-container { width: var(--sidebar-width); background: var(--sidebar-bg); height: 100vh; position: fixed; left: 0; top: 0; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 2000; overflow-y: auto; box-shadow: 4px 0 15px rgba(0,0,0,0.2); }
         
-        /* สไตล์เหล่านี้จะทำงานกับ HTML ที่ดึงมาจาก sidebar.html */
+        /* สไตล์จัดการเมนูย่อยและการจำสถานะ */
         .menu .item .sub { display: none; background: #0f172a; }
         .menu .item.open .sub { display: block; }
         .menu .item.open .arrow { transform: rotate(90deg); }
         .arrow { margin-left: auto; transition: 0.3s; font-size: 10px; }
         
         .menu a, .drop-btn { width: 100%; padding: 15px 20px; background: none; border: none; color: var(--sidebar-text) !important; text-align: left; font-size: 15px; cursor: pointer; display: flex; align-items: center; gap: 10px; text-decoration: none !important; transition: var(--transition); border-left: 4px solid transparent; }
-        .menu a:hover, .drop-btn:hover { background: var(--sidebar-hover); color: var(--primary) !important; border-left: 4px solid var(--primary); padding-left: 25px; }
+        .menu a:hover, .drop-btn:hover, .menu a.active { background: var(--sidebar-hover); color: var(--primary) !important; border-left: 4px solid var(--primary); }
         .sub a { padding-left: 50px; font-size: 14px; opacity: 0.8; }
 
         .main-content { flex-grow: 1; margin-left: var(--sidebar-width); padding: 15px; width: calc(100% - var(--sidebar-width)); transition: var(--transition); }
@@ -45,7 +45,7 @@
         .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: none; backdrop-filter: blur(4px); z-index: 1500; }
         body.show-sidebar .overlay { display: block; }
 
-        /* Dashboard & Card Styles */
+        /* Dashboard Styles */
         .container { max-width: 1200px; margin: 0 auto; width: 100%; }
         .header-bar { background: var(--white); padding: 15px 20px; border-radius: 14px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); flex-wrap: wrap; gap: 15px; }
         .action-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -109,8 +109,7 @@
 <div class="loading" id="loader">🔄 กำลังประมวลผล...</div>
 <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 
-<aside id="sidebar-container">
-    </aside>
+<aside id="sidebar-container"></aside>
 
 <main class="main-content">
     <div class="container">
@@ -177,23 +176,39 @@
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxnxcEXpQfQOroa2hSkCP70DNMMThefnCFJqItwrVXUgJCDu40Tm4WCN6B6don8wuqiKg/exec"; 
 
-    // 1. ฟังก์ชันดึง Sidebar จากไฟล์ภายนอก
+    // 1. ฟังก์ชันดึง Sidebar และจำค่าสถานะ (Active Menu)
     async function includeSidebar() {
         const version = new Date().getTime();
         try {
             const response = await fetch('sidebar.html?v=' + version);
             const data = await response.text();
-            document.getElementById('sidebar-container').innerHTML = data;
+            const container = document.getElementById('sidebar-container');
+            container.innerHTML = data;
             
-            // เพิ่ม Logic สำหรับตรวจจับการคลิก Submenu (เพราะ HTML มาทีหลัง)
-            document.addEventListener('click', function (e) {
+            // ตรวจสอบ URL เพื่อระบุว่าเมนูไหนทำงานอยู่
+            const currentPath = window.location.pathname.split('/').pop() || 'index.html';
+            const allLinks = container.querySelectorAll('a');
+            
+            allLinks.forEach(link => {
+                const href = link.getAttribute('href');
+                if (href && (href === currentPath || (currentPath === '' && href === 'index.html'))) {
+                    link.classList.add('active');
+                    // ถ้าเมนูย่อย Active ให้กางเมนูหลักด้วย
+                    const parentItem = link.closest('.item');
+                    if (parentItem) parentItem.classList.add('open');
+                }
+            });
+
+            // จัดการ Event คลิกสำหรับ Submenu (ใช้ Delegation เพื่อความเสถียร)
+            container.addEventListener('click', function (e) {
                 const dropBtn = e.target.closest('.drop-btn');
                 if (dropBtn) {
-                    dropBtn.parentElement.classList.toggle('open');
+                    const parent = dropBtn.parentElement;
+                    parent.classList.toggle('open');
                 }
             });
         } catch (err) { 
-            console.warn("Sidebar Load Error: ตรวจสอบว่าไฟล์ sidebar.html อยู่ในโฟลเดอร์เดียวกันหรือไม่"); 
+            console.warn("Sidebar Load Error"); 
         }
     }
 
@@ -207,7 +222,7 @@
         }
     }
 
-    // 3. ฟังก์ชันดึงข้อมูลจาก Google Sheets (ห้ามแก้ไข)
+    // 3. ฟังก์ชันดึงข้อมูลจาก Google Sheets (ห้ามแก้ไขโครงสร้าง)
     async function loadData() {
         const loader = document.getElementById('loader');
         const sheet = document.getElementById('staffSelect').value;
@@ -278,14 +293,14 @@
                 document.getElementById('dashboardData').style.display = 'block';
                 document.getElementById('noData').style.display = 'none';
             }
-        } catch (e) { alert("Error"); } finally { loader.style.display = 'none'; }
+        } catch (e) { alert("ข้อมูลผิดพลาด"); } finally { loader.style.display = 'none'; }
     }
 
-    // เรียกใช้งาน Sidebar เมื่อโหลดหน้าเว็บ
-    window.onload = includeSidebar;
+    // เริ่มทำงาน
+    document.addEventListener('DOMContentLoaded', includeSidebar);
 
-    function exportPDF() { /* logic */ }
-    function exportExcel() { /* logic */ }
+    function exportPDF() { /* logic เดิม */ }
+    function exportExcel() { /* logic เดิม */ }
 </script>
 </body>
 </html>
