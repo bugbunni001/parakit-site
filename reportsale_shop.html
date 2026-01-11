@@ -40,7 +40,8 @@
             z-index: 2000;
             overflow-y: auto;
             box-shadow: 4px 0 15px rgba(0,0,0,0.2);
-            padding-top: 20px;
+            /* แก้ไขให้ชิดด้านบน */
+            padding-top: 0; 
         }
 
         .menu .item .sub { display: none; background: #0f172a; }
@@ -70,9 +71,10 @@
         .main-content { 
             flex-grow: 1; 
             margin-left: var(--sidebar-width);
-            padding: 15px; 
+            padding: 20px; 
             width: calc(100% - var(--sidebar-width));
             transition: var(--transition);
+            min-width: 0; /* ป้องกันเนื้อหาดันจอออก */
         }
 
         body.collapsed #sidebar-container { transform: translateX(calc(var(--sidebar-width) * -1)); }
@@ -88,82 +90,78 @@
         .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: none; backdrop-filter: blur(4px); z-index: 1500; }
         .overlay.show { display: block; }
 
-        .btn-fetch, .btn-pdf, .btn-excel {
-            transition: var(--transition);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        /* ===== MODERN LOADING SPINNER ===== */
+        .loading { 
+            position: fixed; inset: 0; 
+            background: rgba(255,255,255,0.9); 
+            display: none; flex-direction: column;
+            justify-content: center; align-items: center; 
+            z-index: 3000; 
         }
-        .btn-fetch:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(91, 183, 170, 0.4); filter: brightness(1.1); }
-        .btn-pdf:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(225, 29, 72, 0.4); filter: brightness(1.1); }
-        .btn-excel:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(22, 101, 52, 0.4); filter: brightness(1.1); }
+        .spinner {
+            width: 50px; height: 50px;
+            border: 5px solid #e2e8f0;
+            border-top: 5px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .loading span { font-weight: 500; color: var(--text-dark); letter-spacing: 1px; }
 
-        .container { max-width: 1200px; margin: 0 auto; width: 100%; }
-        
         .header-bar { 
             background: var(--primary); padding: 15px 20px; border-radius: 14px; display: flex; 
             justify-content: space-between; align-items: center; margin-bottom: 20px; 
             box-shadow: 0 4px 15px rgba(91, 183, 170, 0.2); flex-wrap: wrap; gap: 15px; 
         }
-        .header-bar h2 { color: white !important; font-weight: 500; letter-spacing: 0.5px; }
-        .header-bar button[onclick="toggleSidebar()"] { background: rgba(255,255,255,0.2) !important; color: white; }
+        .header-bar h2 { color: white !important; font-weight: 500; letter-spacing: 0.5px; margin:0; }
 
         .action-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-        #daySelect { padding: 10px 16px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.3); font-size: 16px; background-color: white; cursor: pointer; transition: var(--transition); flex-grow: 1; }
+        #daySelect { padding: 10px 16px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.3); font-size: 16px; background-color: white; cursor: pointer; transition: var(--transition); }
 
         .btn-fetch { background: #2d3748; color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 8px; }
         .btn-pdf { background: var(--pdf); color: white; border: none; padding: 10px 16px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
         .btn-excel { background: var(--excel); color: white; border: none; padding: 10px 16px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
 
         .main-grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 15px; }
-        @media (max-width: 900px) { .main-grid { grid-template-columns: 1fr; } .action-group { width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; } .btn-fetch { grid-column: span 2; } }
+        @media (max-width: 900px) { 
+            .main-grid { grid-template-columns: 1fr; } 
+            .action-group { width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; } 
+            .btn-fetch { grid-column: span 2; }
+            #daySelect { grid-column: span 2; }
+        }
 
         #dashboardData { display: none; animation: fadeIn 0.5s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .card { background: var(--white); border-radius: 15px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid #edf2f7; margin-bottom: 15px; transition: var(--transition); }
-        .card:hover { box-shadow: 0 8px 20px rgba(0,0,0,0.06); }
-        .card-header { padding: 12px 18px; color: white; font-weight: 500; background: var(--primary); display: flex; justify-content: space-between; font-size: 18px; letter-spacing: 0.3px; }
+        .card { background: var(--white); border-radius: 15px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid #edf2f7; margin-bottom: 15px; }
+        .card-header { padding: 12px 18px; color: white; font-weight: 500; background: var(--primary); display: flex; justify-content: space-between; align-items: center; font-size: 18px; }
         
-        .table-wrapper { width: 100%; overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; }
+        .table-wrapper { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; border-collapse: collapse; min-width: 400px; }
         th { padding: 15px; text-align: left; font-size: 15px; background: #fafbfc; border-bottom: 2px solid #edf2f7; color: #4a5568; font-weight: 600; }
-        td { padding: 12px 15px; border-bottom: 1px solid #f7fafc; font-size: 15px; transition: var(--transition); color: #2d3748; }
-        
-        tr:hover td { background: rgba(91, 183, 170, 0.05); }
+        td { padding: 12px 15px; border-bottom: 1px solid #f7fafc; font-size: 15px; color: #2d3748; }
         
         .text-right { text-align: right; }
-        .row-summary { background-color: rgba(91, 183, 170, 0.1); }
-        .row-summary td { font-weight: 700 !important; color: #1a202c; border-bottom: 2px solid var(--primary); }
+        .row-summary { background-color: rgba(91, 183, 170, 0.1); font-weight: 700; }
         
-        /* Stat 4 BOX */
-        .bottom-stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 15px; background: #fafbfc; border-top: 1px solid #edf2f7; }
-        .stat-item { background: #ffffff; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0; border-left: 6px solid var(--primary); transition: var(--transition); cursor: pointer; }
-        .stat-item:hover { transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); background: #fff; }
-        .stat-label { font-size: 15px; font-weight: 600; color: #718096; margin-bottom: 8px; display: block; }
+        .bottom-stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 15px; background: #fafbfc; }
+        @media (max-width: 480px) { .bottom-stats-grid { grid-template-columns: 1fr; } }
+
+        .stat-item { background: #ffffff; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0; border-left: 6px solid var(--primary); }
+        .stat-label { font-size: 14px; font-weight: 600; color: #718096; margin-bottom: 8px; display: block; }
         .stat-content { display: flex; justify-content: space-between; align-items: flex-end; }
-        .stat-left { display: flex; flex-direction: column; gap: 2px; }
-        .stat-main { font-size: 32px; font-weight: 700; line-height: 1; color: var(--text-dark); }
-        .stat-achieve { color: var(--success); font-weight: 700; font-size: 20px; }
-        .stat-right { text-align: right; }
-        .stat-sub-val { color: #dc2626; font-weight: 700; font-size: 18px; display: block; }
-        .stat-sub-label { font-size: 11px; color: #a0aec0; font-weight: 600; text-transform: uppercase; }
+        .stat-main { font-size: 28px; font-weight: 700; color: var(--text-dark); }
+        .stat-achieve { color: var(--success); font-weight: 700; font-size: 18px; }
+        .stat-sub-val { color: #dc2626; font-weight: 700; font-size: 16px; display: block; }
+        .stat-sub-label { font-size: 10px; color: #a0aec0; text-transform: uppercase; }
 
-        /* ===== BRAND TABLE CUSTOM (ปรับปรุงใหม่) ===== */
-        .brand-summary-wrapper { padding: 15px; background: #f8fafc; border-top: 1px solid #edf2f7; }
-        .brand-table { width: 100%; background: white; border-radius: 10px; border-collapse: collapse; }
-        .brand-table th { 
-            background: #f8fafc !important; 
-            color: #4a5568 !important; 
-            font-size: 15px !important; 
-            padding: 15px; 
-            border-bottom: 2px solid #edf2f7;
-        }
-        .brand-table td { padding: 12px 15px; font-size: 14px; border-bottom: 1px solid #f1f5f9; }
-        .brand-table tbody tr:hover { background-color: rgba(91, 183, 170, 0.05); }
+        .brand-table { width: 100%; border-collapse: collapse; }
+        .brand-table th { background: #f8fafc; padding: 12px; }
+        .brand-table td { padding: 10px 12px; border-bottom: 1px solid #f1f5f9; }
 
-        .target-group-header { padding: 10px 15px; font-weight: 600; color: white; transition: var(--transition); }
-        .target-group-header:hover { filter: brightness(1.2); padding-left: 20px; cursor: default; }
-        .target-row { transition: var(--transition); display:flex; justify-content:space-between; padding:12px 18px; border-bottom:1px solid #f1f5f9; }
-        .target-row:hover { background: #f8fafc; padding-left: 25px; color: var(--primary); }
+        .target-group-header { padding: 10px 15px; font-weight: 600; color: white; }
+        .target-row { display:flex; justify-content:space-between; padding:12px 18px; border-bottom:1px solid #f1f5f9; }
         
         .bg-grad-yellow { background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%); }
         .bg-grad-orange-light { background: linear-gradient(90deg, #f97316 0%, #fb923c 100%); }
@@ -177,10 +175,8 @@
         .bg-slate { background: #4a5568; } 
         .bg-teal { background: #38b2ac; }
         
-        .loading { position: fixed; inset: 0; background: rgba(255,255,255,0.8); display: none; justify-content: center; align-items: center; z-index: 3000; font-weight: 600; }
-        .daily-table thead tr:first-child th { color: #ffffff; text-align: center; padding: 8px; font-weight: 500; }
+        .daily-table thead tr:first-child th { color: #ffffff; text-align: center; padding: 8px; }
         .daily-table thead tr:last-child th { background: #f1f5f9; color: #475569; text-align: center; font-size: 12px; }
-        .daily-table td { text-align: center; border-right: 1px solid #f1f5f9; }
         .val-actual { color: var(--primary); font-weight: 700; }
         .val-diff { color: #dc2626; font-weight: 700; }
         .v-sep { border-left: 2px solid #e2e8f0 !important; }
@@ -188,7 +184,11 @@
 </head>
 <body id="mainBody">
 
-<div class="loading" id="loader">🔄 กำลังประมวลผล...</div>
+<div class="loading" id="loader">
+    <div class="spinner"></div>
+    <span>กำลังดึงข้อมูล...</span>
+</div>
+
 <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 
 <aside id="sidebar-container">
@@ -203,8 +203,8 @@
     <div class="container">
         <div class="header-bar">
             <div style="display:flex; align-items:center; gap:12px;">
-                <button onclick="toggleSidebar()" style="border:none; padding:10px 14px; border-radius:10px; cursor:pointer; transition: 0.3s;">☰</button>
-                <h2 style="margin:0; font-size:20px;">Performance Report</h2>
+                <button onclick="toggleSidebar()" style="border:none; background:rgba(255,255,255,0.2); color:white; padding:10px 14px; border-radius:10px; cursor:pointer;">☰</button>
+                <h2>Performance</h2>
             </div>
             <div class="action-group">
                 <select id="daySelect">
@@ -224,20 +224,20 @@
         </div>
 
         <div id="dashboardData">
-            <div class="card" id="dailyCard">
+            <div class="card">
                 <div class="card-header">
-                    <span>📅 ข้อมูลรายวัน (วันที่ <span id="dailyDateNum"></span>)</span>
+                    <span>📅 วันที่ <span id="dailyDateNum"></span></span>
                     <span id="labelStaff" style="font-size: 13px; opacity: 0.9;"></span>
                 </div>
                 <div class="table-wrapper">
-                    <table class="daily-table" id="tableDaily">
+                    <table class="daily-table">
                         <thead>
                             <tr>
                                 <th rowspan="2" style="background:#4a5568; color:white;">วันที่</th>
-                                <th colspan="2" class="bg-amber" style="color:white;">New Post</th>
-                                <th colspan="2" class="bg-orange" style="color:white;">BDBC</th>
-                                <th colspan="2" class="bg-slate" style="color:white;">Apple</th>
-                                <th colspan="2" class="bg-teal" style="color:white;">SmartPhone</th>
+                                <th colspan="2" class="bg-amber">New Post</th>
+                                <th colspan="2" class="bg-orange">BDBC</th>
+                                <th colspan="2" class="bg-slate">Apple</th>
+                                <th colspan="2" class="bg-teal">SmartPhone</th>
                                 <th colspan="2" style="background:#2d3748; color:white;">Total</th>
                             </tr>
                             <tr>
@@ -256,11 +256,11 @@
             <div class="main-grid">
                 <div class="left-panel">
                     <div class="card">
-                        <div class="card-header">📍 สรุปยอดขาย: <span id="labelL"></span></div>
+                        <div class="card-header">📍 สรุปยอด: <span id="labelL"></span></div>
                         <div class="table-wrapper">
                             <table id="tableSummary">
                                 <thead>
-                                    <tr><th>Type การขาย</th><th class="text-right">ยอด PostPay</th><th class="text-right">จำนวน</th></tr>
+                                    <tr><th>Type</th><th class="text-right">ยอด PostPay</th><th class="text-right">จำนวน</th></tr>
                                 </thead>
                                 <tbody id="summaryBody"></tbody>
                             </table>
@@ -269,22 +269,14 @@
                     </div>
 
                     <div class="card">
-                        <div class="card-header">
-                            <span>📊 ยอดขายแยกตามแบรนด์</span>
-                        </div>
-                        <div class="brand-summary-wrapper">
-                            <div class="table-wrapper">
-                                <table class="brand-table">
-                                    <thead>
-                                        <tr>
-                                            <th>แบรนด์</th>
-                                            <th class="text-right">ยอดขาย</th>
-                                            <th class="text-right">จำนวน</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="brandBody"></tbody>
-                                </table>
-                            </div>
+                        <div class="card-header">📊 ยอดแยกแบรนด์</div>
+                        <div class="table-wrapper">
+                            <table class="brand-table">
+                                <thead>
+                                    <tr><th>แบรนด์</th><th class="text-right">ยอดขาย</th><th class="text-right">จำนวน</th></tr>
+                                </thead>
+                                <tbody id="brandBody"></tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -293,7 +285,7 @@
                     <div class="card">
                         <div class="card-header">🎯 Focus: <span id="labelR"></span></div>
                         <div class="table-wrapper">
-                            <table id="tableFocus">
+                            <table>
                                 <thead><tr><th>Target</th><th class="text-right">Actual</th></tr></thead>
                                 <tbody id="focusBody"></tbody>
                             </table>
@@ -327,13 +319,11 @@
             if (response.ok) {
                 const html = await response.text();
                 menuContainer.innerHTML = html;
-                restoreMenuState();
             } else {
-                menuContainer.innerHTML = '<div style="padding:20px; color:white;">กรุณาเปิดผ่าน Server เพื่อโหลดเมนู</div>';
+                menuContainer.innerHTML = '<div style="padding:20px; color:white;">Sidebar.html not found</div>';
             }
         } catch (error) {
-            console.error("Sidebar error:", error);
-            menuContainer.innerHTML = '<div style="padding:20px; color:white;">Error loading sidebar</div>';
+            menuContainer.innerHTML = '<div style="padding:20px; color:white;">Error loading menu</div>';
         }
     }
 
@@ -347,23 +337,6 @@
             body.classList.toggle('show-sidebar');
             overlay.classList.toggle('show');
         }
-    }
-
-    window.toggleDrop = function(btn, id) {
-        const item = btn.closest('.item'); 
-        if (!item) return;
-        const isOpen = item.classList.toggle("open");
-        if (id) localStorage.setItem('menu-' + id, isOpen);
-    }
-
-    function restoreMenuState() {
-        const menus = ['credit', 'branch']; 
-        menus.forEach(id => {
-            if (localStorage.getItem('menu-' + id) === 'true') {
-                const menuEl = document.getElementById('menu-' + id);
-                if (menuEl) menuEl.classList.add('open');
-            }
-        });
     }
 
     async function loadData() {
@@ -383,46 +356,38 @@
                 document.getElementById('labelStaff').innerText = data.staffName;
                 document.getElementById('dailyDateNum').innerText = selectedDay;
 
-                // 1. สรุปยอดขาย (Card บน)
                 document.getElementById('summaryBody').innerHTML = data.summary.map(r => {
                     const isTotal = r[0].includes("รวมยอด");
                     return `<tr class="${isTotal?'row-summary':''}"><td>${r[0]}</td><td class="text-right">${r[1]}</td><td class="text-right">${r[2]}</td></tr>`;
                 }).join('');
 
-                // 2. ยอดแยกแบรนด์ (Card ล่าง)
                 document.getElementById('brandBody').innerHTML = data.brandSummary.map(r => {
                     const isTotal = r[0].includes("รวม");
                     const rowStyle = isTotal ? 'font-weight:700; background:#f1f5f9;' : '';
-                    return `<tr style="${rowStyle}">
-                        <td>${r[0]}</td><td class="text-right">${r[1]}</td><td class="text-right">${r[2]}</td>
-                    </tr>`;
+                    return `<tr style="${rowStyle}"><td>${r[0]}</td><td class="text-right">${r[1]}</td><td class="text-right">${r[2]}</td></tr>`;
                 }).join('');
 
-                // 3. Focus Panel
                 document.getElementById('focusBody').innerHTML = data.focus
                     .filter(r => r[0] && r[0] !== "Target")
                     .map(r => `<tr><td>${r[0]}</td><td class="text-right" style="color:#dc2626; font-weight:700;">${r[1]}</td></tr>`).join('');
 
-                // 4. Target Panel
                 const tDiv = document.getElementById('targetBody');
                 tDiv.innerHTML = "";
                 data.targets.forEach(r => {
                     if(r[0].includes("คำนวณ Target")) {
-                        let cls = "";
+                        let cls = "bg-slate";
                         if(r[0].includes("All Post")) cls = "bg-grad-yellow";
                         else if(r[0].includes("New Post")) cls = "bg-grad-orange-light";
                         else if(r[0].includes("BDBC")) cls = "bg-grad-orange-dark";
                         else if(r[0].includes("All Device")) cls = "bg-grad-blue-dark";
                         else if(r[0].includes("Apple")) cls = "bg-grad-blue-slate";
                         else if(r[0].includes("SmartPhone")) cls = "bg-grad-blue-teal";
-                        else cls = "bg-slate";
                         tDiv.innerHTML += `<div class="target-group-header ${cls}">${r[0]}</div>`;
                     } else if(r[0] && r[0] !== "Target") {
                         tDiv.innerHTML += `<div class="target-row"><span>${r[0]}</span><b>${r[1]}</b></div>`;
                     }
                 });
 
-                // 5. Bottom Stats
                 const s = data.topStats;
                 const ach = data.achieve; 
                 const stats = [
@@ -431,23 +396,18 @@
                     { l: s[0][4], v: s[1][4], d: s[1][5], a: ach.apple, c: '#4a5568' },
                     { l: s[0][6], v: s[1][6], d: s[1][7], a: ach.smartPhone, c: '#38b2ac' }
                 ];
-
                 document.getElementById('bottomStats').innerHTML = stats.map(i => `
                     <div class="stat-item" style="border-left-color:${i.c}">
                         <span class="stat-label">${i.l}</span>
                         <div class="stat-content">
-                            <div class="stat-left">
-                                <span class="stat-main">${i.v}</span>
-                                <span class="stat-achieve">${i.a}%</span>
-                            </div>
-                            <div class="stat-right">
-                                <span class="stat-sub-label">ขาด/เกิน</span>
+                            <div class="stat-main">${i.v} <span class="stat-achieve">(${i.a}%)</span></div>
+                            <div class="text-right">
+                                <span class="stat-sub-label">Diff</span>
                                 <span class="stat-sub-val">${i.d}</span>
                             </div>
                         </div>
                     </div>`).join('');
 
-                // 6. Daily Table
                 if(data.dailyRow) {
                     const dr = data.dailyRow;
                     document.getElementById('dailyBody').innerHTML = `
@@ -463,7 +423,7 @@
                 document.getElementById('noData').style.display = 'none';
             }
         } catch (e) {
-            alert("ไม่สามารถดึงข้อมูลได้ โปรดตรวจสอบการตั้งค่า App Script ของคุณ");
+            alert("Error: " + e.message);
         } finally {
             loader.style.display = 'none';
         }
@@ -471,14 +431,14 @@
 
     function exportPDF() {
         const element = document.getElementById('dashboardData');
-        html2pdf().set({ margin: 5, filename: 'Performance_Report.pdf', jsPDF: { orientation: 'landscape' } }).from(element).save();
+        html2pdf().set({ margin: 5, filename: 'Performance.pdf', jsPDF: { orientation: 'landscape' } }).from(element).save();
     }
 
     function exportExcel() {
         const wb = XLSX.utils.book_new();
         const ws = XLSX.utils.table_to_sheet(document.getElementById('tableSummary'));
         XLSX.utils.book_append_sheet(wb, ws, "Summary");
-        XLSX.writeFile(wb, "Performance_Report.xlsx");
+        XLSX.writeFile(wb, "Performance.xlsx");
     }
 </script>
 </body>
