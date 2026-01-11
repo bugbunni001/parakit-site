@@ -9,7 +9,6 @@
     <style>
         :root {
             --primary: #2563eb;
-            --primary-light: #dbeafe;
             --secondary: #7c3aed;
             --success: #059669;
             --bg: #f8fafc;
@@ -19,30 +18,30 @@
             --sidebar-w: 280px;
             --radius-lg: 20px;
             --radius-md: 12px;
-            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
             --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         * { box-sizing: border-box; font-family: 'Kanit', sans-serif; }
         body { margin: 0; background: var(--bg); color: var(--text-main); min-height: 100vh; display: flex; overflow-x: hidden; }
 
-        /* ===== SIDEBAR SYSTEM (External) ===== */
+        /* ===== SIDEBAR SYSTEM (Fixed Control) ===== */
         .sidebar { 
             position: fixed; top: 0; left: 0; width: var(--sidebar-w); height: 100vh; 
             background: #0f172a; color: #fff; z-index: 2000;
             transform: translateX(-100%); transition: var(--transition);
-            box-shadow: 10px 0 30px rgba(0,0,0,0.1);
-            overflow-y: auto;
+            box-shadow: 10px 0 30px rgba(0,0,0,0.2);
+            display: flex; flex-direction: column;
         }
-        .sidebar.active { transform: translateX(0); }
+        /* เมื่อมี class active ให้กางออกมา */
+        .sidebar.active { transform: translateX(0) !important; }
 
         .overlay { 
-            position: fixed; inset: 0; background: rgba(0,0,0,0.4); 
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5); 
             display: none; z-index: 1500; backdrop-filter: blur(4px); 
         }
         .overlay.active { display: block; }
 
-        /* ===== CONTENT STRUCTURE ===== */
         .content-wrapper { flex: 1; display: flex; flex-direction: column; width: 100%; transition: var(--transition); }
         
         @media(min-width: 992px) {
@@ -61,123 +60,59 @@
 
         .menu-toggle {
             width: 45px; height: 45px; display: flex; align-items: center; justify-content: center;
-            background: #fff; border-radius: 12px; cursor: pointer; color: var(--text-main);
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; font-size: 1.2rem;
+            background: #fff; border-radius: 12px; cursor: pointer; border: 1px solid #e2e8f0; font-size: 1.2rem;
         }
 
-        .status-pill { 
-            display: flex; align-items: center; gap: 8px; font-size: 13px; 
-            background: #fff; padding: 6px 14px; border-radius: 50px; border: 1px solid #e2e8f0; font-weight: 500;
+        /* ===== INPUT & CARD STYLING (Expanded) ===== */
+        .grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 25px; }
+        .target-card { background: var(--card-bg); border-radius: var(--radius-lg); padding: 25px; box-shadow: var(--shadow); border: 1px solid #fff; position: relative; }
+        .card-postpay::before { content:''; position:absolute; top:0; left:0; width:100%; height:5px; background: var(--primary); border-radius: 20px 20px 0 0; }
+        .card-device::before { content:''; position:absolute; top:0; left:0; width:100%; height:5px; background: var(--secondary); border-radius: 20px 20px 0 0; }
+
+        .total-badge { background: #f1f5f9; color: var(--text-main); padding: 10px; border-radius: 15px; font-size: 24px; font-weight: 700; min-width: 100px; text-align: center; border: 1px solid #e2e8f0; }
+
+        /* ปรับปรุงขนาดช่อง Input ไม่ให้ตัวเลขตกขอบ */
+        input[type="text"] { 
+            width: 115px; text-align: right; padding: 10px 12px; border-radius: 10px; 
+            border: 1.5px solid #f1f5f9; background: #f8fafc; font-weight: 600; font-size: 17px; 
         }
+        input[type="text"]:not([readonly]) { background: #fff; border-color: #cbd5e1; color: #000; }
+        
+        .staff-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .summary-row { border-top: 2px dashed #f1f5f9; padding-top: 15px; margin-top: 10px; font-weight: 700; }
+        .summary-row input { background: transparent !important; border: none !important; color: var(--text-main) !important; font-size: 19px; width: 120px; }
+
+        /* UI อื่นๆ */
+        .status-pill { display: flex; align-items: center; gap: 8px; font-size: 13px; background: #fff; padding: 6px 14px; border-radius: 50px; border: 1px solid #e2e8f0; }
         .dot { width: 8px; height: 8px; border-radius: 50%; background: #cbd5e1; }
         .dot.pulse { animation: pulse 1.5s infinite; }
         @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(2.5); opacity: 0; } }
-
-        /* ===== MAIN CONTAINER ===== */
-        .main-container { padding: 30px 20px; max-width: 1200px; margin: 0 auto; width: 100%; }
         
-        .header-section { margin-bottom: 30px; border-left: 5px solid var(--primary); padding-left: 20px; }
-        .header-section h1 { font-size: 26px; margin: 0; color: #0f172a; }
-        
-        .mode-control {
-            background: #fff; padding: 12px 20px; border-radius: var(--radius-md);
-            display: flex; align-items: center; justify-content: space-between;
-            margin-bottom: 25px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); border: 1px solid #e2e8f0;
-        }
-
-        /* Switch UI */
-        .edit-switch { position: relative; display: inline-block; width: 48px; height: 24px; }
-        .edit-switch input { opacity: 0; width: 0; height: 0; }
-        .slider {
-            position: absolute; cursor: pointer; inset: 0; background-color: #e2e8f0;
-            transition: .4s; border-radius: 34px;
-        }
-        .slider:before {
-            position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px;
-            background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        input:checked + .slider { background-color: var(--primary); }
-        input:checked + .slider:before { transform: translateX(24px); }
-
-        /* ===== CARDS UI ===== */
-        .grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 25px; }
-
-        .target-card { 
-            background: var(--card-bg); border-radius: var(--radius-lg); padding: 25px; 
-            box-shadow: var(--shadow); border: 1px solid #fff; position: relative; overflow: hidden;
-        }
-        .target-card::before {
-            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 5px;
-        }
-        .card-postpay::before { background: var(--primary); }
-        .card-device::before { background: var(--secondary); }
-
-        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .total-badge { 
-            background: #f1f5f9; color: var(--text-main); padding: 10px 18px; border-radius: 15px;
-            font-size: 24px; font-weight: 700; min-width: 100px; text-align: center; border: 1px solid #e2e8f0;
-        }
-
-        .unit-label { 
-            margin: 18px 0 12px 0; padding: 6px 14px; border-radius: 8px; 
-            font-weight: 600; font-size: 13px; display: inline-flex; align-items: center; gap: 5px;
-        }
-        .bg-blue { background: #eff6ff; color: #2563eb; }
-        .bg-purple { background: #f5f3ff; color: #7c3aed; }
-
-        .staff-item { 
-            display: flex; justify-content: space-between; align-items: center; 
-            margin-bottom: 12px; font-size: 16px;
-        }
-        
-        /* ขยายขนาดช่อง Input ให้ใหญ่ขึ้น */
-        input[type="text"] { 
-            width: 110px; text-align: right; padding: 10px 15px; border-radius: 12px; 
-            border: 1.5px solid #f1f5f9; background: #f8fafc; color: #94a3b8;
-            transition: var(--transition); font-weight: 600; font-size: 16px;
-        }
-        input[type="text"]:not([readonly]) { background: #fff; color: var(--text-main); border-color: #e2e8f0; }
-        input[type="text"]:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 4px rgba(37,99,235,0.1); }
-        
-        .summary-row { border-top: 2px dashed #f1f5f9; padding-top: 15px; font-weight: 700; margin-top: 10px; color: var(--text-main); }
-        .summary-row input { background: transparent !important; border: none !important; color: var(--text-main) !important; font-size: 18px; width: 120px; }
-
-        /* ===== SAVE BUTTON ===== */
-        .btn-save { 
-            background: var(--success); color: white; width: 100%; max-width: 450px;
-            margin: 40px auto; padding: 20px; border-radius: var(--radius-lg); border: none; 
-            font-size: 18px; font-weight: 600; cursor: pointer; transition: var(--transition);
-            display: flex; align-items: center; justify-content: center; gap: 12px;
-            box-shadow: 0 10px 20px -5px rgba(5, 150, 105, 0.4);
-        }
-        .btn-save:disabled { background: #cbd5e1; cursor: not-allowed; box-shadow: none; transform: none; }
-        .btn-save:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 15px 25px -5px rgba(5, 150, 105, 0.5); }
-
-        /* Loader */
+        .btn-save { background: var(--success); color: white; width: 100%; max-width: 450px; margin: 40px auto; padding: 20px; border-radius: var(--radius-lg); border: none; font-size: 18px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 12px; }
         .save-popup { position: fixed; inset: 0; background: rgba(15,23,42,0.8); display: none; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(8px); }
         .save-popup.active { display: flex; }
-        .loader-box { background: #fff; padding: 40px; border-radius: 30px; text-align: center; width: 90%; max-width: 350px; }
-
-        @media(max-width: 768px) {
-            .grid-container { grid-template-columns: 1fr; }
-            .header-section h1 { font-size: 22px; }
-            input[type="text"] { width: 100px; padding: 8px 10px; }
-        }
     </style>
 </head>
 <body>
 
-<div class="overlay" id="overlay"></div>
+<div class="overlay" id="overlay" onclick="closeMenu()"></div>
 
 <aside class="sidebar" id="sidebar">
-    <div style="padding: 20px; text-align: center; color: #64748b;">กำลังโหลดเมนู...</div>
+    <div style="padding: 20px; background: #1e293b; display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-weight: 600; font-size: 1.2rem;"><i class="fa-solid fa-bars mr-2"></i> เมนูหลัก</span>
+        <button onclick="closeMenu()" style="background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer;" class="menu-toggle-inner">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+    </div>
+    <div id="sidebar-content">
+        <div style="padding: 20px; text-align: center; color: #64748b;">กำลังโหลดเมนู...</div>
+    </div>
 </aside>
 
 <div class="save-popup" id="savePopup">
-    <div class="loader-box">
+    <div style="background: #fff; padding: 40px; border-radius: 30px; text-align: center;">
         <i class="fa-solid fa-circle-notch fa-spin fa-3x" style="color: var(--primary); margin-bottom: 20px;"></i>
-        <h2 style="margin: 0; font-size: 20px;">กำลังส่งข้อมูล</h2>
-        <p style="color: var(--text-sub); margin-top: 10px;">ระบบกำลังอัปเดต Google Sheet...</p>
+        <h2>กำลังบันทึกข้อมูล</h2>
     </div>
 </div>
 
@@ -190,38 +125,36 @@
         </div>
     </nav>
 
-    <main class="main-container">
-        <div class="header-section">
-            <h1>BigC Prachauthit</h1>
+    <main class="main-container" style="padding: 30px 20px; max-width: 1200px; margin: 0 auto; width: 100%;">
+        <div class="header-section" style="margin-bottom: 30px; border-left: 5px solid var(--primary); padding-left: 20px;">
+            <h1 style="font-size: 26px; margin: 0;">BigC Prachauthit</h1>
             <p style="color: var(--text-sub); margin: 5px 0 0 0;">Sale Target Tracking System</p>
         </div>
 
-        <div class="mode-control">
+        <div style="background: #fff; padding: 12px 20px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px; border: 1px solid #e2e8f0;">
             <div style="display:flex; align-items:center; gap:12px;">
-                <i class="fa-solid fa-lock" id="modeIcon" style="color: var(--text-sub);"></i>
+                <i class="fa-solid fa-lock" id="modeIcon"></i>
                 <span style="font-weight: 600;" id="modeLabel">READ ONLY</span>
             </div>
-            <label class="edit-switch">
-                <input type="checkbox" id="editToggle" onchange="toggleEditMode()">
-                <span class="slider"></span>
+            <label style="position: relative; display: inline-block; width: 48px; height: 24px;">
+                <input type="checkbox" id="editToggle" onchange="toggleEditMode()" style="opacity:0; width:0; height:0;">
+                <span style="position: absolute; cursor: pointer; inset: 0; background-color: #e2e8f0; transition: .4s; border-radius: 34px;" id="sliderBtn"></span>
             </label>
         </div>
 
         <div class="grid-container">
             <div class="target-card card-postpay">
-                <div class="card-header">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                     <span style="font-weight:600; font-size:18px; color:var(--primary);"><i class="fa-solid fa-sim-card"></i> Postpay</span>
                     <div class="total-badge" id="postpay_total_display">0</div>
                     <input type="hidden" id="postpay_total">
                 </div>
-
-                <div class="unit-label bg-blue">New Sim Only</div>
+                <div style="background: #eff6ff; color: #2563eb; padding: 6px; border-radius: 8px; font-weight: 600; font-size: 13px; display: inline-block; margin-bottom: 15px;">New Sim Only</div>
                 <div class="staff-item"><span>นวพล</span><input type="text" id="pp_nawa_n" class="data-input" oninput="handleInput(this)" readonly></div>
                 <div class="staff-item"><span>ปิยะพร</span><input type="text" id="pp_piya_n" class="data-input" oninput="handleInput(this)" readonly></div>
                 <div class="staff-item"><span>กรทักษ์</span><input type="text" id="pp_korn_n" class="data-input" oninput="handleInput(this)" readonly></div>
                 <div class="staff-item summary-row"><span>รวม New Sim</span><input type="text" id="pp_new_total" readonly value="0"></div>
-
-                <div class="unit-label bg-blue">Existing</div>
+                <div style="background: #eff6ff; color: #2563eb; padding: 6px; border-radius: 8px; font-weight: 600; font-size: 13px; display: inline-block; margin: 15px 0;">Existing</div>
                 <div class="staff-item"><span>นวพล</span><input type="text" id="pp_nawa_e" class="data-input" oninput="handleInput(this)" readonly></div>
                 <div class="staff-item"><span>ปิยะพร</span><input type="text" id="pp_piya_e" class="data-input" oninput="handleInput(this)" readonly></div>
                 <div class="staff-item"><span>กรทักษ์</span><input type="text" id="pp_korn_e" class="data-input" oninput="handleInput(this)" readonly></div>
@@ -229,19 +162,17 @@
             </div>
 
             <div class="target-card card-device">
-                <div class="card-header">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                     <span style="font-weight:600; font-size:18px; color:var(--secondary);"><i class="fa-solid fa-mobile-screen-button"></i> Device</span>
                     <div class="total-badge" id="device_total_display">0</div>
                     <input type="hidden" id="device_total">
                 </div>
-
-                <div class="unit-label bg-purple">Apple Device</div>
+                <div style="background: #f5f3ff; color: #7c3aed; padding: 6px; border-radius: 8px; font-weight: 600; font-size: 13px; display: inline-block; margin-bottom: 15px;">Apple Device</div>
                 <div class="staff-item"><span>นวพล</span><input type="text" id="dev_nawa_a" class="data-input" oninput="handleInput(this)" readonly></div>
                 <div class="staff-item"><span>ปิยะพร</span><input type="text" id="dev_piya_a" class="data-input" oninput="handleInput(this)" readonly></div>
                 <div class="staff-item"><span>กรทักษ์</span><input type="text" id="dev_korn_a" class="data-input" oninput="handleInput(this)" readonly></div>
                 <div class="staff-item summary-row"><span>รวม Apple</span><input type="text" id="dev_apple_total" readonly value="0"></div>
-
-                <div class="unit-label bg-purple">Smartphone</div>
+                <div style="background: #f5f3ff; color: #7c3aed; padding: 6px; border-radius: 8px; font-weight: 600; font-size: 13px; display: inline-block; margin: 15px 0;">Smartphone</div>
                 <div class="staff-item"><span>นวพล</span><input type="text" id="dev_nawa_s" class="data-input" oninput="handleInput(this)" readonly></div>
                 <div class="staff-item"><span>ปิยะพร</span><input type="text" id="dev_piya_s" class="data-input" oninput="handleInput(this)" readonly></div>
                 <div class="staff-item"><span>กรทักษ์</span><input type="text" id="dev_korn_s" class="data-input" oninput="handleInput(this)" readonly></div>
@@ -258,72 +189,34 @@
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz4jD9tgF3eR-j5xEyq2HUlQ2r7eYyHFo7pwvkV_EHBLz33Srnez2Vy9q7i-biUvtvmgQ/exec";
 
-    // --- Sidebar External Load ---
+    // --- Sidebar Logic ---
+    function openMenu() {
+        document.getElementById('sidebar').classList.add('active');
+        document.getElementById('overlay').classList.add('active');
+    }
+
+    function closeMenu() {
+        document.getElementById('sidebar').classList.remove('active');
+        document.getElementById('overlay').classList.remove('active');
+    }
+
     async function loadSidebar() {
         try {
             const response = await fetch('sidebar.html');
             if (response.ok) {
                 const html = await response.text();
-                document.getElementById('sidebar').innerHTML = html;
-            } else {
-                document.getElementById('sidebar').innerHTML = '<div style="padding:20px;">ไม่พบไฟล์ sidebar.html</div>';
+                document.getElementById('sidebar-content').innerHTML = html;
             }
-        } catch (e) {
-            console.error("Error loading sidebar:", e);
-        }
+        } catch (e) { console.error("Sidebar load error", e); }
     }
 
-    const sidebar = document.getElementById('sidebar');
-    const overlay = document.getElementById('overlay');
-
-    function openMenu() {
-        sidebar.classList.add('active');
-        overlay.classList.add('active');
-    }
-
-    function closeMenu() {
-        sidebar.classList.remove('active');
-        overlay.classList.remove('active');
-    }
-
-    overlay.addEventListener('click', closeMenu);
-
-    // --- Helper Functions ---
-    function formatNumber(num) {
-        return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-    }
-
-    function parseNumber(str) {
-        return parseInt(str.replace(/,/g, '')) || 0;
-    }
+    // --- Data Logic ---
+    function formatNumber(num) { return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
+    function parseNumber(str) { return parseInt(str.replace(/,/g, '')) || 0; }
 
     function handleInput(input) {
-        let val = input.value.replace(/[^0-9]/g, '');
-        input.value = formatNumber(val);
+        input.value = formatNumber(input.value.replace(/[^0-9]/g, ''));
         calculate();
-    }
-
-    function toggleEditMode() {
-        const isEdit = document.getElementById('editToggle').checked;
-        const inputs = document.querySelectorAll('.data-input');
-        const saveBtn = document.getElementById('saveBtn');
-        const modeLabel = document.getElementById('modeLabel');
-        const modeIcon = document.getElementById('modeIcon');
-
-        inputs.forEach(input => input.readOnly = !isEdit);
-        saveBtn.disabled = !isEdit;
-        
-        if(isEdit) {
-            modeLabel.innerText = "EDIT MODE";
-            modeLabel.style.color = "var(--primary)";
-            modeIcon.className = "fa-solid fa-unlock-alt";
-            modeIcon.style.color = "var(--primary)";
-        } else {
-            modeLabel.innerText = "READ ONLY";
-            modeLabel.style.color = "var(--text-sub)";
-            modeIcon.className = "fa-solid fa-lock";
-            modeIcon.style.color = "var(--text-sub)";
-        }
     }
 
     function calculate() {
@@ -331,110 +224,69 @@
         
         const ppNew = getVal('pp_nawa_n') + getVal('pp_piya_n') + getVal('pp_korn_n');
         const ppExt = getVal('pp_nawa_e') + getVal('pp_piya_e') + getVal('pp_korn_e');
-        const ppTotal = ppNew + ppExt;
-        
         document.getElementById('pp_new_total').value = formatNumber(ppNew);
         document.getElementById('pp_ext_total').value = formatNumber(ppExt);
-        document.getElementById('postpay_total').value = ppTotal;
-        document.getElementById('postpay_total_display').innerText = formatNumber(ppTotal);
+        document.getElementById('postpay_total_display').innerText = formatNumber(ppNew + ppExt);
+        document.getElementById('postpay_total').value = ppNew + ppExt;
 
-        const devApple = getVal('dev_nawa_a') + getVal('dev_piya_a') + getVal('dev_korn_a');
-        const devSmart = getVal('dev_nawa_s') + getVal('dev_piya_s') + getVal('dev_korn_s');
-        const devTotal = devApple + devSmart;
-
-        document.getElementById('dev_apple_total').value = formatNumber(devApple);
-        document.getElementById('dev_smart_total').value = formatNumber(devSmart);
-        document.getElementById('device_total').value = devTotal;
-        document.getElementById('device_total_display').innerText = formatNumber(devTotal);
+        const devA = getVal('dev_nawa_a') + getVal('dev_piya_a') + getVal('dev_korn_a');
+        const devS = getVal('dev_nawa_s') + getVal('dev_piya_s') + getVal('dev_korn_s');
+        document.getElementById('dev_apple_total').value = formatNumber(devA);
+        document.getElementById('dev_smart_total').value = formatNumber(devS);
+        document.getElementById('device_total_display').innerText = formatNumber(devA + devS);
+        document.getElementById('device_total').value = devA + devS;
     }
 
-    function updateSyncStatus(type) {
-        const dot = document.getElementById("sync-dot");
-        const txt = document.getElementById("status-text");
-        dot.className = "dot";
-        
-        if (type === 'syncing') {
-            dot.style.background = "#f59e0b";
-            dot.classList.add("pulse");
-            txt.innerText = "กำลังซิงค์ข้อมูล...";
-        } else if (type === 'success') {
-            dot.style.background = "#10b981";
-            txt.innerText = "ออนไลน์";
-        } else if (type === 'error') {
-            dot.style.background = "#ef4444";
-            txt.innerText = "ขาดการเชื่อมต่อ";
-        }
+    function toggleEditMode() {
+        const isEdit = document.getElementById('editToggle').checked;
+        document.querySelectorAll('.data-input').forEach(i => i.readOnly = !isEdit);
+        document.getElementById('saveBtn').disabled = !isEdit;
+        document.getElementById('modeLabel').innerText = isEdit ? "EDIT MODE" : "READ ONLY";
+        document.getElementById('modeLabel').style.color = isEdit ? "var(--primary)" : "var(--text-sub)";
+        document.getElementById('sliderBtn').style.backgroundColor = isEdit ? "var(--primary)" : "#e2e8f0";
     }
 
     async function loadData() {
-        updateSyncStatus('syncing');
+        const dot = document.getElementById('sync-dot');
+        const txt = document.getElementById('status-text');
+        dot.className = "dot pulse"; dot.style.background = "#f59e0b";
+        txt.innerText = "กำลังซิงค์...";
+
         try {
             const res = await fetch(SCRIPT_URL);
             const data = await res.json();
-            
             Object.keys(data).forEach(k => {
                 const el = document.getElementById(k);
-                if (el) {
-                    if(el.tagName === 'INPUT') {
-                        el.value = formatNumber(data[k]);
-                    } else {
-                        el.innerText = formatNumber(data[k]);
-                    }
+                if(el) {
+                    if(el.tagName === 'INPUT') el.value = formatNumber(data[k]);
+                    else el.innerText = formatNumber(data[k]);
                 }
             });
-            
             calculate();
-            updateSyncStatus('success');
+            dot.className = "dot"; dot.style.background = "#10b981";
+            txt.innerText = "ออนไลน์";
         } catch (e) {
-            updateSyncStatus('error');
+            dot.style.background = "#ef4444"; txt.innerText = "Error";
         }
     }
 
     async function saveAll() {
-        const popup = document.getElementById("savePopup");
-        const btn = document.getElementById("saveBtn");
+        if(!confirm("บันทึกข้อมูล?")) return;
+        document.getElementById('savePopup').classList.add('active');
         
-        if(!confirm("ต้องการบันทึกข้อมูลใช่หรือไม่?")) return;
-
-        updateSyncStatus('syncing');
-        popup.classList.add("active");
-        btn.disabled = true;
-
         const payload = {};
-        document.querySelectorAll("input").forEach(i => {
-            if (i.id) {
-                payload[i.id] = parseNumber(i.value);
-            }
-        });
+        document.querySelectorAll("input").forEach(i => { if(i.id) payload[i.id] = parseNumber(i.value); });
 
         try {
-            const response = await fetch(SCRIPT_URL, {
-                method: "POST",
-                body: JSON.stringify(payload)
-            });
-            const result = await response.json();
-            
-            if (result.status === "Success") {
-                updateSyncStatus('success');
-                await loadData();
-                setTimeout(() => {
-                    popup.classList.remove("active");
-                    document.getElementById('editToggle').checked = false;
-                    toggleEditMode();
-                }, 1000);
-            } else { throw new Error(); }
+            await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(payload) });
+            location.reload();
         } catch (e) {
-            popup.classList.remove("active");
-            btn.disabled = false;
-            alert("❌ บันทึกไม่สำเร็จ กรุณาตรวจสอบการเชื่อมต่อ");
-            updateSyncStatus('error');
+            alert("บันทึกไม่สำเร็จ");
+            document.getElementById('savePopup').classList.remove('active');
         }
     }
 
-    window.onload = () => {
-        loadSidebar();
-        loadData();
-    };
+    window.onload = () => { loadSidebar(); loadData(); };
 </script>
 
 </body>
