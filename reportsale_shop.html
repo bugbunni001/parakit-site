@@ -322,11 +322,9 @@
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwuHFYlbD8PVy61v_SeJ7bOwm5Tg92DHCbzF4Myrvuogs63r-oYbVagveG8obnkIMuI3Q/exec"; 
 
     document.addEventListener('DOMContentLoaded', () => {
-        // ดึงสถานะ Sidebar จาก localStorage (ค่าเริ่มต้นคือ false หากไม่มี)
         const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
         const body = document.getElementById('mainBody');
         
-        // ถ้าเป็นจอใหญ่และสถานะเป็น collapsed ให้ซ่อนเมนูทันทีที่โหลด
         if (isCollapsed && window.innerWidth > 900) {
             body.classList.add('collapsed');
         }
@@ -342,10 +340,30 @@
                 const html = await response.text();
                 menuContainer.innerHTML = html;
                 
+                // คืนค่าสถานะการเปิดเมนูย่อยจาก localStorage
+                const openedMenus = JSON.parse(localStorage.getItem('openedSubMenus') || "[]");
+                
                 const dropBtns = menuContainer.querySelectorAll('.drop-btn');
-                dropBtns.forEach(btn => {
+                dropBtns.forEach((btn, index) => {
+                    const parent = btn.parentElement;
+                    
+                    // ตรวจสอบว่าเมนูนี้เคยเปิดค้างไว้หรือไม่
+                    if (openedMenus.includes(index)) {
+                        parent.classList.add('open');
+                    }
+
                     btn.addEventListener('click', function() {
-                        this.parentElement.classList.toggle('open');
+                        parent.classList.toggle('open');
+                        
+                        // บันทึกสถานะเมนูย่อยที่เปิดอยู่
+                        const currentOpened = [];
+                        menuContainer.querySelectorAll('.item.open').forEach((openItem) => {
+                            // หา index ของปุ่มที่อยู่ใน item ที่เปิดอยู่
+                            const allItems = Array.from(menuContainer.querySelectorAll('.item'));
+                            const idx = allItems.indexOf(openItem);
+                            if (idx !== -1) currentOpened.push(idx);
+                        });
+                        localStorage.setItem('openedSubMenus', JSON.stringify(currentOpened));
                     });
                 });
             } else {
@@ -362,7 +380,6 @@
         
         if (window.innerWidth > 900) {
             body.classList.toggle('collapsed');
-            // บันทึกสถานะการ "หุบเมนู" ลงใน localStorage
             localStorage.setItem('sidebarCollapsed', body.classList.contains('collapsed'));
         } else {
             body.classList.toggle('show-sidebar');
