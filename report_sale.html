@@ -20,7 +20,9 @@
         body { display: flex; }
 
         /* Sidebar System */
-        #sidebar-container { width: var(--sidebar-width); background: var(--sidebar-bg); height: 100vh; position: fixed; left: 0; top: 0; transition: transform 0.3s ease; z-index: 2000; overflow-y: auto; box-shadow: 4px 0 15px rgba(0,0,0,0.2); }
+        #sidebar-container { width: var(--sidebar-width); background: var(--sidebar-bg); height: 100vh; position: fixed; left: 0; top: 0; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 2000; overflow-y: auto; box-shadow: 4px 0 15px rgba(0,0,0,0.2); }
+        
+        /* สไตล์เหล่านี้จะทำงานกับ HTML ที่ดึงมาจาก sidebar.html */
         .menu .item .sub { display: none; background: #0f172a; }
         .menu .item.open .sub { display: block; }
         .menu .item.open .arrow { transform: rotate(90deg); }
@@ -43,7 +45,7 @@
         .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: none; backdrop-filter: blur(4px); z-index: 1500; }
         body.show-sidebar .overlay { display: block; }
 
-        /* Dashboard Styles */
+        /* Dashboard & Card Styles */
         .container { max-width: 1200px; margin: 0 auto; width: 100%; }
         .header-bar { background: var(--white); padding: 15px 20px; border-radius: 14px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); flex-wrap: wrap; gap: 15px; }
         .action-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -108,23 +110,7 @@
 <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 
 <aside id="sidebar-container">
-    <div class="menu" style="padding-top: 20px;">
-        <div style="padding: 20px; text-align: center; border-bottom: 1px solid #334155; margin-bottom: 15px;">
-            <h3 style="color: var(--primary); margin: 0;">Performance</h3>
-        </div>
-        <a href="#">🏠 แดชบอร์ด</a>
-        <div class="item">
-            <button class="drop-btn" onclick="this.parentElement.classList.toggle('open')">
-                📊 รายงานผลงาน <span class="arrow">▶</span>
-            </button>
-            <div class="sub">
-                <a href="#">- รายวัน</a>
-                <a href="#">- รายเดือน</a>
-            </div>
-        </div>
-        <a href="#">⚙️ ตั้งค่าระบบ</a>
-    </div>
-</aside>
+    </aside>
 
 <main class="main-content">
     <div class="container">
@@ -191,7 +177,27 @@
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxnxcEXpQfQOroa2hSkCP70DNMMThefnCFJqItwrVXUgJCDu40Tm4WCN6B6don8wuqiKg/exec"; 
 
-    // ระบบ Sidebar สมบูรณ์แบบ
+    // 1. ฟังก์ชันดึง Sidebar จากไฟล์ภายนอก
+    async function includeSidebar() {
+        const version = new Date().getTime();
+        try {
+            const response = await fetch('sidebar.html?v=' + version);
+            const data = await response.text();
+            document.getElementById('sidebar-container').innerHTML = data;
+            
+            // เพิ่ม Logic สำหรับตรวจจับการคลิก Submenu (เพราะ HTML มาทีหลัง)
+            document.addEventListener('click', function (e) {
+                const dropBtn = e.target.closest('.drop-btn');
+                if (dropBtn) {
+                    dropBtn.parentElement.classList.toggle('open');
+                }
+            });
+        } catch (err) { 
+            console.warn("Sidebar Load Error: ตรวจสอบว่าไฟล์ sidebar.html อยู่ในโฟลเดอร์เดียวกันหรือไม่"); 
+        }
+    }
+
+    // 2. ระบบเปิด-ปิด Sidebar
     function toggleSidebar() {
         const body = document.getElementById('mainBody');
         if (window.innerWidth <= 900) {
@@ -201,6 +207,7 @@
         }
     }
 
+    // 3. ฟังก์ชันดึงข้อมูลจาก Google Sheets (ห้ามแก้ไข)
     async function loadData() {
         const loader = document.getElementById('loader');
         const sheet = document.getElementById('staffSelect').value;
@@ -273,6 +280,9 @@
             }
         } catch (e) { alert("Error"); } finally { loader.style.display = 'none'; }
     }
+
+    // เรียกใช้งาน Sidebar เมื่อโหลดหน้าเว็บ
+    window.onload = includeSidebar;
 
     function exportPDF() { /* logic */ }
     function exportExcel() { /* logic */ }
