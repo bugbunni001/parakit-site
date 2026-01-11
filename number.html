@@ -112,25 +112,54 @@
 <script>
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw2Zip_1F4g2sMHK_UbMyU7Vv4A3rOPfzLAHh20tlqMMk4jH5OoFHOKCu6L8CyVf5LVjA/exec";
 
+// ฟังก์ชันเปิด/ปิด Sidebar พร้อมบันทึกสถานะ
 function toggleSidebar() {
     const body = document.getElementById('mainBody');
     if (window.innerWidth <= 900) {
         body.classList.toggle('show-sidebar');
     } else {
-        body.classList.toggle('collapsed');
+        const isCollapsed = body.classList.toggle('collapsed');
+        localStorage.setItem('sidebar-collapsed', isCollapsed);
     }
 }
 
-// Logic Sidebar Dropdown
+// คืนค่าสถานะ Sidebar และสถานะ Dropdown เมื่อโหลดหน้า
+function restoreSidebarState() {
+    const body = document.getElementById('mainBody');
+    const container = document.getElementById('sidebar-container');
+    
+    // คืนค่าการ ยุบ/ขยาย Sidebar
+    if (window.innerWidth > 900) {
+        const isCollapsed = localStorage.getItem('sidebar-collapsed');
+        if (isCollapsed === 'true') body.classList.add('collapsed');
+    }
+
+    // คืนค่าสถานะ Dropdown ใน Menu
+    container.querySelectorAll('.item').forEach((item, index) => {
+        const isOpened = localStorage.getItem('dropdown-' + index);
+        if (isOpened === 'true') item.classList.add('open');
+    });
+}
+
+// Logic Sidebar Dropdown พร้อมบันทึกสถานะ
 document.addEventListener('click', function (e) {
     const dropBtn = e.target.closest('.drop-btn');
     if (dropBtn) {
         const parent = dropBtn.parentElement;
         parent.classList.toggle('open');
+        
+        // บันทึกสถานะว่า index ไหนถูกเปิดอยู่
+        const allItems = document.querySelectorAll('#sidebar-container .item');
+        allItems.forEach((item, index) => {
+            localStorage.setItem('dropdown-' + index, item.classList.contains('open'));
+        });
     }
 });
 
-window.onload = fetchData;
+window.onload = () => {
+    restoreSidebarState();
+    fetchData();
+};
 
 function fetchData() {
     fetch(WEB_APP_URL + "?action=getData")
