@@ -24,7 +24,7 @@
             --excel: #166534;
             --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
+        * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; -webkit-tap-highlight-color: transparent; }
         
         html, body { margin: 0; padding: 0; width: 100%; background-color: var(--bg); color: var(--text-dark); min-height: 100vh; overflow-x: hidden; }
         body { display: flex; }
@@ -75,14 +75,18 @@
             transition: var(--transition);
         }
 
+        /* Desktop Collapse */
         body.collapsed #sidebar-container { transform: translateX(calc(var(--sidebar-width) * -1)); }
         body.collapsed .main-content { margin-left: 0; width: 100%; }
 
+        /* Mobile Responsive Sidebar */
         @media (max-width: 900px) {
-            #sidebar-container { transform: translateX(calc(var(--sidebar-width) * -1)); }
+            #sidebar-container { transform: translateX(-100%); }
             .main-content { margin-left: 0; width: 100%; padding: 10px; }
+            
+            /* Show Sidebar on Mobile */
             body.show-sidebar #sidebar-container { transform: translateX(0); }
-            body.collapsed #sidebar-container { transform: translateX(calc(var(--sidebar-width) * -1)); }
+            body.show-sidebar .overlay { display: block; }
         }
 
         .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: none; backdrop-filter: blur(4px); z-index: 1500; }
@@ -91,6 +95,7 @@
         .btn-fetch, .btn-pdf, .btn-excel {
             transition: var(--transition);
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            white-space: nowrap;
         }
         .btn-fetch:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(91, 183, 170, 0.4); filter: brightness(1.1); }
         .btn-pdf:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(225, 29, 72, 0.4); filter: brightness(1.1); }
@@ -98,35 +103,61 @@
 
         .container { max-width: 1200px; margin: 0 auto; width: 100%; }
         
+        /* ===== HEADER RESPONSIVE ===== */
         .header-bar { 
             background: var(--primary); padding: 15px 20px; border-radius: 14px; display: flex; 
             justify-content: space-between; align-items: center; margin-bottom: 20px; 
             box-shadow: 0 4px 15px rgba(91, 183, 170, 0.2); flex-wrap: wrap; gap: 15px; 
         }
-        .header-bar h2 { color: white !important; font-weight: 500; letter-spacing: 0.5px; }
-        .header-bar button[onclick="toggleSidebar()"] { background: rgba(255,255,255,0.2) !important; color: white; }
+        .header-bar h2 { color: white !important; font-weight: 500; letter-spacing: 0.5px; font-size: 20px; margin: 0; }
+        .header-bar button[onclick="toggleSidebar()"] { background: rgba(255,255,255,0.2) !important; color: white; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; }
 
         .action-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-        #daySelect { padding: 10px 16px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.3); font-size: 16px; background-color: white; cursor: pointer; transition: var(--transition); flex-grow: 1; }
+        #daySelect { padding: 10px 16px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.3); font-size: 16px; background-color: white; cursor: pointer; transition: var(--transition); }
 
         .btn-fetch { background: #2d3748; color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 8px; }
         .btn-pdf { background: var(--pdf); color: white; border: none; padding: 10px 16px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
         .btn-excel { background: var(--excel); color: white; border: none; padding: 10px 16px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
 
+        /* ===== GRID SYSTEM RESPONSIVE ===== */
         .main-grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 15px; }
-        @media (max-width: 900px) { .main-grid { grid-template-columns: 1fr; } .action-group { width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; } .btn-fetch { grid-column: span 2; } }
+        
+        @media (max-width: 900px) { 
+            .header-bar { flex-direction: column; align-items: stretch; padding: 15px; }
+            .header-bar > div:first-child { justify-content: space-between; width: 100%; margin-bottom: 5px; }
+            
+            .action-group { display: grid; grid-template-columns: 1fr 1fr; width: 100%; gap: 10px; }
+            #daySelect { grid-column: span 2; width: 100%; text-align: center; }
+            .btn-fetch { grid-column: span 2; justify-content: center; width: 100%; }
+            .btn-pdf, .btn-excel { justify-content: center; width: 100%; }
+
+            .main-grid { grid-template-columns: 1fr; } 
+            
+            /* Stack cards vertically */
+            .left-panel, .side-panel { width: 100%; }
+        }
 
         #dashboardData { display: none; animation: fadeIn 0.5s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         .card { background: var(--white); border-radius: 15px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid #edf2f7; margin-bottom: 15px; transition: var(--transition); }
         .card:hover { box-shadow: 0 8px 20px rgba(0,0,0,0.06); }
-        .card-header { padding: 12px 18px; color: white; font-weight: 500; background: var(--primary); display: flex; justify-content: space-between; font-size: 18px; letter-spacing: 0.3px; }
+        .card-header { padding: 12px 18px; color: white; font-weight: 500; background: var(--primary); display: flex; justify-content: space-between; align-items: center; font-size: 16px; letter-spacing: 0.3px; flex-wrap: wrap; gap: 5px; }
         
-        .table-wrapper { width: 100%; overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; }
-        th { padding: 15px; text-align: left; font-size: 15px; background: #fafbfc; border-bottom: 2px solid #edf2f7; color: #4a5568; font-weight: 600; }
-        td { padding: 12px 15px; border-bottom: 1px solid #f7fafc; font-size: 15px; transition: var(--transition); color: #2d3748; }
+        /* ===== TABLE RESPONSIVE WRAPPER ===== */
+        .table-wrapper { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 0 0 10px 10px; }
+        /* Scrollbar styling for webkit */
+        .table-wrapper::-webkit-scrollbar { height: 6px; }
+        .table-wrapper::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        .table-wrapper::-webkit-scrollbar-track { background: #f1f5f9; }
+
+        table { width: 100%; border-collapse: collapse; min-width: 100%; }
+        
+        /* Force min-width for large tables to prevent squishing */
+        #dailyCard table { min-width: 800px; } 
+
+        th { padding: 12px 15px; text-align: left; font-size: 14px; background: #fafbfc; border-bottom: 2px solid #edf2f7; color: #4a5568; font-weight: 600; white-space: nowrap; }
+        td { padding: 10px 15px; border-bottom: 1px solid #f7fafc; font-size: 14px; transition: var(--transition); color: #2d3748; white-space: nowrap; }
         
         tr:hover td { background: rgba(91, 183, 170, 0.05); }
         
@@ -136,33 +167,40 @@
         
         /* Stat 4 BOX */
         .bottom-stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 15px; background: #fafbfc; border-top: 1px solid #edf2f7; }
+        
+        @media (max-width: 480px) {
+            .bottom-stats-grid { grid-template-columns: 1fr; } /* 1 Column on very small screens */
+            .card-header { font-size: 15px; }
+            th, td { padding: 10px; font-size: 13px; }
+        }
+
         .stat-item { background: #ffffff; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0; border-left: 6px solid var(--primary); transition: var(--transition); cursor: pointer; }
         .stat-item:hover { transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); background: #fff; }
-        .stat-label { font-size: 15px; font-weight: 600; color: #718096; margin-bottom: 8px; display: block; }
+        .stat-label { font-size: 14px; font-weight: 600; color: #718096; margin-bottom: 8px; display: block; }
         .stat-content { display: flex; justify-content: space-between; align-items: flex-end; }
         .stat-left { display: flex; flex-direction: column; gap: 2px; }
-        .stat-main { font-size: 32px; font-weight: 700; line-height: 1; color: var(--text-dark); }
-        .stat-achieve { color: var(--success); font-weight: 700; font-size: 20px; }
+        .stat-main { font-size: 28px; font-weight: 700; line-height: 1; color: var(--text-dark); }
+        .stat-achieve { color: var(--success); font-weight: 700; font-size: 18px; }
         .stat-right { text-align: right; }
-        .stat-sub-val { color: #dc2626; font-weight: 700; font-size: 18px; display: block; }
-        .stat-sub-label { font-size: 11px; color: #a0aec0; font-weight: 600; text-transform: uppercase; }
+        .stat-sub-val { color: #dc2626; font-weight: 700; font-size: 16px; display: block; }
+        .stat-sub-label { font-size: 10px; color: #a0aec0; font-weight: 600; text-transform: uppercase; }
 
-        /* ===== BRAND TABLE CUSTOM (ปรับปรุงใหม่) ===== */
+        /* ===== BRAND TABLE CUSTOM ===== */
         .brand-summary-wrapper { padding: 15px; background: #f8fafc; border-top: 1px solid #edf2f7; }
         .brand-table { width: 100%; background: white; border-radius: 10px; border-collapse: collapse; }
         .brand-table th { 
             background: #f8fafc !important; 
             color: #4a5568 !important; 
-            font-size: 15px !important; 
-            padding: 15px; 
+            font-size: 14px !important; 
+            padding: 12px; 
             border-bottom: 2px solid #edf2f7;
         }
-        .brand-table td { padding: 12px 15px; font-size: 14px; border-bottom: 1px solid #f1f5f9; }
+        .brand-table td { padding: 10px 12px; font-size: 13px; border-bottom: 1px solid #f1f5f9; }
         .brand-table tbody tr:hover { background-color: rgba(91, 183, 170, 0.05); }
 
-        .target-group-header { padding: 10px 15px; font-weight: 600; color: white; transition: var(--transition); }
+        .target-group-header { padding: 10px 15px; font-weight: 600; color: white; transition: var(--transition); font-size: 14px; }
         .target-group-header:hover { filter: brightness(1.2); padding-left: 20px; cursor: default; }
-        .target-row { transition: var(--transition); display:flex; justify-content:space-between; padding:12px 18px; border-bottom:1px solid #f1f5f9; }
+        .target-row { transition: var(--transition); display:flex; justify-content:space-between; padding:12px 18px; border-bottom:1px solid #f1f5f9; font-size: 14px; }
         .target-row:hover { background: #f8fafc; padding-left: 25px; color: var(--primary); }
         
         .bg-grad-yellow { background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%); }
@@ -177,7 +215,7 @@
         .bg-slate { background: #4a5568; } 
         .bg-teal { background: #38b2ac; }
         
-        .loading { position: fixed; inset: 0; background: rgba(255,255,255,0.8); display: none; justify-content: center; align-items: center; z-index: 3000; font-weight: 600; }
+        .loading { position: fixed; inset: 0; background: rgba(255,255,255,0.8); display: none; justify-content: center; align-items: center; z-index: 3000; font-weight: 600; flex-direction: column; gap: 10px; }
         .daily-table thead tr:first-child th { color: #ffffff; text-align: center; padding: 8px; font-weight: 500; }
         .daily-table thead tr:last-child th { background: #f1f5f9; color: #475569; text-align: center; font-size: 12px; }
         .daily-table td { text-align: center; border-right: 1px solid #f1f5f9; }
@@ -188,7 +226,10 @@
 </head>
 <body id="mainBody">
 
-<div class="loading" id="loader">🔄 กำลังประมวลผล...</div>
+<div class="loading" id="loader">
+    <div style="font-size: 30px;">🔄</div>
+    <div>กำลังประมวลผล...</div>
+</div>
 <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 
 <aside id="sidebar-container">
@@ -203,8 +244,8 @@
     <div class="container">
         <div class="header-bar">
             <div style="display:flex; align-items:center; gap:12px;">
-                <button onclick="toggleSidebar()" style="border:none; padding:10px 14px; border-radius:10px; cursor:pointer; transition: 0.3s;">☰</button>
-                <h2 style="margin:0; font-size:20px;">Performance Report</h2>
+                <button onclick="toggleSidebar()">☰</button>
+                <h2>Performance Report</h2>
             </div>
             <div class="action-group">
                 <select id="daySelect">
@@ -219,21 +260,21 @@
             </div>
         </div>
 
-        <div id="noData" style="text-align: center; padding: 60px 20px; color: #a0aec0; background: white; border-radius: 20px; border: 2px dashed #e2e8f0;">
-            <p>กรุณาเลือกวันที่และกดปุ่ม <b>"ดึงข้อมูล"</b></p>
+        <div id="noData" style="text-align: center; padding: 60px 20px; color: #a0aec0; background: white; border-radius: 20px; border: 2px dashed #e2e8f0; margin-bottom: 20px;">
+            <p style="margin-top: 10px;">กรุณาเลือกวันที่และกดปุ่ม <b>"ดึงข้อมูล"</b></p>
         </div>
 
         <div id="dashboardData">
             <div class="card" id="dailyCard">
                 <div class="card-header">
-                    <span>📅 ข้อมูลรายวัน (วันที่ <span id="dailyDateNum"></span>)</span>
-                    <span id="labelStaff" style="font-size: 13px; opacity: 0.9;"></span>
+                    <span>📅 ข้อมูลรายวัน (วันที่ <span id="dailyDateNum">-</span>)</span>
+                    <span id="labelStaff" style="font-size: 13px; opacity: 0.9; background: rgba(0,0,0,0.2); padding: 2px 8px; border-radius: 4px;"></span>
                 </div>
                 <div class="table-wrapper">
                     <table class="daily-table" id="tableDaily">
                         <thead>
                             <tr>
-                                <th rowspan="2" style="background:#4a5568; color:white;">วันที่</th>
+                                <th rowspan="2" style="background:#4a5568; color:white; min-width: 80px;">วันที่</th>
                                 <th colspan="2" class="bg-amber" style="color:white;">New Post</th>
                                 <th colspan="2" class="bg-orange" style="color:white;">BDBC</th>
                                 <th colspan="2" class="bg-slate" style="color:white;">Apple</th>
@@ -260,7 +301,11 @@
                         <div class="table-wrapper">
                             <table id="tableSummary">
                                 <thead>
-                                    <tr><th>Type การขาย</th><th class="text-right">ยอด PostPay</th><th class="text-right">จำนวน</th></tr>
+                                    <tr>
+                                        <th>Type การขาย</th>
+                                        <th class="text-right">ยอด PostPay</th>
+                                        <th class="text-right">จำนวน</th>
+                                    </tr>
                                 </thead>
                                 <tbody id="summaryBody"></tbody>
                             </table>
@@ -329,7 +374,8 @@
                 menuContainer.innerHTML = html;
                 restoreMenuState();
             } else {
-                menuContainer.innerHTML = '<div style="padding:20px; color:white;">กรุณาเปิดผ่าน Server เพื่อโหลดเมนู</div>';
+                // Fallback Menu
+                menuContainer.innerHTML = '<div style="padding:20px; color:white; text-align:center;">เมนู (Demo)</div>';
             }
         } catch (error) {
             console.error("Sidebar error:", error);
@@ -340,14 +386,29 @@
     function toggleSidebar() {
         const body = document.getElementById('mainBody');
         const overlay = document.getElementById('overlay');
+        
         if (window.innerWidth > 900) {
+            // Desktop Mode
             body.classList.toggle('collapsed');
             localStorage.setItem('sidebarCollapsed', body.classList.contains('collapsed'));
         } else {
+            // Mobile Mode
             body.classList.toggle('show-sidebar');
-            overlay.classList.toggle('show');
+            // Toggle Overlay Class
+            if(body.classList.contains('show-sidebar')){
+                overlay.classList.add('show');
+            } else {
+                overlay.classList.remove('show');
+            }
         }
     }
+
+    // Close sidebar when clicking overlay
+    document.getElementById('overlay').addEventListener('click', () => {
+         const body = document.getElementById('mainBody');
+         body.classList.remove('show-sidebar');
+         document.getElementById('overlay').classList.remove('show');
+    });
 
     window.toggleDrop = function(btn, id) {
         const item = btn.closest('.item'); 
@@ -383,13 +444,13 @@
                 document.getElementById('labelStaff').innerText = data.staffName;
                 document.getElementById('dailyDateNum').innerText = selectedDay;
 
-                // 1. สรุปยอดขาย (Card บน)
+                // 1. สรุปยอดขาย
                 document.getElementById('summaryBody').innerHTML = data.summary.map(r => {
                     const isTotal = r[0].includes("รวมยอด");
                     return `<tr class="${isTotal?'row-summary':''}"><td>${r[0]}</td><td class="text-right">${r[1]}</td><td class="text-right">${r[2]}</td></tr>`;
                 }).join('');
 
-                // 2. ยอดแยกแบรนด์ (Card ล่าง)
+                // 2. ยอดแยกแบรนด์
                 document.getElementById('brandBody').innerHTML = data.brandSummary.map(r => {
                     const isTotal = r[0].includes("รวม");
                     const rowStyle = isTotal ? 'font-weight:700; background:#f1f5f9;' : '';
@@ -463,7 +524,8 @@
                 document.getElementById('noData').style.display = 'none';
             }
         } catch (e) {
-            alert("ไม่สามารถดึงข้อมูลได้ โปรดตรวจสอบการตั้งค่า App Script ของคุณ");
+            console.error(e);
+            alert("ไม่สามารถดึงข้อมูลได้ โปรดตรวจสอบการเชื่อมต่ออินเทอร์เน็ต");
         } finally {
             loader.style.display = 'none';
         }
@@ -471,13 +533,25 @@
 
     function exportPDF() {
         const element = document.getElementById('dashboardData');
-        html2pdf().set({ margin: 5, filename: 'Performance_Report.pdf', jsPDF: { orientation: 'landscape' } }).from(element).save();
+        const opt = {
+            margin: 5,
+            filename: 'Performance_Report.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+        };
+        html2pdf().set(opt).from(element).save();
     }
 
     function exportExcel() {
         const wb = XLSX.utils.book_new();
-        const ws = XLSX.utils.table_to_sheet(document.getElementById('tableSummary'));
-        XLSX.utils.book_append_sheet(wb, ws, "Summary");
+        // รวมข้อมูลจากหลายตารางลงชีทเดียว หรือ แยกชีทก็ได้ตามสะดวก
+        const wsSummary = XLSX.utils.table_to_sheet(document.getElementById('tableSummary'));
+        XLSX.utils.book_append_sheet(wb, wsSummary, "Summary");
+        
+        const wsDaily = XLSX.utils.table_to_sheet(document.getElementById('tableDaily'));
+        XLSX.utils.book_append_sheet(wb, wsDaily, "Daily");
+
         XLSX.writeFile(wb, "Performance_Report.xlsx");
     }
 </script>
