@@ -4,50 +4,163 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>5G Device Extra</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ===== GLOBAL RESET & STRUCTURE ===== */
+        * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
+        body { margin: 0; background: #f8fafc; padding-bottom: 80px; color: #334155; }
 
-  <style>
-footer { width: 100%; text-align: center; padding: 20px 0; background: #fff; color: #94a3b8; position: fixed; bottom: 0; left: 0; font-size: 12px; z-index: 1100; border-top: 1px solid #f1f5f9; }
-  </style>
+        /* ปุ่ม Toggle สำหรับมือถือ */
+        .top-toggle { position: fixed; top: 15px; left: 15px; z-index: 1400; width: 45px; height: 45px; border-radius: 12px; border: none; background: #1e293b; color: #fff; font-size: 20px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; transition: 0.3s; }
+        .top-toggle:hover { background: #334155; transform: scale(1.05); }
+        @media(min-width:769px) { .top-toggle { display: none; } }
 
+        /* Sidebar พื้นฐาน */
+        .sidebar { position: fixed; top: 0; left: 0; width: 260px; height: 100vh; background: #1e293b; color: #fff; overflow-y: auto; transform: translateX(-260px); transition: all .3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 2000; }
+        .sidebar.show { transform: translateX(0); }
+        
+        .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: none; backdrop-filter: blur(4px); z-index: 1500; }
+        .overlay.show { display: block; }
+
+        /* ส่วนเนื้อหาหลัก */
+        .content { padding: 80px 20px 40px; transition: margin-left .3s; }
+        @media(min-width:769px) { .sidebar { transform: translateX(0); } .content { margin-left: 260px; } }
+
+        /* การตกแต่งการ์ดเนื้อหา */
+        .info-card { 
+            max-width: 800px; 
+            margin: 0 auto; 
+            background: #ffffff; 
+            padding: 40px; 
+            border-radius: 20px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            line-height: 1.8;
+            border: 1px solid #f1f5f9;
+        }
+
+        .highlight-box {
+            background: #eff6ff;
+            border-left: 5px solid #3b82f6;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .footer-text { font-weight: 600; color: #1e293b; font-size: 1.2rem; display: block; margin-bottom: 10px; }
+        .price-tag { color: #2563eb; font-weight: 600; font-size: 1.1rem; }
+        .discount { color: #dc2626; font-weight: 600; }
+
+        footer { width: 100%; text-align: center; padding: 20px 0; background: #fff; color: #94a3b8; position: fixed; bottom: 0; left: 0; font-size: 12px; z-index: 1100; border-top: 1px solid #f1f5f9; }
+
+        /* Sidebar Item Style (เมื่อกางออก) */
+        .item.open .sub { display: block; }
+    </style>
 </head>
 
 <body>
-🆕 5G Device Extra 
-<br>
-🔄 เปลี่ยนเครื่องเปล่า มาเป็น Device Bundling
-<br>
-<br>
-สำหรับลูกค้า
-<br>
-🔹เปิดใหม่
-<br>
-🔹ย้ายค่ายเบอร์เดิม
-<br>
-🔹เปลี่ยนจากเติมเงินเป็นรายเดือน อายุ 30 วัน
-<br>
-✨ไม่มีค่าบริการ + สัญญา 12 เดือน
-<br>
-<br>
-✅ โทรฟรีทุกเครื่อข่าย 15 นาทีต่อครั้ง
-<br>
-399.- 🌐 50 GB  / FUP 10 Mbps
-<br>
-✨ รับส่วนลดค่าเรื่อง 1,000
-<br>
-สำหรับ SMP RRP 0-13,000 บาท
-<br>
-<br>
-699.- 🌐 100 GB / FUP 20 Mbps
-<br>
-✨ ส่วนลดค่าเรื่อง 2,000
-<br>
-สำหรับ SMP RRP 13,000 บาท ขึ้นไป
-<br>
-วันนี้ - 28 กพ. 69 เท่านั้น
-<br>
-<br>
+
+<button class="top-toggle" onclick="toggleSidebar()">☰</button>
+<div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+<aside class="sidebar" id="sidebar"></aside>
+
+<div class="content">
+    <div class="info-card">
+        <span class="footer-text">🆕 5G Device Extra</span>
+        🔄 เปลี่ยนเครื่องเปล่า มาเป็น Device Bundling
+        <br><br>
+        <strong>สำหรับลูกค้า:</strong>
+        <div style="padding-left: 20px;">
+            🔹 เปิดใหม่<br>
+            🔹 ย้ายค่ายเบอร์เดิม<br>
+            🔹 เปลี่ยนจากเติมเงินเป็นรายเดือน อายุ 30 วัน
+        </div>
+        
+        <div class="highlight-box">
+            ✨ <strong>ไม่มีค่าบริการล่วงหน้า</strong> + สัญญา 12 เดือน<br>
+            ✅ โทรฟรีทุกเครือข่าย 15 นาทีต่อครั้ง
+        </div>
+
+        <p>
+            <span class="price-tag">399.-</span> 🌐 50 GB / FUP 10 Mbps<br>
+            <span class="discount">✨ รับส่วนลดค่าเครื่อง 1,000 บาท</span><br>
+            <small>(สำหรับ SMP RRP 0-13,000 บาท)</small>
+        </p>
+
+        <p>
+            <span class="price-tag">699.-</span> 🌐 100 GB / FUP 20 Mbps<br>
+            <span class="discount">✨ ส่วนลดค่าเครื่อง 2,000 บาท</span><br>
+            <small>(สำหรับ SMP RRP 13,000 บาท ขึ้นไป)</small>
+        </p>
+
+        <p style="text-align: center; color: #64748b; margin-top: 30px; font-size: 0.9rem;">
+            📅 วันนี้ - 28 ก.พ. 69 เท่านั้น
+        </p>
+    </div>
+</div>
+
 <footer>© 2026 Copy Right By Angerina Frog</footer>
+
 <script>
-<script>
+    // --- ระบบดึง Sidebar จาก sidebar.html ---
+    function includeSidebar() {
+        const version = new Date().getTime(); 
+        fetch('sidebar.html?v=' + version)
+            .then(response => {
+                if (!response.ok) throw new Error('ไม่พบไฟล์ sidebar.html');
+                return response.text();
+            })
+            .then(data => {
+                document.getElementById('sidebar').innerHTML = data;
+                restoreMenuState(); // คืนค่าการเปิด-ปิดเมนู
+            })
+            .catch(err => console.warn("Sidebar Error:", err));
+    }
+
+    // --- ระบบ Toggle Sidebar ---
+    function toggleSidebar() {
+        document.getElementById("sidebar").classList.toggle("show");
+        document.getElementById("overlay").classList.toggle("show");
+    }
+
+    // --- ระบบกาง-หุบ เมนูย่อย (เรียกใช้จาก sidebar.html) ---
+    window.toggleDrop = function(btn, id) {
+        const item = btn.parentElement;
+        const isOpen = item.classList.toggle("open");
+        
+        // จัดการเรื่องความสวยงาม (Slide Toggle จำลอง)
+        const sub = item.querySelector('.sub');
+        if (sub) {
+            sub.style.display = isOpen ? 'block' : 'none';
+        }
+
+        // เก็บสถานะลง LocalStorage
+        if (id) {
+            localStorage.setItem('menu-' + id, isOpen);
+        }
+    }
+
+    // --- ระบบจำสถานะเมนู ---
+    function restoreMenuState() {
+        // รายชื่อ ID ของเมนูที่ต้องการให้จำค่า (ต้องตรงกับใน sidebar.html)
+        const menus = ['credit', 'branch', 'sales', 'device']; 
+        menus.forEach(id => {
+            const state = localStorage.getItem('menu-' + id);
+            const menuEl = document.getElementById('menu-' + id);
+            if (state === 'true' && menuEl) {
+                menuEl.classList.add('open');
+                const sub = menuEl.querySelector('.sub');
+                if (sub) sub.style.display = 'block';
+            }
+        });
+    }
+
+    // เริ่มทำงานเมื่อโหลดหน้าเว็บ
+    window.onload = function() {
+        includeSidebar();
+    };
+</script>
+
 </body>
 </html>
