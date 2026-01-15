@@ -38,9 +38,9 @@
         .item.open .arrow { transform: rotate(90deg); }
 
         /* Slider Styles */
-        .slider-container { position: relative; max-width: 1100px; margin: 0 auto 30px; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.1); background: #f1f1f1; }
+        .slider-container { position: relative; max-width: 1100px; margin: 0 auto 30px; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.1); background: #f1f1f1; touch-action: pan-y; }
         .slides { display: none; width: 100%; height: 350px; }
-        .slides img { width: 100%; height: 100%; object-fit: cover; cursor: pointer; transition: 0.3s; }
+        .slides img { width: 100%; height: 100%; object-fit: cover; cursor: pointer; transition: 0.3s; -webkit-user-drag: none; }
         
         .dot-container { position: absolute; bottom: 15px; width: 100%; text-align: center; z-index: 10; }
         .dot { cursor: pointer; height: 12px; width: 12px; margin: 0 5px; background-color: rgba(255,255,255,0.5); border-radius: 50%; display: inline-block; transition: 0.3s; border: 1px solid rgba(0,0,0,0.1); }
@@ -75,15 +75,15 @@
 <aside class="sidebar" id="sidebar"></aside>
 
 <div class="content">
-    <div class="slider-container">
+    <div class="slider-container" id="sliderContainer">
         <div class="slides fade">
             <a href="news1.html" target="_blank">
-                <img src="https://i.postimg.cc/dJq4qHS3/A4-3x-100.jpg" loading="lazy">
+                <img src="https://scontent-kul3-1.xx.fbcdn.net/v/t39.30808-6/616070579_25491226163867724_8257385640284922060_n.jpg?_nc_cat=111&ccb=1-7&_nc_sid=aa7b47&_nc_eui2=AeFutZ2IvUZ7LHRZBIv4P957f2ExmfXo75B_YTGZ9ejvkDNjePm-h6KzCquegW7DVbxN2AVuX1k0Rj8c0DfM9bS-&_nc_ohc=pAJKGzYIXS4Q7kNvwHjgOgT&_nc_oc=Adn4r-3QtOCAXjqeUxawefyQLEHGTf1R-qebtvct1zjIW6YbT7fMIxApDK7-iCxHzZo&_nc_zt=23&_nc_ht=scontent-kul3-1.xx&_nc_gid=Bsc08E4ElSxwOMYYJ6xbcg&oh=00_AfrsH0b9e7bsw0PstEBt1QUlDUsN-3rtJDHMAfmcg-VIhA&oe=696E34EC" loading="lazy">
             </a>
         </div>
         <div class="slides fade">
             <a href="news1.html" target="_blank">
-                <img src="https://scontent-kul3-1.xx.fbcdn.net/v/t39.30808-6/616070579_25491226163867724_8257385640284922060_n.jpg?_nc_cat=111&ccb=1-7&_nc_sid=aa7b47&_nc_eui2=AeFutZ2IvUZ7LHRZBIv4P957f2ExmfXo75B_YTGZ9ejvkDNjePm-h6KzCquegW7DVbxN2AVuX1k0Rj8c0DfM9bS-&_nc_ohc=pAJKGzYIXS4Q7kNvwHjgOgT&_nc_oc=Adn4r-3QtOCAXjqeUxawefyQLEHGTf1R-qebtvct1zjIW6YbT7fMIxApDK7-iCxHzZo&_nc_zt=23&_nc_ht=scontent-kul3-1.xx&_nc_gid=Bsc08E4ElSxwOMYYJ6xbcg&oh=00_AfrsH0b9e7bsw0PstEBt1QUlDUsN-3rtJDHMAfmcg-VIhA&oe=696E34EC" loading="lazy">
+                <img src="https://i.postimg.cc/dJq4qHS3/A4-3x-100.jpg" loading="lazy">
             </a>
         </div>
         
@@ -174,7 +174,7 @@
         });
     }
 
-    // --- Simple Slider System ---
+    // --- Simple Slider System (Updated with Swipe Support) ---
     let slideIndex = 0;
     let slideTimer;
 
@@ -197,13 +197,52 @@
         if (dots.length >= slideIndex) {
             dots[slideIndex-1].className += " active";
         }
+        resetTimer();
+    }
+
+    function resetTimer() {
+        clearTimeout(slideTimer);
         slideTimer = setTimeout(showSlides, 4000);
     }
 
     function currentSlide(n) {
-        clearTimeout(slideTimer);
         slideIndex = n - 1;
         showSlides();
+    }
+
+    function nextSlide() {
+        showSlides();
+    }
+
+    function prevSlide() {
+        let slides = document.getElementsByClassName("slides");
+        slideIndex -= 2; // ถอยกลับ 2 เพื่อให้ slideIndex++ ใน showSlides ได้ค่าที่ถูกต้อง
+        if (slideIndex < 0) { slideIndex = slides.length - 1; }
+        showSlides();
+    }
+
+    // --- Swipe Support Implementation ---
+    let touchstartX = 0;
+    let touchendX = 0;
+    const sliderContainer = document.getElementById('sliderContainer');
+
+    sliderContainer.addEventListener('touchstart', e => {
+        touchstartX = e.changedTouches[0].screenX;
+    }, {passive: true});
+
+    sliderContainer.addEventListener('touchend', e => {
+        touchendX = e.changedTouches[0].screenX;
+        handleGesture();
+    }, {passive: true});
+
+    function handleGesture() {
+        const threshold = 50; // ระยะการปัดขั้นต่ำ
+        if (touchendX < touchstartX - threshold) {
+            nextSlide(); // ปัดซ้าย -> รูปถัดไป
+        }
+        if (touchendX > touchstartX + threshold) {
+            prevSlide(); // ปัดขวา -> รูปก่อนหน้า
+        }
     }
 
     window.addEventListener('DOMContentLoaded', () => {
