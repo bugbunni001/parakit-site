@@ -65,10 +65,9 @@
             z-index: 2000;
             overflow-y: auto;
             box-shadow: 4px 0 15px rgba(0,0,0,0.2);
-            padding-top: 0; /* แก้ไข: เอา padding ออกเพื่อให้ชิดขอบบน */
+            padding-top: 0; 
         }
 
-        /* สำหรับรองรับสไตล์จาก sidebar.html */
         .menu .item .sub { display: none; background: #0f172a; }
         .menu .item.open .sub { display: block; }
         .menu .item.open .arrow { transform: rotate(90deg); }
@@ -92,7 +91,7 @@
         .sub a { padding-left: 45px; font-size: 14px; opacity: 0.8; }
         .sub a:hover { opacity: 1; padding-left: 50px; background: rgba(91, 183, 170, 0.1); }
 
-        /* ===== MAIN CONTENT AREA (Updated width) ===== */
+        /* ===== MAIN CONTENT AREA ===== */
         .main-content { 
             flex-grow: 1; 
             margin-left: var(--sidebar-width);
@@ -114,7 +113,6 @@
         .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: none; backdrop-filter: blur(4px); z-index: 1500; }
         .overlay.show { display: block; }
 
-        /* Container size increase */
         .container { max-width: 1400px; margin: 0 auto; width: 100%; }
         
         .header-bar { 
@@ -138,9 +136,7 @@
 
         .btn-fetch:hover, .btn-pdf:hover, .btn-excel:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.15); filter: brightness(1.1); }
 
-        /* ===== GRID & CARDS ===== */
         .main-grid { display: grid; grid-template-columns: 1.25fr 0.75fr; gap: 20px; }
-        
         @media (max-width: 1024px) { .main-grid { grid-template-columns: 1fr; } }
 
         #dashboardData { display: none; animation: fadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
@@ -156,7 +152,6 @@
         th { padding: 15px; text-align: left; font-size: 14px; background: #f8fafc; border-bottom: 2px solid #edf2f7; color: #4a5568; font-weight: 600; }
         td { padding: 12px 15px; border-bottom: 1px solid #f1f5f9; font-size: 15px; color: #2d3748; transition: background 0.2s; }
         
-        /* HOVER EFFECTS FOR TABLES */
         tbody tr:hover td { background-color: rgba(91, 183, 170, 0.04); }
         .target-row:hover { background-color: #f8fafc; }
 
@@ -221,7 +216,13 @@
                 <select id="daySelect">
                     <option value="">📅 เลือกวันที่</option>
                     <script>
-                        for(let i=1; i<=31; i++) document.write(`<option value="${i}">วันที่ ${i}</option>`);
+                        // ดึงวันที่ปัจจุบัน
+                        const today = new Date().getDate();
+                        for(let i=1; i<=31; i++) {
+                            // ถ้า i ตรงกับวันที่ปัจจุบัน ให้เพิ่ม attribute selected
+                            const isSelected = (i === today) ? 'selected' : '';
+                            document.write(`<option value="${i}" ${isSelected}>วันที่ ${i}</option>`);
+                        }
                     </script>
                 </select>
                 <button class="btn-fetch" onclick="loadData()">🚀 ดึงข้อมูล</button>
@@ -319,8 +320,7 @@
             </div>
         </div>
     </div>
-    <br>
-    <br>
+    <br><br>
 </main>
 
 <script>
@@ -334,6 +334,11 @@
             body.classList.add('collapsed');
         }
         
+        // กำหนดวันที่ปัจจุบันใน dropdown (กันพลาดจากฝั่ง HTML)
+        const daySelect = document.getElementById('daySelect');
+        const todayNum = new Date().getDate();
+        if(!daySelect.value) daySelect.value = todayNum;
+
         loadSidebar(); 
     });
 
@@ -345,25 +350,16 @@
                 const html = await response.text();
                 menuContainer.innerHTML = html;
                 
-                // คืนค่าสถานะการเปิดเมนูย่อยจาก localStorage
                 const openedMenus = JSON.parse(localStorage.getItem('openedSubMenus') || "[]");
-                
                 const dropBtns = menuContainer.querySelectorAll('.drop-btn');
                 dropBtns.forEach((btn, index) => {
                     const parent = btn.parentElement;
-                    
-                    // ตรวจสอบว่าเมนูนี้เคยเปิดค้างไว้หรือไม่
-                    if (openedMenus.includes(index)) {
-                        parent.classList.add('open');
-                    }
+                    if (openedMenus.includes(index)) parent.classList.add('open');
 
                     btn.addEventListener('click', function() {
                         parent.classList.toggle('open');
-                        
-                        // บันทึกสถานะเมนูย่อยที่เปิดอยู่
                         const currentOpened = [];
                         menuContainer.querySelectorAll('.item.open').forEach((openItem) => {
-                            // หา index ของปุ่มที่อยู่ใน item ที่เปิดอยู่
                             const allItems = Array.from(menuContainer.querySelectorAll('.item'));
                             const idx = allItems.indexOf(openItem);
                             if (idx !== -1) currentOpened.push(idx);
@@ -504,7 +500,7 @@
     }
 </script>
 
-    <footer>© 2026 Copy Right By Angerina Frog</footer>
+<footer>© 2026 Copy Right By Angerina Frog</footer>
     
 </body>
 </html>
