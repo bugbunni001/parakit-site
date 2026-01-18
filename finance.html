@@ -104,6 +104,17 @@
                 <label>ชื่อพนักงาน</label>
                 <input type="text" id="staffName" required placeholder="ระบุชื่อพนักงาน">
             </div>
+
+            <div class="form-row">
+                <label>ชื่อลูกค้า</label>
+                <input type="text" id="customerName" required placeholder="พิมพ์ชื่อ-นามสกุล ลูกค้า">
+            </div>
+
+            <div class="form-row">
+                <label>เบอร์โทรศัพท์ลูกค้า</label>
+                <input type="tel" id="customerPhone" required placeholder="08XXXXXXXX" pattern="[0-9]{10}">
+            </div>
+
             <div class="form-row">
                 <label>ประเภทสินเชื่อ</label>
                 <select id="loanType" required>
@@ -123,8 +134,10 @@
                 <label>เหตุผล (กรณีผ่าน)</label>
                 <select id="reason">
                     <option value="">-- เลือกเหตุผล --</option>
-                    <option>ผ่าน ซื้อเครื่อง ใชวงเงิน</option><option>ผ่าน ไม่ซื้อเครื่อง ยังไม่ตัดสินใจซื้อ ด้วยเหตุผลอื่นๆ</option>
-                    <option>ผ่าน ไม่ซื้อเครื่อง วางดาวน์สูง</option><option>ผ่าน ไม่ซื้อเครื่องได้วงเงินน้อย ไม่พอซื้อเครื่อง</option>
+                    <option>ผ่าน ซื้อเครื่อง ใช้วงเงิน</option>
+		        <option>ผ่าน ไม่ซื้อเครื่อง ยังไม่ตัดสินใจซื้อ ด้วยเหตุผลอื่นๆ</option>
+                    <option>ผ่าน ไม่ซื้อเครื่อง วางดาวน์สูง</option>
+                                        <option>ผ่าน ไม่ซื้อเครื่องได้วงเงินน้อย ไม่พอซื้อเครื่อง</option>
                     <option>ผ่าน ไม่ซื้อเครื่อง ลูกค้ายังไม่อยากใช้วงเงินสินเชื่อ</option>
                 </select>
             </div>
@@ -161,7 +174,7 @@
 
 <script>
 // --- CONFIG URL ---
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxT9Q6KURZYaNrdf0RjEA3xLcTVWIqjOXTy179d6slv2RdaePxenjhosoBXQ8oNQJztlw/exec"; 
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxZEBN5PfyZh56YQizLz2Fzo6xkq0jxRbDuPgkCsL9tCF7-SOpXeKkhs6v2Tfr_I5LqsQ/exec"; 
 
 document.getElementById('date').value = new Date().toISOString().split("T")[0];
 
@@ -186,8 +199,11 @@ document.getElementById('loanForm').onsubmit = function(e) {
     const loading = document.getElementById('loading');
 
     const staffName = document.getElementById('staffName').value.trim();
-    if (!staffName) {
-        showPopup("กรุณาระบุชื่อพนักงาน", false);
+    const customerName = document.getElementById('customerName').value.trim();
+    const customerPhone = document.getElementById('customerPhone').value.trim();
+
+    if (!staffName || !customerName || !customerPhone) {
+        showPopup("กรุณากรอกข้อมูลให้ครบถ้วน", false);
         return;
     }
 
@@ -199,6 +215,8 @@ document.getElementById('loanForm').onsubmit = function(e) {
         date: document.getElementById('date').value,
         branch: document.getElementById('branch').value,
         staffName: staffName,
+        customerName: customerName,     // ส่งค่าชื่อลูกค้า
+        customerPhone: customerPhone,   // ส่งค่าเบอร์ลูกค้า
         loanType: document.getElementById('loanType').value,
         result: document.getElementById('result').value,
         reason: document.getElementById('reason').value || "ไม่ผ่าน"
@@ -249,7 +267,6 @@ function closePopup() {
     document.getElementById("popup").classList.remove("show");
 }
 
-// --- Sidebar Logic ---
 function includeSidebar() {
     const version = new Date().getTime(); 
     fetch('sidebar.html?v=' + version)
