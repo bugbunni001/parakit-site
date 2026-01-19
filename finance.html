@@ -23,7 +23,6 @@
             background-color: var(--bg);
             color: white;
             overflow: hidden;
-            display: flex;
         }
 
         /* Sidebar Container */
@@ -39,18 +38,17 @@
             overflow-y: auto;
         }
 
-        /* เนื้อหาหลัก */
+        /* --- จุดที่แก้ไข: ปรับการจัดวางเนื้อหาหลักให้กลางจอจริงๆ --- */
         .main-content {
-            flex-grow: 1;
+            height: 100vh;
             margin-left: var(--sidebar-width);
-            width: calc(100% - var(--sidebar-width));
             display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
+            justify-content: center; /* กลางแนวนอน */
+            align-items: center;     /* กลางแนวตั้ง */
             text-align: center;
             transition: var(--transition);
             position: relative;
+            width: auto; /* ให้ยืดตามพื้นที่ที่เหลือ */
         }
 
         /* ปุ่ม Toggle Hamburger */
@@ -70,13 +68,14 @@
 
         /* ข้อความแจ้งเตือน */
         .message {
-            font-size: 6vw;
+            font-size: 7vw;
             color: #ff0000;
             font-weight: 700;
             line-height: 1.2;
-            text-shadow: 0 0 20px rgba(255, 0, 0, 0.6);
+            text-shadow: 0 0 30px rgba(255, 0, 0, 0.7);
             animation: pulse 1.5s infinite;
-            padding: 20px;
+            padding: 40px;
+            width: 100%; /* กระจายเต็มพื้นที่เพื่อความชัวร์ในการกลาง */
         }
 
         /* Overlay สำหรับมือถือ */
@@ -91,24 +90,23 @@
 
         /* สถานะตอนหุบ Sidebar (Desktop) */
         body.collapsed #sidebar-container { transform: translateX(calc(var(--sidebar-width) * -1)); }
-        body.collapsed .main-content { margin-left: 0; width: 100%; }
+        body.collapsed .main-content { margin-left: 0; }
 
         /* สถานะตอนเปิด Sidebar (Mobile) */
         @media (max-width: 900px) {
             #sidebar-container { transform: translateX(calc(var(--sidebar-width) * -1)); }
-            .main-content { margin-left: 0; width: 100%; }
+            .main-content { margin-left: 0; }
             body.show-sidebar #sidebar-container { transform: translateX(0); }
             body.show-sidebar .overlay { display: block; }
-            .message { font-size: 12vw; }
+            .message { font-size: 12vw; padding: 20px; }
         }
 
         @keyframes pulse {
             0% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.03); opacity: 0.8; }
+            50% { transform: scale(1.05); opacity: 0.9; }
             100% { transform: scale(1); opacity: 1; }
         }
 
-        /* สไตล์เพิ่มเติมเพื่อให้เมนูใน sidebar.html ทำงานได้ */
         .menu .item .sub { display: none; background: #0f172a; }
         .menu .item.open .sub { display: block; }
         .menu .item.open .arrow { transform: rotate(90deg); }
@@ -123,12 +121,11 @@
     <main class="main-content">
         <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
         <div class="message">
-            กลับไปลงยอดที่เดิมเลย<br>นะคะ แบบ นะค่ะ
+            กลับไปลงยอดที่เดิมเลย<br>อีหน้าหี
         </div>
     </main>
 
     <script>
-        // โหลด Sidebar และสถานะ
         window.onload = () => {
             includeSidebar();
             restoreSidebarState();
@@ -141,14 +138,12 @@
                 const container = document.getElementById('sidebar-container');
                 container.innerHTML = data;
 
-                // กู้คืนสถานะ Dropdown ใน Sidebar
                 container.querySelectorAll('.item').forEach((item, index) => {
                     if (localStorage.getItem('dropdown-' + index) === 'true') {
                         item.classList.add('open');
                     }
                 });
 
-                // จัดการ Click Dropdown
                 container.addEventListener('click', function (e) {
                     const dropBtn = e.target.closest('.drop-btn');
                     if (dropBtn) {
