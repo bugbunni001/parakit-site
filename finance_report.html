@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ระบบรายงานสินเชื่อรายสาขา</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <style>
+        :root { 
+            --primary: #5bb7aa; --bg: #f5f7fa; --text-dark: #2d3748; --white: #ffffff; 
+            --sidebar-width: 260px; --sidebar-bg: #1e293b; --sidebar-hover: #334155;
+            --sidebar-text: #cbd5e1; --success: #059669; --danger: #dc2626;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --header-bg-green: #5bb7aa; 
+            --header-text-white: #ffffff;
+            --btn-fetch-new: #f97316; 
+        }
+
+        * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
+        html, body { margin: 0; padding: 0; width: 100%; background-color: var(--bg); color: var(--text-dark); min-height: 100vh; }
+        body { display: flex; flex-direction: column; }
+
+        /* SIDEBAR STYLE */
+        #sidebar-container { width: var(--sidebar-width); background: var(--sidebar-bg); height: 100vh; position: fixed; left: 0; top: 0; transition: transform 0.3s ease; z-index: 2000; overflow-y: auto; box-shadow: 4px 0 15px rgba(0,0,0,0.2); }
+        .main-content { flex-grow: 1; margin-left: var(--sidebar-width); padding: 20px; width: calc(100% - var(--sidebar-width)); transition: var(--transition); }
+        
+        body.collapsed #sidebar-container { transform: translateX(calc(var(--sidebar-width) * -1)); }
+        body.collapsed .main-content { margin-left: 0; width: 100%; }
+
+        @media (max-width: 900px) { 
+            #sidebar-container { transform: translateX(calc(var(--sidebar-width) * -1)); } 
+            .main-content { margin-left: 0 !important; width: 100% !important; } 
+            body.show-sidebar #sidebar-container { transform: translateX(0); }
+        }
+
+        .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: none; backdrop-filter: blur(4px); z-index: 1500; }
+        body.show-sidebar .overlay { display: block; }
+
+        /* HEADER BAR */
+        .header-bar { 
+            background: var(--header-bg-green); padding: 15px 25px; border-radius: 14px; 
+            display: flex; justify-content: space-between; align-items: center; 
+            margin-bottom: 25px; box-shadow: 0 4px 12px rgba(91, 183, 170, 0.3); 
+            flex-wrap: wrap; gap: 15px;
+        }
+        .header-bar h2 { font-size: 22px; font-weight: 600; color: var(--header-text-white); margin: 0; }
+        
+        .date-input { padding: 10px; border-radius: 10px; border: 1px solid #fff; font-size: 16px; outline: none; }
+        .btn-fetch { background: var(--btn-fetch-new); color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: 500; transition: 0.2s; }
+        .btn-fetch:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(249, 115, 22, 0.3); }
+
+        /* CARD & TABLE */
+        .card { background: var(--white); border-radius: 15px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid #edf2f7; margin-bottom: 25px; }
+        .card-header { padding: 15px 20px; color: white; font-weight: 600; background: var(--primary); display: flex; justify-content: space-between; align-items: center; }
+        
+        .table-wrapper { width: 100%; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 700px; }
+        th { background: #f8fafc; padding: 15px; font-size: 13px; color: #64748b; border-bottom: 2px solid #edf2f7; text-align: center; }
+        th:first-child { text-align: left; padding-left: 25px; width: 220px; font-size: 14px; }
+        td { padding: 14px 15px; font-size: 15px; border-bottom: 1px solid #f1f5f9; text-align: center; }
+        .shop-name { font-weight: 600; text-align: left !important; padding-left: 25px; color: var(--text-dark); background: #fcfdfe; }
+
+        /* CHART CENTERED */
+        .chart-container { display: flex; justify-content: center; padding: 20px; background: #fafafa; }
+        .iframe-wrap { width: 100%; max-width: 900px; aspect-ratio: 16/9; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .iframe-wrap iframe { width: 100%; height: 100%; border: none; }
+
+        /* LOADING SPINNER */
+        .loading-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.8); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 3000; backdrop-filter: blur(4px); }
+        .spinner { width: 50px; height: 50px; border: 5px solid #e2e8f0; border-top: 5px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* BADGES */
+        .badge { padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 600; }
+        .c1 { background: #fee2e2; color: #dc2626; } .c2 { background: #dcfce7; color: #166534; }
+        .c3 { background: #dbeafe; color: #1e40af; } .c4 { background: #fef9c3; color: #854d0e; }
+        .c5 { background: #ffedd5; color: #c2410c; }
+
+        footer { text-align: center; padding: 20px; color: #94a3b8; font-size: 12px; margin-top: auto; }
+    </style>
+</head>
+<body id="mainBody">
+
+<div class="loading-overlay" id="loader">
+    <div class="spinner"></div>
+    <span style="color: var(--primary); font-weight: 500;">กำลังรวบรวมข้อมูลสินเชื่อ...</span>
+</div>
+
+<div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+<aside id="sidebar-container"></aside>
+
+<main class="main-content">
+    <div class="header-bar">
+        <div style="display:flex; align-items:center; gap:15px;">
+            <button onclick="toggleSidebar()" style="background:rgba(255,255,255,0.2); color:white; border:1px solid rgba(255,255,255,0.4); padding:8px 12px; border-radius:8px; cursor:pointer;">☰</button>
+            <h2>ระบบรายงานสินเชื่อรายสาขา</h2>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+            <input type="date" id="targetDate" class="date-input">
+            <button class="btn-fetch" onclick="refreshData()">🚀 ดึงข้อมูล</button>
+        </div>
+    </div>
+
+    <div id="dashboard-content">
+        <div class="card">
+            <div class="card-header">📈 ภาพรวมยอดสินเชื่อสะสม</div>
+            <div class="chart-container">
+                <div class="iframe-wrap">
+                    <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vQ6-tg6_zQhxuiO4IMG5OkJRoWUHosvKa6iCiTGkdzURgNxpLrXIu5F7zcQNBG8Oa9ZgS3ab7vFL1HQ/pubchart?oid=1311075250&amp;format=interactive"></iframe>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <span>📅 รายงานประจำวัน: <span id="date-label"></span></span>
+            </div>
+            <div class="table-wrapper">
+                <table>
+                    <thead><tr id="h-daily"></tr></thead>
+                    <tbody id="b-daily"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <span>📊 สรุปยอดสะสมเดือน: <span id="month-label" style="color: #fff; text-decoration: underline;"></span></span>
+            </div>
+            <div class="table-wrapper">
+                <table>
+                    <thead><tr id="h-month"></tr></thead>
+                    <tbody id="b-month"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <footer>© 2026 Copy Right By Angerina Frog</footer>
+</main>
+
+<script>
+    // 🚩 URL ของ Web App Google Apps Script
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzUkmUuBbJGOenY3wqBafUpn2U9hiaqU56Vzybs4DvAxT_nbelVIAg7JClSlLXdppHbbA/exec"; 
+
+    window.onload = () => {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('targetDate').value = today;
+        includeSidebar();
+        restoreSidebarState();
+        refreshData();
+    };
+
+    async function includeSidebar() {
+        try {
+            const response = await fetch('sidebar.html?v=' + new Date().getTime());
+            const data = await response.text();
+            document.getElementById('sidebar-container').innerHTML = data;
+        } catch (err) { console.warn("Sidebar Load Error"); }
+    }
+
+    function toggleSidebar() {
+        const body = document.getElementById('mainBody');
+        if (window.innerWidth <= 900) {
+            body.classList.toggle('show-sidebar');
+        } else {
+            const isCollapsed = body.classList.toggle('collapsed');
+            localStorage.setItem('sidebar-collapsed', isCollapsed);
+        }
+    }
+
+    function restoreSidebarState() {
+        if (window.innerWidth > 900) {
+            if (localStorage.getItem('sidebar-collapsed') === 'true') {
+                document.getElementById('mainBody').classList.add('collapsed');
+            }
+        }
+    }
+
+    async function refreshData() {
+        const date = document.getElementById('targetDate').value;
+        const loader = document.getElementById('loader');
+        loader.style.display = 'flex';
+
+        try {
+            const response = await fetch(`${WEB_APP_URL}?date=${date}`);
+            const data = await response.json();
+            
+            renderTable(data.dailyTable, 'daily');
+            renderTable(data.monthlyTable, 'month');
+            
+            document.getElementById('date-label').innerText = date;
+            document.getElementById('month-label').innerText = data.displayMonth;
+            
+            loader.style.display = 'none';
+        } catch (error) {
+            console.error(error);
+            alert("ไม่สามารถดึงข้อมูลได้ กรุณาลองใหม่");
+            loader.style.display = 'none';
+        }
+    }
+
+    function renderTable(tableObj, type) {
+        document.getElementById('h-' + type).innerHTML = `<th>ชื่อสาขา</th>` + 
+            tableObj.loanTypes.map((n, i) => `<th><span class="badge c${i+1}">${n}</span></th>`).join('');
+        
+        let html = '';
+        tableObj.branches.forEach(branch => {
+            html += `<tr><td class="shop-name">${branch}</td>`;
+            tableObj.loanTypes.forEach(t => {
+                const val = tableObj.data[branch][t];
+                html += `<td style="${val > 0 ? 'font-weight:600; color:var(--primary)' : 'color:#cbd5e1'}">${val}</td>`;
+            });
+            html += `</tr>`;
+        });
+        document.getElementById('b-' + type).innerHTML = html;
+    }
+</script>
+</body>
+</html>
