@@ -25,6 +25,12 @@
         #sidebar-container { width: var(--sidebar-width); background: var(--sidebar-bg); height: 100vh; position: fixed; left: 0; top: 0; transition: transform 0.3s ease; z-index: 2000; overflow-y: auto; box-shadow: 4px 0 15px rgba(0,0,0,0.2); }
         .main-content { flex-grow: 1; margin-left: var(--sidebar-width); padding: 20px; width: calc(100% - var(--sidebar-width)); transition: var(--transition); }
         
+        /* CSS สำหรับการกาง/หุบเมนูย่อยใน Sidebar */
+        .menu .item .sub { display: none; background: #0f172a; }
+        .menu .item.open .sub { display: block; }
+        .menu .item.open .arrow { transform: rotate(90deg); }
+        .arrow { margin-left: auto; transition: 0.3s; font-size: 10px; }
+
         body.collapsed #sidebar-container { transform: translateX(calc(var(--sidebar-width) * -1)); }
         body.collapsed .main-content { margin-left: 0; width: 100%; }
 
@@ -142,7 +148,6 @@
 </main>
 
 <script>
-    // 🚩 URL ของ Web App Google Apps Script
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzUkmUuBbJGOenY3wqBafUpn2U9hiaqU56Vzybs4DvAxT_nbelVIAg7JClSlLXdppHbbA/exec"; 
 
     window.onload = () => {
@@ -157,7 +162,37 @@
         try {
             const response = await fetch('sidebar.html?v=' + new Date().getTime());
             const data = await response.text();
-            document.getElementById('sidebar-container').innerHTML = data;
+            const container = document.getElementById('sidebar-container');
+            container.innerHTML = data;
+
+            // --- ส่วนที่แก้ไข: เพิ่ม Event Listener สำหรับการกาง-หุบเมนูย่อย ---
+            
+            // 1. กู้คืนสถานะเมนูที่เคยเปิดไว้
+            container.querySelectorAll('.item').forEach((item, index) => {
+                const isOpened = localStorage.getItem('dropdown-' + index);
+                if (isOpened === 'true') item.classList.add('open');
+            });
+
+            // 2. ตั้งค่าการคลิกที่ Dropdown Button
+            container.addEventListener('click', function (e) {
+                const dropBtn = e.target.closest('.drop-btn');
+                if (dropBtn) {
+                    const parent = dropBtn.parentElement;
+                    parent.classList.toggle('open');
+                    
+                    // บันทึกสถานะไว้ใน LocalStorage
+                    container.querySelectorAll('.item').forEach((item, index) => {
+                        localStorage.setItem('dropdown-' + index, item.classList.contains('open'));
+                    });
+                }
+            });
+
+            // 3. Highlight ลิงก์ปัจจุบัน
+            const currentPath = window.location.pathname.split('/').pop() || 'index.html';
+            container.querySelectorAll('a').forEach(link => {
+                if (link.getAttribute('href') === currentPath) link.classList.add('active');
+            });
+
         } catch (err) { console.warn("Sidebar Load Error"); }
     }
 
@@ -211,7 +246,7 @@
             html += `<tr><td class="shop-name">${branch}</td>`;
             tableObj.loanTypes.forEach(t => {
                 const val = tableObj.data[branch][t];
-                html += `<td style="${val > 0 ? 'font-weight:600; color:var(--primary)' : 'color:#cbd5e1'}">${val}</td>`;
+                html += `<td style="${val > 0 ? 'font-weight:600; color:var(--primary)' : 'color:#cbd5e1'}">${val.toLocaleString()}</td>`;
             });
             html += `</tr>`;
         });
