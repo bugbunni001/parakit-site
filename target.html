@@ -4,50 +4,61 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Target BigC Prachauthit</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
         :root {
-            /* Main Colors */
-            --primary: #3b82f6;
-            --primary-dark: #1d4ed8;
-            --secondary: #8b5cf6;
-            --success: #10b981;
-            --bg: #f8fafc;
-            --white: #ffffff;
-            --text-dark: #1e293b;
-            --text-sub: #64748b;
-            
-            /* Sidebar Variables (Keep Original) */
-            --sidebar-width: 260px;
-            --sidebar-bg: #1e293b;
-            --sidebar-hover: #334155;
-            --sidebar-text: #cbd5e1;
-            
-            /* UI Elements */
-            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            --radius: 20px;
-            --shadow: 0 10px 30px -10px rgba(0,0,0,0.08);
-
-            /* Section Colors (Soft Backgrounds) */
-            --soft-blue: #eff6ff;
-            --soft-blue-text: #1e40af;
-            --soft-orange: #fff7ed;
-            --soft-orange-text: #9a3412;
-            --soft-purple: #f5f3ff;
-            --soft-purple-text: #5b21b6;
-            --soft-teal: #f0fdfa;
-            --soft-teal-text: #115e59;
+            --primary-gradient: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            --secondary-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            --success-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            --glass-bg: rgba(255, 255, 255, 0.9);
+            --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
+            --sidebar-color: #1e293b;
+            --sidebar-width: 280px;
+            --text-main: #334155;
+            --text-light: #64748b;
+            --bg-main: #f1f5f9;
+            --radius: 24px;
         }
 
+        /* ===== GLOBAL RESET ===== */
         * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
-        html, body { margin: 0; padding: 0; width: 100%; background-color: var(--bg); color: var(--text-dark); min-height: 100vh; overflow-x: hidden; }
-        body { display: flex; }
+        
+        body { 
+            margin: 0; 
+            background: var(--bg-main); 
+            color: var(--text-main); 
+            -webkit-font-smoothing: antialiased;
+            min-height: 100vh;
+            display: flex;
+            transition: padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
 
-        /* ===== SIDEBAR SYSTEM (DO NOT TOUCH) ===== */
-        #sidebar-container { width: var(--sidebar-width); background: var(--sidebar-bg); height: 100vh; position: fixed; left: 0; top: 0; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 2000; overflow-y: auto; box-shadow: 4px 0 15px rgba(0,0,0,0.2); }
-        .main-content { flex-grow: 1; margin-left: var(--sidebar-width); width: calc(100% - var(--sidebar-width)); transition: var(--transition); display: flex; flex-direction: column; }
+        /* ===== SIDEBAR SYSTEM (DO NOT TOUCH ID) ===== */
+        #sidebar-container { 
+            width: var(--sidebar-width); 
+            background: var(--sidebar-color); 
+            height: 100vh; 
+            position: fixed; 
+            left: 0; top: 0; 
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+            z-index: 2000; 
+            overflow-y: auto; 
+            box-shadow: 10px 0 30px rgba(0,0,0,0.1); 
+        }
+        
+        .main-content { 
+            flex-grow: 1; 
+            margin-left: var(--sidebar-width); 
+            width: calc(100% - var(--sidebar-width)); 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+            display: flex; 
+            flex-direction: column; 
+        }
         
         body.collapsed #sidebar-container { transform: translateX(calc(var(--sidebar-width) * -1)); }
         body.collapsed .main-content { margin-left: 0; width: 100%; }
@@ -56,167 +67,186 @@
             #sidebar-container { transform: translateX(calc(var(--sidebar-width) * -1)); } 
             .main-content { margin-left: 0 !important; width: 100% !important; } 
             body.show-sidebar #sidebar-container { transform: translateX(0); }
-            body.show-sidebar { overflow: hidden; } 
         }
 
-        .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: none; backdrop-filter: blur(4px); z-index: 1500; }
+        .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.5); backdrop-filter: blur(4px); display: none; z-index: 1500; }
         body.show-sidebar .overlay { display: block; }
 
-        /* ===== TOP NAV ===== */
+        /* ===== TOP NAV (MODERN GLASS) ===== */
         .top-nav { 
-            position: sticky; top: 0; background: rgba(255,255,255,0.8); 
-            backdrop-filter: blur(12px); padding: 15px 25px; display: flex; 
-            align-items: center; justify-content: space-between; z-index: 1000; 
-            border-bottom: 1px solid #e2e8f0;
+            position: sticky; top: 0; 
+            height: 70px;
+            background: var(--glass-bg); 
+            backdrop-filter: blur(12px); 
+            padding: 0 25px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            z-index: 1000; 
+            border-bottom: 1px solid rgba(0,0,0,0.05);
         }
-        .menu-toggle { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; cursor: pointer; transition: var(--transition); color: var(--text-dark); }
-        .menu-toggle:hover { background: var(--primary); color: white; border-color: var(--primary); }
-        
-        .status-pill { display: flex; align-items: center; gap: 8px; font-size: 13px; background: #fff; padding: 6px 15px; border-radius: 50px; border: 1px solid #e2e8f0; box-shadow: 0 2px 5px rgba(0,0,0,0.03); }
-        .dot { width: 8px; height: 8px; border-radius: 50%; background: #cbd5e1; position: relative; }
+
+        .top-toggle {
+            width: 45px; height: 45px;
+            border-radius: 12px;
+            border: none;
+            background: var(--sidebar-color);
+            color: white;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px;
+            transition: 0.3s;
+        }
+
+        .status-pill { 
+            display: flex; align-items: center; gap: 10px; 
+            font-size: 14px; background: white; 
+            padding: 8px 18px; border-radius: 50px; 
+            box-shadow: var(--card-shadow);
+            border: 1px solid rgba(0,0,0,0.03);
+        }
+        .dot { width: 10px; height: 10px; border-radius: 50%; background: #cbd5e1; position: relative; }
         .dot.pulse::after { content: ''; position: absolute; inset: -4px; border-radius: 50%; background: inherit; opacity: 0.4; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0% { transform: scale(1); opacity: 0.5; } 100% { transform: scale(2.5); opacity: 0; } }
 
-        /* ===== MAIN CONTAINER & CARDS ===== */
-        .main-container { padding: 30px 20px; max-width: 1200px; margin: 0 auto; width: 100%; }
+        /* ===== MAIN CONTENT AREA ===== */
+        .main-container { padding: 40px 25px; max-width: 1200px; margin: 0 auto; width: 100%; }
         
-        .header-section { margin-bottom: 35px; }
-        .header-section h1 { font-size: 28px; font-weight: 700; background: linear-gradient(135deg, var(--text-dark) 0%, #475569 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0; letter-spacing: -0.5px; }
-        
-        .grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 25px; }
+        .header-section { margin-bottom: 40px; }
+        .header-section h1 { 
+            font-size: 32px; font-weight: 700; 
+            color: var(--sidebar-color);
+            margin: 0; letter-spacing: -1px; 
+        }
+        .header-section p { color: var(--text-light); font-size: 16px; margin-top: 5px; }
+
+        /* ===== CARDS GRID ===== */
+        .grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 30px; }
         
         .target-card { 
-            background: var(--white); 
+            background: #fff; 
             border-radius: var(--radius); 
-            box-shadow: var(--shadow); 
-            border: 1px solid #f1f5f9; 
+            box-shadow: var(--card-shadow); 
             overflow: hidden;
-            transition: var(--transition);
+            border: 1px solid rgba(0,0,0,0.02);
+            transition: 0.3s;
         }
-        .target-card:hover { transform: translateY(-5px); box-shadow: 0 20px 40px -10px rgba(0,0,0,0.12); }
 
         /* Card Header */
         .card-header { 
-            padding: 20px 25px; 
+            padding: 25px; 
             background: #fff;
-            border-bottom: 1px solid #f1f5f9;
             display: flex; justify-content: space-between; align-items: center; 
         }
-        .card-title { font-weight: 700; font-size: 20px; display: flex; align-items: center; gap: 12px; }
-        
-        /* Total Badge in Header */
+        .card-title { font-weight: 700; font-size: 20px; display: flex; align-items: center; gap: 15px; }
+        .icon-box {
+            width: 48px; height: 48px;
+            border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px;
+            color: white;
+        }
+        .icon-blue { background: var(--primary-gradient); }
+        .icon-purple { background: linear-gradient(135deg, #a855f7 0%, #7e22ce 100%); }
+
         .total-badge { 
-            background: var(--text-dark); 
+            background: var(--sidebar-color); 
             color: #fff; 
-            padding: 6px 16px; 
-            border-radius: 12px; 
-            font-size: 22px; 
+            padding: 8px 20px; 
+            border-radius: 14px; 
+            font-size: 24px; 
             font-weight: 700; 
-            min-width: 80px; 
-            text-align: center; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-            font-variant-numeric: tabular-nums;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
         }
 
-        /* Section Styling (Stripes) */
-        .section-wrapper { padding: 20px 25px; }
-        .section-wrapper:not(:last-child) { border-bottom: 1px solid #f1f5f9; }
-        
-        /* Background Colors for Sections */
-        .bg-section-blue { background-color: var(--soft-blue); }
-        .bg-section-orange { background-color: var(--soft-orange); }
-        .bg-section-purple { background-color: var(--soft-purple); }
-        .bg-section-teal { background-color: var(--soft-teal); }
+        /* Section Styling */
+        .section-wrapper { padding: 25px; border-top: 1px solid #f1f5f9; }
+        .bg-section-soft { background-color: #fafafa; }
 
         .section-header { 
-            font-size: 16px; 
-            font-weight: 700; 
-            margin-bottom: 15px; 
-            display: flex; 
-            align-items: center; 
-            gap: 8px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            font-size: 14px; font-weight: 600; 
+            margin-bottom: 20px; color: var(--text-light);
+            text-transform: uppercase; letter-spacing: 1px;
+            display: flex; align-items: center; gap: 10px;
         }
-        .section-header.blue { color: var(--soft-blue-text); }
-        .section-header.orange { color: var(--soft-orange-text); }
-        .section-header.purple { color: var(--soft-purple-text); }
-        .section-header.teal { color: var(--soft-teal-text); }
 
-        /* Staff Items */
-        .staff-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; position: relative; }
-        .staff-item span { font-size: 15px; font-weight: 500; color: var(--text-dark); }
+        /* Staff Items & Inputs */
+        .staff-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .staff-item span { font-size: 16px; font-weight: 500; color: var(--text-main); }
         
-        /* Input Styling */
+        .input-group { position: relative; }
         input[type="text"] { 
-            width: 90px; 
+            width: 100px; 
             text-align: right; 
-            padding: 8px 12px; 
-            border-radius: 10px; 
-            border: 1px solid transparent; 
+            padding: 10px 15px; 
+            border-radius: 12px; 
+            border: 2px solid #e2e8f0; 
             background: #fff; 
-            font-weight: 600; 
-            font-size: 16px;
-            color: var(--text-dark);
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            transition: var(--transition);
+            font-weight: 600; font-size: 16px;
+            transition: 0.3s;
         }
-        input[type="text"]:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); }
-        input[type="text"][readonly] { background: rgba(255,255,255,0.6); color: var(--text-sub); box-shadow: none; border: 1px solid rgba(0,0,0,0.05); }
+        input[type="text"]:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); }
+        input[type="text"][readonly] { background: #f8fafc; border-color: transparent; color: var(--text-light); }
 
-        /* Summary Row Styling */
         .summary-row { 
-            margin-top: 15px; 
-            padding-top: 15px; 
-            border-top: 2px dashed rgba(0,0,0,0.05); 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center;
+            margin-top: 20px; padding: 15px; border-radius: 16px;
+            background: #f8fafc;
+            display: flex; justify-content: space-between; align-items: center;
         }
-        .summary-row span { font-weight: 700; color: var(--text-dark); font-size: 16px; }
+        .summary-row span { font-weight: 600; color: var(--text-main); }
         .summary-row input { 
-            background: transparent !important; 
-            border: none !important; 
-            box-shadow: none !important; 
-            font-size: 20px; 
-            font-weight: 800; 
-            color: var(--text-dark);
-            width: 120px;
-            padding: 0;
+            background: transparent !important; border: none !important; 
+            font-size: 20px; font-weight: 700; color: var(--sidebar-color);
+            width: 120px; padding: 0;
         }
 
-        /* Button & Controls */
-        .btn-save { 
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%); 
-            color: white; width: 100%; max-width: 350px; 
-            margin: 40px auto; padding: 16px; border-radius: 16px; 
-            border: none; font-size: 18px; font-weight: 600; 
-            cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 12px; 
-            box-shadow: 0 10px 20px -5px rgba(16, 185, 129, 0.4); 
-            transition: var(--transition); 
+        /* ===== CONTROLS ===== */
+        .mode-control { 
+            display: flex; align-items: center; gap: 12px; 
+            background: white; padding: 10px 20px; 
+            border-radius: 50px; box-shadow: var(--card-shadow);
+            margin-bottom: 25px; float: right;
         }
-        .btn-save:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 15px 25px -5px rgba(16, 185, 129, 0.5); }
-        .btn-save:disabled { background: #cbd5e1; cursor: not-allowed; box-shadow: none; filter: grayscale(100%); }
         
-        .mode-control { display: flex; align-items: center; justify-content: flex-end; margin-bottom: 25px; gap: 12px; background: white; padding: 8px 16px; border-radius: 50px; display: inline-flex; box-shadow: 0 2px 10px rgba(0,0,0,0.05); float: right; }
-        .edit-switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+        /* Switch UI */
+        .edit-switch { position: relative; display: inline-block; width: 50px; height: 26px; }
         .edit-switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; inset: 0; background-color: #cbd5e1; transition: .4s; border-radius: 34px; }
-        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
-        input:checked + .slider { background-color: var(--primary); }
-        input:checked + .slider:before { transform: translateX(20px); }
+        .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background: var(--primary-gradient); }
+        input:checked + .slider:before { transform: translateX(24px); }
 
+        .btn-save { 
+            background: var(--success-gradient); 
+            color: white; width: 100%; max-width: 400px; 
+            margin: 50px auto; padding: 18px; border-radius: 20px; 
+            border: none; font-size: 18px; font-weight: 600; 
+            cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 12px; 
+            box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.4); 
+            transition: 0.3s; 
+        }
+        .btn-save:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 20px 30px -10px rgba(16, 185, 129, 0.5); }
+        .btn-save:disabled { background: #cbd5e1; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        /* Popups */
         .loading-popup { position: fixed; inset: 0; background: rgba(15,23,42,0.8); display: none; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(8px); }
         .loading-popup.active { display: flex; }
+        .popup-card { background: #fff; padding: 40px; border-radius: 30px; text-align: center; }
+
+        @media (max-width: 600px) {
+            .grid-container { grid-template-columns: 1fr; }
+            .main-container { padding: 20px 15px; }
+            .header-section h1 { font-size: 24px; }
+        }
     </style>
 </head>
 <body id="mainBody">
 
 <div class="loading-popup" id="savePopup">
-    <div style="background: #fff; padding: 40px 60px; border-radius: 24px; text-align: center; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);">
-        <i class="fa-solid fa-circle-notch fa-spin fa-3x" style="color: var(--primary); margin-bottom: 25px;"></i>
-        <h2 style="margin: 0; font-size: 22px; color: var(--text-dark);">กำลังประมวลผล...</h2>
-        <p style="color: var(--text-sub); margin-top: 5px;">กรุณารอสักครู่</p>
+    <div class="popup-card">
+        <i class="fa-solid fa-circle-notch fa-spin fa-3x" style="color: #6366f1; margin-bottom: 20px;"></i>
+        <h2 style="margin: 0; font-size: 22px;">กำลังบันทึกข้อมูล</h2>
+        <p style="color: var(--text-light);">กรุณารอสักครู่ ระบบกำลังอัปเดต Target...</p>
     </div>
 </div>
 
@@ -226,7 +256,9 @@
 
 <main class="main-content">
     <nav class="top-nav">
-        <div class="menu-toggle" onclick="toggleSidebar()"><i class="fa-solid fa-bars-staggered"></i></div>
+        <button class="top-toggle" onclick="toggleSidebar()">
+            <i class="fa-solid fa-bars-staggered"></i>
+        </button>
         <div class="status-pill">
             <span class="dot" id="sync-dot"></span>
             <span id="status-text">กำลังโหลด...</span>
@@ -235,9 +267,9 @@
 
     <div class="main-container">
         
-        <div style="display: flow-root;">
+        <div style="display: flow-root; margin-bottom: 10px;">
             <div class="mode-control">
-                <span id="modeLabel" style="font-size: 14px; color: var(--text-sub); font-weight:500;">โหมดอ่านอย่างเดียว</span>
+                <span id="modeLabel" style="font-size: 14px; font-weight:600; color: var(--text-light);">อ่านอย่างเดียว</span>
                 <label class="edit-switch">
                     <input type="checkbox" id="editToggle" onchange="toggleEditMode()">
                     <span class="slider"></span>
@@ -245,7 +277,7 @@
             </div>
             <div class="header-section">
                 <h1>Target BigC Prachauthit</h1>
-                <p style="color: var(--text-sub); margin: 5px 0 0 0; font-size: 16px;">สรุปยอดขายประจำสาขา แบบเรียลไทม์</p>
+                <p>รายงานสรุปเป้ายอดขายประจำสาขา (Real-time)</p>
             </div>
         </div>
 
@@ -253,8 +285,8 @@
             <div class="target-card">
                 <div class="card-header">
                     <div class="card-title">
-                        <div style="width:40px; height:40px; background: var(--soft-blue); border-radius:10px; display:flex; align-items:center; justify-content:center;">
-                            <i class="fa-solid fa-sim-card" style="color:var(--primary); font-size: 20px;"></i>
+                        <div class="icon-box icon-blue">
+                            <i class="fa-solid fa-sim-card"></i>
                         </div>
                         Postpay
                     </div>
@@ -262,20 +294,20 @@
                     <input type="hidden" id="postpay_total">
                 </div>
 
-                <div class="section-wrapper bg-section-blue">
-                    <div class="section-header blue">
+                <div class="section-wrapper">
+                    <div class="section-header">
                         <i class="fa-solid fa-plus-circle"></i> New Sim Only
                     </div>
                     <div class="staff-item">
-                        <span><i class="fa-regular fa-user" style="margin-right:8px; opacity:0.5;"></i>นวพล</span>
+                        <span>นวพล</span>
                         <input type="text" id="pp_nawa_n" class="data-input" oninput="calculate()" readonly placeholder="-">
                     </div>
                     <div class="staff-item">
-                        <span><i class="fa-regular fa-user" style="margin-right:8px; opacity:0.5;"></i>ปิยะพร</span>
+                        <span>ปิยะพร</span>
                         <input type="text" id="pp_piya_n" class="data-input" oninput="calculate()" readonly placeholder="-">
                     </div>
                     <div class="staff-item">
-                        <span><i class="fa-regular fa-user" style="margin-right:8px; opacity:0.5;"></i>กรทักษ์</span>
+                        <span>กรทักษ์</span>
                         <input type="text" id="pp_korn_n" class="data-input" oninput="calculate()" readonly placeholder="-">
                     </div>
                     <div class="summary-row">
@@ -284,20 +316,20 @@
                     </div>
                 </div>
 
-                <div class="section-wrapper bg-section-orange">
-                    <div class="section-header orange">
+                <div class="section-wrapper bg-section-soft">
+                    <div class="section-header">
                         <i class="fa-solid fa-rotate"></i> Existing
                     </div>
                     <div class="staff-item">
-                        <span><i class="fa-regular fa-user" style="margin-right:8px; opacity:0.5;"></i>นวพล</span>
+                        <span>นวพล</span>
                         <input type="text" id="pp_nawa_e" class="data-input" oninput="calculate()" readonly placeholder="-">
                     </div>
                     <div class="staff-item">
-                        <span><i class="fa-regular fa-user" style="margin-right:8px; opacity:0.5;"></i>ปิยะพร</span>
+                        <span>ปิยะพร</span>
                         <input type="text" id="pp_piya_e" class="data-input" oninput="calculate()" readonly placeholder="-">
                     </div>
                     <div class="staff-item">
-                        <span><i class="fa-regular fa-user" style="margin-right:8px; opacity:0.5;"></i>กรทักษ์</span>
+                        <span>กรทักษ์</span>
                         <input type="text" id="pp_korn_e" class="data-input" oninput="calculate()" readonly placeholder="-">
                     </div>
                     <div class="summary-row">
@@ -310,8 +342,8 @@
             <div class="target-card">
                 <div class="card-header">
                     <div class="card-title">
-                        <div style="width:40px; height:40px; background: var(--soft-purple); border-radius:10px; display:flex; align-items:center; justify-content:center;">
-                            <i class="fa-solid fa-mobile-screen-button" style="color:var(--secondary); font-size: 20px;"></i>
+                        <div class="icon-box icon-purple">
+                            <i class="fa-solid fa-mobile-screen-button"></i>
                         </div>
                         Device
                     </div>
@@ -319,20 +351,20 @@
                     <input type="hidden" id="device_total">
                 </div>
 
-                <div class="section-wrapper bg-section-purple">
-                    <div class="section-header purple">
+                <div class="section-wrapper">
+                    <div class="section-header">
                         <i class="fa-brands fa-apple"></i> Apple Device
                     </div>
                     <div class="staff-item">
-                        <span><i class="fa-regular fa-user" style="margin-right:8px; opacity:0.5;"></i>นวพล</span>
+                        <span>นวพล</span>
                         <input type="text" id="dev_nawa_a" class="data-input" oninput="calculate()" readonly placeholder="-">
                     </div>
                     <div class="staff-item">
-                        <span><i class="fa-regular fa-user" style="margin-right:8px; opacity:0.5;"></i>ปิยะพร</span>
+                        <span>ปิยะพร</span>
                         <input type="text" id="dev_piya_a" class="data-input" oninput="calculate()" readonly placeholder="-">
                     </div>
                     <div class="staff-item">
-                        <span><i class="fa-regular fa-user" style="margin-right:8px; opacity:0.5;"></i>กรทักษ์</span>
+                        <span>กรทักษ์</span>
                         <input type="text" id="dev_korn_a" class="data-input" oninput="calculate()" readonly placeholder="-">
                     </div>
                     <div class="summary-row">
@@ -341,20 +373,20 @@
                     </div>
                 </div>
 
-                <div class="section-wrapper bg-section-teal">
-                    <div class="section-header teal">
+                <div class="section-wrapper bg-section-soft">
+                    <div class="section-header">
                         <i class="fa-brands fa-android"></i> Smartphone
                     </div>
                     <div class="staff-item">
-                        <span><i class="fa-regular fa-user" style="margin-right:8px; opacity:0.5;"></i>นวพล</span>
+                        <span>นวพล</span>
                         <input type="text" id="dev_nawa_s" class="data-input" oninput="calculate()" readonly placeholder="-">
                     </div>
                     <div class="staff-item">
-                        <span><i class="fa-regular fa-user" style="margin-right:8px; opacity:0.5;"></i>ปิยะพร</span>
+                        <span>ปิยะพร</span>
                         <input type="text" id="dev_piya_s" class="data-input" oninput="calculate()" readonly placeholder="-">
                     </div>
                     <div class="staff-item">
-                        <span><i class="fa-regular fa-user" style="margin-right:8px; opacity:0.5;"></i>กรทักษ์</span>
+                        <span>กรทักษ์</span>
                         <input type="text" id="dev_korn_s" class="data-input" oninput="calculate()" readonly placeholder="-">
                     </div>
                     <div class="summary-row">
@@ -366,15 +398,16 @@
         </div>
 
         <button class="btn-save" id="saveBtn" onclick="saveAll()" disabled>
-            <i class="fa-solid fa-cloud-arrow-up"></i> 💾 บันทึก Target
+            <i class="fa-solid fa-cloud-arrow-up"></i> บันทึกข้อมูลเข้าสู่ระบบ
         </button>
     </div>
 </main>
 
 <script>
+    // URL สคริปต์เดิม
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz4jD9tgF3eR-j5xEyq2HUlQ2r7eYyHFo7pwvkV_EHBLz33Srnez2Vy9q7i-biUvtvmgQ/exec";
 
-    // --- ระบบ Sidebar (คงเดิม) ---
+    // --- ระบบ Sidebar (คง ID และ Logic เดิม) ---
     async function includeSidebar() {
         const version = new Date().getTime();
         try {
@@ -423,54 +456,42 @@
         }
     }
 
-    // --- ระบบจัดการข้อมูล (ปรับปรุง Number Format) ---
+    // --- ระบบคำนวณและจัดการข้อมูล (คงเดิม) ---
     function toggleEditMode() {
         const isEdit = document.getElementById('editToggle').checked;
         document.querySelectorAll('.data-input').forEach(input => {
             input.readOnly = !isEdit;
-            // ถ้าเข้าโหมดแก้ไข ให้ถอด readonly
         });
         document.getElementById('saveBtn').disabled = !isEdit;
         const label = document.getElementById('modeLabel');
-        label.innerText = isEdit ? "โหมดแก้ไขข้อมูล" : "โหมดอ่านอย่างเดียว";
-        label.style.color = isEdit ? "var(--primary)" : "var(--text-sub)";
+        label.innerText = isEdit ? "โหมดแก้ไขข้อมูล" : "อ่านอย่างเดียว";
+        label.style.color = isEdit ? "#4f46e5" : "var(--text-light)";
     }
 
-    // Helper: ดึงค่าและตัดคอมมาออกเพื่อคำนวณ
     function getRawValue(id) {
         const val = document.getElementById(id).value;
-        // ลบ comma ออกก่อนแปลงเป็นตัวเลข
         return parseInt(val.replace(/,/g, '')) || 0;
     }
 
-    // Helper: ใส่คอมมาให้ตัวเลข
     function formatNumber(num) {
         return num.toLocaleString('en-US');
     }
 
     function calculate() {
-        // คำนวณ Postpay
         const ppNew = getRawValue('pp_nawa_n') + getRawValue('pp_piya_n') + getRawValue('pp_korn_n');
         const ppExt = getRawValue('pp_nawa_e') + getRawValue('pp_piya_e') + getRawValue('pp_korn_e');
-        
-        // แสดงผลรวม (ใส่ comma)
         document.getElementById('pp_new_total').value = formatNumber(ppNew);
         document.getElementById('pp_ext_total').value = formatNumber(ppExt);
-        
         const totalPP = ppNew + ppExt;
-        document.getElementById('postpay_total').value = totalPP; // Hidden raw value
+        document.getElementById('postpay_total').value = totalPP;
         document.getElementById('postpay_total_display').innerText = formatNumber(totalPP);
 
-        // คำนวณ Device
         const devApple = getRawValue('dev_nawa_a') + getRawValue('dev_piya_a') + getRawValue('dev_korn_a');
         const devSmart = getRawValue('dev_nawa_s') + getRawValue('dev_piya_s') + getRawValue('dev_korn_s');
-        
-        // แสดงผลรวม (ใส่ comma)
         document.getElementById('dev_apple_total').value = formatNumber(devApple);
         document.getElementById('dev_smart_total').value = formatNumber(devSmart);
-        
         const totalDev = devApple + devSmart;
-        document.getElementById('device_total').value = totalDev; // Hidden raw value
+        document.getElementById('device_total').value = totalDev;
         document.getElementById('device_total_display').innerText = formatNumber(totalDev);
     }
 
@@ -481,12 +502,9 @@
             const data = await res.json();
             Object.keys(data).forEach(k => {
                 const el = document.getElementById(k);
-                if (el) {
-                    // ถ้าเป็น input ให้ใส่ค่าลงไป (ยังไม่ format input เพื่อให้แก้ได้ง่าย แต่ format display อื่นๆ)
-                    el.value = data[k]; 
-                }
+                if (el) { el.value = data[k]; }
             });
-            calculate(); // คำนวณและ format ผลรวมทันที
+            calculate();
             updateSyncStatus('success');
         } catch (e) { updateSyncStatus('error'); }
     }
@@ -495,18 +513,14 @@
         if(!confirm("ยืนยันบันทึกข้อมูลเข้าสู่ระบบ?")) return;
         const popup = document.getElementById("savePopup");
         popup.classList.add("active");
-        
         const payload = {};
-        // เก็บข้อมูลจาก Input ทั้งหมด โดยต้องตัด Comma ออกก่อนส่ง
         document.querySelectorAll("input").forEach(i => { 
             if (i.id) {
                 let val = i.value;
-                // ถ้ามีคอมมา ให้เอาออกก่อนส่งค่า
                 if(typeof val === 'string') val = val.replace(/,/g, '');
                 payload[i.id] = val || 0; 
             }
         });
-
         try {
             const response = await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(payload) });
             const result = await response.json();
@@ -537,4 +551,3 @@
 
 </body>
 </html>
-
