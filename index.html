@@ -17,6 +17,7 @@
             --sidebar-color: #1e293b;
             --text-main: #334155;
             --text-light: #64748b;
+            --sidebar-width: 280px;
         }
 
         /* ===== GLOBAL RESET ===== */
@@ -28,9 +29,10 @@
             color: var(--text-main); 
             -webkit-font-smoothing: antialiased;
             padding-bottom: 100px;
+            transition: padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* ===== Header Navbar (New) ===== */
+        /* ===== Header Navbar ===== */
         .top-header {
             position: fixed;
             top: 0; left: 0; right: 0;
@@ -42,7 +44,7 @@
             align-items: center;
             padding: 0 20px;
             border-bottom: 1px solid rgba(0,0,0,0.05);
-            justify-content: space-between;
+            transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .top-toggle {
@@ -55,29 +57,38 @@
             display: flex; align-items: center; justify-content: center;
             font-size: 18px;
             z-index: 1300;
+            margin-right: 15px;
         }
 
-        /* ===== Sidebar Style (รักษาโครงสร้างเดิม) ===== */
+        /* ===== Sidebar Style ===== */
         .sidebar { 
             position: fixed; top: 0; left: 0; 
-            width: 280px; height: 100vh; 
+            width: var(--sidebar-width); height: 100vh; 
             background: var(--sidebar-color); 
             color: #fff; overflow-y: auto; 
-            transform: translateX(-280px); 
             transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 2000;
             box-shadow: 10px 0 30px rgba(0,0,0,0.1);
         }
-        .sidebar.show { transform: translateX(0); }
         
-        .content { padding: 85px 20px 40px; transition: margin-left .3s; }
-        
+        /* สภาวะปกติบนจอใหญ่ */
         @media(min-width:769px) { 
-            .sidebar { transform: translateX(0); } 
-            .content { margin-left: 280px; }
-            .top-header { left: 280px; }
-            .top-toggle { display: none; }
+            body:not(.collapsed) { padding-left: var(--sidebar-width); }
+            body:not(.collapsed) .top-header { left: var(--sidebar-width); }
+            
+            body.collapsed .sidebar { transform: translateX(-100%); }
+            body.collapsed .top-header { left: 0; }
         }
+
+        /* สภาวะบนมือถือ */
+        @media(max-width:768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.show { transform: translateX(0); }
+            body { padding-left: 0 !important; }
+            .top-header { left: 0 !important; }
+        }
+
+        .content { padding: 85px 20px 40px; max-width: 1400px; margin: 0 auto; }
 
         .overlay { 
             position: fixed; inset: 0; 
@@ -87,7 +98,7 @@
         }
         .overlay.show { display: block; }
 
-        /* สไตล์ภายใน Sidebar (ดึงมาจากของเดิม) */
+        /* สไตล์ภายใน Sidebar */
         .sidebar-header { padding: 25px 20px; font-size: 18px; font-weight: 600; background: #0f172a; color: #fff; border-bottom: 1px solid rgba(255,255,255,0.05); }
         .menu { display: flex; flex-direction: column; padding: 10px 0; }
         .item { border-bottom: 1px solid rgba(255,255,255,0.03); }
@@ -176,7 +187,6 @@
         .red-gradient { background: linear-gradient(135deg, #f43f5e 0%, #be123c 100%); color: white; }
         .card-content { padding: 15px 20px; font-size: 13px; color: var(--text-light); background: #fff; }
 
-       /* ===== FOOTER CARD STYLE ===== */
         footer { 
             width: 100%; 
             text-align: center; 
@@ -298,7 +308,7 @@
 <footer>© 2026 Copy Right By Angerina Frog</footer>
 
 <script>
-    // --- Sidebar System (รักษา Logic เดิมไว้ทั้งหมด) ---
+    // --- Sidebar System ---
     function includeSidebar() {
         const cached = localStorage.getItem('sidebar_cache');
         if (cached) {
@@ -316,11 +326,23 @@
                 }
             })
             .catch(err => console.warn("Sidebar Load Error"));
+            
+        // กู้คืนสถานะการยุบ (Collapsed State) สำหรับ Desktop
+        if(localStorage.getItem('sidebar_collapsed') === 'true' && window.innerWidth > 768) {
+            document.body.classList.add('collapsed');
+        }
     }
 
     function toggleSidebar() {
-        document.getElementById("sidebar").classList.toggle("show");
-        document.getElementById("overlay").classList.toggle("show");
+        if (window.innerWidth <= 768) {
+            // โหมดมือถือ: Drawer เลื่อนเข้าออก
+            document.getElementById("sidebar").classList.toggle("show");
+            document.getElementById("overlay").classList.toggle("show");
+        } else {
+            // โหมด Desktop: ยุบแถบเมนู
+            const isCollapsed = document.body.classList.toggle("collapsed");
+            localStorage.setItem('sidebar_collapsed', isCollapsed);
+        }
     }
 
     window.toggleDrop = function(btn, id) {
@@ -364,12 +386,14 @@
     // Swipe Control
     let touchstartX = 0; let touchendX = 0;
     const slider = document.getElementById('sliderContainer');
-    slider.addEventListener('touchstart', e => touchstartX = e.changedTouches[0].screenX, {passive: true});
-    slider.addEventListener('touchend', e => {
-        touchendX = e.changedTouches[0].screenX;
-        if (touchendX < touchstartX - 50) showSlides();
-        if (touchendX > touchstartX + 50) { slideIndex -= 2; if(slideIndex < 0) slideIndex = 0; showSlides(); }
-    }, {passive: true});
+    if(slider) {
+        slider.addEventListener('touchstart', e => touchstartX = e.changedTouches[0].screenX, {passive: true});
+        slider.addEventListener('touchend', e => {
+            touchendX = e.changedTouches[0].screenX;
+            if (touchendX < touchstartX - 50) showSlides();
+            if (touchendX > touchstartX + 50) { slideIndex -= 2; if(slideIndex < 0) slideIndex = 0; showSlides(); }
+        }, {passive: true});
+    }
 
     window.addEventListener('DOMContentLoaded', () => {
         includeSidebar();
