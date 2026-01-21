@@ -8,18 +8,30 @@
     <style>
         /* ===== GLOBAL RESET & SIDEBAR STRUCTURE ===== */
         * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
-        body { margin: 0; background: #f1f5f9; padding-bottom: 80px; color: #334155; -webkit-font-smoothing: antialiased; }
+        body { margin: 0; background: #f1f5f9; padding-bottom: 80px; color: #334155; -webkit-font-smoothing: antialiased; transition: all 0.3s; }
         
-        .top-toggle { position: fixed; top: 15px; left: 15px; z-index: 1400; width: 45px; height: 45px; border-radius: 12px; border: none; background: #1e293b; color: #fff; font-size: 20px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; }
-        @media(min-width:769px) { .top-toggle { display: none; } }
+        /* ปุ่ม Toggle สำหรับทุกหน้าจอ */
+        .top-toggle { position: fixed; top: 15px; left: 15px; z-index: 2100; width: 45px; height: 45px; border-radius: 12px; border: none; background: #1e293b; color: #fff; font-size: 20px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; }
         
         .sidebar { position: fixed; top: 0; left: 0; width: 260px; height: 100vh; background: #1e293b; color: #fff; overflow-y: auto; transform: translateX(-260px); transition: all .3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 2000; }
+        
+        /* เมื่อ sidebar แสดงผล */
         .sidebar.show { transform: translateX(0); }
-        .content { padding: 80px 20px 40px; transition: margin-left .3s; display: flex; justify-content: center; }
-        @media(min-width:769px) { .sidebar { transform: translateX(0); } .content { margin-left: 260px; } }
+        
+        /* การจัดการเนื้อหา */
+        .content { padding: 80px 20px 40px; transition: margin-left .3s; display: flex; justify-content: center; width: 100%; }
+
+        /* Desktop Mode: ถ้า sidebar แสดง ให้ขยับเนื้อหา */
+        @media(min-width:769px) {
+            .sidebar.show ~ .content { margin-left: 260px; width: calc(100% - 260px); }
+            /* เริ่มต้นให้ Sidebar แสดง (ถ้าต้องการให้เริ่มแบบพับ ให้ลบ .show ออกจาก class ใน HTML) */
+        }
         
         .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: none; backdrop-filter: blur(4px); z-index: 1500; }
         .overlay.show { display: block; }
+
+        /* ปิด overlay ใน desktop */
+        @media(min-width:769px) { .overlay.show { display: none; } }
 
         /* ===== SIDEBAR INTERNAL MENU STYLE ===== */
         .sidebar-header { padding: 25px 20px; font-size: 18px; font-weight: 600; background: #0f172a; color: #fff; border-bottom: 1px solid rgba(255,255,255,0.05); }
@@ -66,7 +78,6 @@
         .error .warn-icon { display: block; color: #ef4444; font-size: 60px; }
         .success .warn-icon, .error .check-icon { display: none; }
         
-        /* Checkmark Animation */
         .check-icon circle { stroke: #22c55e; stroke-width: 2; fill: none; }
         .check-icon path { stroke: #22c55e; stroke-width: 3; fill: none; stroke-linecap: round; }
 
@@ -79,7 +90,7 @@
 <button class="top-toggle" onclick="toggleSidebar()">☰</button>
 <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 
-<aside class="sidebar" id="sidebar">
+<aside class="sidebar show" id="sidebar">
     </aside>
 
 <div class="content">
@@ -218,7 +229,6 @@ function submitData() {
     })
     .catch((err) => {
         document.getElementById("loading").style.display = "none";
-        // fallback กรณีเจอ CORS error แต่ข้อมูลเข้า
         showPopup("บันทึกข้อมูลเรียบร้อยแล้ว", true);
         resetForm();
     });
@@ -228,10 +238,8 @@ function showPopup(text, isSuccess) {
     const popup = document.getElementById("popup");
     const pBox = document.getElementById("pBox");
     document.getElementById("popupText").innerText = text;
-    
     popup.classList.remove("success", "error");
     popup.classList.add(isSuccess ? "success" : "error");
-    
     popup.classList.add("show");
 }
 
@@ -275,6 +283,10 @@ function includeSidebar() {
 function toggleSidebar() {
     document.getElementById("sidebar").classList.toggle("show");
     document.getElementById("overlay").classList.toggle("show");
+    
+    // บันทึกสถานะไว้ใน localStorage เพื่อให้เปิด/ปิดค้างไว้ได้ (ถ้าต้องการ)
+    const isOpen = document.getElementById("sidebar").classList.contains("show");
+    localStorage.setItem('sidebar-visible', isOpen);
 }
 
 window.toggleDrop = function(btn, id) {
@@ -293,6 +305,14 @@ function restoreMenuState() {
             if (menuEl) menuEl.classList.add('open');
         }
     });
+
+    // คืนค่าสถานะ Sidebar (Desktop)
+    const sidebarVisible = localStorage.getItem('sidebar-visible');
+    if (sidebarVisible === 'false') {
+        document.getElementById("sidebar").classList.remove("show");
+    } else {
+        document.getElementById("sidebar").classList.add("show");
+    }
 }
 
 window.onload = includeSidebar;
