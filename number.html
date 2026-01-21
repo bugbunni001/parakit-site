@@ -64,6 +64,8 @@
         #sidebar-container { transform: translateX(calc(var(--sidebar-width) * -1)); }
         .main-content { margin-left: 0; width: 100%; padding: 20px; }
         body.show-sidebar #sidebar-container { transform: translateX(0); }
+        /* มือถือห้ามใช้คลาส collapsed เพื่อไม่ให้สับสนกับระบบ Desktop */
+        body.collapsed #sidebar-container { transform: translateX(calc(var(--sidebar-width) * -1)); }
     }
 
     .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.5); display: none; z-index: 1500; backdrop-filter: blur(4px); }
@@ -143,7 +145,7 @@
 
     /* ===== FOOTER CARD (FIXED CENTER) ===== */
     footer { 
-        width: calc(100% - 40px); /* หักลบระยะขอบซ้ายขวา */
+        width: calc(100% - 40px);
         max-width: 1100px;
         text-align: center; 
         padding: 25px; 
@@ -152,7 +154,7 @@
         font-size: 13px; 
         border: 1px solid #edf2f7; 
         border-radius: 20px; 
-        margin: 40px auto 20px auto; /* auto ซ้ายขวาทำให้กึ่งกลาง */
+        margin: 40px auto 20px auto; 
         box-shadow: var(--card-shadow);
         box-sizing: border-box;
     }
@@ -248,12 +250,12 @@
 <script>
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbylkr6WhEp7kpK8WkpZw6F7Rws0OglgqbWy3wQ-3IImG8Fwqaou9VmseZvuSdrxqg83WQ/exec";
 
-/* ✅ Original Sidebar Logic (Do not touch) */
+/* ✅ แก้ไขตรรกะ Sidebar ให้จำสถานะกาง/หุบ */
 fetch("sidebar.html")
   .then(res => res.text())
   .then(html => {
       document.getElementById("sidebar-container").innerHTML = html;
-      restoreSidebarState();
+      restoreSidebarState(); // เรียกฟังก์ชันกู้คืนสถานะ
   });
 
 function toggleSidebar() {
@@ -261,20 +263,34 @@ function toggleSidebar() {
     if (window.innerWidth <= 900) {
         body.classList.toggle('show-sidebar');
     } else {
-        const isCollapsed = body.classList.toggle('collapsed');
-        localStorage.setItem('sidebar-collapsed', isCollapsed);
+        // สำหรับ Desktop: สลับคลาส collapsed และจำค่าลง localStorage
+        const isCurrentlyCollapsed = body.classList.toggle('collapsed');
+        localStorage.setItem('sidebar-collapsed', isCurrentlyCollapsed);
     }
 }
 
 function restoreSidebarState() {
     const body = document.getElementById('mainBody');
     const container = document.getElementById('sidebar-container');
+    
+    // 1. กู้คืนสถานะ กาง/หุบ ของ Sidebar หลัก
     if (window.innerWidth > 900) {
         const isCollapsed = localStorage.getItem('sidebar-collapsed');
-        if (isCollapsed === 'true') body.classList.add('collapsed');
+        if (isCollapsed === 'true') {
+            body.classList.add('collapsed');
+        } else {
+            body.classList.remove('collapsed');
+        }
     }
+
+    // 2. กู้คืนสถานะ Dropdown ภายใน Sidebar (ถ้ามี)
+    container.querySelectorAll('.item').forEach((item, index) => {
+        const isOpened = localStorage.getItem('dropdown-' + index);
+        if (isOpened === 'true') item.classList.add('open');
+    });
 }
 
+/* จัดการคลิก Dropdown ใน Sidebar */
 document.addEventListener('click', function (e) {
     const dropBtn = e.target.closest('.drop-btn');
     if (dropBtn) {
@@ -287,7 +303,7 @@ document.addEventListener('click', function (e) {
     }
 });
 
-/* ✅ Data & UI Functions */
+/* ✅ ฟังก์ชันอื่นๆ ยังคงเดิม */
 window.onscroll = function() {
     const scrollBtn = document.getElementById("scrollTopBtn");
     if (document.documentElement.scrollTop > 300) {
