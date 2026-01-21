@@ -187,7 +187,7 @@
 
         .blue { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white; }
         .yellow { background: linear-gradient(135deg, #facc15 0%, #ca8a04 100%); color: #422006; }
-        .green-gradient { background: linear-gradient(135deg, #10 b981 0%, #047857 100%); color: white; }
+        .green-gradient { background: linear-gradient(135deg, #10b981 0%, #047857 100%); color: white; }
         .red-gradient { background: linear-gradient(135deg, #f43f5e 0%, #be123c 100%); color: white; }
 
         .card-content { padding: 15px 20px; font-size: 13px; color: var(--text-light); background: #fff; }
@@ -211,10 +211,10 @@
 <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 
 <aside class="sidebar" id="sidebar">
-    <div id="sidebar-header" style="padding: 30px 20px; font-size: 1.2rem; font-weight: 600; background: #0f172a;">
+    <div style="padding: 30px 20px; font-size: 1.2rem; font-weight: 600; background: #0f172a;">
         🔖 เมนูหลัก
     </div>
-    <div id="sidebar-content"></div> </aside>
+    <div id="sidebar-external-content"></div> </aside>
 
 <div class="content">
     <div class="slider-container" id="sliderContainer">
@@ -313,43 +313,32 @@
 <script>
     // --- Sidebar System ---
     function includeSidebar() {
-        const sidebarContent = document.getElementById('sidebar-content');
+        const target = document.getElementById('sidebar-external-content');
         const cached = localStorage.getItem('sidebar_cache');
-        
-        if (cached) { 
-            sidebarContent.innerHTML = cached; 
-            restoreSidebarState(); // คืนค่าสถานะหลังจากโหลด cache
-        }
+        if (cached) { target.innerHTML = cached; }
         
         fetch('sidebar.html')
             .then(response => response.text())
             .then(data => {
-                sidebarContent.innerHTML = data;
+                target.innerHTML = data;
                 localStorage.setItem('sidebar_cache', data);
-                restoreSidebarState(); // คืนค่าสถานะหลังจากโหลดไฟล์ใหม่
             }).catch(err => console.warn("Sidebar Error"));
+        
+        // กู้คืนสถานะการกางเมนู (สำหรับมือถือ)
+        if (localStorage.getItem('sidebar_open') === 'true' && window.innerWidth <= 768) {
+            document.getElementById("sidebar").classList.add("show");
+            document.getElementById("overlay").classList.add("show");
+        }
     }
 
     function toggleSidebar() {
         const sidebar = document.getElementById("sidebar");
         const overlay = document.getElementById("overlay");
-        
-        const isShowing = sidebar.classList.toggle("show");
+        sidebar.classList.toggle("show");
         overlay.classList.toggle("show");
         
-        // จำค่าสถานะ (ใช้ sessionStorage เพื่อให้จำเฉพาะตอนเปิด browser ค้างไว้)
-        sessionStorage.setItem('sidebar_is_open', isShowing);
-    }
-
-    function restoreSidebarState() {
-        // ตรวจสอบเฉพาะหน้าจอเล็ก (Mobile) เพราะหน้าจอใหญ่กางถาวรอยู่แล้วตาม CSS
-        if (window.innerWidth <= 768) {
-            const isOpen = sessionStorage.getItem('sidebar_is_open') === 'true';
-            if (isOpen) {
-                document.getElementById("sidebar").classList.add("show");
-                document.getElementById("overlay").classList.add("show");
-            }
-        }
+        // จำสถานะไว้ในเครื่อง
+        localStorage.setItem('sidebar_open', sidebar.classList.contains("show"));
     }
 
     // --- Slider System ---
@@ -375,14 +364,12 @@
     // Swipe Control
     let touchstartX = 0; let touchendX = 0;
     const slider = document.getElementById('sliderContainer');
-    if(slider) {
-        slider.addEventListener('touchstart', e => touchstartX = e.changedTouches[0].screenX, {passive: true});
-        slider.addEventListener('touchend', e => {
-            touchendX = e.changedTouches[0].screenX;
-            if (touchendX < touchstartX - 50) showSlides();
-            if (touchendX > touchstartX + 50) { slideIndex -= 2; showSlides(); }
-        }, {passive: true});
-    }
+    slider.addEventListener('touchstart', e => touchstartX = e.changedTouches[0].screenX, {passive: true});
+    slider.addEventListener('touchend', e => {
+        touchendX = e.changedTouches[0].screenX;
+        if (touchendX < touchstartX - 50) showSlides();
+        if (touchendX > touchstartX + 50) { slideIndex -= 2; showSlides(); }
+    }, {passive: true});
 
     window.addEventListener('DOMContentLoaded', () => {
         includeSidebar();
