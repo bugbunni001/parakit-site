@@ -25,31 +25,15 @@
             --radius: 24px;
         }
 
-        /* ===== GLOBAL RESET & FIX FONT ERROR ===== */
-        * { 
-            box-sizing: border-box; 
-            font-family: 'Kanit', sans-serif; 
-        }
+        * { box-sizing: border-box; font-family: 'Kanit', sans-serif; }
 
-        /* แก้ไขจุดที่ทำให้ไอคอนแสดงผลเป็นภาษามั่ว (สี่เหลี่ยม) */
-        .fa, .fas, .far, .fal, .fab, .fa-solid, .fa-brands {
-            font-family: "Font Awesome 6 Free", "Font Awesome 6 Brands" !important;
-            font-weight: 900;
-            display: inline-block;
-            font-style: normal;
-            font-variant: normal;
-            text-rendering: auto;
-            -webkit-font-smoothing: antialiased;
-        }
-        
         body { 
             margin: 0; 
             background: var(--bg-main); 
             color: var(--text-main); 
-            -webkit-font-smoothing: antialiased;
             min-height: 100vh;
             display: flex;
-            transition: padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow-x: hidden;
         }
 
         /* ===== SIDEBAR SYSTEM ===== */
@@ -59,7 +43,7 @@
             height: 100vh; 
             position: fixed; 
             left: 0; top: 0; 
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
             z-index: 2000; 
             overflow-y: auto; 
             box-shadow: 10px 0 30px rgba(0,0,0,0.1); 
@@ -72,18 +56,26 @@
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
             display: flex; 
             flex-direction: column; 
+            min-width: 0;
         }
         
+        /* Desktop Collapse */
         body.collapsed #sidebar-container { transform: translateX(calc(var(--sidebar-width) * -1)); }
         body.collapsed .main-content { margin-left: 0; width: 100%; }
 
+        /* Mobile Responsive */
         @media (max-width: 900px) { 
             #sidebar-container { transform: translateX(calc(var(--sidebar-width) * -1)); } 
             .main-content { margin-left: 0 !important; width: 100% !important; } 
             body.show-sidebar #sidebar-container { transform: translateX(0); }
         }
 
-        .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.5); backdrop-filter: blur(4px); display: none; z-index: 1500; }
+        .overlay { 
+            position: fixed; inset: 0; 
+            background: rgba(15, 23, 42, 0.5); 
+            backdrop-filter: blur(4px); 
+            display: none; z-index: 1500; 
+        }
         body.show-sidebar .overlay { display: block; }
 
         /* ===== TOP NAV ===== */
@@ -117,90 +109,41 @@
             font-size: 14px; background: white; 
             padding: 8px 18px; border-radius: 50px; 
             box-shadow: var(--card-shadow);
-            border: 1px solid rgba(0,0,0,0.03);
         }
         .dot { width: 10px; height: 10px; border-radius: 50%; background: #cbd5e1; position: relative; }
         .dot.pulse::after { content: ''; position: absolute; inset: -4px; border-radius: 50%; background: inherit; opacity: 0.4; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0% { transform: scale(1); opacity: 0.5; } 100% { transform: scale(2.5); opacity: 0; } }
 
-        /* ===== MAIN CONTAINER ===== */
+        /* ===== MAIN CONTAINER & CARDS ===== */
         .main-container { padding: 40px 25px; max-width: 1200px; margin: 0 auto; width: 100%; }
         .header-section { margin-bottom: 40px; }
-        .header-section h1 { 
-            font-size: 32px; font-weight: 700; 
-            color: var(--sidebar-color);
-            margin: 0; letter-spacing: -1px; 
-        }
-        .header-section p { color: var(--text-light); font-size: 16px; margin-top: 5px; }
-
-        /* ===== GRID & CARDS ===== */
+        .header-section h1 { font-size: 32px; font-weight: 700; color: var(--sidebar-color); margin: 0; }
+        
         .grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 30px; }
-        .target-card { 
-            background: #fff; 
-            border-radius: var(--radius); 
-            box-shadow: var(--card-shadow); 
-            overflow: hidden;
-            border: 1px solid rgba(0,0,0,0.02);
-            transition: 0.3s;
-        }
-
-        .card-header { 
-            padding: 25px; 
-            background: #fff;
-            display: flex; justify-content: space-between; align-items: center; 
-        }
+        .target-card { background: #fff; border-radius: var(--radius); box-shadow: var(--card-shadow); overflow: hidden; border: 1px solid rgba(0,0,0,0.02); }
+        .card-header { padding: 25px; display: flex; justify-content: space-between; align-items: center; }
         .card-title { font-weight: 700; font-size: 20px; display: flex; align-items: center; gap: 15px; }
-        .icon-box {
-            width: 48px; height: 48px;
-            border-radius: 14px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 22px;
-            color: white;
-        }
+        
+        .icon-box { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 22px; color: white; }
         .icon-blue { background: var(--primary-gradient); }
         .icon-purple { background: linear-gradient(135deg, #a855f7 0%, #7e22ce 100%); }
-
-        .total-badge { 
-            background: var(--sidebar-color); 
-            color: #fff; 
-            padding: 8px 20px; 
-            border-radius: 14px; 
-            font-size: 24px; 
-            font-weight: 700; 
-            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
-        }
+        .total-badge { background: var(--sidebar-color); color: #fff; padding: 8px 20px; border-radius: 14px; font-size: 24px; font-weight: 700; }
 
         .section-wrapper { padding: 25px; border-top: 1px solid #f1f5f9; }
         .bg-section-soft { background-color: #fafafa; }
-        .section-header { 
-            font-size: 14px; font-weight: 600; 
-            margin-bottom: 20px; color: var(--text-light);
-            text-transform: uppercase; letter-spacing: 1px;
-            display: flex; align-items: center; gap: 10px;
-        }
-
         .staff-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        
         input[type="text"] { 
             width: 100px; text-align: right; padding: 10px 15px; border-radius: 12px; 
-            border: 2px solid #e2e8f0; background: #fff; font-weight: 600; font-size: 16px; transition: 0.3s;
+            border: 2px solid #e2e8f0; background: #fff; font-weight: 600; font-size: 16px;
         }
-        input[type="text"]:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); }
-        input[type="text"][readonly] { background: #f8fafc; border-color: transparent; color: var(--text-light); }
+        input[readonly] { background: #f8fafc !important; border-color: transparent; color: var(--text-light); }
 
-        .summary-row { 
-            margin-top: 20px; padding: 15px; border-radius: 16px;
-            background: #f8fafc; display: flex; justify-content: space-between; align-items: center;
-        }
-        .summary-row span { font-weight: 600; }
-        .summary-row input { background: transparent !important; border: none !important; font-size: 20px; font-weight: 700; color: var(--sidebar-color); width: 120px; padding: 0; }
+        .summary-row { margin-top: 20px; padding: 15px; border-radius: 16px; background: #f8fafc; display: flex; justify-content: space-between; align-items: center; }
+        .summary-row input { background: transparent !important; border: none !important; font-size: 20px; font-weight: 700; color: var(--sidebar-color); width: 120px; }
 
         /* ===== CONTROLS ===== */
-        .mode-control { 
-            display: flex; align-items: center; gap: 12px; 
-            background: white; padding: 10px 20px; 
-            border-radius: 50px; box-shadow: var(--card-shadow);
-            margin-bottom: 25px; float: right;
-        }
+        .mode-control { display: flex; align-items: center; gap: 12px; background: white; padding: 10px 20px; border-radius: 50px; box-shadow: var(--card-shadow); float: right; }
         .edit-switch { position: relative; display: inline-block; width: 50px; height: 26px; }
         .edit-switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; inset: 0; background-color: #cbd5e1; transition: .4s; border-radius: 34px; }
@@ -210,21 +153,14 @@
 
         .btn-save { 
             background: var(--success-gradient); color: white; width: 100%; max-width: 400px; 
-            margin: 50px auto; padding: 18px; border-radius: 20px; 
-            border: none; font-size: 18px; font-weight: 600; 
-            cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 12px; 
-            box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.4); transition: 0.3s; 
+            margin: 50px auto; padding: 18px; border-radius: 20px; border: none; font-size: 18px; font-weight: 600; 
+            cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 12px; transition: 0.3s; 
         }
         .btn-save:disabled { background: #cbd5e1; cursor: not-allowed; transform: none; box-shadow: none; }
 
         .loading-popup { position: fixed; inset: 0; background: rgba(15,23,42,0.8); display: none; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(8px); }
         .loading-popup.active { display: flex; }
         .popup-card { background: #fff; padding: 40px; border-radius: 30px; text-align: center; }
-
-        @media (max-width: 600px) {
-            .grid-container { grid-template-columns: 1fr; }
-            .header-section h1 { font-size: 24px; }
-        }
     </style>
 </head>
 <body id="mainBody">
@@ -232,8 +168,7 @@
 <div class="loading-popup" id="savePopup">
     <div class="popup-card">
         <i class="fa-solid fa-circle-notch fa-spin fa-3x" style="color: #6366f1; margin-bottom: 20px;"></i>
-        <h2 style="margin: 0; font-size: 22px;">กำลังบันทึกข้อมูล</h2>
-        <p style="color: var(--text-light);">กรุณารอสักครู่ ระบบกำลังอัปเดต Target...</p>
+        <h2 style="margin: 0;">กำลังบันทึกข้อมูล</h2>
     </div>
 </div>
 
@@ -253,10 +188,9 @@
     </nav>
 
     <div class="main-container">
-        
         <div style="display: flow-root; margin-bottom: 10px;">
             <div class="mode-control">
-                <span id="modeLabel" style="font-size: 14px; font-weight:600; color: var(--text-light);">อ่านอย่างเดียว</span>
+                <span id="modeLabel" style="font-size: 14px; font-weight:600;">อ่านอย่างเดียว</span>
                 <label class="edit-switch">
                     <input type="checkbox" id="editToggle" onchange="toggleEditMode()">
                     <span class="slider"></span>
@@ -272,114 +206,46 @@
             <div class="target-card">
                 <div class="card-header">
                     <div class="card-title">
-                        <div class="icon-box icon-blue">
-                            <i class="fa-solid fa-sim-card"></i>
-                        </div>
+                        <div class="icon-box icon-blue"><i class="fa-solid fa-sim-card"></i></div>
                         Postpay
                     </div>
                     <div class="total-badge" id="postpay_total_display">0</div>
                     <input type="hidden" id="postpay_total">
                 </div>
-
                 <div class="section-wrapper">
-                    <div class="section-header">
-                        <i class="fa-solid fa-plus-circle"></i> New Sim Only
-                    </div>
-                    <div class="staff-item">
-                        <span>นวพล</span>
-                        <input type="text" id="pp_nawa_n" class="data-input" oninput="calculate()" readonly placeholder="-">
-                    </div>
-                    <div class="staff-item">
-                        <span>ปิยะพร</span>
-                        <input type="text" id="pp_piya_n" class="data-input" oninput="calculate()" readonly placeholder="-">
-                    </div>
-                    <div class="staff-item">
-                        <span>กรทักษ์</span>
-                        <input type="text" id="pp_korn_n" class="data-input" oninput="calculate()" readonly placeholder="-">
-                    </div>
-                    <div class="summary-row">
-                        <span>รวม New Sim</span>
-                        <input type="text" id="pp_new_total" readonly value="0">
-                    </div>
+                    <div class="staff-item"><span>นวพล (New)</span><input type="text" id="pp_nawa_n" class="data-input" oninput="calculate()" readonly></div>
+                    <div class="staff-item"><span>ปิยะพร (New)</span><input type="text" id="pp_piya_n" class="data-input" oninput="calculate()" readonly></div>
+                    <div class="staff-item"><span>กรทักษ์ (New)</span><input type="text" id="pp_korn_n" class="data-input" oninput="calculate()" readonly></div>
+                    <div class="summary-row"><span>รวม New Sim</span><input type="text" id="pp_new_total" readonly value="0"></div>
                 </div>
-
                 <div class="section-wrapper bg-section-soft">
-                    <div class="section-header">
-                        <i class="fa-solid fa-rotate"></i> Existing
-                    </div>
-                    <div class="staff-item">
-                        <span>นวพล</span>
-                        <input type="text" id="pp_nawa_e" class="data-input" oninput="calculate()" readonly placeholder="-">
-                    </div>
-                    <div class="staff-item">
-                        <span>ปิยะพร</span>
-                        <input type="text" id="pp_piya_e" class="data-input" oninput="calculate()" readonly placeholder="-">
-                    </div>
-                    <div class="staff-item">
-                        <span>กรทักษ์</span>
-                        <input type="text" id="pp_korn_e" class="data-input" oninput="calculate()" readonly placeholder="-">
-                    </div>
-                    <div class="summary-row">
-                        <span>รวม Existing</span>
-                        <input type="text" id="pp_ext_total" readonly value="0">
-                    </div>
+                    <div class="staff-item"><span>นวพล (Ext)</span><input type="text" id="pp_nawa_e" class="data-input" oninput="calculate()" readonly></div>
+                    <div class="staff-item"><span>ปิยะพร (Ext)</span><input type="text" id="pp_piya_e" class="data-input" oninput="calculate()" readonly></div>
+                    <div class="staff-item"><span>กรทักษ์ (Ext)</span><input type="text" id="pp_korn_e" class="data-input" oninput="calculate()" readonly></div>
+                    <div class="summary-row"><span>รวม Existing</span><input type="text" id="pp_ext_total" readonly value="0"></div>
                 </div>
             </div>
 
             <div class="target-card">
                 <div class="card-header">
                     <div class="card-title">
-                        <div class="icon-box icon-purple">
-                            <i class="fa-solid fa-mobile-screen-button"></i>
-                        </div>
+                        <div class="icon-box icon-purple"><i class="fa-solid fa-mobile-screen-button"></i></div>
                         Device
                     </div>
                     <div class="total-badge" id="device_total_display">0</div>
                     <input type="hidden" id="device_total">
                 </div>
-
                 <div class="section-wrapper">
-                    <div class="section-header">
-                        <i class="fa-brands fa-apple"></i> Apple Device
-                    </div>
-                    <div class="staff-item">
-                        <span>นวพล</span>
-                        <input type="text" id="dev_nawa_a" class="data-input" oninput="calculate()" readonly placeholder="-">
-                    </div>
-                    <div class="staff-item">
-                        <span>ปิยะพร</span>
-                        <input type="text" id="dev_piya_a" class="data-input" oninput="calculate()" readonly placeholder="-">
-                    </div>
-                    <div class="staff-item">
-                        <span>กรทักษ์</span>
-                        <input type="text" id="dev_korn_a" class="data-input" oninput="calculate()" readonly placeholder="-">
-                    </div>
-                    <div class="summary-row">
-                        <span>รวม Apple</span>
-                        <input type="text" id="dev_apple_total" readonly value="0">
-                    </div>
+                    <div class="staff-item"><span>นวพล (Apple)</span><input type="text" id="dev_nawa_a" class="data-input" oninput="calculate()" readonly></div>
+                    <div class="staff-item"><span>ปิยะพร (Apple)</span><input type="text" id="dev_piya_a" class="data-input" oninput="calculate()" readonly></div>
+                    <div class="staff-item"><span>กรทักษ์ (Apple)</span><input type="text" id="dev_korn_a" class="data-input" oninput="calculate()" readonly></div>
+                    <div class="summary-row"><span>รวม Apple</span><input type="text" id="dev_apple_total" readonly value="0"></div>
                 </div>
-
                 <div class="section-wrapper bg-section-soft">
-                    <div class="section-header">
-                        <i class="fa-brands fa-android"></i> Smartphone
-                    </div>
-                    <div class="staff-item">
-                        <span>นวพล</span>
-                        <input type="text" id="dev_nawa_s" class="data-input" oninput="calculate()" readonly placeholder="-">
-                    </div>
-                    <div class="staff-item">
-                        <span>ปิยะพร</span>
-                        <input type="text" id="dev_piya_s" class="data-input" oninput="calculate()" readonly placeholder="-">
-                    </div>
-                    <div class="staff-item">
-                        <span>กรทักษ์</span>
-                        <input type="text" id="dev_korn_s" class="data-input" oninput="calculate()" readonly placeholder="-">
-                    </div>
-                    <div class="summary-row">
-                        <span>รวม Smart</span>
-                        <input type="text" id="dev_smart_total" readonly value="0">
-                    </div>
+                    <div class="staff-item"><span>นวพล (Smart)</span><input type="text" id="dev_nawa_s" class="data-input" oninput="calculate()" readonly></div>
+                    <div class="staff-item"><span>ปิยะพร (Smart)</span><input type="text" id="dev_piya_s" class="data-input" oninput="calculate()" readonly></div>
+                    <div class="staff-item"><span>กรทักษ์ (Smart)</span><input type="text" id="dev_korn_s" class="data-input" oninput="calculate()" readonly></div>
+                    <div class="summary-row"><span>รวม Smart</span><input type="text" id="dev_smart_total" readonly value="0"></div>
                 </div>
             </div>
         </div>
@@ -393,22 +259,7 @@
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz4jD9tgF3eR-j5xEyq2HUlQ2r7eYyHFo7pwvkV_EHBLz33Srnez2Vy9q7i-biUvtvmgQ/exec";
 
-    // --- Sidebar System ---
-    async function includeSidebar() {
-        const version = new Date().getTime();
-        try {
-            const response = await fetch('sidebar.html?v=' + version);
-            const data = await response.text();
-            const container = document.getElementById('sidebar-container');
-            container.innerHTML = data;
-            
-            const currentPath = window.location.pathname.split('/').pop() || 'index.html';
-            container.querySelectorAll('a').forEach(link => {
-                if (link.getAttribute('href') === currentPath) link.classList.add('active');
-            });
-        } catch (err) { console.warn("Sidebar Load Error"); }
-    }
-
+    // --- Sidebar System (Fixed & Tested) ---
     function toggleSidebar() {
         const body = document.getElementById('mainBody');
         if (window.innerWidth <= 900) {
@@ -419,89 +270,81 @@
         }
     }
 
+    async function includeSidebar() {
+        try {
+            const response = await fetch('sidebar.html?v=' + Date.now());
+            const data = await response.text();
+            document.getElementById('sidebar-container').innerHTML = data;
+            
+            // Set Active Menu
+            const currentPath = window.location.pathname.split('/').pop() || 'index.html';
+            document.querySelectorAll('#sidebar-container a').forEach(link => {
+                if (link.getAttribute('href') === currentPath) link.classList.add('active');
+            });
+        } catch (err) { console.error("Sidebar Error"); }
+    }
+
+    // --- Core Functions ---
     function toggleEditMode() {
         const isEdit = document.getElementById('editToggle').checked;
-        document.querySelectorAll('.data-input').forEach(input => {
-            input.readOnly = !isEdit;
-        });
+        document.querySelectorAll('.data-input').forEach(input => input.readOnly = !isEdit);
         document.getElementById('saveBtn').disabled = !isEdit;
         const label = document.getElementById('modeLabel');
         label.innerText = isEdit ? "โหมดแก้ไขข้อมูล" : "อ่านอย่างเดียว";
-        label.style.color = isEdit ? "#4f46e5" : "var(--text-light)";
+        label.style.color = isEdit ? "#4f46e5" : "#64748b";
     }
 
-    function getRawValue(id) {
-        const val = document.getElementById(id).value;
-        return parseInt(val.replace(/,/g, '')) || 0;
-    }
-
-    function formatNumber(num) {
-        return num.toLocaleString('en-US');
-    }
+    function getVal(id) { return parseInt(document.getElementById(id).value.replace(/,/g, '')) || 0; }
+    function setFmt(id, val) { document.getElementById(id).value = val.toLocaleString(); }
 
     function calculate() {
-        const ppNew = getRawValue('pp_nawa_n') + getRawValue('pp_piya_n') + getRawValue('pp_korn_n');
-        const ppExt = getRawValue('pp_nawa_e') + getRawValue('pp_piya_e') + getRawValue('pp_korn_e');
-        document.getElementById('pp_new_total').value = formatNumber(ppNew);
-        document.getElementById('pp_ext_total').value = formatNumber(ppExt);
-        const totalPP = ppNew + ppExt;
-        document.getElementById('postpay_total').value = totalPP;
-        document.getElementById('postpay_total_display').innerText = formatNumber(totalPP);
+        const ppNew = getVal('pp_nawa_n') + getVal('pp_piya_n') + getVal('pp_korn_n');
+        const ppExt = getVal('pp_nawa_e') + getVal('pp_piya_e') + getVal('pp_korn_e');
+        setFmt('pp_new_total', ppNew);
+        setFmt('pp_ext_total', ppExt);
+        document.getElementById('postpay_total_display').innerText = (ppNew + ppExt).toLocaleString();
+        document.getElementById('postpay_total').value = ppNew + ppExt;
 
-        const devApple = getRawValue('dev_nawa_a') + getRawValue('dev_piya_a') + getRawValue('dev_korn_a');
-        const devSmart = getRawValue('dev_nawa_s') + getRawValue('dev_piya_s') + getRawValue('dev_korn_s');
-        document.getElementById('dev_apple_total').value = formatNumber(devApple);
-        document.getElementById('dev_smart_total').value = formatNumber(devSmart);
-        const totalDev = devApple + devSmart;
-        document.getElementById('device_total').value = totalDev;
-        document.getElementById('device_total_display').innerText = formatNumber(totalDev);
+        const devA = getVal('dev_nawa_a') + getVal('dev_piya_a') + getVal('dev_korn_a');
+        const devS = getVal('dev_nawa_s') + getVal('dev_piya_s') + getVal('dev_korn_s');
+        setFmt('dev_apple_total', devA);
+        setFmt('dev_smart_total', devS);
+        document.getElementById('device_total_display').innerText = (devA + devS).toLocaleString();
+        document.getElementById('device_total').value = devA + devS;
     }
 
     async function loadData() {
-        updateSyncStatus('syncing');
+        updateStatus('syncing');
         try {
             const res = await fetch(SCRIPT_URL);
             const data = await res.json();
-            Object.keys(data).forEach(k => {
-                const el = document.getElementById(k);
-                if (el) { el.value = data[k]; }
-            });
+            Object.keys(data).forEach(k => { if(document.getElementById(k)) document.getElementById(k).value = data[k]; });
             calculate();
-            updateSyncStatus('success');
-        } catch (e) { updateSyncStatus('error'); }
+            updateStatus('success');
+        } catch (e) { updateStatus('error'); }
     }
 
     async function saveAll() {
-        if(!confirm("ยืนยันบันทึกข้อมูลเข้าสู่ระบบ?")) return;
-        const popup = document.getElementById("savePopup");
-        popup.classList.add("active");
+        if(!confirm("ยืนยันการบันทึก?")) return;
+        document.getElementById("savePopup").classList.add("active");
         const payload = {};
-        document.querySelectorAll("input").forEach(i => { 
-            if (i.id) {
-                let val = i.value;
-                if(typeof val === 'string') val = val.replace(/,/g, '');
-                payload[i.id] = val || 0; 
-            }
-        });
+        document.querySelectorAll("input").forEach(i => { if(i.id) payload[i.id] = i.value.replace(/,/g, '') || 0; });
         try {
-            const response = await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(payload) });
-            const result = await response.json();
-            if (result.status === "Success") {
-                await loadData();
-                popup.classList.remove("active");
-                document.getElementById('editToggle').checked = false;
-                toggleEditMode();
-            }
-        } catch (e) { popup.classList.remove("active"); alert("บันทึกล้มเหลว"); }
+            await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(payload) });
+            await loadData();
+            document.getElementById('editToggle').checked = false;
+            toggleEditMode();
+        } catch (e) { alert("ล้มเหลว"); }
+        document.getElementById("savePopup").classList.remove("active");
     }
 
-    function updateSyncStatus(type) {
+    function updateStatus(type) {
         const dot = document.getElementById("sync-dot");
         const txt = document.getElementById("status-text");
         dot.className = "dot";
-        if (type === 'syncing') { dot.style.background = "#f59e0b"; dot.classList.add("pulse"); txt.innerText = "กำลังเชื่อมต่อ..."; }
+        if (type === 'syncing') { dot.style.background = "#f59e0b"; dot.classList.add("pulse"); txt.innerText = "กำลังโหลด..."; }
         else if (type === 'success') { dot.style.background = "#10b981"; txt.innerText = "เชื่อมต่อสำเร็จ"; }
-        else { dot.style.background = "#ef4444"; txt.innerText = "การเชื่อมต่อผิดพลาด"; }
+        else { dot.style.background = "#ef4444"; txt.innerText = "เชื่อมต่อผิดพลาด"; }
     }
 
     document.addEventListener('DOMContentLoaded', () => {
