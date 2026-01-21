@@ -423,12 +423,11 @@
         }
     }
 
-    // --- ระบบจัดการข้อมูล (ปรับปรุง Number Format) ---
+    // --- ระบบจัดการข้อมูล ---
     function toggleEditMode() {
         const isEdit = document.getElementById('editToggle').checked;
         document.querySelectorAll('.data-input').forEach(input => {
             input.readOnly = !isEdit;
-            // ถ้าเข้าโหมดแก้ไข ให้ถอด readonly
         });
         document.getElementById('saveBtn').disabled = !isEdit;
         const label = document.getElementById('modeLabel');
@@ -436,41 +435,34 @@
         label.style.color = isEdit ? "var(--primary)" : "var(--text-sub)";
     }
 
-    // Helper: ดึงค่าและตัดคอมมาออกเพื่อคำนวณ
     function getRawValue(id) {
         const val = document.getElementById(id).value;
-        // ลบ comma ออกก่อนแปลงเป็นตัวเลข
         return parseInt(val.replace(/,/g, '')) || 0;
     }
 
-    // Helper: ใส่คอมมาให้ตัวเลข
     function formatNumber(num) {
         return num.toLocaleString('en-US');
     }
 
     function calculate() {
-        // คำนวณ Postpay
         const ppNew = getRawValue('pp_nawa_n') + getRawValue('pp_piya_n') + getRawValue('pp_korn_n');
         const ppExt = getRawValue('pp_nawa_e') + getRawValue('pp_piya_e') + getRawValue('pp_korn_e');
         
-        // แสดงผลรวม (ใส่ comma)
         document.getElementById('pp_new_total').value = formatNumber(ppNew);
         document.getElementById('pp_ext_total').value = formatNumber(ppExt);
         
         const totalPP = ppNew + ppExt;
-        document.getElementById('postpay_total').value = totalPP; // Hidden raw value
+        document.getElementById('postpay_total').value = totalPP;
         document.getElementById('postpay_total_display').innerText = formatNumber(totalPP);
 
-        // คำนวณ Device
         const devApple = getRawValue('dev_nawa_a') + getRawValue('dev_piya_a') + getRawValue('dev_korn_a');
         const devSmart = getRawValue('dev_nawa_s') + getRawValue('dev_piya_s') + getRawValue('dev_korn_s');
         
-        // แสดงผลรวม (ใส่ comma)
         document.getElementById('dev_apple_total').value = formatNumber(devApple);
         document.getElementById('dev_smart_total').value = formatNumber(devSmart);
         
         const totalDev = devApple + devSmart;
-        document.getElementById('device_total').value = totalDev; // Hidden raw value
+        document.getElementById('device_total').value = totalDev;
         document.getElementById('device_total_display').innerText = formatNumber(totalDev);
     }
 
@@ -482,11 +474,10 @@
             Object.keys(data).forEach(k => {
                 const el = document.getElementById(k);
                 if (el) {
-                    // ถ้าเป็น input ให้ใส่ค่าลงไป (ยังไม่ format input เพื่อให้แก้ได้ง่าย แต่ format display อื่นๆ)
                     el.value = data[k]; 
                 }
             });
-            calculate(); // คำนวณและ format ผลรวมทันที
+            calculate();
             updateSyncStatus('success');
         } catch (e) { updateSyncStatus('error'); }
     }
@@ -497,11 +488,9 @@
         popup.classList.add("active");
         
         const payload = {};
-        // เก็บข้อมูลจาก Input ทั้งหมด โดยต้องตัด Comma ออกก่อนส่ง
         document.querySelectorAll("input").forEach(i => { 
             if (i.id) {
                 let val = i.value;
-                // ถ้ามีคอมมา ให้เอาออกก่อนส่งค่า
                 if(typeof val === 'string') val = val.replace(/,/g, '');
                 payload[i.id] = val || 0; 
             }
