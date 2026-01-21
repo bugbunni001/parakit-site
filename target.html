@@ -2,196 +2,215 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Target Sales Management</title>
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Target Sales Management 2026 - Premium UI</title>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
     <style>
-        :root {
-            --sidebar-color: #1e293b;
-            --sidebar-width: 280px;
-            --primary: #4f46e5;
-            --bg-main: #f1f5f9;
-            --text-main: #334155;
-            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            --radius: 16px;
+        :root { 
+            --primary: #5bb7aa; 
+            --primary-dark: #4a9e92;
+            --primary-light: #e0f2f1;
+            --bg: #f8fafc; 
+            --text-dark: #1e293b; 
+            --text-muted: #64748b;
+            --white: #ffffff; 
+            --sidebar-width: 260px; 
+            --sidebar-bg: #1e293b; 
+            --success: #10b981; 
+            --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.04), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* ===== GLOBAL SETUP ===== */
         * { box-sizing: border-box; font-family: 'Kanit', sans-serif; }
+        
         body { 
-            margin: 0; background: var(--bg-main); color: var(--text-main); 
-            display: flex; min-height: 100vh; overflow-x: hidden;
-            transition: padding-left 0.3s ease;
+            background: var(--bg); 
+            margin: 0; 
+            display: flex; 
+            min-height: 100vh; 
+            color: var(--text-dark);
         }
 
-        /* ===== SIDEBAR (ORIGINAL SYSTEM) ===== */
-        .sidebar { 
-            position: fixed; top: 0; left: 0; 
-            width: var(--sidebar-width); height: 100vh; 
-            background: var(--sidebar-color); color: #fff; 
-            z-index: 2000; transition: transform 0.3s ease;
-            box-shadow: 4px 0 15px rgba(0,0,0,0.1);
+        /* ===== SIDEBAR (PREMIUM STYLE) ===== */
+        #sidebar-container { 
+            width: var(--sidebar-width); 
+            background: var(--sidebar-bg); 
+            height: 100vh; 
+            position: fixed; 
+            left: 0; top: 0; 
+            transition: transform 0.3s ease; 
+            z-index: 2000; 
+            overflow-y: auto; 
+            box-shadow: 4px 0 15px rgba(0,0,0,0.2); 
+        }
+        
+        .main-content { 
+            flex-grow: 1; 
+            margin-left: var(--sidebar-width); 
+            padding: 30px; 
+            width: calc(100% - var(--sidebar-width)); 
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        body.collapsed #sidebar-container { transform: translateX(calc(var(--sidebar-width) * -1)); }
+        body.collapsed .main-content { margin-left: 0; width: 100%; }
+
+        @media (max-width: 900px) {
+            #sidebar-container { transform: translateX(calc(var(--sidebar-width) * -1)); }
+            .main-content { margin-left: 0; width: 100%; padding: 20px; }
+            body.show-sidebar #sidebar-container { transform: translateX(0); }
         }
 
-        .overlay { 
-            position: fixed; inset: 0; background: rgba(0,0,0,0.5); 
-            display: none; z-index: 1500; backdrop-filter: blur(2px);
-        }
+        .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.5); display: none; z-index: 1500; backdrop-filter: blur(4px); }
+        body.show-sidebar .overlay { display: block; }
 
-        /* Desktop States */
-        @media(min-width: 901px) {
-            /* Default state: Expanded (padding-left enabled) */
-            body { padding-left: var(--sidebar-width); }
-            /* Collapsed state */
-            body.collapsed { padding-left: 0; }
-            body.collapsed .sidebar { transform: translateX(-100%); }
-        }
-
-        /* Mobile States */
-        @media(max-width: 900px) {
-            .sidebar { transform: translateX(-100%); }
-            .sidebar.show { transform: translateX(0); }
-            .overlay.show { display: block; }
-            body { padding-left: 0 !important; }
-        }
-
-        /* ===== MAIN CONTENT ===== */
-        .main-content { flex-grow: 1; width: 100%; display: flex; flex-direction: column; }
-
+        /* ===== NAVIGATION & TOP BAR ===== */
         .top-nav {
-            height: 70px; background: #fff; padding: 0 25px;
-            display: flex; align-items: center; justify-content: flex-end; /* ปรับให้ Mode Switcher อยู่ขวา */
-            border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
         }
 
-        /* ลบปุ่ม Toggle เก่าออกตามวงกลมแดง */
-        .toggle-btn { display: none; }
+        .menu-btn {
+            background: var(--white); color: var(--text-dark); border: 1px solid #e2e8f0; 
+            padding: 10px 20px; border-radius: 12px; cursor: pointer;
+            box-shadow: var(--card-shadow); font-weight: 500; transition: var(--transition);
+        }
+        .menu-btn:hover { background: var(--primary); color: white; border-color: var(--primary); }
 
-        .container { padding: 30px; max-width: 1200px; margin: 0 auto; width: 100%; }
+        .mode-switcher {
+            display: flex; align-items: center; gap: 12px; background: var(--white);
+            padding: 10px 20px; border-radius: 50px; border: 1px solid #e2e8f0;
+            box-shadow: var(--card-shadow);
+        }
 
-        /* ===== UI CARDS ===== */
-        .header-section { margin-bottom: 25px; }
-        .header-section h1 { font-size: 24px; font-weight: 700; margin: 0; color: #1e293b; }
-        .header-section p { color: #64748b; margin: 5px 0 0; }
+        /* ===== HEADER BANNER ===== */
+        .header-banner { 
+            background: linear-gradient(135deg, var(--primary) 0%, #3d8e83 100%); 
+            padding: 40px 30px; border-radius: 24px; 
+            margin-bottom: 40px; text-align: center;
+            box-shadow: 0 20px 25px -5px rgba(91, 183, 170, 0.2);
+        }
+        .header-banner h1 { color: white; margin: 0; font-size: 2rem; }
+        .header-banner p { color: rgba(255,255,255,0.8); margin-top: 10px; font-weight: 300; }
 
+        /* ===== DASHBOARD CARDS ===== */
         .dashboard-grid { 
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 25px; 
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 25px; 
         }
 
         .card {
-            background: #fff; border-radius: var(--radius); 
-            box-shadow: var(--card-shadow); border: 1px solid #e2e8f0;
-            overflow: hidden;
+            background: var(--white); border-radius: 24px; 
+            box-shadow: var(--card-shadow); border: 1px solid rgba(226, 232, 240, 0.8);
+            overflow: hidden; transition: var(--transition);
         }
 
         .card-header {
-            padding: 20px; background: #f8fafc; border-bottom: 1px solid #e2e8f0;
+            padding: 25px; background: #fcfdfe; border-bottom: 1px solid #f1f5f9;
             display: flex; justify-content: space-between; align-items: center;
         }
 
-        .title-box { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 18px; }
+        .title-box { font-weight: 600; font-size: 1.1rem; color: var(--text-dark); }
         
-        /* ลบสัญลักษณ์ Icon ใน Card Header ออกตามวงกลมแดง */
-        .icon-box { display: none; }
-
         .badge-total { 
-            background: #1e293b; color: #fff; padding: 6px 16px; 
-            border-radius: 10px; font-size: 20px; font-weight: 700;
+            background: var(--sidebar-bg); color: #fff; padding: 6px 18px; 
+            border-radius: 12px; font-size: 1.2rem; font-weight: 700;
         }
 
-        .card-body { padding: 20px; }
+        .card-body { padding: 25px; }
         .group-label { 
-            font-size: 12px; font-weight: 700; color: #94a3b8; 
-            text-transform: uppercase; letter-spacing: 1px; margin: 15px 0 10px;
+            font-size: 11px; font-weight: 700; color: var(--primary); 
+            text-transform: uppercase; letter-spacing: 1.5px; margin: 20px 0 12px;
+            border-left: 3px solid var(--primary); padding-left: 10px;
         }
 
         .data-row { 
             display: flex; justify-content: space-between; align-items: center; 
-            margin-bottom: 10px;
+            margin-bottom: 12px;
         }
-        .data-row span { font-weight: 500; color: #475569; }
+        .data-row span { font-weight: 500; color: var(--text-dark); }
 
         /* ===== INPUT STYLES ===== */
         input[type="text"] {
-            width: 100px; padding: 8px 12px; border-radius: 8px;
-            border: 1px solid #cbd5e1; text-align: right; font-weight: 600;
-            background: #f8fafc; transition: all 0.2s;
+            width: 110px; padding: 10px 14px; border-radius: 10px;
+            border: 1px solid #e2e8f0; text-align: right; font-weight: 600;
+            background: #f8fafc; transition: var(--transition);
+            color: var(--text-dark);
         }
-        input[type="text"]:focus { outline: none; border-color: var(--primary); background: #fff; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
+        input[type="text"]:focus { outline: none; border-color: var(--primary); background: #fff; box-shadow: 0 0 0 4px var(--primary-light); }
         input[readonly] { border-color: transparent; background: transparent; cursor: default; }
 
         .summary-box {
-            background: #f1f5f9; padding: 12px 15px; border-radius: 12px;
+            background: var(--bg); padding: 15px; border-radius: 15px;
             display: flex; justify-content: space-between; align-items: center;
-            margin-top: 5px; border: 1px dashed #cbd5e1;
+            margin-top: 10px; border: 1px dashed var(--primary);
         }
         .summary-box span { font-size: 14px; font-weight: 700; color: var(--primary); }
-        .summary-box input { color: var(--primary); font-size: 16px; }
+        .summary-box input { color: var(--primary); font-size: 16px; border: none !important; }
 
-        /* ===== CONTROLS ===== */
-        .mode-switcher {
-            display: flex; align-items: center; gap: 10px; background: #fff;
-            padding: 8px 15px; border-radius: 50px; border: 1px solid #e2e8f0;
-        }
-
-        .btn-save-container { margin-top: 30px; display: flex; justify-content: center; }
+        /* ===== SAVE BUTTON ===== */
+        .btn-save-container { margin-top: 40px; text-align: center; }
         .btn-save {
-            background: #10b981; color: white; border: none;
-            padding: 15px 40px; border-radius: 12px; font-weight: 600; font-size: 16px;
-            cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 10px;
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+            background: var(--primary); color: white; border: none;
+            padding: 16px 50px; border-radius: 16px; font-weight: 600; font-size: 16px;
+            cursor: pointer; transition: var(--transition); display: inline-flex; align-items: center; gap: 10px;
+            box-shadow: 0 10px 20px rgba(91, 183, 170, 0.3);
         }
-        .btn-save:hover:not(:disabled) { background: #059669; transform: translateY(-2px); }
-        .btn-save:disabled { background: #cbd5e1; cursor: not-allowed; box-shadow: none; }
+        .btn-save:hover:not(:disabled) { background: var(--primary-dark); transform: translateY(-3px); box-shadow: 0 15px 25px rgba(91, 183, 170, 0.4); }
+        .btn-save:disabled { background: #cbd5e1; cursor: not-allowed; box-shadow: none; transform: none; }
 
-        /* Loading Popup */
-        .loader-overlay {
-            position: fixed; inset: 0; background: rgba(15,23,42,0.7);
-            display: none; align-items: center; justify-content: center; z-index: 9999;
+        /* ===== MODALS ===== */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); 
+            display: none; align-items: center; justify-content: center; z-index: 3000;
+            backdrop-filter: blur(8px);
         }
-        .loader-overlay.active { display: flex; }
+        .modal { 
+            background: white; padding: 40px; border-radius: 30px; 
+            width: 90%; max-width: 400px; text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+        .spinner {
+            width: 45px; height: 45px; border: 4px solid var(--primary-light);
+            border-top: 4px solid var(--primary); border-radius: 50%;
+            animation: spin 1s linear infinite; margin: 0 auto 20px;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        footer { 
+            text-align: center; padding: 25px; color: var(--text-muted); font-size: 13px; margin-top: 50px;
+        }
     </style>
 </head>
+
 <body id="mainBody">
 
-<div class="loader-overlay" id="savePopup">
-    <div style="background:white; padding:30px; border-radius:20px; text-align:center;">
-        <i class="fa-solid fa-spinner fa-spin fa-2x" style="color:var(--primary)"></i>
-        <p style="margin: 15px 0 0; font-weight: 600;">กำลังบันทึกข้อมูล...</p>
-    </div>
-</div>
-
-<div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
-
-<aside class="sidebar" id="sidebar">
-</aside>
+<div class="overlay" onclick="toggleSidebar()"></div>
+<aside id="sidebar-container"></aside>
 
 <main class="main-content">
-    <nav class="top-nav">
+    <div class="top-nav">
+        <button class="menu-btn" onclick="toggleSidebar()">☰ เมนูหลัก</button>
         <div class="mode-switcher">
-            <span id="modeLabel" style="font-size: 13px; font-weight: 700; color: #64748b;">VIEW ONLY</span>
-            <input type="checkbox" id="editToggle" onchange="toggleEditMode()" style="cursor:pointer">
+            <span id="modeLabel" style="font-size: 13px; font-weight: 700; color: var(--text-muted);">VIEW ONLY</span>
+            <input type="checkbox" id="editToggle" onchange="toggleEditMode()" style="cursor:pointer; width:20px; height:20px;">
         </div>
-    </nav>
-
+    </div>
+    
     <div class="container">
-        <div class="header-section">
+        <div class="header-banner">
             <h1>Target Sales Dashboard</h1>
-            <p>อัปเดตข้อมูลเป้ายอดขายพนักงานประจำสาขา</p>
+            <p>ระบบบริหารจัดการเป้ายอดขายพนักงาน ปี 2026</p>
         </div>
 
         <div class="dashboard-grid">
             <div class="card">
                 <div class="card-header">
-                    <div class="title-box">
-                        <div class="icon-box bg-blue"><i class="fa-solid fa-sim-card"></i></div>
-                        Postpay Plan
-                    </div>
+                    <div class="title-box">Postpay Plan</div>
                     <div class="badge-total" id="postpay_total_display">0</div>
                     <input type="hidden" id="postpay_total">
                 </div>
@@ -212,10 +231,7 @@
 
             <div class="card">
                 <div class="card-header">
-                    <div class="title-box">
-                        <div class="icon-box bg-purple"><i class="fa-solid fa-mobile-screen"></i></div>
-                        Device Sales
-                    </div>
+                    <div class="title-box">Device Sales</div>
                     <div class="badge-total" id="device_total_display">0</div>
                     <input type="hidden" id="device_total">
                 </div>
@@ -241,114 +257,114 @@
             </button>
         </div>
     </div>
+
+    <footer>
+        &copy; 2026 copyright By <b>Angerina Frog</b>
+    </footer>
 </main>
 
+<div class="modal-overlay" id="loadingOverlay">
+    <div class="modal">
+        <div class="spinner"></div>
+        <p style="font-weight: 500;">กำลังประมวลผลข้อมูล กรุณารอสักครู่...</p>
+    </div>
+</div>
+
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz4jD9tgF3eR-j5xEyq2HUlQ2r7eYyHFo7pwvkV_EHBLz33Srnez2Vy9q7i-biUvtvmgQ/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz4jD9tgF3eR-j5xEyq2HUlQ2r7eYyHFo7pwvkV_EHBLz33Srnez2Vy9q7i-biUvtvmgQ/exec";
 
-    // --- Sidebar Original Logic ---
-    function toggleSidebar() {
-        const body = document.getElementById('mainBody');
-        const sidebar = document.getElementById('sidebar');
-        const overlay = document.getElementById('overlay');
+/* ✅ Sidebar Logic */
+fetch("sidebar.html")
+  .then(res => res.text())
+  .then(html => {
+      document.getElementById("sidebar-container").innerHTML = html;
+      restoreSidebarState();
+  });
 
-        if (window.innerWidth <= 900) {
-            sidebar.classList.toggle('show');
-            overlay.classList.toggle('show');
-        } else {
-            const isCollapsed = body.classList.toggle('collapsed');
-            localStorage.setItem('sidebar-collapsed', isCollapsed);
-        }
+function toggleSidebar() {
+    const body = document.getElementById('mainBody');
+    if (window.innerWidth <= 900) {
+        body.classList.toggle('show-sidebar');
+    } else {
+        const isCollapsed = body.classList.toggle('collapsed');
+        localStorage.setItem('sidebar-collapsed', isCollapsed);
     }
+}
 
-    async function includeSidebar() {
-        try {
-            const response = await fetch('sidebar.html?v=' + Date.now());
-            const data = await response.text();
-            const sbContainer = document.getElementById('sidebar');
-            sbContainer.innerHTML = data;
-            
-            const currentPath = window.location.pathname.split('/').pop() || 'index.html';
-            sbContainer.querySelectorAll('a').forEach(link => {
-                if (link.getAttribute('href') === currentPath) link.classList.add('active');
-            });
-
-            sbContainer.querySelectorAll('.drop-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    this.parentElement.classList.toggle('open');
-                });
-            });
-        } catch (err) { console.error("Sidebar error"); }
+function restoreSidebarState() {
+    const body = document.getElementById('mainBody');
+    if (window.innerWidth > 900) {
+        const isCollapsed = localStorage.getItem('sidebar-collapsed');
+        if (isCollapsed === 'true') body.classList.add('collapsed');
+        else body.classList.remove('collapsed');
     }
+}
 
-    // --- Data Management ---
-    function toggleEditMode() {
-        const isEdit = document.getElementById('editToggle').checked;
-        document.querySelectorAll('.data-input').forEach(input => {
-            input.readOnly = !isEdit;
-        });
-        document.getElementById('saveBtn').disabled = !isEdit;
-        document.getElementById('modeLabel').innerText = isEdit ? "EDIT MODE" : "VIEW ONLY";
-        document.getElementById('modeLabel').style.color = isEdit ? "#4f46e5" : "#64748b";
-    }
-
-    function getVal(id) { return parseInt(document.getElementById(id).value.replace(/,/g, '')) || 0; }
-    function setFmt(id, val) { document.getElementById(id).value = val.toLocaleString(); }
-
-    function calculate() {
-        const ppNew = getVal('pp_nawa_n') + getVal('pp_piya_n') + getVal('pp_korn_n');
-        const ppExt = getVal('pp_nawa_e') + getVal('pp_piya_e') + getVal('pp_korn_e');
-        setFmt('pp_new_total', ppNew);
-        setFmt('pp_ext_total', ppExt);
-        document.getElementById('postpay_total_display').innerText = (ppNew + ppExt).toLocaleString();
-        document.getElementById('postpay_total').value = ppNew + ppExt;
-
-        const devA = getVal('dev_nawa_a') + getVal('dev_piya_a') + getVal('dev_korn_a');
-        const devS = getVal('dev_nawa_s') + getVal('dev_piya_s') + getVal('dev_korn_s');
-        setFmt('dev_apple_total', devA);
-        setFmt('dev_smart_total', devS);
-        document.getElementById('device_total_display').innerText = (devA + devS).toLocaleString();
-        document.getElementById('device_total').value = devA + devS;
-    }
-
-    async function loadData() {
-        try {
-            const res = await fetch(SCRIPT_URL);
-            const data = await res.json();
-            Object.keys(data).forEach(k => { if(document.getElementById(k)) document.getElementById(k).value = data[k]; });
-            calculate();
-        } catch (e) { console.error("Data load error"); }
-    }
-
-    async function saveAll() {
-        if(!confirm("ยืนยันการบันทึกข้อมูล?")) return;
-        document.getElementById("savePopup").classList.add("active");
-        
-        const payload = {};
-        document.querySelectorAll("input").forEach(i => { if(i.id) payload[i.id] = i.value.replace(/,/g, '') || 0; });
-        
-        try {
-            await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(payload) });
-            await loadData();
-            document.getElementById('editToggle').checked = false;
-            toggleEditMode();
-        } catch (e) { alert("Error saving data"); }
-        document.getElementById("savePopup").classList.remove("active");
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-        const body = document.getElementById('mainBody');
-        // แก้ไขให้ Default เป็นกางออก (Expanded)
-        // ถ้า localStorage ไม่มีค่า หรือค่าเป็น 'false' ให้เอาคลาส collapsed ออก
-        if (localStorage.getItem('sidebar-collapsed') === 'true' && window.innerWidth > 900) {
-            body.classList.add('collapsed');
-        } else {
-            body.classList.remove('collapsed');
-        }
-        
-        includeSidebar();
-        loadData();
+/* ✅ Data Management Logic */
+function toggleEditMode() {
+    const isEdit = document.getElementById('editToggle').checked;
+    document.querySelectorAll('.data-input').forEach(input => {
+        input.readOnly = !isEdit;
     });
+    document.getElementById('saveBtn').disabled = !isEdit;
+    const label = document.getElementById('modeLabel');
+    label.innerText = isEdit ? "EDIT MODE" : "VIEW ONLY";
+    label.style.color = isEdit ? "var(--primary)" : "var(--text-muted)";
+}
+
+function getVal(id) { return parseInt(document.getElementById(id).value.replace(/,/g, '')) || 0; }
+function setFmt(id, val) { document.getElementById(id).value = val.toLocaleString(); }
+
+function calculate() {
+    const ppNew = getVal('pp_nawa_n') + getVal('pp_piya_n') + getVal('pp_korn_n');
+    const ppExt = getVal('pp_nawa_e') + getVal('pp_piya_e') + getVal('pp_korn_e');
+    setFmt('pp_new_total', ppNew);
+    setFmt('pp_ext_total', ppExt);
+    document.getElementById('postpay_total_display').innerText = (ppNew + ppExt).toLocaleString();
+    document.getElementById('postpay_total').value = ppNew + ppExt;
+
+    const devA = getVal('dev_nawa_a') + getVal('dev_piya_a') + getVal('dev_korn_a');
+    const devS = getVal('dev_nawa_s') + getVal('dev_piya_s') + getVal('dev_korn_s');
+    setFmt('dev_apple_total', devA);
+    setFmt('dev_smart_total', devS);
+    document.getElementById('device_total_display').innerText = (devA + devS).toLocaleString();
+    document.getElementById('device_total').value = devA + devS;
+}
+
+async function loadData() {
+    try {
+        const res = await fetch(SCRIPT_URL);
+        const data = await res.json();
+        Object.keys(data).forEach(k => { 
+            if(document.getElementById(k)) document.getElementById(k).value = data[k]; 
+        });
+        calculate();
+    } catch (e) { console.error("Data load error"); }
+}
+
+async function saveAll() {
+    if(!confirm("ยืนยันการบันทึกข้อมูลเป้ายอดขาย?")) return;
+    document.getElementById("loadingOverlay").style.display = "flex";
+    
+    const payload = {};
+    document.querySelectorAll("input").forEach(i => { 
+        if(i.id) payload[i.id] = i.value.replace(/,/g, '') || 0; 
+    });
+    
+    try {
+        await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(payload) });
+        await loadData();
+        document.getElementById('editToggle').checked = false;
+        toggleEditMode();
+        alert("บันทึกข้อมูลเรียบร้อยแล้ว");
+    } catch (e) { alert("เกิดข้อผิดพลาดในการบันทึก"); }
+    document.getElementById("loadingOverlay").style.display = "none";
+}
+
+window.onload = () => {
+    loadData();
+    restoreSidebarState();
+};
 </script>
 
 </body>
