@@ -29,7 +29,7 @@
             transition: padding-left 0.3s ease;
         }
 
-        /* ===== SIDEBAR SYSTEM ===== */
+        /* ===== SIDEBAR (ORIGINAL SYSTEM) ===== */
         .sidebar { 
             position: fixed; top: 0; left: 0; 
             width: var(--sidebar-width); height: 100vh; 
@@ -43,19 +43,21 @@
             display: none; z-index: 1500; backdrop-filter: blur(2px);
         }
 
-        /* Desktop States - Default is Expanded */
+        /* Desktop States */
         @media(min-width: 901px) {
+            /* Default state: Expanded (padding-left enabled) */
             body { padding-left: var(--sidebar-width); }
+            /* Collapsed state */
             body.collapsed { padding-left: 0; }
             body.collapsed .sidebar { transform: translateX(-100%); }
         }
 
         /* Mobile States */
         @media(max-width: 900px) {
-            body { padding-left: 0 !important; }
             .sidebar { transform: translateX(-100%); }
             .sidebar.show { transform: translateX(0); }
             .overlay.show { display: block; }
+            body { padding-left: 0 !important; }
         }
 
         /* ===== MAIN CONTENT ===== */
@@ -63,12 +65,12 @@
 
         .top-nav {
             height: 70px; background: #fff; padding: 0 25px;
-            display: flex; align-items: center; justify-content: flex-end; /* ย้ายปุ่มไปฝั่งขวา */
+            display: flex; align-items: center; justify-content: flex-end; /* ปรับให้ Mode Switcher อยู่ขวา */
             border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 1000;
         }
 
-        /* ลบปุ่ม Toggle เก่าออก และเหลือพื้นที่ว่างด้านซ้ายเพื่อความสวยงาม */
-        .nav-left-spacer { flex-grow: 1; }
+        /* ลบปุ่ม Toggle เก่าออกตามวงกลมแดง */
+        .toggle-btn { display: none; }
 
         .container { padding: 30px; max-width: 1200px; margin: 0 auto; width: 100%; }
 
@@ -94,7 +96,9 @@
 
         .title-box { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 18px; }
         
-        /* ลบ Icon ใน Card ตามรูปที่วงแดง */
+        /* ลบสัญลักษณ์ Icon ใน Card Header ออกตามวงกลมแดง */
+        .icon-box { display: none; }
+
         .badge-total { 
             background: #1e293b; color: #fff; padding: 6px 16px; 
             border-radius: 10px; font-size: 20px; font-weight: 700;
@@ -127,7 +131,7 @@
             margin-top: 5px; border: 1px dashed #cbd5e1;
         }
         .summary-box span { font-size: 14px; font-weight: 700; color: var(--primary); }
-        .summary-box input { color: var(--primary); font-size: 16px; font-weight: 700; }
+        .summary-box input { color: var(--primary); font-size: 16px; }
 
         /* ===== CONTROLS ===== */
         .mode-switcher {
@@ -145,7 +149,7 @@
         .btn-save:hover:not(:disabled) { background: #059669; transform: translateY(-2px); }
         .btn-save:disabled { background: #cbd5e1; cursor: not-allowed; box-shadow: none; }
 
-        /* Loader */
+        /* Loading Popup */
         .loader-overlay {
             position: fixed; inset: 0; background: rgba(15,23,42,0.7);
             display: none; align-items: center; justify-content: center; z-index: 9999;
@@ -165,11 +169,11 @@
 <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 
 <aside class="sidebar" id="sidebar">
-    </aside>
+</aside>
 
 <main class="main-content">
     <nav class="top-nav">
-        <div class="nav-left-spacer"></div> <div class="mode-switcher">
+        <div class="mode-switcher">
             <span id="modeLabel" style="font-size: 13px; font-weight: 700; color: #64748b;">VIEW ONLY</span>
             <input type="checkbox" id="editToggle" onchange="toggleEditMode()" style="cursor:pointer">
         </div>
@@ -184,7 +188,10 @@
         <div class="dashboard-grid">
             <div class="card">
                 <div class="card-header">
-                    <div class="title-box">Postpay Plan</div>
+                    <div class="title-box">
+                        <div class="icon-box bg-blue"><i class="fa-solid fa-sim-card"></i></div>
+                        Postpay Plan
+                    </div>
                     <div class="badge-total" id="postpay_total_display">0</div>
                     <input type="hidden" id="postpay_total">
                 </div>
@@ -205,7 +212,10 @@
 
             <div class="card">
                 <div class="card-header">
-                    <div class="title-box">Device Sales</div>
+                    <div class="title-box">
+                        <div class="icon-box bg-purple"><i class="fa-solid fa-mobile-screen"></i></div>
+                        Device Sales
+                    </div>
                     <div class="badge-total" id="device_total_display">0</div>
                     <input type="hidden" id="device_total">
                 </div>
@@ -236,7 +246,7 @@
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz4jD9tgF3eR-j5xEyq2HUlQ2r7eYyHFo7pwvkV_EHBLz33Srnez2Vy9q7i-biUvtvmgQ/exec";
 
-    // --- Sidebar System Logic ---
+    // --- Sidebar Original Logic ---
     function toggleSidebar() {
         const body = document.getElementById('mainBody');
         const sidebar = document.getElementById('sidebar');
@@ -246,10 +256,8 @@
             sidebar.classList.toggle('show');
             overlay.classList.toggle('show');
         } else {
-            // สลับสถานะ collapsed
-            const isNowCollapsed = body.classList.toggle('collapsed');
-            // บันทึกสถานะ: ถ้า collapsed=true หมายถึงปิด, false หมายถึงกางออก
-            localStorage.setItem('sidebar-collapsed', isNowCollapsed);
+            const isCollapsed = body.classList.toggle('collapsed');
+            localStorage.setItem('sidebar-collapsed', isCollapsed);
         }
     }
 
@@ -260,10 +268,6 @@
             const sbContainer = document.getElementById('sidebar');
             sbContainer.innerHTML = data;
             
-            // ลบ Icon ซ้ำซ้อนใน Sidebar (วงแดงแรก)
-            const brandIcon = sbContainer.querySelector('.fa-square'); // ปรับ selector ตามจริงถ้ามี
-            if(brandIcon) brandIcon.remove();
-
             const currentPath = window.location.pathname.split('/').pop() || 'index.html';
             sbContainer.querySelectorAll('a').forEach(link => {
                 if (link.getAttribute('href') === currentPath) link.classList.add('active');
@@ -274,10 +278,10 @@
                     this.parentElement.classList.toggle('open');
                 });
             });
-        } catch (err) { console.error("Sidebar load error"); }
+        } catch (err) { console.error("Sidebar error"); }
     }
 
-    // --- Calculation & Data Management ---
+    // --- Data Management ---
     function toggleEditMode() {
         const isEdit = document.getElementById('editToggle').checked;
         document.querySelectorAll('.data-input').forEach(input => {
@@ -313,7 +317,7 @@
             const data = await res.json();
             Object.keys(data).forEach(k => { if(document.getElementById(k)) document.getElementById(k).value = data[k]; });
             calculate();
-        } catch (e) { console.error("Data load failed"); }
+        } catch (e) { console.error("Data load error"); }
     }
 
     async function saveAll() {
@@ -332,14 +336,14 @@
         document.getElementById("savePopup").classList.remove("active");
     }
 
-    // --- Initial Load ---
     document.addEventListener('DOMContentLoaded', () => {
-        // เช็คสถานะการจดจำ Sidebar: ถ้าไม่มีค่าบันทึกไว้ ให้ "กางออก" (คือไม่ติดคลาส collapsed)
-        const sidebarStatus = localStorage.getItem('sidebar-collapsed');
-        if (sidebarStatus === 'true' && window.innerWidth > 900) {
-            document.getElementById('mainBody').classList.add('collapsed');
+        const body = document.getElementById('mainBody');
+        // แก้ไขให้ Default เป็นกางออก (Expanded)
+        // ถ้า localStorage ไม่มีค่า หรือค่าเป็น 'false' ให้เอาคลาส collapsed ออก
+        if (localStorage.getItem('sidebar-collapsed') === 'true' && window.innerWidth > 900) {
+            body.classList.add('collapsed');
         } else {
-            document.getElementById('mainBody').classList.remove('collapsed');
+            body.classList.remove('collapsed');
         }
         
         includeSidebar();
