@@ -2,180 +2,306 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>แจ้งเตือนระบบ</title>
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📝 ลงข้อมูลสินเชื่อ - Loan Entry System</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
+    
     <style>
-        :root {
-            --sidebar-width: 260px;
-            --sidebar-bg: #1e293b;
-            --bg: #ffffff; /* ปรับเป็นสีขาว */
-            --primary: #5bb7aa;
-            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
+        /* ===== GLOBAL RESET & SIDEBAR STRUCTURE ===== */
         * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
+        body { margin: 0; background: #f1f5f9; padding-bottom: 80px; color: #334155; -webkit-font-smoothing: antialiased; }
         
-        body, html {
-            margin: 0;
-            padding: 0;
-            height: 100vh;
-            background-color: var(--bg);
-            color: #333; /* ปรับสีตัวอักษรพื้นฐานเป็นสีเข้ม */
-            overflow: hidden;
-        }
+        .top-toggle { position: fixed; top: 15px; left: 15px; z-index: 1400; width: 45px; height: 45px; border-radius: 12px; border: none; background: #1e293b; color: #fff; font-size: 20px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; }
+        @media(min-width:769px) { .top-toggle { display: none; } }
+        
+        .sidebar { position: fixed; top: 0; left: 0; width: 260px; height: 100vh; background: #1e293b; color: #fff; overflow-y: auto; transform: translateX(-260px); transition: all .3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 2000; }
+        .sidebar.show { transform: translateX(0); }
+        .content { padding: 80px 20px 40px; transition: margin-left .3s; display: flex; justify-content: center; }
+        @media(min-width:769px) { .sidebar { transform: translateX(0); } .content { margin-left: 260px; } }
+        
+        .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: none; backdrop-filter: blur(4px); z-index: 1500; }
+        .overlay.show { display: block; }
 
-        /* Sidebar Container */
-        #sidebar-container {
-            width: var(--sidebar-width);
-            background: var(--sidebar-bg);
-            height: 100vh;
-            position: fixed;
-            left: 0;
-            top: 0;
-            transition: transform 0.3s ease;
-            z-index: 2000;
-            overflow-y: auto;
-        }
+        /* ===== SIDEBAR INTERNAL MENU STYLE ===== */
+        .sidebar-header { padding: 25px 20px; font-size: 18px; font-weight: 600; background: #0f172a; color: #fff; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .menu { display: flex; flex-direction: column; padding: 10px 0; }
+        .item { border-bottom: 1px solid rgba(255,255,255,0.03); }
+        .menu a, .menu .drop-btn { width: 100%; min-height: 50px; padding: 12px 20px; background: none; border: none; color: #cbd5e1; text-align: left; font-size: 15px; cursor: pointer; display: flex; align-items: center; text-decoration: none; transition: all 0.3s ease; }
+        .menu a:hover, .menu .drop-btn:hover { background: #334155; color: #fff; padding-left: 30px; }
+        .sub { display: none; background: #0f172a; padding: 5px 0; }
+        .item.open .sub { display: block; }
+        .sub a { padding-left: 45px; font-size: 14px; color: #94a3b8; min-height: 40px; transition: all 0.3s ease; }
+        .sub a:hover { color: #5bbf8a; padding-left: 55px; }
+        .arrow { margin-left: auto; transition: 0.3s; font-size: 10px; opacity: 0.6; }
+        .item.open .arrow { transform: rotate(90deg); }
 
-        /* เนื้อหาหลัก */
-        .main-content {
-            height: 100vh;
-            margin-left: var(--sidebar-width);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            transition: var(--transition);
-            position: relative;
-            width: auto;
-        }
+        /* ===== MAIN CONTENT BOX & FORM ===== */
+        .box { background: white; width: 100%; max-width: 500px; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+        h3 { margin-top: 0; margin-bottom: 25px; color: #1e293b; text-align: center; font-weight: 600; }
+        
+        .form-row { margin-bottom: 18px; }
+        label { display: block; margin-bottom: 6px; font-size: 14px; color: #64748b; font-weight: 400; }
+        input, select { width: 100%; padding: 12px 15px; border: 1.5px solid #e2e8f0; border-radius: 10px; font-size: 15px; outline: none; transition: border-color 0.2s; background: #fff; }
+        input:focus, select:focus { border-color: #3b82f6; }
 
-        /* ปุ่ม Toggle Hamburger - ปรับสีให้เข้มขึ้นเพื่อให้เห็นชัดบนพื้นขาว */
-        .toggle-btn {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background: #1e293b;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 8px;
-            cursor: pointer;
-            z-index: 2100;
-            font-size: 18px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
+        .btn-submit { width: 100%; padding: 14px; border: none; border-radius: 12px; background: #5bb7aa; color: white; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.2s; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-submit:hover { filter: brightness(0.9); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(91, 183, 170, 0.2); }
+        .btn-submit:active { transform: translateY(0); }
 
-        /* ข้อความแจ้งเตือน */
-        .message {
-            font-size: 7vw;
-            color: #ff0000;
-            font-weight: 700;
-            line-height: 1.2;
-            /* ปรับเงาให้เข้ากับพื้นหลังขาว */
-            text-shadow: 2px 2px 10px rgba(255, 0, 0, 0.2);
-            animation: pulse 1.5s infinite;
-            padding: 40px;
-            width: 100%;
-        }
+        #reasonGroup { display: none; }
+        #preview { width: 100%; margin-top: 10px; border-radius: 8px; display: none; border: 1px solid #ddd; }
 
-        /* Overlay สำหรับมือถือ */
-        .overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.5);
-            display: none;
-            backdrop-filter: blur(4px);
-            z-index: 1500;
-        }
+        /* ===== POPUP & LOADING ===== */
+        .loading { position: fixed; inset: 0; background: rgba(255,255,255,0.8); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 3000; backdrop-filter: blur(2px); }
+        .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #2563eb; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* สถานะตอนหุบ Sidebar (Desktop) */
-        body.collapsed #sidebar-container { transform: translateX(calc(var(--sidebar-width) * -1)); }
-        body.collapsed .main-content { margin-left: 0; }
+        .popup { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 4000; padding: 20px; }
+        .popup.show { display: flex; }
+        .popup-box { background: white; padding: 30px; border-radius: 20px; text-align: center; max-width: 400px; width: 100%; transform: scale(0.8); opacity: 0; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .popup.show .popup-box { transform: scale(1); opacity: 1; }
+        
+        .icon-box { margin-bottom: 20px; font-size: 50px; }
+        .success .check-icon { display: block; color: #22c55e; margin: 0 auto; width: 60px; height: 60px; }
+        .error .warn-icon { display: block; color: #ef4444; font-size: 60px; }
+        .success .warn-icon, .error .check-icon { display: none; }
+        
+        .check-icon circle { stroke: #22c55e; stroke-width: 2; fill: none; }
+        .check-icon path { stroke: #22c55e; stroke-width: 3; fill: none; stroke-linecap: round; }
 
-        /* สถานะตอนเปิด Sidebar (Mobile) */
-        @media (max-width: 900px) {
-            #sidebar-container { transform: translateX(calc(var(--sidebar-width) * -1)); }
-            .main-content { margin-left: 0; }
-            body.show-sidebar #sidebar-container { transform: translateX(0); }
-            body.show-sidebar .overlay { display: block; }
-            .message { font-size: 12vw; padding: 20px; }
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-
-        .menu .item .sub { display: none; background: #0f172a; }
-        .menu .item.open .sub { display: block; }
-        .menu .item.open .arrow { transform: rotate(90deg); }
+        footer { width: 100%; text-align: center; padding: 20px; color: #94a3b8; position: fixed; bottom: 0; left: 0; font-size: 11px; z-index: 1100; border-top: 1px solid #e2e8f0; background: #fff; }
     </style>
 </head>
-<body id="mainBody">
 
-    <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+<body>
 
-    <aside id="sidebar-container"></aside>
+<button class="top-toggle" onclick="toggleSidebar()">☰</button>
+<div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 
-    <main class="main-content">
-        <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
-        <div class="message">
-            กลับไปลงยอดที่เดิมเลย<br>นะคะ แบบ นะค่ะ
+<aside class="sidebar" id="sidebar"></aside>
+
+<div class="content">
+    <div class="box">
+        <h3>📝 ลงข้อมูลสินเชื่อ</h3>
+        <form id="loanForm">
+            <div class="form-row">
+                <label>วันที่</label>
+                <input type="date" id="date" required>
+            </div>
+            <div class="form-row">
+                <label>สาขา</label>
+                <select id="branch" required>
+                    <option value="">-- เลือกสาขา --</option>
+                    <option>TS BC Pracha Uthit</option><option>TS LT Bang Yai</option><option>TS Terminal 21 Rama 3</option>
+                    <option>TS Lotus Bangkruai Sainoi</option><option>TS Robinson Samutprakan</option><option>TS LT Bangpoo</option>
+                    <option>TS LT Sukhumvit 50</option><option>TS BC Rama 2</option><option>TS LT Rama 2</option>
+                </select>
+            </div>
+            <div class="form-row">
+                <label>ชื่อพนักงาน</label>
+                <input type="text" id="staffName" required placeholder="ระบุชื่อพนักงาน">
+            </div>
+
+            <div class="form-row">
+                <label>ชื่อลูกค้า</label>
+                <input type="text" id="customerName" required placeholder="พิมพ์ชื่อ-นามสกุล ลูกค้า">
+            </div>
+
+            <div class="form-row">
+                <label>เบอร์โทรศัพท์ลูกค้า</label>
+                <input type="tel" id="customerPhone" required placeholder="08XXXXXXXX" pattern="[0-9]{10}">
+            </div>
+
+            <div class="form-row">
+                <label>ประเภทสินเชื่อ</label>
+                <select id="loanType" required>
+                    <option value="">-- เลือกสินเชื่อ --</option>
+                    <option>True PayNext Extra</option><option>SG Finance+</option><option>Samsung Finance+</option><option>Umay+</option>
+                </select>
+            </div>
+            <div class="form-row">
+                <label>ผลอนุมัติ</label>
+                <select id="result" onchange="toggleReason()" required>
+                    <option value="">-- เลือกผล --</option>
+                    <option value="ผ่าน">ผ่าน</option>
+                    <option value="ไม่ผ่าน">ไม่ผ่าน</option>
+                </select>
+            </div>
+            <div class="form-row" id="reasonGroup">
+                <label>เหตุผล (กรณีผ่าน)</label>
+                <select id="reason">
+                    <option value="">-- เลือกเหตุผล --</option>
+                    <option>ผ่าน ซื้อเครื่อง ใช้วงเงิน</option>
+		        <option>ผ่าน ไม่ซื้อเครื่อง ยังไม่ตัดสินใจซื้อ ด้วยเหตุผลอื่นๆ</option>
+                    <option>ผ่าน ไม่ซื้อเครื่อง วางดาวน์สูง</option>
+                                        <option>ผ่าน ไม่ซื้อเครื่องได้วงเงินน้อย ไม่พอซื้อเครื่อง</option>
+                    <option>ผ่าน ไม่ซื้อเครื่อง ลูกค้ายังไม่อยากใช้วงเงินสินเชื่อ</option>
+                </select>
+            </div>
+            <div class="form-row">
+                <label>รูปภาพหลักฐาน</label>
+                <input type="file" id="imageFile" accept="image/*" onchange="previewImage()">
+                <img id="preview">
+            </div>
+            <button type="submit" class="btn-submit" id="submitBtn">💾 บันทึกข้อมูล</button>
+        </form>
+    </div>
+</div>
+
+<div class="loading" id="loading">
+    <div class="spinner"></div>
+    <div style="margin-top:15px; font-weight:600; color:#475569;">กำลังส่งข้อมูล...</div>
+</div>
+
+<div class="popup" id="popup">
+    <div class="popup-box" id="pBox">
+        <div class="icon-box">
+            <svg class="check-icon" viewBox="0 0 52 52">
+                <circle cx="26" cy="26" r="23" fill="none"/>
+                <path d="M14 27l7 7 16-16" fill="none"/>
+            </svg>
+            <div class="warn-icon">⚠️</div>
         </div>
-    </main>
+        <h3 id="popupText" style="margin-bottom:25px; font-size:18px; color: #1e293b;"></h3>
+        <button class="btn-submit" style="margin-top:0; background: #334155;" onclick="closePopup()">ตกลง</button>
+    </div>
+</div>
 
-    <script>
-        window.onload = () => {
-            includeSidebar();
-            restoreSidebarState();
+<footer>© 2026 Copy Right By Angerina Frog</footer>
+
+<script>
+// --- CONFIG URL ---
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyZqabSCrYmEBNr2z9zpWTYjyptJYoSiLsyN9tgvgPw9KbBH4RyF0FwWvx1Ofu8nE9seg/exec"; 
+
+document.getElementById('date').value = new Date().toISOString().split("T")[0];
+
+function toggleReason() {
+    const isPass = document.getElementById('result').value === 'ผ่าน';
+    document.getElementById('reasonGroup').style.display = isPass ? 'block' : 'none';
+}
+
+function previewImage() {
+    const file = document.getElementById('imageFile').files[0];
+    const preview = document.getElementById('preview');
+    if (file) {
+        const reader = new FileReader();
+        reader.onloadend = () => { preview.src = reader.result; preview.style.display = 'block'; }
+        reader.readAsDataURL(file);
+    }
+}
+
+document.getElementById('loanForm').onsubmit = function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('submitBtn');
+    const loading = document.getElementById('loading');
+
+    const staffName = document.getElementById('staffName').value.trim();
+    const customerName = document.getElementById('customerName').value.trim();
+    const customerPhone = document.getElementById('customerPhone').value.trim();
+
+    if (!staffName || !customerName || !customerPhone) {
+        showPopup("กรุณากรอกข้อมูลให้ครบถ้วน", false);
+        return;
+    }
+
+    loading.style.display = "flex";
+    btn.disabled = true;
+
+    const file = document.getElementById('imageFile').files[0];
+    const formData = {
+        date: document.getElementById('date').value,
+        branch: document.getElementById('branch').value,
+        staffName: staffName,
+        customerName: customerName,     // ส่งค่าชื่อลูกค้า
+        customerPhone: customerPhone,   // ส่งค่าเบอร์ลูกค้า
+        loanType: document.getElementById('loanType').value,
+        result: document.getElementById('result').value,
+        reason: document.getElementById('reason').value || "ไม่ผ่าน"
+    };
+
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            formData.imageFile = e.target.result;
+            formData.imageName = file.name;
+            formData.imageType = file.type;
+            sendData(formData);
         };
+        reader.readAsDataURL(file);
+    } else {
+        sendData(formData);
+    }
+};
 
-        async function includeSidebar() {
-            try {
-                const response = await fetch('sidebar.html?v=' + new Date().getTime());
-                const data = await response.text();
-                const container = document.getElementById('sidebar-container');
-                container.innerHTML = data;
+function sendData(data) {
+    fetch(WEB_APP_URL, {
+        method: "POST",
+        mode: "no-cors", 
+        body: JSON.stringify(data)
+    })
+    .then(() => {
+        document.getElementById('loading').style.display = "none";
+        showPopup("บันทึกข้อมูลเรียบร้อยแล้ว", true);
+        setTimeout(() => location.reload(), 2000);
+    })
+    .catch(err => {
+        document.getElementById('loading').style.display = "none";
+        showPopup("เกิดข้อผิดพลาด: " + err, false);
+        document.getElementById('submitBtn').disabled = false;
+    });
+}
 
-                container.querySelectorAll('.item').forEach((item, index) => {
-                    if (localStorage.getItem('dropdown-' + index) === 'true') {
-                        item.classList.add('open');
-                    }
-                });
+function showPopup(text, isSuccess) {
+    const popup = document.getElementById("popup");
+    const pBox = document.getElementById("pBox");
+    document.getElementById("popupText").innerText = text;
+    popup.classList.remove("success", "error");
+    popup.classList.add(isSuccess ? "success" : "error");
+    popup.classList.add("show");
+}
 
-                container.addEventListener('click', function (e) {
-                    const dropBtn = e.target.closest('.drop-btn');
-                    if (dropBtn) {
-                        const parent = dropBtn.parentElement;
-                        parent.classList.toggle('open');
-                        container.querySelectorAll('.item').forEach((item, index) => {
-                            localStorage.setItem('dropdown-' + index, item.classList.contains('open'));
-                        });
-                    }
-                });
-            } catch (err) { console.warn("Sidebar Load Error"); }
+function closePopup() { 
+    document.getElementById("popup").classList.remove("show");
+}
+
+function includeSidebar() {
+    const version = new Date().getTime(); 
+    fetch('sidebar.html?v=' + version)
+        .then(response => {
+            if (!response.ok) throw new Error('ไม่พบไฟล์ sidebar.html');
+            return response.text();
+        })
+        .then(data => {
+            document.getElementById('sidebar').innerHTML = data;
+            restoreMenuState();
+        })
+        .catch(err => console.warn("Sidebar Load Error:", err));
+}
+
+function toggleSidebar() {
+    document.getElementById("sidebar").classList.toggle("show");
+    document.getElementById("overlay").classList.toggle("show");
+}
+
+window.toggleDrop = function(btn, id) {
+    const item = btn.parentElement;
+    const isOpen = item.classList.toggle("open");
+    if (id) localStorage.setItem('menu-' + id, isOpen);
+}
+
+function restoreMenuState() {
+    ['credit', 'branch', 'sales'].forEach(id => {
+        if (localStorage.getItem('menu-' + id) === 'true') {
+            const menuEl = document.getElementById('menu-' + id);
+            if (menuEl) menuEl.classList.add('open');
         }
+    });
+}
 
-        function toggleSidebar() {
-            const body = document.getElementById('mainBody');
-            if (window.innerWidth <= 900) {
-                body.classList.toggle('show-sidebar');
-            } else {
-                const isCollapsed = body.classList.toggle('collapsed');
-                localStorage.setItem('sidebar-collapsed', isCollapsed);
-            }
-        }
-
-        function restoreSidebarState() {
-            if (window.innerWidth > 900) {
-                if (localStorage.getItem('sidebar-collapsed') === 'true') {
-                    document.getElementById('mainBody').classList.add('collapsed');
-                }
-            }
-        }
-    </script>
+window.onload = includeSidebar;
+</script>
 </body>
 </html>
