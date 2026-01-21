@@ -8,14 +8,14 @@
     <style>
         /* ===== GLOBAL RESET & SIDEBAR STRUCTURE ===== */
         * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
-        body { margin: 0; background: #f1f5f9; padding-bottom: 80px; color: #334155; -webkit-font-smoothing: antialiased; transition: all 0.3s; }
+        body { margin: 0; background: #f1f5f9; padding-bottom: 80px; color: #334155; -webkit-font-smoothing: antialiased; }
         
         /* ปุ่ม Toggle อยู่นอก Sidebar และลอยอยู่ด้านบนเสมอ */
         .top-toggle { 
             position: fixed; 
             top: 15px; 
             left: 15px; 
-            z-index: 3000; /* อยู่เหนือทุกอย่าง */
+            z-index: 3000; 
             width: 45px; 
             height: 45px; 
             border-radius: 12px; 
@@ -31,7 +31,7 @@
             transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* เมื่อ Sidebar เปิด ให้ขยับปุ่มตาม (เฉพาะ Desktop) */
+        /* ปรับตำแหน่งปุ่มเมื่อเปิด Sidebar บนจอใหญ่ */
         @media(min-width:769px) {
             .sidebar.show ~ .top-toggle { left: 275px; }
         }
@@ -103,11 +103,10 @@
 
 <body>
 
-<button class="top-toggle" id="navToggle" onclick="toggleSidebar()">☰</button>
-
+<button class="top-toggle" onclick="toggleSidebar()">☰</button>
 <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 
-<aside class="sidebar show" id="sidebar">
+<aside class="sidebar" id="sidebar">
     </aside>
 
 <div class="content">
@@ -301,6 +300,7 @@ function toggleSidebar() {
     document.getElementById("sidebar").classList.toggle("show");
     document.getElementById("overlay").classList.toggle("show");
     
+    // บันทึกสถานะเพื่อใช้กับจอใหญ่ (Desktop)
     const isOpen = document.getElementById("sidebar").classList.contains("show");
     localStorage.setItem('sidebar-visible', isOpen);
 }
@@ -322,10 +322,11 @@ function restoreMenuState() {
         }
     });
 
+    // คืนค่าสถานะ Sidebar สำหรับจอ Desktop
     const sidebarVisible = localStorage.getItem('sidebar-visible');
     if (sidebarVisible === 'false') {
         document.getElementById("sidebar").classList.remove("show");
-    } else {
+    } else if (window.innerWidth > 768) {
         document.getElementById("sidebar").classList.add("show");
     }
 }
