@@ -7,131 +7,303 @@
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
     
     <style>
-        /* ===== GLOBAL RESET & SIDEBAR STRUCTURE ===== */
-        * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
-        body { margin: 0; background: #f8fafc; padding-bottom: 80px; color: #334155; -webkit-font-smoothing: antialiased; }
+        :root {
+            --primary-gradient: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            --glass-bg: rgba(255, 255, 255, 0.8);
+            --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
+            --sidebar-color: #1e293b;
+            --text-main: #334155;
+            --text-light: #64748b;
+        }
+
+        * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; transition: all 0.2s ease-in-out; }
         
-        .top-toggle { position: fixed; top: 15px; left: 15px; z-index: 1400; width: 45px; height: 45px; border-radius: 12px; border: none; background: #1e293b; color: #fff; font-size: 20px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; }
-        @media(min-width:769px) { .top-toggle { display: none; } }
-        
-        .sidebar { position: fixed; top: 0; left: 0; width: 260px; height: 100vh; background: #1e293b; color: #fff; overflow-y: auto; transform: translateX(-260px); transition: all .3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 2000; }
+        body { 
+            margin: 0; 
+            background: #f1f5f9; 
+            color: var(--text-main); 
+            -webkit-font-smoothing: antialiased;
+            padding-bottom: 100px;
+        }
+
+        /* ===== Header Navbar ===== */
+        .top-header {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 65px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            z-index: 1200;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            justify-content: space-between;
+        }
+
+        .top-toggle {
+            width: 40px; height: 40px;
+            border-radius: 10px;
+            border: none;
+            background: var(--sidebar-color);
+            color: white;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px;
+        }
+
+        /* ===== Sidebar Modern ===== */
+        .sidebar { 
+            position: fixed; top: 0; left: 0; 
+            width: 280px; height: 100vh; 
+            background: var(--sidebar-color); 
+            color: #fff; overflow-y: auto; 
+            transform: translateX(-280px); 
+            z-index: 2000;
+            box-shadow: 10px 0 30px rgba(0,0,0,0.1);
+        }
         .sidebar.show { transform: translateX(0); }
-        .content { padding: 80px 20px 40px; transition: margin-left .3s; }
-        @media(min-width:769px) { .sidebar { transform: translateX(0); } .content { margin-left: 260px; } }
+        .content { padding: 85px 20px 40px; }
         
-        .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: none; backdrop-filter: blur(4px); z-index: 1500; }
+        @media(min-width:769px) { 
+            .sidebar { transform: translateX(0); } 
+            .content { margin-left: 280px; }
+            .top-header { left: 280px; }
+            .top-toggle { display: none; }
+        }
+
+        .overlay { 
+            position: fixed; inset: 0; 
+            background: rgba(15, 23, 42, 0.5); 
+            backdrop-filter: blur(4px); 
+            display: none; z-index: 1500; 
+        }
         .overlay.show { display: block; }
 
-        .sidebar-header { padding: 25px 20px; font-size: 18px; font-weight: 600; background: #0f172a; color: #fff; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .menu { display: flex; flex-direction: column; padding: 10px 0; }
-        .item { border-bottom: 1px solid rgba(255,255,255,0.03); }
-        .menu a, .menu .drop-btn { width: 100%; min-height: 50px; padding: 12px 20px; background: none; border: none; color: #cbd5e1; text-align: left; font-size: 15px; cursor: pointer; display: flex; align-items: center; text-decoration: none; transition: all 0.3s ease; }
-        .menu a:hover, .menu .drop-btn:hover { background: #334155; color: #fff; padding-left: 30px; }
-        .sub { display: none; background: #0f172a; padding: 5px 0; }
-        .item.open .sub { display: block; }
-        .sub a { padding-left: 45px; font-size: 14px; color: #94a3b8; min-height: 40px; transition: all 0.3s ease; }
-        .sub a:hover { color: #5bbf8a; padding-left: 55px; }
-        .arrow { margin-left: auto; transition: 0.3s; font-size: 10px; opacity: 0.6; }
-        .item.open .arrow { transform: rotate(90deg); }
-
-        /* Slider Styles */
-        .slider-container { position: relative; max-width: 1100px; margin: 0 auto 30px; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.1); background: #f1f1f1; touch-action: pan-y; }
-        .slides { display: none; width: 100%; height: 350px; }
-        .slides img { width: 100%; height: 100%; object-fit: cover; cursor: pointer; transition: 0.3s; -webkit-user-drag: none; }
+        /* ===== Modern Slider ===== */
+        .slider-container { 
+            position: relative; 
+            max-width: 1200px; 
+            margin: 0 auto 35px; 
+            border-radius: 24px; 
+            overflow: hidden; 
+            box-shadow: var(--card-shadow); 
+            background: #cbd5e1;
+        }
+        .slides { display: none; width: 100%; height: 380px; }
+        .slides img { width: 100%; height: 100%; object-fit: cover; }
         
-        .dot-container { position: absolute; bottom: 15px; width: 100%; text-align: center; z-index: 10; }
-        .dot { cursor: pointer; height: 12px; width: 12px; margin: 0 5px; background-color: rgba(255,255,255,0.5); border-radius: 50%; display: inline-block; transition: 0.3s; border: 1px solid rgba(0,0,0,0.1); }
-        .active, .dot:hover { background-color: #fff; transform: scale(1.2); }
-        .fade { animation: fadeAnim 0.8s; }
-        @keyframes fadeAnim { from {opacity: .4} to {opacity: 1} }
+        .dot-container { 
+            position: absolute; bottom: 20px; width: 100%; 
+            text-align: center; z-index: 10; 
+        }
+        .dot { 
+            cursor: pointer; height: 8px; width: 30px; 
+            margin: 0 5px; background: rgba(255,255,255,0.4); 
+            border-radius: 10px; display: inline-block; 
+        }
+        .active { background: #fff; width: 45px; }
 
-        @media (max-width: 768px) { .slides { height: 200px; } }
+        @media (max-width: 768px) { .slides { height: 220px; } }
 
-        /* BUTTONS & CARDS */
-        .container { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; max-width: 1100px; margin: 0 auto; }
-        .btn { background: #ffffff; color: #334155; padding: 18px; border-radius: 16px; text-align: center; font-size: 15px; text-decoration: none; transition: 0.3s; font-weight: 600; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #f1f5f9; }
-        .btn:hover { box-shadow: 0 10px 15px rgba(0,0,0,0.1); transform: translateY(-3px); border-color: #5bbf8a; color: #5bbf8a; }
+        /* ===== Section Title ===== */
+        .section-label {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 30px auto 15px;
+            max-width: 1200px;
+            display: flex;
+            align-items: center;
+            color: var(--text-light);
+        }
+        .section-label::after {
+            content: ""; flex: 1; height: 1px; background: #e2e8f0; margin-left: 15px;
+        }
+
+        /* ===== Service Grid (Buttons Re-imagined) ===== */
+        .service-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); 
+            gap: 15px; max-width: 1200px; margin: 0 auto; 
+        }
         
-        .card-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; max-width: 1100px; margin: 50px auto; }
-        .card { background: #ffffff; border-radius: 20px; overflow: hidden; text-align: center; text-decoration: none; color: #1e293b; box-shadow: 0 10px 25px rgba(0,0,0,0.05); transition: 0.4s; border: 1px solid #f1f5f9; }
-        .card:hover { transform: scale(1.03); }
-        .card-box { width: 100%; height: 180px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 600; padding: 30px; line-height: 1.2; }
-        .blue { background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%); color: white; }
-        .yellow { background: linear-gradient(135deg, #fde047 0%, #eab308 100%); color: #854d0e; }
-        .green-gradient { background: linear-gradient(135deg, #22c55e 0%, #15803d 100%); color: white; } /* แก้ไขตรงนี้ */
-        .red-gradient { background: linear-gradient(135deg, #ff4d4d 0%, #b30000 100%); color: white; }
-        .card-title { padding: 20px; font-size: 14px; background: #fff; color: #64748b; }
+        .service-card {
+            background: #ffffff;
+            border-radius: 18px;
+            padding: 20px 10px;
+            text-align: center;
+            text-decoration: none;
+            color: var(--text-main);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            border: 1px solid #f1f5f9;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .service-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--card-shadow);
+            border-color: #6366f1;
+            color: #6366f1;
+        }
+
+        .icon-box {
+            font-size: 24px;
+            width: 50px; height: 50px;
+            background: #f8fafc;
+            border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .service-name { font-size: 14px; font-weight: 500; }
+
+        /* ===== Promotion Cards ===== */
+        .card-container { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
+            gap: 25px; max-width: 1200px; margin: 20px auto; 
+        }
+        .card { 
+            background: #ffffff; border-radius: 22px; 
+            overflow: hidden; text-decoration: none; 
+            color: var(--text-main); box-shadow: var(--card-shadow); 
+            display: flex; flex-direction: column;
+            border: 1px solid rgba(0,0,0,0.03);
+        }
+        .card:hover { transform: scale(1.02); }
         
-        footer { width: 100%; text-align: center; padding: 20px 0; background: #fff; color: #94a3b8; position: fixed; bottom: 0; left: 0; font-size: 12px; z-index: 1100; border-top: 1px solid #f1f5f9; }
+        .card-visual { 
+            height: 140px; 
+            display: flex; align-items: center; 
+            justify-content: center; padding: 20px;
+            font-weight: 600; font-size: 1.2rem; text-align: center;
+        }
+
+        .blue { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white; }
+        .yellow { background: linear-gradient(135deg, #facc15 0%, #ca8a04 100%); color: #422006; }
+        .green-gradient { background: linear-gradient(135deg, #10b981 0%, #047857 100%); color: white; }
+        .red-gradient { background: linear-gradient(135deg, #f43f5e 0%, #be123c 100%); color: white; }
+
+        .card-content { padding: 15px 20px; font-size: 13px; color: var(--text-light); background: #fff; }
+
+        footer { 
+            width: 100%; text-align: center; padding: 25px; 
+            background: #fff; color: var(--text-light); 
+            font-size: 12px; border-top: 1px solid #f1f5f9; 
+            margin-top: 50px;
+        }
     </style>
 </head>
 
 <body>
 
-<button class="top-toggle" onclick="toggleSidebar()">☰</button>
+<header class="top-header">
+    <button class="top-toggle" onclick="toggleSidebar()">☰</button>
+    <div style="font-weight: 600; font-size: 1.1rem; color: #1e293b;">DASHBOARD 2026</div>
+    <div style="width: 40px;"></div> </header>
+
 <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
-<aside class="sidebar" id="sidebar"></aside>
+
+<aside class="sidebar" id="sidebar">
+    <div style="padding: 30px 20px; font-size: 1.2rem; font-weight: 600; background: #0f172a;">
+        🔖 เมนูหลัก
+    </div>
+    </aside>
 
 <div class="content">
     <div class="slider-container" id="sliderContainer">
-        <div class="slides fade">
+        <div class="slides">
             <a href="news2.html" target="_blank">
                 <img src="https://scontent-kul3-1.xx.fbcdn.net/v/t39.30808-6/616070579_25491226163867724_8257385640284922060_n.jpg?_nc_cat=111&ccb=1-7&_nc_sid=aa7b47&_nc_eui2=AeFutZ2IvUZ7LHRZBIv4P957f2ExmfXo75B_YTGZ9ejvkDNjePm-h6KzCquegW7DVbxN2AVuX1k0Rj8c0DfM9bS-&_nc_ohc=pAJKGzYIXS4Q7kNvwHjgOgT&_nc_oc=Adn4r-3QtOCAXjqeUxawefyQLEHGTf1R-qebtvct1zjIW6YbT7fMIxApDK7-iCxHzZo&_nc_zt=23&_nc_ht=scontent-kul3-1.xx&_nc_gid=Bsc08E4ElSxwOMYYJ6xbcg&oh=00_AfrsH0b9e7bsw0PstEBt1QUlDUsN-3rtJDHMAfmcg-VIhA&oe=696E34EC" loading="lazy">
             </a>
         </div>
-        <div class="slides fade">
+        <div class="slides">
             <a href="news1.html" target="_blank">
                 <img src="https://i.postimg.cc/dJq4qHS3/A4-3x-100.jpg" loading="lazy">
             </a>
         </div>
-        
         <div class="dot-container">
             <span class="dot" onclick="currentSlide(1)"></span>
             <span class="dot" onclick="currentSlide(2)"></span>
         </div>
     </div>
 
-    <div class="container">
-        <a class="btn" href="https://dtaclearn.com/dclick/login/index.php" target="_blank">🔴 OneClick</a>
-        <a class="btn" href="https://double7.co.th" target="_blank">🟢 TabTab</a>
-        <a class="btn" href="https://cpeim-true.truecorp.co.th/#/" target="_blank">📦 CPE Inventory</a>
-        <a class="btn" href="https://shorturl.asia/59o4W" target="_blank">💻 ess Double7</a>
-        <a class="btn" href="https://shorturl.asia/VaHBj" target="_blank">🔄 TechSwap Double7</a>
-        <a class="btn" href="https://store.truemobilecare.online/login" target="_blank">📱 True Mobile Care</a>
-        <a class="btn" href="https://kims-proxy.public-thp.ascendmoney.io/kims-proxy/kiosk-kims/#/l_login" target="_blank">🪙 TMN KIMS</a>
-        <a class="btn" href="https://shorturl.asia/4HdtD" target="_blank">🚚 ลิงก์โยกสินค้า</a>
-        <a class="btn" href="https://shorturl.asia/Zsz6o" target="_blank">ฟอร์มเบิกใบส่งของ DHL</a>
-        <a class="btn" href="https://shorturl.asia/f8ilH" target="_blank">ฟอร์มทำคืน TOL+TVS</a>
-        <a class="btn" href="commission.html">💰 คำนวณค่าคอม</a>
-        <a class="btn" href="input_sale.html">✏️ ลงยอดขาย</a>
-        <a class="btn" href="report_sale.html">🔎 เช็คยอดขายรายบุคคล</a>
-        <a class="btn" href="reportsale_shop.html">🔎 เช็คยอดขาย SHOP</a>
-        <a class="btn" href="number.html">🪪 จองเบอร์</a>
+    <div class="section-label">เมนูระบบและฟอร์มต่างๆ</div>
+    <div class="service-grid">
+        <a class="service-card" href="https://dtaclearn.com/dclick/login/index.php" target="_blank">
+            <div class="icon-box">🔴</div><div class="service-name">OneClick</div>
+        </a>
+        <a class="service-card" href="https://double7.co.th" target="_blank">
+            <div class="icon-box">🟢</div><div class="service-name">TabTab</div>
+        </a>
+        <a class="service-card" href="https://cpeim-true.truecorp.co.th/#/" target="_blank">
+            <div class="icon-box">📦</div><div class="service-name">CPE Inventory</div>
+        </a>
+        <a class="service-card" href="https://shorturl.asia/59o4W" target="_blank">
+            <div class="icon-box">💻</div><div class="service-name">ess Double7</div>
+        </a>
+        <a class="service-card" href="https://shorturl.asia/VaHBj" target="_blank">
+            <div class="icon-box">🔄</div><div class="service-name">TechSwap Double7</div>
+        </a>
+        <a class="service-card" href="https://store.truemobilecare.online/login" target="_blank">
+            <div class="icon-box">📱</div><div class="service-name">True Mobile Care</div>
+        </a>
+        <a class="service-card" href="https://kims-proxy.public-thp.ascendmoney.io/kims-proxy/kiosk-kims/#/l_login" target="_blank">
+            <div class="icon-box">🪙</div><div class="service-name">TMN KIMS</div>
+        </a>
+        <a class="service-card" href="https://shorturl.asia/4HdtD" target="_blank">
+            <div class="icon-box">🚚</div><div class="service-name">ลิงก์โยกสินค้า</div>
+        </a>
+        <a class="service-card" href="https://shorturl.asia/Zsz6o" target="_blank">
+            <div class="icon-box">📑</div><div class="service-name">ฟอร์มเบิกใบส่งของ DHL</div>
+        </a>
+        <a class="service-card" href="https://shorturl.asia/f8ilH" target="_blank">
+            <div class="icon-box">↩️</div><div class="service-name">ฟอร์มทำคืน TOL+TVS</div>
+        </a>
+        <a class="service-card" href="commission.html">
+            <div class="icon-box">💰</div><div class="service-name">คำนวณค่าคอม</div>
+        </a>
+        <a class="service-card" href="input_sale.html">
+            <div class="icon-box">✏️</div><div class="service-name">ลงยอดขาย</div>
+        </a>
+        <a class="service-card" href="report_sale.html">
+            <div class="icon-box">🔎</div><div class="service-name">ยอดขายรายบุคคล</div>
+        </a>
+        <a class="service-card" href="reportsale_shop.html">
+            <div class="icon-box">🏬</div><div class="service-name">เช็คยอดขาย SHOP</div>
+        </a>
+        <a class="service-card" href="number.html">
+            <div class="icon-box">🪪</div><div class="service-name">จองเบอร์</div>
+        </a>
     </div>
 
+    <div class="section-label">โปรโมชั่นและ Hilight ประจำเดือน</div>
     <div class="card-container">
         <a class="card" href="https://shorturl.asia/WpkTN" target="_blank">
-            <div class="card-box blue">Hilight True Online Jan 2026</div>
-            <div class="card-title">Hilight True Online Jan 2026</div>
+            <div class="card-visual blue">Hilight True Online Jan 2026</div>
+            <div class="card-content">Hilight True Online Jan 2026</div>
         </a>
         <a class="card" href="https://www.true.th/docs/tol-mass" target="_blank">
-            <div class="card-box blue">โปรโมชั่นทรูออนไลน์</div>
-            <div class="card-title">โปรโมชั่น TOL (4 ธ.ค. 68 - 31 ม.ค. 69)</div>
+            <div class="card-visual blue">โปรโมชั่นทรูออนไลน์</div>
+            <div class="card-content">โปรโมชั่น TOL (4 ธ.ค. 68 - 31 ม.ค. 69)</div>
         </a>
         <a class="card" href="https://drive.google.com/drive/folders/1W5OodsG_HgZt3s5sX6gAUmaNNcEqyYVR" target="_blank">
-            <div class="card-box yellow">SPEC CARD</div>
-            <div class="card-title">SPEC CARD</div>
+            <div class="card-visual yellow">SPEC CARD</div>
+            <div class="card-content">SPEC CARD</div>
         </a>
         <a class="card" href="https://shorturl.asia/zN1YP" target="_blank">
-            <div class="card-box green-gradient">Panogram</div>
-            <div class="card-title">Panogram</div>
+            <div class="card-visual green-gradient">Panogram</div>
+            <div class="card-content">Panogram</div>
         </a>
         <a class="card" href="https://shorturl.asia/9wpr5" target="_blank">
-            <div class="card-box red-gradient">โปรโมชั่น Postpay (JAN 26)</div>
-            <div class="card-title">โปรโมชั่น Postpay (JAN 26)</div>
+            <div class="card-visual red-gradient">โปรโมชั่น Postpay (JAN 26)</div>
+            <div class="card-content">โปรโมชั่น Postpay (JAN 26)</div>
         </a>
     </div>
 </div>
@@ -139,24 +311,16 @@
 <footer>© 2026 Copy Right By Angerina Frog</footer>
 
 <script>
-    // --- Sidebar System with Cache for Speed ---
+    // --- Sidebar System ---
     function includeSidebar() {
         const cached = localStorage.getItem('sidebar_cache');
-        if (cached) {
-            document.getElementById('sidebar').innerHTML = cached;
-            restoreMenuState();
-        }
-
+        if (cached) { document.getElementById('sidebar').innerHTML = cached; }
         fetch('sidebar.html')
             .then(response => response.text())
             .then(data => {
-                if (data !== cached) {
-                    document.getElementById('sidebar').innerHTML = data;
-                    localStorage.setItem('sidebar_cache', data);
-                    restoreMenuState();
-                }
-            })
-            .catch(err => console.warn("Sidebar Load Error:", err));
+                document.getElementById('sidebar').innerHTML = data;
+                localStorage.setItem('sidebar_cache', data);
+            }).catch(err => console.warn("Sidebar Error"));
     }
 
     function toggleSidebar() {
@@ -164,22 +328,7 @@
         document.getElementById("overlay").classList.toggle("show");
     }
 
-    window.toggleDrop = function(btn, id) {
-        const item = btn.parentElement;
-        const isOpen = item.classList.toggle("open");
-        if (id) localStorage.setItem('menu-' + id, isOpen);
-    }
-
-    function restoreMenuState() {
-        ['credit', 'branch', 'sales'].forEach(id => {
-            if (localStorage.getItem('menu-' + id) === 'true') {
-                const el = document.getElementById('menu-' + id);
-                if (el) el.classList.add('open');
-            }
-        });
-    }
-
-    // --- Simple Slider System (Updated with Swipe Support) ---
+    // --- Slider System ---
     let slideIndex = 0;
     let slideTimer;
 
@@ -187,68 +336,27 @@
         let slides = document.getElementsByClassName("slides");
         let dots = document.getElementsByClassName("dot");
         if (slides.length === 0) return;
-        
-        for (let i = 0; i < slides.length; i++) {
-            slides[i].style.display = "none";
-        }
+        for (let i = 0; i < slides.length; i++) { slides[i].style.display = "none"; }
         slideIndex++;
         if (slideIndex > slides.length) {slideIndex = 1}
-        
-        for (let i = 0; i < dots.length; i++) {
-            dots[i].className = dots[i].className.replace(" active", "");
-        }
-        
+        for (let i = 0; i < dots.length; i++) { dots[i].className = dots[i].className.replace(" active", ""); }
         slides[slideIndex-1].style.display = "block";  
-        if (dots.length >= slideIndex) {
-            dots[slideIndex-1].className += " active";
-        }
-        resetTimer();
-    }
-
-    function resetTimer() {
+        if (dots.length >= slideIndex) { dots[slideIndex-1].className += " active"; }
         clearTimeout(slideTimer);
-        slideTimer = setTimeout(showSlides, 4000);
+        slideTimer = setTimeout(showSlides, 5000);
     }
 
-    function currentSlide(n) {
-        slideIndex = n - 1;
-        showSlides();
-    }
+    function currentSlide(n) { slideIndex = n - 1; showSlides(); }
 
-    function nextSlide() {
-        showSlides();
-    }
-
-    function prevSlide() {
-        let slides = document.getElementsByClassName("slides");
-        slideIndex -= 2; // ถอยกลับ 2 เพื่อให้ slideIndex++ ใน showSlides ได้ค่าที่ถูกต้อง
-        if (slideIndex < 0) { slideIndex = slides.length - 1; }
-        showSlides();
-    }
-
-    // --- Swipe Support Implementation ---
-    let touchstartX = 0;
-    let touchendX = 0;
-    const sliderContainer = document.getElementById('sliderContainer');
-
-    sliderContainer.addEventListener('touchstart', e => {
-        touchstartX = e.changedTouches[0].screenX;
-    }, {passive: true});
-
-    sliderContainer.addEventListener('touchend', e => {
+    // Swipe Control
+    let touchstartX = 0; let touchendX = 0;
+    const slider = document.getElementById('sliderContainer');
+    slider.addEventListener('touchstart', e => touchstartX = e.changedTouches[0].screenX, {passive: true});
+    slider.addEventListener('touchend', e => {
         touchendX = e.changedTouches[0].screenX;
-        handleGesture();
+        if (touchendX < touchstartX - 50) showSlides();
+        if (touchendX > touchstartX + 50) { slideIndex -= 2; showSlides(); }
     }, {passive: true});
-
-    function handleGesture() {
-        const threshold = 50; // ระยะการปัดขั้นต่ำ
-        if (touchendX < touchstartX - threshold) {
-            nextSlide(); // ปัดซ้าย -> รูปถัดไป
-        }
-        if (touchendX > touchstartX + threshold) {
-            prevSlide(); // ปัดขวา -> รูปก่อนหน้า
-        }
-    }
 
     window.addEventListener('DOMContentLoaded', () => {
         includeSidebar();
@@ -258,5 +366,3 @@
 
 </body>
 </html>
-
-
