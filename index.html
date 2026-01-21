@@ -53,6 +53,7 @@
             cursor: pointer;
             display: flex; align-items: center; justify-content: center;
             font-size: 18px;
+            z-index: 1300;
         }
 
         /* ===== Sidebar Modern ===== */
@@ -64,12 +65,16 @@
             transform: translateX(-280px); 
             z-index: 2000;
             box-shadow: 10px 0 30px rgba(0,0,0,0.1);
+            visibility: hidden; /* ซ่อนไว้ก่อนเพื่อกันเมนูแลบ */
         }
-        .sidebar.show { transform: translateX(0); }
+        .sidebar.show { 
+            transform: translateX(0); 
+            visibility: visible;
+        }
         .content { padding: 85px 20px 40px; }
         
         @media(min-width:769px) { 
-            .sidebar { transform: translateX(0); } 
+            .sidebar { transform: translateX(0); visibility: visible; } 
             .content { margin-left: 280px; }
             .top-header { left: 280px; }
             .top-toggle { display: none; }
@@ -123,7 +128,7 @@
             content: ""; flex: 1; height: 1px; background: #e2e8f0; margin-left: 15px;
         }
 
-        /* ===== Service Grid (Buttons Re-imagined) ===== */
+        /* ===== Service Grid ===== */
         .service-grid { 
             display: grid; 
             grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); 
@@ -206,15 +211,18 @@
 <header class="top-header">
     <button class="top-toggle" onclick="toggleSidebar()">☰</button>
     <div style="font-weight: 600; font-size: 1.1rem; color: #1e293b;">DASHBOARD 2026</div>
-    <div style="width: 40px;"></div> </header>
+    <div style="width: 40px;"></div> 
+</header>
 
 <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 
 <aside class="sidebar" id="sidebar">
-    <div style="padding: 30px 20px; font-size: 1.2rem; font-weight: 600; background: #0f172a;">
-        🔖 เมนูหลัก
-    </div>
-    <div id="sidebar-external-content"></div> </aside>
+    <div id="sidebarContent">
+        <div style="padding: 30px 20px; font-size: 1.2rem; font-weight: 600; background: #0f172a; color: white;">
+            🔖 เมนูหลัก
+        </div>
+        </div>
+</aside>
 
 <div class="content">
     <div class="slider-container" id="sliderContainer">
@@ -313,32 +321,32 @@
 <script>
     // --- Sidebar System ---
     function includeSidebar() {
-        const target = document.getElementById('sidebar-external-content');
+        const sidebarEl = document.getElementById('sidebar');
         const cached = localStorage.getItem('sidebar_cache');
-        if (cached) { target.innerHTML = cached; }
+        
+        if (cached) { sidebarEl.innerHTML = cached; }
         
         fetch('sidebar.html')
-            .then(response => response.text())
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.text();
+            })
             .then(data => {
-                target.innerHTML = data;
+                sidebarEl.innerHTML = data;
                 localStorage.setItem('sidebar_cache', data);
-            }).catch(err => console.warn("Sidebar Error"));
-        
-        // กู้คืนสถานะการกางเมนู (สำหรับมือถือ)
-        if (localStorage.getItem('sidebar_open') === 'true' && window.innerWidth <= 768) {
-            document.getElementById("sidebar").classList.add("show");
-            document.getElementById("overlay").classList.add("show");
-        }
+            })
+            .catch(err => {
+                console.warn("Sidebar Error: ระบบจะใช้ข้อมูลจาก Cache หรือโครงสร้างพื้นฐาน");
+            });
     }
 
     function toggleSidebar() {
         const sidebar = document.getElementById("sidebar");
         const overlay = document.getElementById("overlay");
+        
+        // ใช้ classList.toggle เพื่อสลับสถานะการแสดงผล
         sidebar.classList.toggle("show");
         overlay.classList.toggle("show");
-        
-        // จำสถานะไว้ในเครื่อง
-        localStorage.setItem('sidebar_open', sidebar.classList.contains("show"));
     }
 
     // --- Slider System ---
@@ -349,28 +357,40 @@
         let slides = document.getElementsByClassName("slides");
         let dots = document.getElementsByClassName("dot");
         if (slides.length === 0) return;
+        
         for (let i = 0; i < slides.length; i++) { slides[i].style.display = "none"; }
         slideIndex++;
         if (slideIndex > slides.length) {slideIndex = 1}
+        
         for (let i = 0; i < dots.length; i++) { dots[i].className = dots[i].className.replace(" active", ""); }
+        
         slides[slideIndex-1].style.display = "block";  
         if (dots.length >= slideIndex) { dots[slideIndex-1].className += " active"; }
+        
         clearTimeout(slideTimer);
         slideTimer = setTimeout(showSlides, 5000);
     }
 
-    function currentSlide(n) { slideIndex = n - 1; showSlides(); }
+    function currentSlide(n) { 
+        slideIndex = n - 1; 
+        showSlides(); 
+    }
 
     // Swipe Control
     let touchstartX = 0; let touchendX = 0;
     const slider = document.getElementById('sliderContainer');
-    slider.addEventListener('touchstart', e => touchstartX = e.changedTouches[0].screenX, {passive: true});
+    
+    slider.addEventListener('touchstart', e => {
+        touchstartX = e.changedTouches[0].screenX;
+    }, {passive: true});
+    
     slider.addEventListener('touchend', e => {
         touchendX = e.changedTouches[0].screenX;
         if (touchendX < touchstartX - 50) showSlides();
         if (touchendX > touchstartX + 50) { slideIndex -= 2; showSlides(); }
     }, {passive: true});
 
+    // เริ่มทำงานเมื่อ Load เสร็จ
     window.addEventListener('DOMContentLoaded', () => {
         includeSidebar();
         showSlides();
