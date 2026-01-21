@@ -11,222 +11,239 @@
     
     <style>
         :root {
-            --primary-gradient: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-            --glass-bg: rgba(255, 255, 255, 0.8);
-            --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
-            --sidebar-color: #1e293b;
-            --text-main: #334155;
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --bg-main: #f8fafc;
+            --text-main: #1e293b;
             --text-light: #64748b;
+            --glass: rgba(255, 255, 255, 0.8);
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+            --shadow-md: 0 10px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.05);
+            --sidebar-z: 9999;
         }
 
-        * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; transition: all 0.2s ease-in-out; }
+        * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; outline: none; }
         
         body { 
             margin: 0; 
-            background: #f1f5f9; 
+            background: var(--bg-main); 
             color: var(--text-main); 
             -webkit-font-smoothing: antialiased;
-            padding-bottom: 100px;
+            overflow-x: hidden;
         }
 
-        /* ===== Header Navbar ===== */
-        .top-header {
+        /* ===== MODERN HEADER ===== */
+        .top-nav {
             position: fixed;
             top: 0; left: 0; right: 0;
-            height: 65px;
-            background: var(--glass-bg);
-            backdrop-filter: blur(10px);
-            z-index: 1200;
+            height: 70px;
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             display: flex;
             align-items: center;
             padding: 0 20px;
-            border-bottom: 1px solid rgba(0,0,0,0.05);
+            z-index: 1000;
+            border-bottom: 1px solid rgba(226, 232, 240, 0.8);
             justify-content: space-between;
         }
 
-        .top-toggle {
-            width: 40px; height: 40px;
-            border-radius: 10px;
-            border: none;
-            background: var(--sidebar-color);
-            color: white;
-            cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 18px;
-            z-index: 1300; /* ให้ปุ่มอยู่บนสุดเสมอ */
+        .nav-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: var(--text-main);
+            letter-spacing: -0.025em;
         }
 
-        /* ===== Sidebar Modern ===== */
+        .top-toggle { 
+            width: 45px; height: 45px; 
+            border-radius: 14px; border: none; 
+            background: #1e293b; color: #fff; 
+            font-size: 20px; cursor: pointer; 
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s;
+        }
+        .top-toggle:active { transform: scale(0.9); }
+
+        /* ===== SIDEBAR & OVERLAY ===== */
         .sidebar { 
             position: fixed; top: 0; left: 0; 
             width: 280px; height: 100vh; 
-            background: var(--sidebar-color); 
-            color: #fff; overflow-y: auto; 
-            transform: translateX(-280px); 
-            z-index: 9999; /* สูงกว่าทุกส่วน */
-            box-shadow: 10px 0 30px rgba(0,0,0,0.1);
-            visibility: hidden;
-            transition: transform 0.3s ease, visibility 0.3s;
+            background: #1e293b; color: #fff; 
+            overflow-y: auto; transform: translateX(-100%); 
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
+            z-index: var(--sidebar-z);
+            box-shadow: 20px 0 50px rgba(0,0,0,0.1);
+        }
+        .sidebar.show { transform: translateX(0); }
+        
+        .overlay { 
+            position: fixed; inset: 0; 
+            background: rgba(15, 23, 42, 0.4); 
+            backdrop-filter: blur(4px);
+            display: none; z-index: 9000; 
+            animation: fadeIn 0.3s;
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .overlay.show { display: block; }
+
+        /* ===== CONTENT AREA ===== */
+        .content { 
+            padding: 100px 20px 60px; 
+            max-width: 1200px; 
+            margin: 0 auto;
+            transition: all 0.4s;
         }
         
-        /* คลาสสำหรับสั่งให้แสดงผล */
-        .sidebar.show { 
-            transform: translateX(0) !important; 
-            visibility: visible !important;
-        }
-        
-        .content { padding: 85px 20px 40px; }
-        
-        @media(min-width:769px) { 
-            .sidebar { transform: translateX(0); visibility: visible; } 
-            .content { margin-left: 280px; }
-            .top-header { left: 280px; }
+        @media(min-width:1024px) { 
+            .sidebar { transform: translateX(0); } 
+            .content { margin-left: 280px; width: calc(100% - 280px); }
+            .top-nav { left: 280px; }
             .top-toggle { display: none; }
         }
 
-        .overlay { 
-            position: fixed; inset: 0; 
-            background: rgba(15, 23, 42, 0.5); 
-            backdrop-filter: blur(4px); 
-            display: none; z-index: 9000; 
+        /* ===== SECTION LABELS ===== */
+        .section-header {
+            display: flex;
+            align-items: center;
+            margin: 40px 0 20px;
+            gap: 15px;
         }
-        .overlay.show { display: block !important; }
+        .section-header h2 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-light);
+            margin: 0;
+            white-space: nowrap;
+        }
+        .section-header .line {
+            height: 1px;
+            background: #e2e8f0;
+            width: 100%;
+        }
 
-        /* ===== Modern Slider ===== */
+        /* ===== SLIDER ===== */
         .slider-container { 
             position: relative; 
-            max-width: 1200px; 
-            margin: 0 auto 35px; 
             border-radius: 24px; 
             overflow: hidden; 
-            box-shadow: var(--card-shadow); 
-            background: #cbd5e1;
+            box-shadow: var(--shadow-md);
+            margin-bottom: 20px;
         }
         .slides { display: none; width: 100%; height: 380px; }
         .slides img { width: 100%; height: 100%; object-fit: cover; }
         
         .dot-container { 
             position: absolute; bottom: 20px; width: 100%; 
-            text-align: center; z-index: 10; 
+            display: flex; justify-content: center; gap: 8px;
         }
         .dot { 
-            cursor: pointer; height: 8px; width: 30px; 
-            margin: 0 5px; background: rgba(255,255,255,0.4); 
-            border-radius: 10px; display: inline-block; 
+            cursor: pointer; height: 6px; width: 30px; 
+            background-color: rgba(255,255,255,0.3); 
+            border-radius: 10px; transition: 0.3s; 
         }
-        .active { background: #fff; width: 45px; }
+        .active { background-color: #fff; width: 50px; }
 
         @media (max-width: 768px) { .slides { height: 220px; } }
 
-        /* ===== Section Title ===== */
-        .section-label {
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin: 30px auto 15px;
-            max-width: 1200px;
-            display: flex;
-            align-items: center;
-            color: var(--text-light);
-        }
-        .section-label::after {
-            content: ""; flex: 1; height: 1px; background: #e2e8f0; margin-left: 15px;
-        }
-
-        /* ===== Service Grid ===== */
-        .service-grid { 
+        /* ===== SERVICE GRID ===== */
+        .grid-services { 
             display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); 
-            gap: 15px; max-width: 1200px; margin: 0 auto; 
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); 
+            gap: 16px; 
         }
-        
-        .service-card {
-            background: #ffffff;
-            border-radius: 18px;
-            padding: 20px 10px;
-            text-align: center;
-            text-decoration: none;
+        .service-item { 
+            background: #fff; 
+            padding: 24px 16px; 
+            border-radius: 20px; 
+            text-align: center; 
+            text-decoration: none; 
             color: var(--text-main);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
             border: 1px solid #f1f5f9;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 12px;
+            box-shadow: var(--shadow-sm);
         }
-
-        .service-card:hover {
-            transform: translateY(-5px);
-            box-shadow: var(--card-shadow);
-            border-color: #6366f1;
-            color: #6366f1;
+        .service-item:hover { 
+            transform: translateY(-8px); 
+            box-shadow: var(--shadow-md);
+            border-color: var(--primary);
+            color: var(--primary);
         }
-
-        .icon-box {
+        .icon-wrapper {
             font-size: 24px;
-            width: 50px; height: 50px;
-            background: #f8fafc;
-            border-radius: 14px;
+            width: 54px; height: 54px;
+            background: #f1f5f9;
+            border-radius: 16px;
             display: flex; align-items: center; justify-content: center;
+            transition: 0.3s;
         }
+        .service-item:hover .icon-wrapper { background: #eef2ff; transform: scale(1.1); }
+        .service-label { font-size: 0.9rem; font-weight: 500; line-height: 1.3; }
 
-        .service-name { font-size: 14px; font-weight: 500; }
-
-        /* ===== Promotion Cards ===== */
-        .card-container { 
+        /* ===== PROMOTION CARDS ===== */
+        .grid-promo { 
             display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
-            gap: 25px; max-width: 1200px; margin: 20px auto; 
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); 
+            gap: 24px; 
         }
-        .card { 
-            background: #ffffff; border-radius: 22px; 
-            overflow: hidden; text-decoration: none; 
-            color: var(--text-main); box-shadow: var(--card-shadow); 
-            display: flex; flex-direction: column;
-            border: 1px solid rgba(0,0,0,0.03);
+        .promo-card { 
+            background: #fff; 
+            border-radius: 24px; 
+            overflow: hidden; 
+            text-decoration: none; 
+            box-shadow: var(--shadow-sm);
+            transition: 0.3s;
+            border: 1px solid #f1f5f9;
         }
-        .card:hover { transform: scale(1.02); }
-        
-        .card-visual { 
-            height: 140px; 
-            display: flex; align-items: center; 
-            justify-content: center; padding: 20px;
-            font-weight: 600; font-size: 1.2rem; text-align: center;
+        .promo-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-md); }
+        .promo-visual { 
+            height: 160px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            padding: 20px; 
+            font-weight: 600; 
+            font-size: 1.25rem; 
+            text-align: center;
         }
+        .promo-info { padding: 20px; }
+        .promo-title { font-size: 0.85rem; color: var(--text-light); font-weight: 400; }
 
-        .blue { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white; }
-        .yellow { background: linear-gradient(135deg, #facc15 0%, #ca8a04 100%); color: #422006; }
-        .green-gradient { background: linear-gradient(135deg, #10b981 0%, #047857 100%); color: white; }
-        .red-gradient { background: linear-gradient(135deg, #f43f5e 0%, #be123c 100%); color: white; }
-
-        .card-content { padding: 15px 20px; font-size: 13px; color: var(--text-light); background: #fff; }
+        /* GRADIENTS */
+        .blue { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; }
+        .yellow { background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%); color: #fff; }
+        .green-gradient { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; }
+        .red-gradient { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; }
 
         footer { 
-            width: 100%; text-align: center; padding: 25px; 
-            background: #fff; color: var(--text-light); 
-            font-size: 12px; border-top: 1px solid #f1f5f9; 
-            margin-top: 50px;
+            margin-top: 60px;
+            padding: 40px 0;
+            text-align: center; 
+            color: var(--text-light); 
+            font-size: 0.8rem;
+            border-top: 1px solid #e2e8f0;
         }
+
+        /* SIDEBAR INTERNAL STYLE (Should match sidebar.html structure) */
+        .sidebar-header { padding: 30px 20px; font-size: 1.2rem; font-weight: 600; border-bottom: 1px solid rgba(255,255,255,0.1); }
     </style>
 </head>
 
 <body>
 
-<header class="top-header">
+<header class="top-nav">
     <button class="top-toggle" onclick="toggleSidebar()">☰</button>
-    <div style="font-weight: 600; font-size: 1.1rem; color: #1e293b;">DASHBOARD 2026</div>
-    <div style="width: 40px;"></div> 
-</header>
+    <div class="nav-title">DASHBOARD 2026</div>
+    <div style="width: 45px;"></div> </header>
 
 <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 
-<aside class="sidebar" id="sidebar">
-    <div id="sidebarContent">
-        <div style="padding: 30px 20px; font-size: 1.2rem; font-weight: 600; background: #0f172a; color: white;">
-            🔖 เมนูหลัก
-        </div>
-        </div>
-</aside>
+<aside class="sidebar" id="sidebar"></aside>
 
 <div class="content">
     <div class="slider-container" id="sliderContainer">
@@ -246,117 +263,111 @@
         </div>
     </div>
 
-    <div class="section-label">เมนูระบบและฟอร์มต่างๆ</div>
-    <div class="service-grid">
-        <a class="service-card" href="https://dtaclearn.com/dclick/login/index.php" target="_blank">
-            <div class="icon-box">🔴</div><div class="service-name">OneClick</div>
+    <div class="section-header">
+        <h2>เมนูระบบและฟอร์มต่างๆ</h2>
+        <div class="line"></div>
+    </div>
+    
+    <div class="grid-services">
+        <a class="service-item" href="https://dtaclearn.com/dclick/login/index.php" target="_blank">
+            <div class="icon-wrapper">🔴</div><div class="service-label">OneClick</div>
         </a>
-        <a class="service-card" href="https://double7.co.th" target="_blank">
-            <div class="icon-box">🟢</div><div class="service-name">TabTab</div>
+        <a class="service-item" href="https://double7.co.th" target="_blank">
+            <div class="icon-wrapper">🟢</div><div class="service-label">TabTab</div>
         </a>
-        <a class="service-card" href="https://cpeim-true.truecorp.co.th/#/" target="_blank">
-            <div class="icon-box">📦</div><div class="service-name">CPE Inventory</div>
+        <a class="service-item" href="https://cpeim-true.truecorp.co.th/#/" target="_blank">
+            <div class="icon-wrapper">📦</div><div class="service-label">CPE Inventory</div>
         </a>
-        <a class="service-card" href="https://shorturl.asia/59o4W" target="_blank">
-            <div class="icon-box">💻</div><div class="service-name">ess Double7</div>
+        <a class="service-item" href="https://shorturl.asia/59o4W" target="_blank">
+            <div class="icon-wrapper">💻</div><div class="service-label">ess Double7</div>
         </a>
-        <a class="service-card" href="https://shorturl.asia/VaHBj" target="_blank">
-            <div class="icon-box">🔄</div><div class="service-name">TechSwap Double7</div>
+        <a class="service-item" href="https://shorturl.asia/VaHBj" target="_blank">
+            <div class="icon-wrapper">🔄</div><div class="service-label">TechSwap Double7</div>
         </a>
-        <a class="service-card" href="https://store.truemobilecare.online/login" target="_blank">
-            <div class="icon-box">📱</div><div class="service-name">True Mobile Care</div>
+        <a class="service-item" href="https://store.truemobilecare.online/login" target="_blank">
+            <div class="icon-wrapper">📱</div><div class="service-label">True Mobile Care</div>
         </a>
-        <a class="service-card" href="https://kims-proxy.public-thp.ascendmoney.io/kims-proxy/kiosk-kims/#/l_login" target="_blank">
-            <div class="icon-box">🪙</div><div class="service-name">TMN KIMS</div>
+        <a class="service-item" href="https://kims-proxy.public-thp.ascendmoney.io/kims-proxy/kiosk-kims/#/l_login" target="_blank">
+            <div class="icon-wrapper">🪙</div><div class="service-label">TMN KIMS</div>
         </a>
-        <a class="service-card" href="https://shorturl.asia/4HdtD" target="_blank">
-            <div class="icon-box">🚚</div><div class="service-name">ลิงก์โยกสินค้า</div>
+        <a class="service-item" href="https://shorturl.asia/4HdtD" target="_blank">
+            <div class="icon-wrapper">🚚</div><div class="service-label">ลิงก์โยกสินค้า</div>
         </a>
-        <a class="service-card" href="https://shorturl.asia/Zsz6o" target="_blank">
-            <div class="icon-box">📑</div><div class="service-name">ฟอร์มเบิกใบส่งของ DHL</div>
+        <a class="service-item" href="https://shorturl.asia/Zsz6o" target="_blank">
+            <div class="icon-wrapper">📑</div><div class="service-label">ฟอร์มเบิกใบส่งของ DHL</div>
         </a>
-        <a class="service-card" href="https://shorturl.asia/f8ilH" target="_blank">
-            <div class="icon-box">↩️</div><div class="service-name">ฟอร์มทำคืน TOL+TVS</div>
+        <a class="service-item" href="https://shorturl.asia/f8ilH" target="_blank">
+            <div class="icon-wrapper">↩️</div><div class="service-label">ฟอร์มทำคืน TOL+TVS</div>
         </a>
-        <a class="service-card" href="commission.html">
-            <div class="icon-box">💰</div><div class="service-name">คำนวณค่าคอม</div>
+        <a class="service-item" href="commission.html">
+            <div class="icon-wrapper">💰</div><div class="service-label">คำนวณค่าคอม</div>
         </a>
-        <a class="service-card" href="input_sale.html">
-            <div class="icon-box">✏️</div><div class="service-name">ลงยอดขาย</div>
+        <a class="service-item" href="input_sale.html">
+            <div class="icon-wrapper">✏️</div><div class="service-label">ลงยอดขาย</div>
         </a>
-        <a class="service-card" href="report_sale.html">
-            <div class="icon-box">🔎</div><div class="service-name">ยอดขายรายบุคคล</div>
+        <a class="service-item" href="report_sale.html">
+            <div class="icon-wrapper">🔎</div><div class="service-label">เช็คยอดขายรายบุคคล</div>
         </a>
-        <a class="service-card" href="reportsale_shop.html">
-            <div class="icon-box">🏬</div><div class="service-name">เช็คยอดขาย SHOP</div>
+        <a class="service-item" href="reportsale_shop.html">
+            <div class="icon-wrapper">🏬</div><div class="service-label">เช็คยอดขาย SHOP</div>
         </a>
-        <a class="service-card" href="number.html">
-            <div class="icon-box">🪪</div><div class="service-name">จองเบอร์</div>
+        <a class="service-item" href="number.html">
+            <div class="icon-wrapper">🪪</div><div class="service-label">จองเบอร์</div>
         </a>
     </div>
 
-    <div class="section-label">โปรโมชั่นและ Hilight ประจำเดือน</div>
-    <div class="card-container">
-        <a class="card" href="https://shorturl.asia/WpkTN" target="_blank">
-            <div class="card-visual blue">Hilight True Online Jan 2026</div>
-            <div class="card-content">Hilight True Online Jan 2026</div>
+    <div class="section-header">
+        <h2>โปรโมชั่นและ Hilight ประจำเดือน</h2>
+        <div class="line"></div>
+    </div>
+
+    <div class="grid-promo">
+        <a class="promo-card" href="https://shorturl.asia/WpkTN" target="_blank">
+            <div class="promo-visual blue">Hilight True Online Jan 2026</div>
+            <div class="promo-info"><div class="promo-title">Hilight True Online Jan 2026</div></div>
         </a>
-        <a class="card" href="https://www.true.th/docs/tol-mass" target="_blank">
-            <div class="card-visual blue">โปรโมชั่นทรูออนไลน์</div>
-            <div class="card-content">โปรโมชั่น TOL (4 ธ.ค. 68 - 31 ม.ค. 69)</div>
+        <a class="promo-card" href="https://www.true.th/docs/tol-mass" target="_blank">
+            <div class="promo-visual blue">โปรโมชั่นทรูออนไลน์</div>
+            <div class="promo-info"><div class="promo-title">โปรโมชั่น TOL (4 ธ.ค. 68 - 31 ม.ค. 69)</div></div>
         </a>
-        <a class="card" href="https://drive.google.com/drive/folders/1W5OodsG_HgZt3s5sX6gAUmaNNcEqyYVR" target="_blank">
-            <div class="card-visual yellow">SPEC CARD</div>
-            <div class="card-content">SPEC CARD</div>
+        <a class="promo-card" href="https://drive.google.com/drive/folders/1W5OodsG_HgZt3s5sX6gAUmaNNcEqyYVR" target="_blank">
+            <div class="promo-visual yellow">SPEC CARD</div>
+            <div class="promo-info"><div class="promo-title">SPEC CARD</div></div>
         </a>
-        <a class="card" href="https://shorturl.asia/zN1YP" target="_blank">
-            <div class="card-visual green-gradient">Panogram</div>
-            <div class="card-content">Panogram</div>
+        <a class="promo-card" href="https://shorturl.asia/zN1YP" target="_blank">
+            <div class="promo-visual green-gradient">Panogram</div>
+            <div class="promo-info"><div class="promo-title">Panogram</div></div>
         </a>
-        <a class="card" href="https://shorturl.asia/9wpr5" target="_blank">
-            <div class="card-visual red-gradient">โปรโมชั่น Postpay (JAN 26)</div>
-            <div class="card-content">โปรโมชั่น Postpay (JAN 26)</div>
+        <a class="promo-card" href="https://shorturl.asia/9wpr5" target="_blank">
+            <div class="promo-visual red-gradient">โปรโมชั่น Postpay (JAN 26)</div>
+            <div class="promo-info"><div class="promo-title">โปรโมชั่น Postpay (JAN 26)</div></div>
         </a>
     </div>
+
+    <footer>© 2026 Copy Right By Angerina Frog</footer>
 </div>
 
-<footer>© 2026 Copy Right By Angerina Frog</footer>
-
 <script>
-    /** * ฟังก์ชันเปิด-ปิดเมนู (แก้ไขให้ทำงานแน่นอน)
-     */
-    function toggleSidebar() {
-        const sidebar = document.getElementById("sidebar");
-        const overlay = document.getElementById("overlay");
-        
-        if (sidebar && overlay) {
-            sidebar.classList.toggle("show");
-            overlay.classList.toggle("show");
-        }
-    }
-
-    /**
-     * ฟังก์ชันโหลดไฟล์ Sidebar แยกต่างหาก (ไม่ให้กระทบฟังก์ชันหลัก)
-     */
+    // --- Sidebar Manager ---
     function includeSidebar() {
-        const sidebarEl = document.getElementById('sidebarContent');
         const cached = localStorage.getItem('sidebar_cache');
-        
-        if (cached) { sidebarEl.innerHTML = cached; }
-        
+        if (cached) { document.getElementById('sidebar').innerHTML = cached; }
+
         fetch('sidebar.html')
-            .then(response => {
-                if (response.ok) return response.text();
-                throw new Error('No file');
-            })
+            .then(res => res.text())
             .then(data => {
-                sidebarEl.innerHTML = data;
+                document.getElementById('sidebar').innerHTML = data;
                 localStorage.setItem('sidebar_cache', data);
             })
-            .catch(err => console.log("Sidebar file not found, using default."));
+            .catch(err => console.error("Sidebar loading failed"));
     }
 
-    // --- Slider System (ทำงานปกติ) ---
+    function toggleSidebar() {
+        document.getElementById("sidebar").classList.toggle("show");
+        document.getElementById("overlay").classList.toggle("show");
+    }
+
+    // --- Slider System ---
     let slideIndex = 0;
     let slideTimer;
 
@@ -364,33 +375,42 @@
         let slides = document.getElementsByClassName("slides");
         let dots = document.getElementsByClassName("dot");
         if (slides.length === 0) return;
-        for (let i = 0; i < slides.length; i++) { slides[i].style.display = "none"; }
+        
+        for (let i = 0; i < slides.length; i++) slides[i].style.display = "none";
         slideIndex++;
-        if (slideIndex > slides.length) {slideIndex = 1}
-        for (let i = 0; i < dots.length; i++) { dots[i].className = dots[i].className.replace(" active", ""); }
+        if (slideIndex > slides.length) slideIndex = 1;
+        
+        for (let i = 0; i < dots.length; i++) dots[i].className = dots[i].className.replace(" active", "");
+        
         slides[slideIndex-1].style.display = "block";  
-        if (dots.length >= slideIndex) { dots[slideIndex-1].className += " active"; }
+        if (dots.length >= slideIndex) dots[slideIndex-1].className += " active";
+        
         clearTimeout(slideTimer);
         slideTimer = setTimeout(showSlides, 5000);
     }
 
-    function currentSlide(n) { slideIndex = n - 1; showSlides(); }
-
-    // เริ่มทำงาน
-    window.onload = function() {
-        includeSidebar();
+    function currentSlide(n) {
+        slideIndex = n - 1;
         showSlides();
-    };
+    }
 
-    // Swipe สำหรับ Slider
-    let touchstartX = 0; let touchendX = 0;
+    // --- Touch Swipe for Slider ---
+    let touchstartX = 0;
+    let touchendX = 0;
     const slider = document.getElementById('sliderContainer');
+
     slider.addEventListener('touchstart', e => touchstartX = e.changedTouches[0].screenX, {passive: true});
     slider.addEventListener('touchend', e => {
         touchendX = e.changedTouches[0].screenX;
         if (touchendX < touchstartX - 50) showSlides();
-        if (touchendX > touchstartX + 50) { slideIndex -= 2; showSlides(); }
+        if (touchendX > touchstartX + 50) { slideIndex -= 2; if(slideIndex < 0) slideIndex = 0; showSlides(); }
     }, {passive: true});
+
+    // --- Init ---
+    window.addEventListener('DOMContentLoaded', () => {
+        includeSidebar();
+        showSlides();
+    });
 </script>
 
 </body>
