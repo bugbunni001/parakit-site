@@ -30,6 +30,7 @@
             display: flex; 
             min-height: 100vh; 
             color: var(--text-dark);
+            overflow-x: hidden;
         }
 
         /* ===== SIDEBAR (PREMIUM STYLE) ===== */
@@ -39,7 +40,7 @@
             height: 100vh; 
             position: fixed; 
             left: 0; top: 0; 
-            transition: transform 0.3s ease; 
+            transition: var(--transition); 
             z-index: 2000; 
             overflow-y: auto; 
             box-shadow: 4px 0 15px rgba(0,0,0,0.2); 
@@ -55,24 +56,26 @@
             flex-direction: column;
         }
         
+        /* State: Collapsed (Desktop) */
         body.collapsed #sidebar-container { transform: translateX(calc(var(--sidebar-width) * -1)); }
         body.collapsed .main-content { margin-left: 0; width: 100%; }
 
+        /* Mobile Adjustments */
         @media (max-width: 900px) {
             #sidebar-container { transform: translateX(calc(var(--sidebar-width) * -1)); }
             .main-content { margin-left: 0; width: 100%; padding: 20px; }
             body.show-sidebar #sidebar-container { transform: translateX(0); }
         }
 
-        .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.5); display: none; z-index: 1500; backdrop-filter: blur(4px); }
+        .overlay { 
+            position: fixed; inset: 0; background: rgba(15, 23, 42, 0.5); 
+            display: none; z-index: 1500; backdrop-filter: blur(4px); 
+        }
         body.show-sidebar .overlay { display: block; }
 
-        /* ===== NAVIGATION & TOP BAR ===== */
+        /* ===== TOP BAR & INTERFACE ===== */
         .top-nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;
         }
 
         .menu-btn {
@@ -134,15 +137,15 @@
         }
         .data-row span { font-weight: 500; color: var(--text-dark); }
 
-        /* ===== INPUT STYLES ===== */
+        /* ===== INPUTS ===== */
         input[type="text"] {
             width: 110px; padding: 10px 14px; border-radius: 10px;
             border: 1px solid #e2e8f0; text-align: right; font-weight: 600;
             background: #f8fafc; transition: var(--transition);
             color: var(--text-dark);
         }
-        input[type="text"]:focus { outline: none; border-color: var(--primary); background: #fff; box-shadow: 0 0 0 4px var(--primary-light); }
-        input[readonly] { border-color: transparent; background: transparent; cursor: default; }
+        input.editable { background: #ffffff !important; border-color: var(--primary) !important; box-shadow: 0 0 0 4px var(--primary-light); }
+        input[readonly] { border-color: transparent; background: transparent; cursor: default; pointer-events: none; }
 
         .summary-box {
             background: var(--bg); padding: 15px; border-radius: 15px;
@@ -150,20 +153,20 @@
             margin-top: 10px; border: 1px dashed var(--primary);
         }
         .summary-box span { font-size: 14px; font-weight: 700; color: var(--primary); }
-        .summary-box input { color: var(--primary); font-size: 16px; border: none !important; }
+        .summary-box input { color: var(--primary); font-size: 16px; border: none !important; background: transparent !important; }
 
         /* ===== SAVE BUTTON ===== */
         .btn-save-container { margin-top: 40px; text-align: center; }
         .btn-save {
             background: var(--primary); color: white; border: none;
             padding: 16px 50px; border-radius: 16px; font-weight: 600; font-size: 16px;
-            cursor: pointer; transition: var(--transition); display: inline-flex; align-items: center; gap: 10px;
-            box-shadow: 0 10px 20px rgba(91, 183, 170, 0.3);
+            cursor: pointer; transition: var(--transition); display: none; align-items: center; gap: 10px;
+            box-shadow: 0 10px 20px rgba(91, 183, 170, 0.3); margin: 0 auto;
         }
-        .btn-save:hover:not(:disabled) { background: var(--primary-dark); transform: translateY(-3px); box-shadow: 0 15px 25px rgba(91, 183, 170, 0.4); }
-        .btn-save:disabled { background: #cbd5e1; cursor: not-allowed; box-shadow: none; transform: none; }
+        .btn-save:hover:not(:disabled) { background: var(--primary-dark); transform: translateY(-3px); }
+        .btn-save:disabled { background: #cbd5e1; cursor: not-allowed; }
 
-        /* ===== MODALS ===== */
+        /* ===== LOADING MODAL ===== */
         .modal-overlay {
             position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); 
             display: none; align-items: center; justify-content: center; z-index: 3000;
@@ -172,7 +175,6 @@
         .modal { 
             background: white; padding: 40px; border-radius: 30px; 
             width: 90%; max-width: 400px; text-align: center;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
         }
         .spinner {
             width: 45px; height: 45px; border: 4px solid var(--primary-light);
@@ -181,20 +183,18 @@
         }
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
-        footer { 
-            text-align: center; padding: 25px; color: var(--text-muted); font-size: 13px; margin-top: 50px;
-        }
+        footer { text-align: center; padding: 25px; color: var(--text-muted); font-size: 13px; margin-top: 50px; }
     </style>
 </head>
 
 <body id="mainBody">
 
-<div class="overlay" onclick="toggleSidebar()"></div>
+<div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 <aside id="sidebar-container"></aside>
 
 <main class="main-content">
     <div class="top-nav">
-        <button class="menu-btn" onclick="toggleSidebar()">☰ เมนูหลัก</button>
+        <button class="menu-btn" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i> เมนูหลัก</button>
         <div class="mode-switcher">
             <span id="modeLabel" style="font-size: 13px; font-weight: 700; color: var(--text-muted);">VIEW ONLY</span>
             <input type="checkbox" id="editToggle" onchange="toggleEditMode()" style="cursor:pointer; width:20px; height:20px;">
@@ -252,34 +252,37 @@
         </div>
 
         <div class="btn-save-container">
-            <button class="btn-save" id="saveBtn" onclick="saveAll()" disabled>
+            <button class="btn-save" id="saveBtn" onclick="saveAll()">
                 <i class="fa-solid fa-cloud-arrow-up"></i> บันทึกข้อมูลเข้าสู่ระบบ
             </button>
         </div>
     </div>
 
-    <footer>
-        &copy; 2026 copyright By <b>Angerina Frog</b>
-    </footer>
+    <footer>&copy; 2026 copyright By <b>Angerina Frog</b></footer>
 </main>
 
 <div class="modal-overlay" id="loadingOverlay">
     <div class="modal">
         <div class="spinner"></div>
-        <p style="font-weight: 500;">กำลังประมวลผลข้อมูล กรุณารอสักครู่...</p>
+        <p id="loadingText">กำลังประมวลผลข้อมูล...</p>
     </div>
 </div>
 
 <script>
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz4jD9tgF3eR-j5xEyq2HUlQ2r7eYyHFo7pwvkV_EHBLz33Srnez2Vy9q7i-biUvtvmgQ/exec";
 
-/* ✅ Sidebar Logic */
-fetch("sidebar.html")
-  .then(res => res.text())
-  .then(html => {
-      document.getElementById("sidebar-container").innerHTML = html;
-      restoreSidebarState();
-  });
+/* ---------------------------------------------------------
+   ✅ SIDEBAR LOGIC (จำสถานะการเปิด/ปิด)
+--------------------------------------------------------- */
+function loadSidebar() {
+    fetch("sidebar.html")
+        .then(res => res.text())
+        .then(html => {
+            document.getElementById("sidebar-container").innerHTML = html;
+            restoreSidebarState();
+        })
+        .catch(err => console.warn("Sidebar file not found."));
+}
 
 function toggleSidebar() {
     const body = document.getElementById('mainBody');
@@ -293,77 +296,125 @@ function toggleSidebar() {
 
 function restoreSidebarState() {
     const body = document.getElementById('mainBody');
-    if (window.innerWidth > 900) {
-        const isCollapsed = localStorage.getItem('sidebar-collapsed');
-        if (isCollapsed === 'true') body.classList.add('collapsed');
-        else body.classList.remove('collapsed');
+    const isCollapsed = localStorage.getItem('sidebar-collapsed');
+    // ถ้าเคยตั้งพับไว้ และจอใหญ่ ให้พับต่อ
+    if (isCollapsed === 'true' && window.innerWidth > 900) {
+        body.classList.add('collapsed');
     }
 }
 
-/* ✅ Data Management Logic */
+/* ---------------------------------------------------------
+   ✅ EDIT MODE & CALCULATION
+--------------------------------------------------------- */
 function toggleEditMode() {
-    const isEdit = document.getElementById('editToggle').checked;
-    document.querySelectorAll('.data-input').forEach(input => {
-        input.readOnly = !isEdit;
-    });
-    document.getElementById('saveBtn').disabled = !isEdit;
-    const label = document.getElementById('modeLabel');
-    label.innerText = isEdit ? "EDIT MODE" : "VIEW ONLY";
-    label.style.color = isEdit ? "var(--primary)" : "var(--text-muted)";
-}
+    const isEditing = document.getElementById('editToggle').checked;
+    const inputs = document.querySelectorAll('.data-input');
+    const saveBtn = document.getElementById('saveBtn');
+    const modeLabel = document.getElementById('modeLabel');
 
-function getVal(id) { return parseInt(document.getElementById(id).value.replace(/,/g, '')) || 0; }
-function setFmt(id, val) { document.getElementById(id).value = val.toLocaleString(); }
+    inputs.forEach(input => {
+        if (isEditing) {
+            input.removeAttribute('readonly');
+            input.classList.add('editable');
+        } else {
+            input.setAttribute('readonly', true);
+            input.classList.remove('editable');
+        }
+    });
+
+    saveBtn.style.display = isEditing ? 'inline-flex' : 'none';
+    modeLabel.innerText = isEditing ? 'EDITING MODE' : 'VIEW ONLY';
+    modeLabel.style.color = isEditing ? 'var(--primary)' : 'var(--text-muted)';
+}
 
 function calculate() {
-    const ppNew = getVal('pp_nawa_n') + getVal('pp_piya_n') + getVal('pp_korn_n');
-    const ppExt = getVal('pp_nawa_e') + getVal('pp_piya_e') + getVal('pp_korn_e');
-    setFmt('pp_new_total', ppNew);
-    setFmt('pp_ext_total', ppExt);
-    document.getElementById('postpay_total_display').innerText = (ppNew + ppExt).toLocaleString();
-    document.getElementById('postpay_total').value = ppNew + ppExt;
+    // Helper function to get value
+    const val = (id) => parseFloat(document.getElementById(id).value.replace(/,/g, '')) || 0;
 
-    const devA = getVal('dev_nawa_a') + getVal('dev_piya_a') + getVal('dev_korn_a');
-    const devS = getVal('dev_nawa_s') + getVal('dev_piya_s') + getVal('dev_korn_s');
-    setFmt('dev_apple_total', devA);
-    setFmt('dev_smart_total', devS);
-    document.getElementById('device_total_display').innerText = (devA + devS).toLocaleString();
-    document.getElementById('device_total').value = devA + devS;
+    // Postpay Calculations
+    const ppNew = val('pp_nawa_n') + val('pp_piya_n') + val('pp_korn_n');
+    const ppExt = val('pp_nawa_e') + val('pp_piya_e') + val('pp_korn_e');
+    const ppTotal = ppNew + ppExt;
+
+    document.getElementById('pp_new_total').value = ppNew.toLocaleString();
+    document.getElementById('pp_ext_total').value = ppExt.toLocaleString();
+    document.getElementById('postpay_total').value = ppTotal;
+    document.getElementById('postpay_total_display').innerText = ppTotal.toLocaleString();
+
+    // Device Calculations
+    const devApple = val('dev_nawa_a') + val('dev_piya_a') + val('dev_korn_a');
+    const devSmart = val('dev_nawa_s') + val('dev_piya_s') + val('dev_korn_s');
+    const devTotal = devApple + devSmart;
+
+    document.getElementById('dev_apple_total').value = devApple.toLocaleString();
+    document.getElementById('dev_smart_total').value = devSmart.toLocaleString();
+    document.getElementById('device_total').value = devTotal;
+    document.getElementById('device_total_display').innerText = devTotal.toLocaleString();
 }
 
+/* ---------------------------------------------------------
+   ✅ DATA SYNC (GOOGLE SHEETS)
+--------------------------------------------------------- */
 async function loadData() {
+    showLoading("กำลังโหลดข้อมูลจาก Google Sheets...");
     try {
-        const res = await fetch(SCRIPT_URL);
-        const data = await res.json();
-        Object.keys(data).forEach(k => { 
-            if(document.getElementById(k)) document.getElementById(k).value = data[k]; 
-        });
-        calculate();
-    } catch (e) { console.error("Data load error"); }
+        const response = await fetch(`${SCRIPT_URL}?action=read`);
+        const data = await response.json();
+        
+        for (let key in data) {
+            const el = document.getElementById(key);
+            if (el) {
+                el.value = data[key];
+            }
+        }
+        calculate(); // คำนวณยอดรวมหลังโหลด
+    } catch (err) {
+        console.error("Load Error:", err);
+    } finally {
+        hideLoading();
+    }
 }
 
 async function saveAll() {
-    if(!confirm("ยืนยันการบันทึกข้อมูลเป้ายอดขาย?")) return;
-    document.getElementById("loadingOverlay").style.display = "flex";
-    
+    const btn = document.getElementById('saveBtn');
+    btn.disabled = true;
+    showLoading("กำลังบันทึกข้อมูล...");
+
+    const inputs = document.querySelectorAll('input[type="text"], input[type="hidden"]');
     const payload = {};
-    document.querySelectorAll("input").forEach(i => { 
-        if(i.id) payload[i.id] = i.value.replace(/,/g, '') || 0; 
+    inputs.forEach(input => {
+        payload[input.id] = input.value;
     });
-    
+
     try {
-        await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(payload) });
-        await loadData();
+        await fetch(`${SCRIPT_URL}`, {
+            method: 'POST',
+            body: JSON.stringify({ action: "updateAll", data: payload })
+        });
+        alert("✅ บันทึกข้อมูลสำเร็จ");
         document.getElementById('editToggle').checked = false;
         toggleEditMode();
-        alert("บันทึกข้อมูลเรียบร้อยแล้ว");
-    } catch (e) { alert("เกิดข้อผิดพลาดในการบันทึก"); }
-    document.getElementById("loadingOverlay").style.display = "none";
+    } catch (err) {
+        alert("❌ เกิดข้อผิดพลาดในการบันทึก");
+    } finally {
+        btn.disabled = false;
+        hideLoading();
+    }
 }
 
+function showLoading(text) {
+    document.getElementById('loadingText').innerText = text;
+    document.getElementById('loadingOverlay').style.display = 'flex';
+}
+
+function hideLoading() {
+    document.getElementById('loadingOverlay').style.display = 'none';
+}
+
+// Initial Load
 window.onload = () => {
+    loadSidebar();
     loadData();
-    restoreSidebarState();
 };
 </script>
 
