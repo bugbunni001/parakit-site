@@ -53,7 +53,7 @@
             cursor: pointer;
             display: flex; align-items: center; justify-content: center;
             font-size: 18px;
-            z-index: 1300;
+            z-index: 1300; /* ให้ปุ่มอยู่บนสุดเสมอ */
         }
 
         /* ===== Sidebar Modern ===== */
@@ -63,14 +63,18 @@
             background: var(--sidebar-color); 
             color: #fff; overflow-y: auto; 
             transform: translateX(-280px); 
-            z-index: 2000;
+            z-index: 9999; /* สูงกว่าทุกส่วน */
             box-shadow: 10px 0 30px rgba(0,0,0,0.1);
-            visibility: hidden; /* ซ่อนไว้ก่อนเพื่อกันเมนูแลบ */
+            visibility: hidden;
+            transition: transform 0.3s ease, visibility 0.3s;
         }
+        
+        /* คลาสสำหรับสั่งให้แสดงผล */
         .sidebar.show { 
-            transform: translateX(0); 
-            visibility: visible;
+            transform: translateX(0) !important; 
+            visibility: visible !important;
         }
+        
         .content { padding: 85px 20px 40px; }
         
         @media(min-width:769px) { 
@@ -84,9 +88,9 @@
             position: fixed; inset: 0; 
             background: rgba(15, 23, 42, 0.5); 
             backdrop-filter: blur(4px); 
-            display: none; z-index: 1500; 
+            display: none; z-index: 9000; 
         }
-        .overlay.show { display: block; }
+        .overlay.show { display: block !important; }
 
         /* ===== Modern Slider ===== */
         .slider-container { 
@@ -319,37 +323,40 @@
 <footer>© 2026 Copy Right By Angerina Frog</footer>
 
 <script>
-    // --- Sidebar System ---
+    /** * ฟังก์ชันเปิด-ปิดเมนู (แก้ไขให้ทำงานแน่นอน)
+     */
+    function toggleSidebar() {
+        const sidebar = document.getElementById("sidebar");
+        const overlay = document.getElementById("overlay");
+        
+        if (sidebar && overlay) {
+            sidebar.classList.toggle("show");
+            overlay.classList.toggle("show");
+        }
+    }
+
+    /**
+     * ฟังก์ชันโหลดไฟล์ Sidebar แยกต่างหาก (ไม่ให้กระทบฟังก์ชันหลัก)
+     */
     function includeSidebar() {
-        const sidebarEl = document.getElementById('sidebar');
+        const sidebarEl = document.getElementById('sidebarContent');
         const cached = localStorage.getItem('sidebar_cache');
         
         if (cached) { sidebarEl.innerHTML = cached; }
         
         fetch('sidebar.html')
             .then(response => {
-                if (!response.ok) throw new Error('Network response was not ok');
-                return response.text();
+                if (response.ok) return response.text();
+                throw new Error('No file');
             })
             .then(data => {
                 sidebarEl.innerHTML = data;
                 localStorage.setItem('sidebar_cache', data);
             })
-            .catch(err => {
-                console.warn("Sidebar Error: ระบบจะใช้ข้อมูลจาก Cache หรือโครงสร้างพื้นฐาน");
-            });
+            .catch(err => console.log("Sidebar file not found, using default."));
     }
 
-    function toggleSidebar() {
-        const sidebar = document.getElementById("sidebar");
-        const overlay = document.getElementById("overlay");
-        
-        // ใช้ classList.toggle เพื่อสลับสถานะการแสดงผล
-        sidebar.classList.toggle("show");
-        overlay.classList.toggle("show");
-    }
-
-    // --- Slider System ---
+    // --- Slider System (ทำงานปกติ) ---
     let slideIndex = 0;
     let slideTimer;
 
@@ -357,44 +364,33 @@
         let slides = document.getElementsByClassName("slides");
         let dots = document.getElementsByClassName("dot");
         if (slides.length === 0) return;
-        
         for (let i = 0; i < slides.length; i++) { slides[i].style.display = "none"; }
         slideIndex++;
         if (slideIndex > slides.length) {slideIndex = 1}
-        
         for (let i = 0; i < dots.length; i++) { dots[i].className = dots[i].className.replace(" active", ""); }
-        
         slides[slideIndex-1].style.display = "block";  
         if (dots.length >= slideIndex) { dots[slideIndex-1].className += " active"; }
-        
         clearTimeout(slideTimer);
         slideTimer = setTimeout(showSlides, 5000);
     }
 
-    function currentSlide(n) { 
-        slideIndex = n - 1; 
-        showSlides(); 
-    }
+    function currentSlide(n) { slideIndex = n - 1; showSlides(); }
 
-    // Swipe Control
+    // เริ่มทำงาน
+    window.onload = function() {
+        includeSidebar();
+        showSlides();
+    };
+
+    // Swipe สำหรับ Slider
     let touchstartX = 0; let touchendX = 0;
     const slider = document.getElementById('sliderContainer');
-    
-    slider.addEventListener('touchstart', e => {
-        touchstartX = e.changedTouches[0].screenX;
-    }, {passive: true});
-    
+    slider.addEventListener('touchstart', e => touchstartX = e.changedTouches[0].screenX, {passive: true});
     slider.addEventListener('touchend', e => {
         touchendX = e.changedTouches[0].screenX;
         if (touchendX < touchstartX - 50) showSlides();
         if (touchendX > touchstartX + 50) { slideIndex -= 2; showSlides(); }
     }, {passive: true});
-
-    // เริ่มทำงานเมื่อ Load เสร็จ
-    window.addEventListener('DOMContentLoaded', () => {
-        includeSidebar();
-        showSlides();
-    });
 </script>
 
 </body>
