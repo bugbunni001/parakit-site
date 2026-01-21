@@ -15,6 +15,7 @@
             --glass-bg: rgba(255, 255, 255, 0.8);
             --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
             --sidebar-color: #1e293b;
+            --sidebar-dark: #0f172a;
             --text-main: #334155;
             --text-light: #64748b;
         }
@@ -55,7 +56,7 @@
             font-size: 18px;
         }
 
-        /* ===== Sidebar Modern ===== */
+        /* ===== Sidebar Modern with Dropdown Support ===== */
         .sidebar { 
             position: fixed; top: 0; left: 0; 
             width: 280px; height: 100vh; 
@@ -83,6 +84,33 @@
         }
         .overlay.show { display: block; }
 
+        /* Sidebar Menu Styles */
+        .sidebar-header {
+            padding: 30px 20px; font-size: 1.2rem; font-weight: 600; background: var(--sidebar-dark);
+            display: flex; align-items: center; gap: 10px;
+        }
+        .menu-item { border-bottom: 1px solid rgba(255,255,255,0.03); }
+        .menu-btn {
+            width: 100%; padding: 15px 20px; background: none; border: none;
+            color: #cbd5e1; text-align: left; font-size: 15px; cursor: pointer;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .menu-btn:hover { background: rgba(255,255,255,0.05); color: #fff; }
+        
+        .submenu { 
+            max-height: 0; overflow: hidden; background: var(--sidebar-dark); 
+            transition: max-height 0.3s cubic-bezier(0, 1, 0, 1); 
+        }
+        .menu-item.active .submenu { max-height: 1000px; transition: max-height 0.3s ease-in; }
+        .menu-item.active .arrow { transform: rotate(90deg); }
+        
+        .submenu a {
+            display: block; padding: 12px 20px 12px 45px; color: #94a3b8;
+            text-decoration: none; font-size: 14px;
+        }
+        .submenu a:hover { color: #6366f1; background: rgba(255,255,255,0.03); }
+        .arrow { font-size: 10px; opacity: 0.5; transition: 0.3s; }
+
         /* ===== Modern Slider ===== */
         .slider-container { 
             position: relative; 
@@ -105,7 +133,7 @@
             margin: 0 5px; background: rgba(255,255,255,0.4); 
             border-radius: 10px; display: inline-block; 
         }
-        .active { background: #fff; width: 45px; }
+        .active-dot { background: #fff; width: 45px; }
 
         @media (max-width: 768px) { .slides { height: 220px; } }
 
@@ -123,7 +151,7 @@
             content: ""; flex: 1; height: 1px; background: #e2e8f0; margin-left: 15px;
         }
 
-        /* ===== Service Grid (Buttons Re-imagined) ===== */
+        /* ===== Service Grid ===== */
         .service-grid { 
             display: grid; 
             grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); 
@@ -206,15 +234,41 @@
 <header class="top-header">
     <button class="top-toggle" onclick="toggleSidebar()">☰</button>
     <div style="font-weight: 600; font-size: 1.1rem; color: #1e293b;">DASHBOARD 2026</div>
-    <div style="width: 40px;"></div> </header>
+    <div style="width: 40px;"></div> 
+</header>
 
 <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 
 <aside class="sidebar" id="sidebar">
-    <div style="padding: 30px 20px; font-size: 1.2rem; font-weight: 600; background: #0f172a;">
+    <div class="sidebar-header">
         🔖 เมนูหลัก
     </div>
-    </aside>
+    
+    <div id="sidebar-menu-container">
+        <div class="menu-item" id="menu-sales">
+            <button class="menu-btn" onclick="toggleMenu('sales')">
+                <span>📈 ยอดขาย</span>
+                <span class="arrow">▶</span>
+            </button>
+            <div class="submenu">
+                <a href="input_sale.html">ลงยอดขาย</a>
+                <a href="report_sale.html">รายงานรายบุคคล</a>
+                <a href="reportsale_shop.html">รายงานร้านค้า</a>
+            </div>
+        </div>
+
+        <div class="menu-item" id="menu-forms">
+            <button class="menu-btn" onclick="toggleMenu('forms')">
+                <span>📑 ฟอร์มต่างๆ</span>
+                <span class="arrow">▶</span>
+            </button>
+            <div class="submenu">
+                <a href="https://shorturl.asia/Zsz6o">เบิกใบส่งของ DHL</a>
+                <a href="https://shorturl.asia/f8ilH">ทำคืน TOL+TVS</a>
+            </div>
+        </div>
+    </div>
+</aside>
 
 <div class="content">
     <div class="slider-container" id="sliderContainer">
@@ -311,16 +365,42 @@
 <footer>© 2026 Copy Right By Angerina Frog</footer>
 
 <script>
-    // --- Sidebar System ---
+    // --- Dropdown Menu Logic with LocalStorage ---
+    function toggleMenu(menuId) {
+        const menuElement = document.getElementById('menu-' + menuId);
+        const isActive = menuElement.classList.toggle('active');
+        
+        // บันทึกสถานะไว้ใน localStorage
+        localStorage.setItem('sidebar-menu-' + menuId, isActive);
+    }
+
+    function restoreMenuState() {
+        // ตรวจสอบทุก menu-item ใน sidebar
+        document.querySelectorAll('.menu-item').forEach(item => {
+            const menuId = item.id.replace('menu-', '');
+            const savedState = localStorage.getItem('sidebar-menu-' + menuId);
+            
+            if (savedState === 'true') {
+                item.classList.add('active');
+            }
+        });
+    }
+
+    // --- Sidebar Include/Toggle ---
     function includeSidebar() {
         const cached = localStorage.getItem('sidebar_cache');
-        if (cached) { document.getElementById('sidebar').innerHTML = cached; }
+        if (cached) { 
+            document.getElementById('sidebar').innerHTML = cached;
+            restoreMenuState(); // คืนค่าหลังจากโหลด cache
+        }
+        
         fetch('sidebar.html')
             .then(response => response.text())
             .then(data => {
                 document.getElementById('sidebar').innerHTML = data;
                 localStorage.setItem('sidebar_cache', data);
-            }).catch(err => console.warn("Sidebar Error"));
+                restoreMenuState(); // คืนค่าหลังจาก fetch ใหม่
+            }).catch(err => console.warn("Sidebar Fetch Error: Use local fallback"));
     }
 
     function toggleSidebar() {
@@ -339,24 +419,14 @@
         for (let i = 0; i < slides.length; i++) { slides[i].style.display = "none"; }
         slideIndex++;
         if (slideIndex > slides.length) {slideIndex = 1}
-        for (let i = 0; i < dots.length; i++) { dots[i].className = dots[i].className.replace(" active", ""); }
+        for (let i = 0; i < dots.length; i++) { dots[i].className = dots[i].className.replace(" active-dot", ""); }
         slides[slideIndex-1].style.display = "block";  
-        if (dots.length >= slideIndex) { dots[slideIndex-1].className += " active"; }
+        if (dots.length >= slideIndex) { dots[slideIndex-1].className += " active-dot"; }
         clearTimeout(slideTimer);
         slideTimer = setTimeout(showSlides, 5000);
     }
 
     function currentSlide(n) { slideIndex = n - 1; showSlides(); }
-
-    // Swipe Control
-    let touchstartX = 0; let touchendX = 0;
-    const slider = document.getElementById('sliderContainer');
-    slider.addEventListener('touchstart', e => touchstartX = e.changedTouches[0].screenX, {passive: true});
-    slider.addEventListener('touchend', e => {
-        touchendX = e.changedTouches[0].screenX;
-        if (touchendX < touchstartX - 50) showSlides();
-        if (touchendX > touchstartX + 50) { slideIndex -= 2; showSlides(); }
-    }, {passive: true});
 
     window.addEventListener('DOMContentLoaded', () => {
         includeSidebar();
