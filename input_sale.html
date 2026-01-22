@@ -4,32 +4,107 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🔖 ภารกิจประจำเดือน & บันทึกยอดขาย</title>
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
     <style>
-        /* ===== GLOBAL RESET & SIDEBAR STRUCTURE ===== */
+        :root {
+            --primary-gradient: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            --glass-bg: rgba(255, 255, 255, 0.8);
+            --sidebar-color: #1e293b;
+            --text-main: #334155;
+            --text-light: #64748b;
+            --sidebar-width: 280px;
+        }
+
+        /* ===== GLOBAL RESET & STRUCTURE ===== */
         * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
-        body { margin: 0; background: #f1f5f9; padding-bottom: 80px; color: #334155; -webkit-font-smoothing: antialiased; }
         
-        .top-toggle { position: fixed; top: 15px; left: 15px; z-index: 1400; width: 45px; height: 45px; border-radius: 12px; border: none; background: #1e293b; color: #fff; font-size: 20px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; }
-        @media(min-width:769px) { .top-toggle { display: none; } }
-        
-        .sidebar { position: fixed; top: 0; left: 0; width: 260px; height: 100vh; background: #1e293b; color: #fff; overflow-y: auto; transform: translateX(-260px); transition: all .3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 2000; }
-        .sidebar.show { transform: translateX(0); }
-        .content { padding: 80px 20px 40px; transition: margin-left .3s; display: flex; justify-content: center; }
-        @media(min-width:769px) { .sidebar { transform: translateX(0); } .content { margin-left: 260px; } }
-        
-        .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: none; backdrop-filter: blur(4px); z-index: 1500; }
+        body { 
+            margin: 0; 
+            background: #f1f5f9; 
+            color: var(--text-main); 
+            -webkit-font-smoothing: antialiased;
+            padding-bottom: 80px;
+            transition: padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* ===== Header Navbar (จากไฟล์แรก) ===== */
+        .top-header {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 65px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            z-index: 1200;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .top-toggle {
+            width: 40px; height: 40px;
+            border-radius: 10px;
+            border: none;
+            background: var(--sidebar-color);
+            color: white;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px;
+            z-index: 1300;
+            margin-right: 15px;
+        }
+
+        /* ===== Sidebar Style ===== */
+        .sidebar { 
+            position: fixed; top: 0; left: 0; 
+            width: var(--sidebar-width); height: 100vh; 
+            background: var(--sidebar-color); 
+            color: #fff; overflow-y: auto; 
+            transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 2000;
+            box-shadow: 10px 0 30px rgba(0,0,0,0.1);
+        }
+
+        /* สภาวะปกติบนจอใหญ่ */
+        @media(min-width:769px) { 
+            body:not(.collapsed) { padding-left: var(--sidebar-width); }
+            body:not(.collapsed) .top-header { left: var(--sidebar-width); }
+            
+            body.collapsed .sidebar { transform: translateX(-100%); }
+            body.collapsed .top-header { left: 0; }
+        }
+
+        /* สภาวะบนมือถือ */
+        @media(max-width:768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.show { transform: translateX(0); }
+            body { padding-left: 0 !important; }
+            .top-header { left: 0 !important; }
+        }
+
+        .content { padding: 100px 20px 40px; display: flex; justify-content: center; }
+
+        .overlay { 
+            position: fixed; inset: 0; 
+            background: rgba(15, 23, 42, 0.5); 
+            backdrop-filter: blur(4px); 
+            display: none; z-index: 1500; 
+        }
         .overlay.show { display: block; }
 
-        /* ===== SIDEBAR INTERNAL MENU STYLE ===== */
+        /* Sidebar Menu Styles (จากไฟล์ที่ 2) */
         .sidebar-header { padding: 25px 20px; font-size: 18px; font-weight: 600; background: #0f172a; color: #fff; border-bottom: 1px solid rgba(255,255,255,0.05); }
         .menu { display: flex; flex-direction: column; padding: 10px 0; }
         .item { border-bottom: 1px solid rgba(255,255,255,0.03); }
-        .menu a, .menu .drop-btn { width: 100%; min-height: 50px; padding: 12px 20px; background: none; border: none; color: #cbd5e1; text-align: left; font-size: 15px; cursor: pointer; display: flex; align-items: center; text-decoration: none; transition: all 0.3s ease; }
+        .menu a, .menu .drop-btn { width: 100%; min-height: 50px; padding: 12px 20px; background: none; border: none; color: #cbd5e1; text-align: left; font-size: 15px; cursor: pointer; display: flex; align-items: center; text-decoration: none; transition: 0.3s; }
         .menu a:hover, .menu .drop-btn:hover { background: #334155; color: #fff; padding-left: 30px; }
         .sub { display: none; background: #0f172a; padding: 5px 0; }
         .item.open .sub { display: block; }
-        .sub a { padding-left: 45px; font-size: 14px; color: #94a3b8; min-height: 40px; transition: all 0.3s ease; }
+        .sub a { padding-left: 45px; font-size: 14px; color: #94a3b8; min-height: 40px; }
         .sub a:hover { color: #5bbf8a; padding-left: 55px; }
         .arrow { margin-left: auto; transition: 0.3s; font-size: 10px; opacity: 0.6; }
         .item.open .arrow { transform: rotate(90deg); }
@@ -49,7 +124,6 @@
 
         .btn-submit { width: 100%; padding: 14px; border: none; border-radius: 12px; background: #2563eb; color: white; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.2s; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .btn-submit:hover { background: #1d4ed8; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
-        .btn-submit:active { transform: translateY(0); }
 
         /* ===== POPUP & LOADING ===== */
         .loading { position: fixed; inset: 0; background: rgba(255,255,255,0.8); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 3000; backdrop-filter: blur(2px); }
@@ -61,26 +135,29 @@
         .popup-box { background: white; padding: 30px; border-radius: 20px; text-align: center; max-width: 400px; width: 100%; transform: scale(0.8); opacity: 0; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
         .popup.show .popup-box { transform: scale(1); opacity: 1; }
         
-        .icon-box { margin-bottom: 20px; font-size: 50px; }
+        .icon-box-popup { margin-bottom: 20px; font-size: 50px; }
         .success .check-icon { display: block; color: #22c55e; margin: 0 auto; width: 60px; height: 60px; }
         .error .warn-icon { display: block; color: #ef4444; font-size: 60px; }
         .success .warn-icon, .error .check-icon { display: none; }
         
-        /* Checkmark Animation */
         .check-icon circle { stroke: #22c55e; stroke-width: 2; fill: none; }
         .check-icon path { stroke: #22c55e; stroke-width: 3; fill: none; stroke-linecap: round; }
 
-        footer { width: 100%; text-align: center; padding: 20px; color: #94a3b8; position: fixed; bottom: 0; left: 0; font-size: 11px; z-index: 1100; border-top: 1px solid #e2e8f0; background: #fff; }
+        footer { width: 100%; text-align: center; padding: 20px; color: #94a3b8; font-size: 11px; border-top: 1px solid #e2e8f0; background: #fff; margin-top: 20px; }
     </style>
 </head>
 
 <body>
 
-<button class="top-toggle" onclick="toggleSidebar()">☰</button>
+<header class="top-header">
+    <button class="top-toggle" onclick="toggleSidebar()">☰</button>
+    <div style="font-weight: 600; font-size: 1.1rem; color: #1e293b;">DASHBOARD</div>
+    <div style="width: 40px;"></div>
+</header>
+
 <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 
-<aside class="sidebar" id="sidebar">
-    </aside>
+<aside class="sidebar" id="sidebar"></aside>
 
 <div class="content">
     <div class="box">
@@ -156,7 +233,7 @@
 
 <div class="popup" id="popup">
     <div class="popup-box" id="pBox">
-        <div class="icon-box">
+        <div class="icon-box-popup">
             <svg class="check-icon" viewBox="0 0 52 52">
                 <circle cx="26" cy="26" r="23" fill="none"/>
                 <path d="M14 27l7 7 16-16" fill="none"/>
@@ -218,7 +295,6 @@ function submitData() {
     })
     .catch((err) => {
         document.getElementById("loading").style.display = "none";
-        // fallback กรณีเจอ CORS error แต่ข้อมูลเข้า
         showPopup("บันทึกข้อมูลเรียบร้อยแล้ว", true);
         resetForm();
     });
@@ -228,10 +304,8 @@ function showPopup(text, isSuccess) {
     const popup = document.getElementById("popup");
     const pBox = document.getElementById("pBox");
     document.getElementById("popupText").innerText = text;
-    
     popup.classList.remove("success", "error");
     popup.classList.add(isSuccess ? "success" : "error");
-    
     popup.classList.add("show");
 }
 
@@ -247,6 +321,57 @@ function resetForm() {
     document.getElementById("date").value = new Date().toISOString().split("T")[0];
 }
 
+// --- Sidebar Systems (จากไฟล์แรก) ---
+function includeSidebar() {
+    const cached = localStorage.getItem('sidebar_cache');
+    if (cached) {
+        document.getElementById('sidebar').innerHTML = cached;
+        restoreMenuState();
+    }
+
+    fetch('sidebar.html')
+        .then(response => response.text())
+        .then(data => {
+            if (data !== cached) {
+                document.getElementById('sidebar').innerHTML = data;
+                localStorage.setItem('sidebar_cache', data);
+                restoreMenuState();
+            }
+        })
+        .catch(err => console.warn("Sidebar Load Error"));
+        
+    if(localStorage.getItem('sidebar_collapsed') === 'true' && window.innerWidth > 768) {
+        document.body.classList.add('collapsed');
+    }
+}
+
+function toggleSidebar() {
+    if (window.innerWidth <= 768) {
+        document.getElementById("sidebar").classList.toggle("show");
+        document.getElementById("overlay").classList.toggle("show");
+    } else {
+        const isCollapsed = document.body.classList.toggle("collapsed");
+        localStorage.setItem('sidebar_collapsed', isCollapsed);
+    }
+}
+
+window.toggleDrop = function(btn, id) {
+    const item = btn.parentElement;
+    const isOpen = item.classList.toggle("open");
+    if (id) localStorage.setItem('menu-' + id, isOpen);
+}
+
+function restoreMenuState() {
+    ['credit', 'branch', 'sales'].forEach(id => {
+        if (localStorage.getItem('menu-' + id) === 'true') {
+            const el = document.getElementById('menu-' + id);
+            if (el) el.classList.add('open');
+        }
+    });
+}
+
+window.addEventListener('DOMContentLoaded', includeSidebar);
+
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Enter') {
         const popup = document.getElementById("popup");
@@ -257,45 +382,7 @@ document.addEventListener('keydown', function(e) {
         }
     }
 });
-
-function includeSidebar() {
-    const version = new Date().getTime(); 
-    fetch('sidebar.html?v=' + version)
-        .then(response => {
-            if (!response.ok) throw new Error('ไม่พบไฟล์ sidebar.html');
-            return response.text();
-        })
-        .then(data => {
-            document.getElementById('sidebar').innerHTML = data;
-            restoreMenuState();
-        })
-        .catch(err => console.warn("Sidebar Load Error:", err));
-}
-
-function toggleSidebar() {
-    document.getElementById("sidebar").classList.toggle("show");
-    document.getElementById("overlay").classList.toggle("show");
-}
-
-window.toggleDrop = function(btn, id) {
-    const item = btn.parentElement;
-    const isOpen = item.classList.toggle("open");
-    if (id) {
-        localStorage.setItem('menu-' + id, isOpen);
-    }
-}
-
-function restoreMenuState() {
-    const menus = ['credit', 'branch', 'sales']; 
-    menus.forEach(id => {
-        if (localStorage.getItem('menu-' + id) === 'true') {
-            const menuEl = document.getElementById('menu-' + id);
-            if (menuEl) menuEl.classList.add('open');
-        }
-    });
-}
-
-window.onload = includeSidebar;
 </script>
+
 </body>
 </html>
