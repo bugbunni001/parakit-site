@@ -14,18 +14,14 @@
             --sidebar-width: 260px; --sidebar-bg: #1e293b; --sidebar-hover: #334155;
             --sidebar-text: #cbd5e1; --success: #059669; --danger: #dc2626;
             --pdf: #e11d48; --excel: #166534; --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            
-            /* แก้ไขตามคำขอ: Header เป็นสีเขียว Primary */
             --header-bg-green: #5bb7aa; 
             --header-text-white: #ffffff;
-            /* สีใหม่สำหรับปุ่มดึงข้อมูล (ส้มสดใส) */
             --btn-fetch-new: #f97316; 
         }
         * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
         html, body { margin: 0; padding: 0; width: 100%; background-color: var(--bg); color: var(--text-dark); min-height: 100vh; overflow-x: hidden; }
-        body { display: flex; flex-direction: column; } /* ปรับเป็น column เพื่อให้ footer อยู่ล่างสุด */
+        body { display: flex; flex-direction: column; } 
 
-        /* SIDEBAR FIXED */
         #sidebar-container { width: var(--sidebar-width); background: var(--sidebar-bg); height: 100vh; position: fixed; left: 0; top: 0; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 2000; overflow-y: auto; box-shadow: 4px 0 15px rgba(0,0,0,0.2); }
         .menu .item .sub { display: none; background: #0f172a; }
         .menu .item.open .sub { display: block; }
@@ -56,7 +52,6 @@
 
         .container { max-width: 1400px; margin: 0 auto; width: 100%; }
 
-        /* ส่วน Header Bar */
         .header-bar { 
             background: var(--header-bg-green); 
             padding: 15px 25px; 
@@ -94,8 +89,6 @@
         
         .btn-fetch, .btn-pdf, .btn-excel { cursor: pointer; transition: var(--transition); font-weight: 500; display: flex; align-items: center; gap: 6px; font-size: 15px; }
         .btn-fetch:hover { filter: brightness(1.1); transform: translateY(-2px); box-shadow: 0 6px 15px rgba(249, 115, 22, 0.4); }
-        .btn-pdf:hover { filter: brightness(1.1); transform: translateY(-2px); box-shadow: 0 6px 15px rgba(225, 29, 72, 0.3); }
-        .btn-excel:hover { filter: brightness(1.1); transform: translateY(-2px); box-shadow: 0 6px 15px rgba(22, 101, 52, 0.3); }
 
         .btn-fetch { background: var(--btn-fetch-new); color: white; border: none; padding: 10px 20px; border-radius: 10px; box-shadow: 0 4px 12px rgba(249, 115, 22, 0.25); }
         .btn-pdf { background: var(--pdf); color: white; border: none; padding: 10px 18px; border-radius: 10px; }
@@ -113,7 +106,9 @@
         th { padding: 15px; text-align: left; font-size: 16px; font-weight: 600; color: #4a5568; border-bottom: 2px solid #edf2f7; background: #fafbfc; }
         
         td { padding: 12px 15px; border-bottom: 1px solid #f7fafc; font-size: 15px; transition: background 0.2s; }
-        tr:hover td { background-color: #f8fafc; }
+        
+        /* Hollover Effect ตามคำสั่ง */
+        tr:hover td { background-color: rgba(91, 183, 170, 0.1) !important; }
 
         .text-right { text-align: right; }
         .row-summary { background-color: rgba(91, 183, 170, 0.15); }
@@ -157,7 +152,6 @@
         .val-diff { color: #dc2626; font-weight: 700; }
         .val-total { color: #1e293b; font-weight: 800; }
 
-       /* ===== FOOTER CARD STYLE ===== */
         footer { 
             width: 100%; 
             text-align: center; 
@@ -170,7 +164,6 @@
             margin-top: 20px; 
             box-shadow: 0 4px 6px rgba(0,0,0,0.02);
         }
-        
     </style>
 </head>
 <body id="mainBody">
@@ -221,6 +214,20 @@
             <div class="card" id="dailyCard" style="display:none;">
                 <div class="card-header"><span>📅 รายวัน (วันที่ <span id="dailyDateNum"></span>)</span><span id="labelStaff" style="opacity: 0.9; font-size: 13px;"></span></div>
                 <div class="table-wrapper"><table class="daily-table"><thead id="dailyHead"></thead><tbody id="dailyBody"></tbody></table></div>
+            </div>
+
+            <div class="card" id="webTransCard" style="display:none; margin-top: 15px;">
+                <div class="card-header" style="background:#2d3748;">📝 รายการยอดจากเว็บ (วันที่ <span id="webDateNum"></span>)</div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead style="background:#4a5568; color:white;">
+                            <tr>
+                                <th>วันที่</th><th>พนักงาน</th><th>ลูกค้า</th><th>Postpay</th><th>ยอด Post</th><th>Device</th><th>ยอด Dev</th><th>เวลา</th><th>สินเชื่อ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="webTransBody"></tbody>
+                    </table>
+                </div>
             </div>
 
             <div class="main-grid" id="exportArea">
@@ -276,7 +283,7 @@
 </main>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz0YP6s-i40jOU_BklK3-ly_1nQyJmzBiGY_HhTlcrW5XM-yWr74bXi_XUgywwXmNn8/exec"; 
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw7X_DxCZ3vYMSefhkp__1hxnb2uyJixCxmjsV1FonH5iYk0pRj0Go8ayB3XL5Zt3jsnQ/exec"; 
 
     async function includeSidebar() {
         const version = new Date().getTime();
@@ -337,6 +344,7 @@
             const res = await fetch(`${SCRIPT_URL}?sheetName=${sheet}&targetDay=${selectedDay}`);
             const data = await res.json();
             if(data.result === "success") {
+                // ข้อมูลเดิมพี่ 100%
                 document.getElementById('labelL').innerText = data.staffName;
                 document.getElementById('labelR').innerText = data.staffName;
                 document.getElementById('labelStaff').innerText = data.staffName;
@@ -367,6 +375,8 @@
                 const formatPct = (val) => (!val) ? "0%" : (val.toString().includes('%') ? val : val + '%');
                 const s = data.topStats;
                 const ach = data.achievements;
+                
+                // [Mapping Stats เดิมของพี่ 100%]
                 const statsMap = [
                     { label: s[0][0], main: s[1][0], diff: s[1][1], percent: formatPct(ach.newPost), color: '#ffb100' },
                     { label: s[0][2], main: s[1][2], diff: s[1][3], percent: formatPct(ach.bdbc), color: '#ff5722' },
@@ -394,6 +404,20 @@
                     document.getElementById('dailyBody').innerHTML = `
                         <tr><td>${dr[0]}</td><td class="v-sep val-actual">${dr[1]}</td><td class="val-diff">${dr[2]}</td><td class="v-sep val-actual">${dr[3]}</td><td class="val-diff">${dr[4]}</td><td class="v-sep val-actual">${dr[5]}</td><td class="val-diff">${dr[6]}</td><td class="v-sep val-actual">${dr[7]}</td><td class="val-diff">${dr[8]}</td><td class="v-sep val-total">${dr[9]}</td><td class="val-total">${dr[10]}</td></tr>`;
                 } else { dailyCard.style.display = 'none'; }
+
+                // --- [ส่วนที่เพิ่มใหม่: แสดงรายการจากเว็บ] ---
+                const webTransCard = document.getElementById('webTransCard');
+                if(data.webTransactions && data.webTransactions.length > 0) {
+                    webTransCard.style.display = 'block';
+                    document.getElementById('webDateNum').innerText = selectedDay;
+                    document.getElementById('webTransBody').innerHTML = data.webTransactions.map(row => 
+                        `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`
+                    ).join('');
+                } else {
+                    webTransCard.style.display = 'block';
+                    document.getElementById('webDateNum').innerText = selectedDay;
+                    document.getElementById('webTransBody').innerHTML = `<tr><td colspan="9" style="text-align:center; padding:15px; color:#999;">ไม่พบรายการขายวันที่ ${selectedDay}</td></tr>`;
+                }
                 
                 document.getElementById('dashboardData').style.display = 'block';
                 document.getElementById('noData').style.display = 'none';
@@ -406,8 +430,8 @@
         includeSidebar();
     });
 
-    function exportPDF() { /* Logic PDF */ }
-    function exportExcel() { /* Logic Excel */ }
+    function exportPDF() { /* Logic PDF เดิม */ }
+    function exportExcel() { /* Logic Excel เดิม */ }
 </script>
 </body>
 </html>
