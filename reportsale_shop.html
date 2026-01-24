@@ -182,22 +182,45 @@
         .v-sep { border-left: 2px solid #e2e8f0 !important; }
         .text-right { text-align: right; }
 
-        /* ส่วนที่แก้ไข: รายละเอียดการขาย (webSalesCard) */
         #webSalesCard table { min-width: 1100px; border-collapse: separate; border-spacing: 0; }
         #webSalesCard th { 
-            background-color: #f8fafc; 
-            color: var(--primary); 
-            border-bottom: 2px solid var(--primary); 
-            border-right: 1px solid #edf2f7; 
+            background-color: #f1f5f9; 
+            color: #4a5568;            
+            border-bottom: 2px solid #cbd5e1; 
+            border-right: 1px solid #cbd5e1;  
+            font-weight: 600;
         }
         #webSalesCard td { 
-            border-right: 1px solid #f1f5f9; 
-            border-bottom: 1px solid #f1f5f9; 
+            border-right: 1px solid #e2e8f0;  
+            border-bottom: 1px solid #e2e8f0; 
         }
         #webSalesCard th:last-child, #webSalesCard td:last-child { border-right: none; }
 
         .badge-postpay { background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
         .badge-device { background: #dcfce7; color: #166534; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+
+        /* --- New Pagination Styles --- */
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+            gap: 5px;
+            background: #fff;
+        }
+        .page-btn {
+            padding: 6px 12px;
+            border: 1px solid #e2e8f0;
+            background: white;
+            color: var(--text-dark);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: var(--transition);
+        }
+        .page-btn:hover { background: #f1f5f9; border-color: var(--primary); color: var(--primary); }
+        .page-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
         footer { 
             width: 100%; 
@@ -312,6 +335,7 @@
                         <tbody id="webSalesBody"></tbody>
                     </table>
                 </div>
+                <div class="pagination-container" id="webSalesPagination"></div>
             </div>
 
             <div class="main-grid">
@@ -374,6 +398,11 @@
 
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzWV29Jc4s-A-ed3QAraKU_2sSwrOxBtYO9u-dDivbTD6SMyRwGbaM9T8_AY-FK0ICtlQ/exec"; 
+
+    // ตัวแปรสำหรับคุม Pagination
+    let allWebSalesData = [];
+    let currentPage = 1;
+    const rowsPerPage = 6;
 
     document.addEventListener('DOMContentLoaded', () => {
         const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
@@ -499,24 +528,10 @@
                         <td class="v-sep"><b>${dr[9]}</b></td><td><b>${dr[10]}</b></td></tr>`;
                 }
 
-                // 7. Web Sales Detail
-                const webSalesBody = document.getElementById('webSalesBody');
-                if(data.webSalesData && data.webSalesData.length > 0) {
-                    webSalesBody.innerHTML = data.webSalesData.map(r => `
-                        <tr>
-                            <td>${r[0]}</td>
-                            <td><b>${r[1]}</b></td>
-                            <td>${r[2]}</td>
-                            <td><span class="badge-postpay">${r[3]}</span></td>
-                            <td class="text-right">${r[4]}</td>
-                            <td><span class="badge-device">${r[5]}</span></td>
-                            <td class="text-right">${r[6]}</td>
-                            <td>${r[7]}</td>
-                            <td style="font-size:13px; color:#64748b;">${r[8] || '-'}</td>
-                        </tr>`).join('');
-                } else {
-                    webSalesBody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:30px; color:#a0aec0;">❌ ไม่พบข้อมูลการขายในวันที่เลือก</td></tr>`;
-                }
+                // 7. Web Sales Detail with Pagination
+                allWebSalesData = data.webSalesData || [];
+                currentPage = 1;
+                renderWebSalesTable();
                 
                 document.getElementById('dashboardData').style.display = 'block';
                 document.getElementById('noData').style.display = 'none';
@@ -528,12 +543,77 @@
         }
     }
 
+    // ฟังก์ชันสำหรับ Render ตาราง Web Sales และ Pagination
+    function renderWebSalesTable() {
+        const webSalesBody = document.getElementById('webSalesBody');
+        const paginationContainer = document.getElementById('webSalesPagination');
+        
+        if(allWebSalesData.length === 0) {
+            webSalesBody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:30px; color:#a0aec0;">❌ ไม่พบข้อมูลการขายในวันที่เลือก</td></tr>`;
+            paginationContainer.innerHTML = "";
+            return;
+        }
+
+        // คำนวณขอบเขตข้อมูล
+        const startIndex = (currentPage - 1) * rowsPerPage;
+        const endIndex = startIndex + rowsPerPage;
+        const paginatedData = allWebSalesData.slice(startIndex, endIndex);
+
+        // แสดงผลตาราง
+        webSalesBody.innerHTML = paginatedData.map(r => `
+            <tr>
+                <td>${r[0]}</td>
+                <td><b>${r[1]}</b></td>
+                <td>${r[2]}</td>
+                <td><span class="badge-postpay">${r[3]}</span></td>
+                <td class="text-right">${r[4]}</td>
+                <td><span class="badge-device">${r[5]}</span></td>
+                <td class="text-right">${r[6]}</td>
+                <td>${r[7]}</td>
+                <td style="font-size:13px; color:#64748b;">${r[8] || '-'}</td>
+            </tr>`).join('');
+
+        // สร้างปุ่ม Pagination
+        const totalPages = Math.ceil(allWebSalesData.length / rowsPerPage);
+        let paginationHtml = "";
+        
+        for (let i = 1; i <= totalPages; i++) {
+            paginationHtml += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+        }
+        paginationContainer.innerHTML = paginationHtml;
+    }
+
+    function goToPage(page) {
+        currentPage = page;
+        renderWebSalesTable();
+    }
+
     function exportPDF() {
         const element = document.getElementById('dashboardData');
         const loader = document.getElementById('loader');
         const loaderText = document.getElementById('loader-text');
+        
+        // ก่อน Export PDF ให้แสดงข้อมูลทั้งหมดในตาราง WebSales เพื่อให้ PDF มีข้อมูลครบ (ชั่วคราว)
+        const currentRows = rowsPerPage;
+        const currentActivePage = currentPage;
+        
         loader.style.display = 'flex';
         loaderText.innerText = 'กำลังเตรียมไฟล์ PDF...';
+
+        // ปรับเป็นแสดงทั้งหมดชั่วคราวเพื่อให้ PDF เห็นครบ
+        const webSalesBody = document.getElementById('webSalesBody');
+        const oldHtml = webSalesBody.innerHTML;
+        const oldPagHtml = document.getElementById('webSalesPagination').innerHTML;
+        
+        webSalesBody.innerHTML = allWebSalesData.map(r => `
+            <tr>
+                <td>${r[0]}</td><td><b>${r[1]}</b></td><td>${r[2]}</td>
+                <td><span class="badge-postpay">${r[3]}</span></td><td class="text-right">${r[4]}</td>
+                <td><span class="badge-device">${r[5]}</span></td><td class="text-right">${r[6]}</td>
+                <td>${r[7]}</td><td>${r[8] || '-'}</td>
+            </tr>`).join('');
+        document.getElementById('webSalesPagination').innerHTML = "";
+
         setTimeout(() => {
             const opt = {
                 margin: 5,
@@ -543,6 +623,8 @@
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
             };
             html2pdf().set(opt).from(element).save().then(() => {
+                // คืนค่าเดิมหลัง Export
+                renderWebSalesTable();
                 loader.style.display = 'none';
                 loaderText.innerText = 'กำลังประมวลผลข้อมูล...';
             });
@@ -552,7 +634,13 @@
     function exportExcel() {
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, XLSX.utils.table_to_sheet(document.getElementById('tableDaily')), "Daily");
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.table_to_sheet(document.getElementById('tableWebSales')), "WebSalesDetails");
+        
+        // สำหรับ Excel เราจะสร้างตารางชั่วคราวที่มีข้อมูลทั้งหมด (allWebSalesData)
+        const tempTable = document.createElement('table');
+        tempTable.innerHTML = `<thead>${document.querySelector('#tableWebSales thead').innerHTML}</thead><tbody>` + 
+            allWebSalesData.map(r => `<tr>${r.map(cell => `<td>${cell}</td>`).join('')}</tr>`).join('') + `</tbody>`;
+        
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.table_to_sheet(tempTable), "WebSalesDetails");
         XLSX.utils.book_append_sheet(wb, XLSX.utils.table_to_sheet(document.getElementById('tableSummary')), "Summary");
         XLSX.utils.book_append_sheet(wb, XLSX.utils.table_to_sheet(document.getElementById('tableBrand')), "Brands");
         XLSX.writeFile(wb, "Performance_Report.xlsx");
