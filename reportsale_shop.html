@@ -298,8 +298,7 @@
                                 <th>บันทึกสินเชื่อ</th>
                             </tr>
                         </thead>
-                        <tbody id="webSalesBody">
-                            </tbody>
+                        <tbody id="webSalesBody"></tbody>
                     </table>
                 </div>
             </div>
@@ -363,8 +362,7 @@
 </main>
 
 <script>
-    // --- ใส่ URL ของคุณที่นี่ ---
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbypTWk6jMEN5VqUXwZlDH2Fu_rD3OZeBOlddkqD1GWV4ezcQ5QgB8zd-UOp8lAq5GZ_2A/exec"; 
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzWV29Jc4s-A-ed3QAraKU_2sSwrOxBtYO9u-dDivbTD6SMyRwGbaM9T8_AY-FK0ICtlQ/exec"; 
 
     document.addEventListener('DOMContentLoaded', () => {
         const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
@@ -421,36 +419,34 @@
 
         loader.style.display = 'flex';
         try {
-            // ส่ง parameter ไปหา App Script (ควรปรับฝั่ง App Script ให้คืนค่า webSalesData มาด้วย)
             const res = await fetch(`${SCRIPT_URL}?sheetName=SHOP&targetDay=${selectedDay}`);
             const data = await res.json();
 
             if(data.result === "success") {
-                // อัปเดต Labels
                 document.getElementById('labelL').innerText = data.staffName;
                 document.getElementById('labelR').innerText = data.staffName;
                 document.getElementById('labelStaff').innerText = data.staffName;
                 document.getElementById('dailyDateNum').innerText = selectedDay;
                 document.getElementById('webSalesDateNum').innerText = selectedDay;
 
-                // สรุปยอดขาย
+                // 1. สรุปยอดขาย
                 document.getElementById('summaryBody').innerHTML = data.summary.map(r => {
                     const isTotal = r[0].includes("รวมยอด");
                     return `<tr class="${isTotal?'row-summary':''}"><td>${r[0]}</td><td class="text-right">${r[1]}</td><td class="text-right">${r[2]}</td></tr>`;
                 }).join('');
 
-                // แบรนด์
+                // 2. แบรนด์
                 document.getElementById('brandBody').innerHTML = data.brandSummary.map(r => {
                     const isTotal = r[0].includes("รวม");
                     const rowStyle = isTotal ? 'font-weight:700; background:#f1f5f9;' : '';
                     return `<tr style="${rowStyle}"><td>${r[0]}</td><td class="text-right">${r[1]}</td><td class="text-right">${r[2]}</td></tr>`;
                 }).join('');
 
-                // Focus
+                // 3. Focus
                 document.getElementById('focusBody').innerHTML = data.focus.filter(r => r[0] && r[0] !== "Target")
                     .map(r => `<tr><td>${r[0]}</td><td class="text-right" style="color:#dc2626; font-weight:700;">${r[1]}</td></tr>`).join('');
 
-                // Targets (Month)
+                // 4. Targets
                 const tDiv = document.getElementById('targetBody');
                 tDiv.innerHTML = "";
                 data.targets.forEach(r => {
@@ -463,7 +459,7 @@
                     }
                 });
 
-                // Top/Bottom Stats Cards
+                // 5. Bottom Stats Cards
                 const s = data.topStats; const ach = data.achieve;
                 const stats = [
                     { l: s[0][0], v: s[1][0], d: s[1][1], a: ach.newPost, c: '#ffb100' },
@@ -480,7 +476,7 @@
                         </div>
                     </div>`).join('');
 
-                // Daily Row Table (Top)
+                // 6. Daily Table
                 if(data.dailyRow) {
                     const dr = data.dailyRow;
                     document.getElementById('dailyBody').innerHTML = `
@@ -492,7 +488,7 @@
                         <td class="v-sep"><b>${dr[9]}</b></td><td><b>${dr[10]}</b></td></tr>`;
                 }
 
-                // --- ส่วนใหม่: ข้อมูลรายละเอียดการขายจากชีท "ยอดจากเว็บ" ---
+                // 7. Web Sales Detail (ส่วนที่เพิ่มใหม่)
                 const webSalesBody = document.getElementById('webSalesBody');
                 if(data.webSalesData && data.webSalesData.length > 0) {
                     webSalesBody.innerHTML = data.webSalesData.map(r => `
@@ -506,8 +502,7 @@
                             <td class="text-right">${r[6]}</td>
                             <td>${r[7]}</td>
                             <td style="font-size:13px; color:#64748b;">${r[8] || '-'}</td>
-                        </tr>
-                    `).join('');
+                        </tr>`).join('');
                 } else {
                     webSalesBody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:30px; color:#a0aec0;">❌ ไม่พบข้อมูลการขายในวันที่เลือก</td></tr>`;
                 }
@@ -517,7 +512,6 @@
             }
         } catch (e) { 
             alert("ดึงข้อมูลไม่สำเร็จ: " + e.message); 
-            console.error(e); 
         } finally { 
             loader.style.display = 'none'; 
         }
