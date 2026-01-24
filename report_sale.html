@@ -244,11 +244,40 @@
         const opt = { margin: 5, filename: 'Report.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' } };
         html2pdf().set(opt).from(element).save();
     }
+    
+    // --- ฟังก์ชัน Export Excel ที่แก้ไขให้ดึงข้อมูลทั้งหมด ---
     function exportExcel() {
         const wb = XLSX.utils.book_new();
-        const ws = XLSX.utils.table_to_sheet(document.getElementById('tableWeb'));
-        XLSX.utils.book_append_sheet(wb, ws, "SalesData");
-        XLSX.writeFile(wb, "Report.xlsx");
+        
+        // 1. ตารางรายวัน (ถ้ามี)
+        const dailyTable = document.getElementById('tableDaily');
+        if (dailyTable && dailyTable.offsetParent !== null) {
+            const wsDaily = XLSX.utils.table_to_sheet(dailyTable);
+            XLSX.utils.book_append_sheet(wb, wsDaily, "DailyReport");
+        }
+
+        // 2. ตารางรายละเอียดการขาย
+        const webTable = document.getElementById('tableWeb');
+        if (webTable && webTable.offsetParent !== null) {
+            const wsWeb = XLSX.utils.table_to_sheet(webTable);
+            XLSX.utils.book_append_sheet(wb, wsWeb, "SalesDetails");
+        }
+
+        // 3. ตารางสรุปยอดขาย
+        const summaryTable = document.getElementById('tableSummary');
+        if (summaryTable) {
+            const wsSummary = XLSX.utils.table_to_sheet(summaryTable);
+            XLSX.utils.book_append_sheet(wb, wsSummary, "Summary");
+        }
+
+        // 4. ตาราง Device ตามแบรนด์
+        const brandTable = document.getElementById('tableBrand');
+        if (brandTable) {
+            const wsBrand = XLSX.utils.table_to_sheet(brandTable);
+            XLSX.utils.book_append_sheet(wb, wsBrand, "DeviceBrands");
+        }
+
+        XLSX.writeFile(wb, "Full_Report.xlsx");
     }
 
     // --- Load Data (ดั้งเดิมของพี่) ---
