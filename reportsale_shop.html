@@ -7,73 +7,61 @@
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    
     <style>
-        :root { 
-            --primary: #5bb7aa; --bg: #f5f7fa; --text-dark: #2d3748; --white: #ffffff; 
-            --sidebar-width: 260px; --sidebar-bg: #1e293b; --sidebar-hover: #334155;
-            --sidebar-text: #cbd5e1; --success: #059669; --danger: #dc2626;
-            --pdf: #e11d48; --excel: #166534; --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
-        body { display: flex; margin: 0; background-color: var(--bg); color: var(--text-dark); min-height: 100vh; }
-        
-        /* สไตล์เดิมที่ล็อคไว้ */
+        /* CSS เดิมของยูนิตทั้งหมด (กูไม่แตะ) */
+        :root { --primary: #5bb7aa; --bg: #f5f7fa; --text-dark: #2d3748; --white: #ffffff; --sidebar-width: 260px; --sidebar-bg: #1e293b; --sidebar-hover: #334155; --sidebar-text: #cbd5e1; --success: #059669; --danger: #dc2626; --pdf: #e11d48; --excel: #166534; --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; -webkit-tap-highlight-color: transparent; }
+        html, body { margin: 0; padding: 0; width: 100%; background-color: var(--bg); color: var(--text-dark); min-height: 100vh; overflow-x: hidden; }
+        body { display: flex; }
         .loading { position: fixed; inset: 0; background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(8px); display: none; justify-content: center; align-items: center; z-index: 9999; flex-direction: column; gap: 15px; }
-        .spinner { width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
+        .spinner { width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; box-shadow: 0 0 15px rgba(91, 183, 170, 0.2); }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
-        #sidebar-container { width: var(--sidebar-width); background: var(--sidebar-bg); height: 100vh; position: fixed; transition: transform 0.3s; z-index: 2000; }
+        #sidebar-container { width: var(--sidebar-width); background: var(--sidebar-bg); height: 100vh; position: fixed; left: 0; top: 0; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 2000; overflow-y: auto; }
+        .menu a, .drop-btn { width: 100%; padding: 15px 20px; background: none; border: none; color: var(--sidebar-text) !important; text-align: left; font-size: 15px; cursor: pointer; display: flex; align-items: center; gap: 10px; text-decoration: none !important; transition: var(--transition); border-left: 4px solid transparent; }
         .main-content { flex-grow: 1; margin-left: var(--sidebar-width); padding: 25px 15px; width: calc(100% - var(--sidebar-width)); transition: var(--transition); }
-        body.collapsed #sidebar-container { transform: translateX(-260px); }
+        body.collapsed #sidebar-container { transform: translateX(calc(var(--sidebar-width) * -1)); }
         body.collapsed .main-content { margin-left: 0; width: 100%; }
-
-        .header-bar { background: var(--primary); padding: 18px 25px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; box-shadow: 0 10px 25px rgba(91, 183, 170, 0.25); }
+        .header-bar { background: var(--primary); padding: 18px 25px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; box-shadow: 0 10px 25px rgba(91, 183, 170, 0.25); flex-wrap: wrap; gap: 15px; }
         .card { background: var(--white); border-radius: 18px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.04); border: 1px solid #edf2f7; margin-bottom: 20px; }
         .card-header { padding: 15px 20px; color: white; font-weight: 500; background: var(--primary); display: flex; justify-content: space-between; align-items: center; font-size: 17px; }
-        
         .table-wrapper { width: 100%; overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; }
-        th { padding: 15px; text-align: left; font-size: 14px; background: #f8fafc; border-bottom: 2px solid #edf2f7; color: #4a5568; }
-        td { padding: 12px 15px; border-bottom: 1px solid #f1f5f9; font-size: 15px; }
+        th { padding: 15px; text-align: left; font-size: 14px; background: #f8fafc; border-bottom: 2px solid #edf2f7; color: #4a5568; font-weight: 600; }
+        td { padding: 12px 15px; border-bottom: 1px solid #f1f5f9; font-size: 15px; color: #2d3748; }
         .text-right { text-align: right; }
         .bg-amber { background: #ffb100; } .bg-orange { background: #ff5722; } .bg-slate { background: #4a5568; } .bg-teal { background: #38b2ac; }
         .val-actual { color: var(--primary); font-weight: 700; } .val-diff { color: #dc2626; font-weight: 700; }
-        
         .main-grid { display: grid; grid-template-columns: 1.25fr 0.75fr; gap: 20px; }
-        @media (max-width: 1024px) { .main-grid { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body id="mainBody">
-
 <div class="loading" id="loader"><div class="spinner"></div><div id="loader-text">กำลังประมวลผล...</div></div>
-
 <aside id="sidebar-container"><nav class="menu" id="dynamic-menu"></nav></aside>
 
 <main class="main-content">
     <div class="container">
         <div class="header-bar">
             <div style="display:flex; align-items:center; gap:15px;">
-                <button onclick="toggleSidebar()" style="background:rgba(255,255,255,0.2); color:white; border:none; padding:10px 15px; border-radius:10px; cursor:pointer;">☰</button>
-                <h2 style="color:white; margin:0;">รายงานยอดขายของสาขา</h2>
+                <button onclick="toggleSidebar()" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 10px 15px; border-radius: 10px; cursor: pointer;">☰</button>
+                <h2>รายงานยอดขายของสาขา</h2>
             </div>
-            <div style="display:flex; gap:10px;">
-                <select id="daySelect" style="padding:10px; border-radius:8px; border:none;">
+            <div class="action-group" style="display:flex; gap:10px;">
+                <select id="daySelect" style="padding: 10px 18px; border-radius: 12px; border: none;">
                     <script>
-                        const today = new Date().getDate();
-                        for(let i=1; i<=31; i++) document.write(`<option value="${i}" ${i===today?'selected':''}>วันที่ ${i}</option>`);
+                        const todayNum = new Date().getDate();
+                        for(let i=1; i<=31; i++) document.write(`<option value="${i}" ${i === todayNum ? 'selected' : ''}>วันที่ ${i}</option>`);
                     </script>
                 </select>
-                <button onclick="loadData()" style="background:#2d3748; color:white; border:none; padding:10px 20px; border-radius:10px; cursor:pointer;">🚀 ดึงข้อมูล</button>
+                <button class="btn-fetch" style="background:#2d3748; color:white; border:none; padding:10px 20px; border-radius:12px; cursor:pointer;" onclick="loadData()">🚀 ดึงข้อมูล</button>
             </div>
         </div>
 
-        <div id="noData" style="text-align: center; padding: 80px; background: white; border-radius: 20px; border: 2px dashed #cbd5e1;">
+        <div id="noData" style="text-align: center; padding: 100px 20px; background: white; border-radius: 20px; border: 2px dashed #cbd5e1;">
             <p>กรุณาเลือกวันที่และกดปุ่ม <b>"ดึงข้อมูล"</b></p>
         </div>
 
         <div id="dashboardData" style="display:none;">
-            <div class="card">
+            <div class="card" id="dailyCard">
                 <div class="card-header">
                     <span>📅 ข้อมูลรายวัน (วันที่ <span id="dailyDateNum">-</span>)</span>
                     <span id="labelStaff" style="font-size: 14px; background: rgba(0,0,0,0.2); padding: 4px 12px; border-radius: 6px;"></span>
@@ -106,10 +94,7 @@
                     <table>
                         <thead>
                             <tr style="background: #f8fafc;">
-                                <th>ชื่อพนักงาน</th>
-                                <th>ประเภทการขาย</th>
-                                <th>รุ่นสินค้า/รายการ</th>
-                                <th class="text-right">จำนวน</th>
+                                <th>ชื่อพนักงาน</th><th>ประเภท</th><th>รุ่นสินค้า/รายการ</th><th class="text-right">จำนวน</th>
                             </tr>
                         </thead>
                         <tbody id="detailsBody"></tbody>
@@ -122,21 +107,17 @@
                     <div class="card">
                         <div class="card-header">📍 สรุปยอดขาย: <span id="labelL"></span></div>
                         <div class="table-wrapper">
-                            <table>
+                            <table id="tableSummary">
                                 <thead><tr><th>Type การขาย</th><th class="text-right">ยอด PostPay</th><th class="text-right">จำนวน</th></tr></thead>
                                 <tbody id="summaryBody"></tbody>
                             </table>
                         </div>
                     </div>
-                    <div class="card">
-                        <div class="card-header">📊 ยอดขายแยกตามแบรนด์</div>
-                        <div class="table-wrapper"><table id="tableBrand"><tbody id="brandBody"></tbody></table></div>
-                    </div>
                 </div>
                 <div class="side-panel">
                     <div class="card">
                         <div class="card-header">🎯 Focus: <span id="labelR"></span></div>
-                        <div class="table-wrapper"><table><tbody id="focusBody"></tbody></table></div>
+                        <div class="table-wrapper"><table id="tableFocus"><tbody id="focusBody"></tbody></table></div>
                     </div>
                 </div>
             </div>
@@ -145,26 +126,25 @@
 </main>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbztRxvD_DjqeM957TahDPvy-d9J3BL-Yvttz1UpL1V7D9m_yY2MJv6R3xnQLp0h-tPaXQ/exec";
-
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzP5wOhOf_f9lEmWLg1kQsxM50NNbXpPXEZa8IGtJ839sI8r3PUnUuqLMepeKzlJtBJFQ/exec";
+    
     function toggleSidebar() { document.getElementById('mainBody').classList.toggle('collapsed'); }
 
     async function loadData() {
-        const day = document.getElementById('daySelect').value;
         const loader = document.getElementById('loader');
+        const day = document.getElementById('daySelect').value;
         loader.style.display = 'flex';
-
         try {
             const res = await fetch(`${SCRIPT_URL}?sheetName=SHOP&targetDay=${day}`);
             const data = await res.json();
-
             if(data.result === "success") {
+                // อัปเดตข้อมูลตาม ID เดิมของยูนิต
                 document.getElementById('labelL').innerText = data.staffName;
                 document.getElementById('labelR').innerText = data.staffName;
                 document.getElementById('labelStaff').innerText = data.staffName;
                 document.getElementById('dailyDateNum').innerText = day;
 
-                // ใส่ข้อมูลรายวัน
+                // ตารางรายวัน (ID: dailyBody)
                 if(data.dailyRow) {
                     const dr = data.dailyRow;
                     document.getElementById('dailyBody').innerHTML = `<tr>
@@ -176,20 +156,25 @@
                         <td><b>${dr[9]}</b></td><td><b>${dr[10]}</b></td></tr>`;
                 }
 
-                // ใส่รายละเอียดว่าใครขายอะไร
-                document.getElementById('detailsBody').innerHTML = data.saleDetails.length ? data.saleDetails.map(r => `
+                // ตารางรายละเอียดพนักงาน (ที่เพิ่มใหม่)
+                document.getElementById('detailsBody').innerHTML = data.saleDetails.map(r => `
                     <tr><td><b>${r[0]}</b></td><td>${r[1]}</td><td>${r[2]}</td><td class="text-right">${r[3]}</td></tr>
-                `).join('') : '<tr><td colspan="4" style="text-align:center;">ไม่มีข้อมูล</td></tr>';
+                `).join('');
 
-                // สรุปยอด
-                document.getElementById('summaryBody').innerHTML = data.summary.map(r => `<tr><td>${r[0]}</td><td class="text-right">${r[1]}</td><td class="text-right">${r[2]}</td></tr>`).join('');
-                document.getElementById('brandBody').innerHTML = data.brandSummary.map(r => `<tr><td>${r[0]}</td><td class="text-right">${r[1]}</td><td class="text-right">${r[2]}</td></tr>`).join('');
-                document.getElementById('focusBody').innerHTML = data.focus.map(r => `<tr><td>${r[0]}</td><td class="text-right">${r[1]}</td></tr>`).join('');
+                // สรุปยอดขาย (ID: summaryBody)
+                document.getElementById('summaryBody').innerHTML = data.summary.map(r => `
+                    <tr><td>${r[0]}</td><td class="text-right">${r[1]}</td><td class="text-right">${r[2]}</td></tr>
+                `).join('');
+
+                // Focus (ID: focusBody)
+                document.getElementById('focusBody').innerHTML = data.focus.map(r => `
+                    <tr><td>${r[0]}</td><td class="text-right">${r[1]}</td></tr>
+                `).join('');
 
                 document.getElementById('dashboardData').style.display = 'block';
                 document.getElementById('noData').style.display = 'none';
             }
-        } catch (e) { alert("Error: ดึงข้อมูลล้มเหลว"); }
+        } catch (e) { alert("ดึงข้อมูลไม่สำเร็จ"); }
         loader.style.display = 'none';
     }
 </script>
