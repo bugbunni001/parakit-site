@@ -51,7 +51,7 @@
             height: 65px;
             background: var(--glass-bg);
             backdrop-filter: blur(10px);
-            z-index: 1200;
+            z-index: 1100; /* ให้อยู่ใต้ loader */
             display: flex;
             align-items: center;
             padding: 0 20px;
@@ -182,8 +182,18 @@
         .down { color: var(--danger); font-weight: 600; } 
         .badge-white { background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 6px; font-size: 13px; }
 
-        #loader { display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.9); z-index: 1000; flex-direction: column; align-items: center; justify-content: center; }
-        .spinner { width: 45px; height: 45px; border: 5px solid #e2e8f0; border-top: 5px solid var(--luxury-blue); border-radius: 50%; animation: spin 1s linear infinite; }
+        /* ===== FULL SCREEN LOADER (แก้ไขตรงนี้) ===== */
+        #loader { 
+            display: none; 
+            position: fixed; 
+            inset: 0; 
+            background: #ffffff; /* ทึบ 100% */
+            z-index: 9999; /* สูงสุดเพื่อบังทุกอย่าง */
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+        }
+        .spinner { width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid var(--luxury-blue); border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
         @media (max-width: 1000px) {
@@ -204,7 +214,7 @@
 
 <div id="loader">
   <div class="spinner"></div>
-  <p style="margin-top:20px; font-size: 20px; font-weight: 500;">ระบบกำลังดึงข้อมูลการขาย...</p>
+  <p style="margin-top:25px; font-size: 20px; font-weight: 500; color: var(--luxury-blue);">กำลังดึงข้อมูลการขายล่าสุด...</p>
 </div>
 
 <div class="main-wrapper">
@@ -290,7 +300,7 @@
 </div>
 
 <script>
-    // --- Sidebar System (จากหน้าแรก) ---
+    // --- Sidebar System ---
     function includeSidebar() {
         const cached = localStorage.getItem('sidebar_cache');
         if (cached) {
@@ -339,7 +349,7 @@
         });
     }
 
-    // --- Sales Logic (คงเดิม 100%) ---
+    // --- Sales Logic ---
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxzvyU4wl6SxCMzANq5SbXypbycPamx2iIvgum4O6p3meddzzpRaH4Hz0xfGMDR4vUvaA/exec";
     
     const dayEl = document.getElementById('day');
@@ -352,19 +362,21 @@
 
     async function pullData() {
         const loader = document.getElementById('loader');
-        loader.style.display = 'flex';
+        loader.style.display = 'flex'; // แสดง Loader แบบเต็มหน้าจอ
         try {
             const name = document.getElementById('name').value;
             const day = document.getElementById('day').value;
             const response = await fetch(`${WEB_APP_URL}?action=getSales&name=${name}&day=${day}`);
             const res = await response.json();
-            loader.style.display = 'none';
+            
             if(!res.success) throw new Error(res.error);
+            
             document.getElementById('dashboard').style.display = 'block';
             render(res);
         } catch (err) {
-            loader.style.display = 'none';
             alert("เกิดข้อผิดพลาด: " + err.message);
+        } finally {
+            loader.style.display = 'none'; // ปิด Loader เมื่อโหลดเสร็จหรือผิดพลาด
         }
     }
 
