@@ -143,8 +143,8 @@
     </div>
 
     <div id="welcome-card">
-        <div style="font-size: 50px; margin-bottom: 15px;">📊</div>
-        <p style="font-size: 18px;">กรุณาเลือกชื่อพนักงานและกดปุ่ม <b>"ดึงข้อมูล"</b> เพื่อแสดงยอดขาย</p>
+        <div id="welcome-icon" style="font-size: 50px; margin-bottom: 15px;">📊</div>
+        <p id="welcome-text" style="font-size: 18px;">กรุณาเลือกชื่อพนักงานและกดปุ่ม <b>"ดึงข้อมูล"</b> เพื่อแสดงยอดขาย</p>
     </div>
         
     <div id="dashboard">
@@ -281,10 +281,14 @@
 
     async function pullData() {
         const loader = document.getElementById('loader');
+        const welcomeCard = document.getElementById('welcome-card');
+        const welcomeText = document.getElementById('welcome-text');
+        const welcomeIcon = document.getElementById('welcome-icon');
+        const dashboard = document.getElementById('dashboard');
+        
         loader.style.display = 'flex'; 
         try {
             const name = document.getElementById('name').value;
-            // ดึงค่าจากปฏิทิน และแยกเอาเฉพาะเลข "วันที่" เพื่อส่งไป Script เดิม
             const dateVal = document.getElementById('day').value;
             if (!dateVal) throw new Error("กรุณาเลือกวันที่");
             const day = new Date(dateVal).getDate(); 
@@ -293,14 +297,31 @@
             const res = await response.json();
             const webResponse = await fetch(`${WEB_APP_URL}?action=getWebDetails&day=${day}`);
             const webRes = await webResponse.json();
-            if(!res.success) throw new Error(res.error);
-            document.getElementById('welcome-card').style.display = 'none';
-            document.getElementById('dashboard').style.display = 'block';
+
+            // ตรวจสอบความสำเร็จของข้อมูล
+            if(!res.success) {
+                // กรณีไม่พบข้อมูล (เช่น Script ส่ง success: false กลับมา)
+                dashboard.style.display = 'none';
+                welcomeCard.style.display = 'block';
+                welcomeCard.style.border = '2px dashed var(--danger)';
+                welcomeIcon.innerText = '⚠️';
+                welcomeText.innerHTML = '<b style="color:var(--danger); font-size: 22px;">‼️ระบบยังไม่พบข้อมูลการขายของวันที่ ที่คุณเลือก</b>';
+                return;
+            }
+
+            // ถ้ามีข้อมูล ให้แสดง Dashboard ปกติ
+            welcomeCard.style.display = 'none';
+            dashboard.style.display = 'block';
             render(res);
             webData = webRes.rows || [];
             renderWebTable(1);
+            
         } catch (err) {
-            alert("เกิดข้อผิดพลาด: " + err.message);
+            // กรณีเกิด Error ในการ Fetch
+            dashboard.style.display = 'none';
+            welcomeCard.style.display = 'block';
+            welcomeIcon.innerText = '‼️';
+            welcomeText.innerHTML = `<b style="color:var(--danger);">เกิดข้อผิดพลาด: ${err.message}</b>`;
         } finally {
             loader.style.display = 'none'; 
         }
