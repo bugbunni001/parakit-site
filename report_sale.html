@@ -3,50 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📊 ยอดขายรายบุคคล</title>
+    <title>📊ยอดขายรายบุคคล</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary-gradient: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            --glass-bg: rgba(255, 255, 255, 0.8);
             --sidebar-color: #1e293b;
+            --text-main: #334155;
             --luxury-blue: #0f172a;
             --border-color: #e2e8f0;
+            --head-daily: #334155;
+            --head-detail: #0284c7;
+            --head-mtd: #059669;
+            --head-focus: #1e293b;
+            --head-target: #b45309;
             --success: #10b981;
             --danger: #ef4444;
         }
 
         * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
-        body { margin: 0; background: #f1f5f9; color: #334155; transition: padding-left 0.3s; }
+        body { margin: 0; background: #f1f5f9; color: var(--text-main); transition: padding-left 0.3s; }
 
-        .top-header { position: fixed; top: 0; left: 0; right: 0; height: 65px; background: rgba(255,255,255,0.8); backdrop-filter: blur(10px); z-index: 1100; display: flex; align-items: center; padding: 0 20px; border-bottom: 1px solid rgba(0,0,0,0.05); }
-        .top-toggle { width: 40px; height: 40px; border-radius: 10px; border: none; background: var(--sidebar-color); color: white; cursor: pointer; margin-right: 15px; }
+        .top-header { position: fixed; top: 0; left: 0; right: 0; height: 65px; background: var(--glass-bg); backdrop-filter: blur(10px); z-index: 1100; display: flex; align-items: center; padding: 0 20px; border-bottom: 1px solid rgba(0,0,0,0.05); transition: left 0.3s; }
+        .top-toggle { width: 40px; height: 40px; border-radius: 10px; border: none; background: var(--sidebar-color); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; margin-right: 15px; }
 
-        .sidebar { position: fixed; top: 0; left: 0; width: 280px; height: 100vh; background: var(--sidebar-color); color: #fff; z-index: 2000; transition: transform 0.3s; overflow-y: auto; }
-        @media(min-width:769px) { body:not(.collapsed) { padding-left: 280px; } body.collapsed .sidebar { transform: translateX(-100%); } }
-        @media(max-width:768px) { .sidebar { transform: translateX(-100%); } .sidebar.show { transform: translateX(0); } }
+        .sidebar { position: fixed; top: 0; left: 0; width: 280px; height: 100vh; background: var(--sidebar-color); color: #fff; overflow-y: auto; transition: all .3s; z-index: 2000; box-shadow: 10px 0 30px rgba(0,0,0,0.1); }
+        @media(min-width:769px) { body:not(.collapsed) { padding-left: 280px; } body:not(.collapsed) .top-header { left: 280px; } body.collapsed .sidebar { transform: translateX(-100%); } body.collapsed .top-header { left: 0; } }
+        @media(max-width:768px) { .sidebar { transform: translateX(-100%); } .sidebar.show { transform: translateX(0); } body { padding-left: 0 !important; } .top-header { left: 0 !important; } }
 
         .main-wrapper { padding: 85px 20px 40px; display: flex; justify-content: center; }
         .content-container { width: 100%; max-width: 1100px; }
 
-        .toolbar { background: white; padding: 18px 25px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); display: flex; justify-content: flex-end; align-items: center; margin-bottom: 30px; gap: 20px; flex-wrap: wrap; }
-        .select-group { display: flex; align-items: center; gap: 10px; }
-        .modern-input { border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 10px; font-size: 15px; outline: none; background: #f8fafc; }
+        .toolbar { background: white; padding: 18px 25px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); display: flex; justify-content: flex-end; align-items: center; margin-bottom: 30px; border: 1px solid var(--border-color); gap: 20px; }
+        .modern-select { background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 10px; font-size: 15px; cursor: pointer; outline: none; }
 
-        button.btn-fetch { background: var(--luxury-blue); color: white; border: none; padding: 12px 24px; border-radius: 10px; cursor: pointer; font-weight: 600; transition: 0.2s; }
-        button.btn-fetch:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        button.btn-fetch { background: var(--luxury-blue); color: white; border: none; padding: 12px 24px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 15px; display: flex; align-items: center; gap: 8px; }
 
         .card { background: white; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
-        .card-header-bar { padding: 14px 20px; color: white; font-weight: 500; display: flex; justify-content: space-between; align-items: center; }
-        .bg-daily { background: #334155; }
-        .bg-history { background: #6366f1; }
-        .bg-detail { background: #0284c7; }
-        .bg-mtd { background: #059669; }
-        .bg-focus { background: #1e293b; }
-        .bg-target { background: #b45309; }
-
-        .table-luxury { width: 100%; border-collapse: collapse; min-width: 600px; }
+        .card-header-bar { padding: 14px 20px; color: white; font-size: 17px; font-weight: 500; display: flex; justify-content: space-between; align-items: center; }
+        .table-luxury { width: 100%; border-collapse: collapse; }
         .table-luxury th { background: #f8fafc; padding: 12px; text-align: left; font-size: 13px; color: #64748b; border-bottom: 2px solid var(--border-color); }
-        .table-luxury td { padding: 14px 12px; font-size: 14px; border-bottom: 1px solid #f1f5f9; }
+        .table-luxury td { padding: 14px 12px; font-size: 15px; border-bottom: 1px solid #f1f5f9; }
 
         .pagination { display: flex; justify-content: center; gap: 8px; padding: 15px; background: #f8fafc; }
         .page-btn { border: 1px solid #e2e8f0; background: white; width: 35px; height: 35px; border-radius: 8px; cursor: pointer; font-weight: 600; }
@@ -54,16 +54,14 @@
 
         .grid-container { display: grid; grid-template-columns: 1.5fr 1fr; gap: 25px; }
         .mtd-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 20px; }
-        .stat-box { padding: 20px; border-radius: 12px; background: #fff; border: 1px solid #f1f5f9; border-left: 6px solid #059669; }
-        .stat-box .val { font-size: 28px; font-weight: 700; color: var(--luxury-blue); }
-
-        #loader { display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.8); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; }
+        .stat-box { padding: 22px; border-left: 6px solid var(--head-mtd); border-radius: 12px; background: #fff; border: 1px solid #f1f5f9; }
+        .stat-box .val { font-size: 32px; font-weight: 700; color: var(--luxury-blue); }
+        
+        .up { color: var(--success); font-weight: 600; } .down { color: var(--danger); font-weight: 600; }
+        #loader { display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.7); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; }
         .spinner { width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid var(--luxury-blue); border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
-        
-        #welcome-card { background: white; padding: 100px 20px; border-radius: 16px; border: 2px dashed #e2e8f0; text-align: center; color: #64748b; }
-        .up { color: var(--success); font-weight: 600; } .down { color: var(--danger); font-weight: 600; }
-        @media (max-width: 1000px) { .grid-container { grid-template-columns: 1fr; } .toolbar { justify-content: center; } }
+        #welcome-card { background: white; padding: 100px; border-radius: 16px; border: 2px dashed #e2e8f0; text-align: center; color: #64748b; }
     </style>
 </head>
 <body>
@@ -74,38 +72,41 @@
 </header>
 
 <aside class="sidebar" id="sidebar">
-    <div style="padding: 25px; font-size: 1.2rem; background: #0f172a;">เมนูจัดการ</div>
-    <div style="padding: 20px; color: #94a3b8;">(ระบบกำลังโหลดเมนู...)</div>
+    <div style="padding: 25px; font-weight: 600; background: #0f172a;">เมนูจัดการ</div>
+    <div style="padding: 20px; color: #94a3b8; font-size: 14px;">(กำลังโหลดเมนู...)</div>
 </aside>
 
-<div id="loader"><div class="spinner"></div><p>กำลังค้นหาข้อมูล...</p></div>
+<div id="loader"><div class="spinner"></div><p style="margin-top:20px;">กำลังดึงข้อมูล...</p></div>
 
 <div class="main-wrapper">
     <div class="content-container">
         <div class="toolbar">
-            <div class="select-group">
+            <div style="display: flex; gap: 10px; align-items: center;">
                 <label>👤 พนักงาน</label>
-                <select id="name" class="modern-input" style="width: 150px;">
-                    <option>นวพล</option><option>ปิยะพร</option><option>กรทักษ์</option>
-                </select>
+                <select id="name" class="modern-select"><option>นวพล</option><option>ปิยะพร</option><option>กรทักษ์</option></select>
             </div>
-            <div class="select-group">
+            <div style="display: flex; gap: 10px; align-items: center;">
                 <label>📅 วันที่</label>
-                <input type="date" id="dateInput" class="modern-input">
+                <input type="date" id="dateInput" class="modern-select">
             </div>
             <button class="btn-fetch" onclick="pullData()">🚀 ดึงข้อมูล</button>
         </div>
 
-        <div id="welcome-card"><h2>📊 กรุณาเลือกวันที่และกดดึงข้อมูล</h2></div>
+        <div id="welcome-card"><h2>📊 กรุณาเลือกวันที่และพนักงานเพื่อดึงข้อมูล</h2></div>
 
         <div id="dashboard" style="display: none;">
             <div class="card">
-                <div class="card-header-bar bg-daily"><span>📉 สรุปยอดขายรายวัน</span><span id="out-date"></span></div>
-                <div style="overflow-x: auto;"><table class="table-luxury"><thead><tr><th>วันที่</th><th>New Post</th><th>Diff</th><th>BDBC</th><th>Diff</th><th>Apple</th><th>Diff</th><th>Smart</th><th>Diff</th><th>รวม P</th><th>รวม D</th></tr></thead><tbody id="body-daily"></tbody></table></div>
+                <div class="card-header-bar" style="background: #334155;"><span>📉 สรุปยอดขายรายวัน</span><span id="out-date"></span></div>
+                <div style="overflow-x: auto;">
+                    <table class="table-luxury">
+                        <thead><tr><th>วันที่</th><th>New Post</th><th>Diff</th><th>BDBC</th><th>Diff</th><th>Apple</th><th>Diff</th><th>Smart</th><th>Diff</th><th style="background:#f1f5f9">รวม P</th><th style="background:#f1f5f9">รวม D</th></tr></thead>
+                        <tbody id="body-daily"></tbody>
+                    </table>
+                </div>
             </div>
 
             <div class="card">
-                <div class="card-header-bar bg-history"><span>📋 รายละเอียดการขาย (ยอดจากเว็บ)</span></div>
+                <div class="card-header-bar" style="background: #6366f1;"><span>📋 รายการจากชีต "ยอดจากเว็บ"</span></div>
                 <div style="overflow-x: auto;">
                     <table class="table-luxury">
                         <thead><tr><th>วันที่</th><th>พนักงาน</th><th>คนที่ขายให้</th><th>Postpay</th><th>ยอดขายPostpay</th><th>Device</th><th>ยอดขายDevice</th><th>เวลาบันทึก</th><th>สินเชื่อ</th></tr></thead>
@@ -118,14 +119,23 @@
             <div class="grid-container">
                 <div class="col-left">
                     <div class="card">
-                        <div class="card-header-bar bg-detail"><span>📑 รายละเอียด: <span class="out-name"></span></span></div>
-                        <table class="table-luxury" id="tbl-sum"><thead><tr><th>รายการสินค้า</th><th>ยอดขาย</th><th>จำนวน</th></tr></thead><tbody></tbody></table>
+                        <div class="card-header-bar" style="background: #0284c7;"><span>📑 รายละเอียด: <span class="out-name"></span></span></div>
+                        <table class="table-luxury" id="tbl-sum"><thead><tr><th>รายการสินค้า/หมวดหมู่</th><th>ยอดขาย (บาท)</th><th>จำนวน</th></tr></thead><tbody></tbody></table>
                     </div>
-                    <div class="card"><div class="card-header-bar bg-mtd"><span>🚀 ภาพรวมสะสม (MTD)</span></div><div class="mtd-grid" id="out-actual"></div></div>
+                    <div class="card">
+                        <div class="card-header-bar" style="background: #059669;"><span>🚀 ภาพรวมสะสม (MTD)</span></div>
+                        <div class="mtd-grid" id="out-actual"></div>
+                    </div>
                 </div>
                 <div class="col-right">
-                    <div class="card"><div class="card-header-bar bg-focus"><span>🎯 KPI Focus</span></div><table class="table-luxury" id="tbl-focus"><thead><tr><th>เป้าหมาย</th><th>จริง</th></tr></thead><tbody></tbody></table></div>
-                    <div class="card"><div class="card-header-bar bg-target"><span>🏁 Targets</span></div><div id="target-list-container" style="padding: 20px;"></div></div>
+                    <div class="card">
+                        <div class="card-header-bar" style="background: #1e293b;"><span>🎯 Focus Point (KPI)</span></div>
+                        <table class="table-luxury" id="tbl-focus"><thead><tr><th>เป้าหมายหลัก</th><th style="text-align:right">ผลงานจริง</th></tr></thead><tbody></tbody></table>
+                    </div>
+                    <div class="card">
+                        <div class="card-header-bar" style="background: #b45309;"><span>🏁 เป้าหมายรายเดือน (Targets)</span></div>
+                        <div id="target-list-container" style="padding: 20px;"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -133,14 +143,12 @@
 </div>
 
 <script>
-    let currentHistoryData = [];
-    const itemsPerPage = 4;
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxzvyU4wl6SxCMzANq5SbXypbycPamx2iIvgum4O6p3meddzzpRaH4Hz0xfGMDR4vUvaA/exec";
+    let currentHistory = [];
     let currentPage = 1;
 
-    // ตั้งค่าวันที่เริ่มต้นเป็นวันนี้
     window.onload = () => {
-        const today = new Date().toISOString().split('T')[0];
-        document.getElementById('dateInput').value = today;
+        document.getElementById('dateInput').value = new Date().toISOString().split('T')[0];
         includeSidebar();
     };
 
@@ -150,74 +158,58 @@
         const loader = document.getElementById('loader');
         const name = document.getElementById('name').value;
         const date = document.getElementById('dateInput').value;
-        if(!date) return alert("กรุณาเลือกวันที่ค่ะคุณแม่");
-
         loader.style.display = 'flex';
         try {
-            const response = await fetch(`${WEB_APP_URL}?action=getSales&name=${encodeURIComponent(name)}&date=${date}`);
-            const res = await response.json();
+            const res = await fetch(`${WEB_APP_URL}?action=getSales&name=${name}&date=${date}`).then(r => r.json());
             if(!res.success) throw new Error(res.error);
-
             document.getElementById('welcome-card').style.display = 'none';
             document.getElementById('dashboard').style.display = 'block';
-            
-            currentHistoryData = res.history || [];
+            currentHistory = res.history || [];
             currentPage = 1;
             renderAll(res);
-        } catch (e) { alert("หาข้อมูลไม่เจอหรือเกิดข้อผิดพลาดค่ะ: " + e.message); }
+        } catch(e) { alert("เกิดข้อผิดพลาด: " + e.message); }
         finally { loader.style.display = 'none'; }
     }
 
     function renderAll(data) {
-        // Render Daily Card
+        // 1. Daily
         const d = data.daily;
-        const getClr = (v) => v.toString().includes('-') ? 'class="up"' : 'class="down"';
+        const clr = (v) => v.toString().includes('-') ? 'class="up"' : 'class="down"';
         document.getElementById('out-date').innerText = d.date;
-        document.getElementById('body-daily').innerHTML = `<tr><td>${d.date}</td><td>${d.np}</td><td><span ${getClr(d.npD)}>${d.npD}</span></td><td>${d.bd}</td><td><span ${getClr(d.bdD)}>${d.bdD}</span></td><td>${d.ap}</td><td><span ${getClr(d.apD)}>${d.apD}</span></td><td>${d.sm}</td><td><span ${getClr(d.smD)}>${d.smD}</span></td><td style="font-weight:bold">${d.totalP}</td><td style="font-weight:bold">${d.totalD}</td></tr>`;
+        document.getElementById('body-daily').innerHTML = `<tr><td>${d.date}</td><td>${d.np}</td><td><span ${clr(d.npD)}>${d.npD}</span></td><td>${d.bd}</td><td><span ${clr(d.bdD)}>${d.bdD}</span></td><td>${d.ap}</td><td><span ${clr(d.apD)}>${d.apD}</span></td><td>${d.sm}</td><td><span ${clr(d.smD)}>${d.smD}</span></td><td style="font-weight:700;">${d.totalP}</td><td style="font-weight:700;">${d.totalD}</td></tr>`;
         
+        // 2. History Table
         renderHistory();
-        
-        // Render Summary & MTD (ข้อมูลเดิมของแม่)
+
+        // 3. Summary & KPI (ข้อมูลเดิม)
         document.querySelectorAll('.out-name').forEach(el => el.innerText = data.name);
         document.querySelector('#tbl-sum tbody').innerHTML = data.summary.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('');
         document.querySelector('#tbl-focus tbody').innerHTML = data.focus.map(r => `<tr><td>${r[0]}</td><td style="text-align:right; font-weight:700; color:#059669;">${r[1]}</td></tr>`).join('');
         
-        // Render MTD Boxes
+        // 4. MTD Boxes (ของเดิม)
         const act = data.actuals;
-        const configs = [{l:'New Post', v:act.np, c:'#0284c7'}, {l:'BDBC', v:act.bd, c:'#059669'}, {l:'Apple', v:act.ap, c:'#d97706'}, {l:'Smart', v:act.sm, c:'#be123c'}];
-        document.getElementById('out-actual').innerHTML = configs.map(i => `<div class="stat-box" style="border-left-color:${i.c}"><div style="color:#64748b; font-size:14px;">${i.l}</div><div class="val">${i.v.val}</div><div style="font-size:12px;">Ach: <span style="color:#059669; font-weight:bold;">${i.v.ach}%</span></div></div>`).join('');
+        const cf = [{l:'New Post',v:act.np,c:'#0284c7'},{l:'BDBC',v:act.bd,c:'#059669'},{l:'Apple',v:act.ap,c:'#d97706'},{l:'Smart',v:act.sm,c:'#be123c'}];
+        document.getElementById('out-actual').innerHTML = cf.map(i => `<div class="stat-box" style="border-left-color:${i.c}"><div style="color:#64748b; font-size:14px;">${i.l}</div><div class="val">${i.v.val}</div><div style="font-size:12px;">Ach: <span style="color:#059669; font-weight:bold;">${i.v.ach}%</span></div></div>`).join('');
+        
+        // 5. Target List (ของเดิม)
+        document.getElementById('target-list-container').innerHTML = data.targetList.map(r => `<div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #f8fafc;"><span>${r[0]}</span><span style="font-weight:600;">${r[1]}</span></div>`).join('');
     }
 
     function renderHistory() {
+        const start = (currentPage - 1) * 4;
+        const data = currentHistory.slice(start, start + 4);
         const tbody = document.getElementById('body-history');
-        const start = (currentPage - 1) * itemsPerPage;
-        const pageData = currentHistoryData.slice(start, start + itemsPerPage);
-
-        if(pageData.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:20px;">ไม่มีข้อมูลการขายในวันนี้</td></tr>';
-            document.getElementById('pagination-container').innerHTML = '';
-            return;
-        }
-
-        tbody.innerHTML = pageData.map(r => `<tr>${r.map(td => `<td>${td}</td>`).join('')}</tr>`).join('');
+        if(data.length === 0) { tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:20px;">ไม่มีข้อมูล</td></tr>'; return; }
+        tbody.innerHTML = data.map(r => `<tr>${r.map(td => `<td>${td}</td>`).join('')}</tr>`).join('');
         
-        // Pagination
-        const totalPages = Math.ceil(currentHistoryData.length / itemsPerPage);
-        let pgHtml = '';
-        for(let i=1; i<=totalPages; i++) {
-            pgHtml += `<button class="page-btn ${i===currentPage?'active':''}" onclick="setPage(${i})">${i}</button>`;
-        }
-        document.getElementById('pagination-container').innerHTML = pgHtml;
+        const totalPages = Math.ceil(currentHistory.length / 4);
+        let pg = '';
+        for(let i=1; i<=totalPages; i++) pg += `<button class="page-btn ${i===currentPage?'active':''}" onclick="setPage(${i})">${i}</button>`;
+        document.getElementById('pagination-container').innerHTML = pg;
     }
 
     function setPage(p) { currentPage = p; renderHistory(); }
-    
-    // ตรงนี้แม่เปลี่ยน URL ของตัวเองด้วยนะคะ
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxehmaYNh3zj15f-WMVfm0B_W7535nqG3FMPmwazSrxuxt8PdVPXg6xkWAYXxMev9yacA/exec";
-
-    function includeSidebar() {
-        fetch('sidebar.html').then(r => r.text()).then(html => document.getElementById('sidebar').innerHTML = html).catch(e => {});
-    }
+    function includeSidebar() { fetch('sidebar.html').then(r => r.text()).then(h => document.getElementById('sidebar').innerHTML = h).catch(e => {}); }
 </script>
 </body>
 </html>
