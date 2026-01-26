@@ -25,7 +25,8 @@
         * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
         body { margin: 0; background: #f1f5f9; color: var(--text-main); -webkit-font-smoothing: antialiased; transition: padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         
-        .sidebar { position: fixed; top: 0; left: 0; width: var(--sidebar-width); height: 100vh; background: var(--sidebar-color); color: #fff; overflow-y: auto; transition: all .3s ease; z-index: 2000; box-shadow: 10px 0 30px rgba(0,0,0,0.1); }
+        /* Sidebar Styling จากโค้ดต้นฉบับ */
+        .sidebar { position: fixed; top: 0; left: 0; width: var(--sidebar-width); height: 100vh; background: var(--sidebar-color); color: #fff; overflow-y: auto; transition: all .3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 2000; box-shadow: 10px 0 30px rgba(0,0,0,0.1); }
         .sidebar-header { padding: 25px 20px; font-size: 18px; font-weight: 600; background: #0f172a; color: #fff; border-bottom: 1px solid rgba(255,255,255,0.05); }
         .menu { display: flex; flex-direction: column; padding: 10px 0; }
         .item { border-bottom: 1px solid rgba(255,255,255,0.03); }
@@ -33,12 +34,16 @@
         .menu a:hover, .menu .drop-btn:hover { background: #334155; color: #fff; padding-left: 30px; }
         .sub { display: none; background: #0f172a; padding: 5px 0; }
         .item.open .sub { display: block; }
-        .sub a { padding-left: 45px; font-size: 14px; color: #94a3b8; }
+        .sub a { padding-left: 45px; font-size: 14px; color: #94a3b8; min-height: 40px; }
+        .sub a:hover { color: #5bbf8a; padding-left: 55px; }
         .arrow { margin-left: auto; transition: 0.3s; font-size: 10px; opacity: 0.6; }
         .item.open .arrow { transform: rotate(90deg); }
 
-        .top-header { position: fixed; top: 0; left: 0; right: 0; height: 65px; background: var(--glass-bg); backdrop-filter: blur(10px); z-index: 1100; display: flex; align-items: center; padding: 0 20px; border-bottom: 1px solid var(--border-color); transition: left 0.3s ease; }
-        .top-toggle { width: 40px; height: 40px; border-radius: 10px; border: none; background: var(--sidebar-color); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+        .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.5); backdrop-filter: blur(4px); display: none; z-index: 1500; }
+        .overlay.show { display: block; }
+
+        .top-header { position: fixed; top: 0; left: 0; right: 0; height: 65px; background: var(--glass-bg); backdrop-filter: blur(10px); z-index: 1100; display: flex; align-items: center; padding: 0 20px; border-bottom: 1px solid var(--border-color); transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .top-toggle { width: 40px; height: 40px; border-radius: 10px; border: none; background: var(--sidebar-color); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; margin-right: 15px; }
         
         @media(min-width:769px) { body:not(.collapsed) { padding-left: var(--sidebar-width); } body:not(.collapsed) .top-header { left: var(--sidebar-width); } body.collapsed .sidebar { transform: translateX(-100%); } body.collapsed .top-header { left: 0; } }
         @media(max-width:768px) { .sidebar { transform: translateX(-100%); } .sidebar.show { transform: translateX(0); } body { padding-left: 0 !important; } .top-header { left: 0 !important; } }
@@ -89,8 +94,10 @@
 </head>
 <body>
 
+<div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
 <aside class="sidebar" id="sidebar">
-    <div class="sidebar-header">MENU DASHBOARD</div>
+    <div class="sidebar-header">ยอดขาย By Indy</div>
     <div class="menu">
         <div class="item" id="menu-sales">
             <button class="drop-btn" onclick="toggleDrop(this, 'sales')">
@@ -109,12 +116,21 @@
                 <a href="#">สาขาทั้งหมด</a>
             </div>
         </div>
+        <div class="item" id="menu-credit">
+            <button class="drop-btn" onclick="toggleDrop(this, 'credit')">
+                💳 สินเชื่อ/ผ่อนชำระ <span class="arrow">▶</span>
+            </button>
+            <div class="sub">
+                <a href="#">รายการขออนุมัติ</a>
+                <a href="#">สถานะสัญญา</a>
+            </div>
+        </div>
     </div>
 </aside>
 
 <header class="top-header">
     <button class="top-toggle" onclick="toggleSidebar()">☰</button>
-    <div style="margin-left: 15px; font-weight: 600; font-size: 1.1rem; color: #1e293b;">Dashboard By Indy</div>
+    <div style="font-weight: 600; font-size: 1.1rem; color: #1e293b;">Dashboard By Indy</div>
 </header>
 
 <div id="loader">
@@ -219,24 +235,32 @@
         const now = new Date();
         document.getElementById('targetDate').value = now.toISOString().split('T')[0];
         restoreMenuState();
+        
+        // ตรวจสอบการพับ Sidebar จาก localStorage
+        if(localStorage.getItem('sidebar_collapsed') === 'true' && window.innerWidth > 768) {
+            document.body.classList.add('collapsed');
+        }
     });
 
+    // ฟังก์ชัน Sidebar ใหม่ตามโค้ดต้นฉบับ
     function toggleSidebar() {
         if (window.innerWidth <= 768) {
             document.getElementById("sidebar").classList.toggle("show");
+            document.getElementById("overlay").classList.toggle("show");
         } else {
-            document.body.classList.toggle("collapsed");
+            const isCollapsed = document.body.classList.toggle("collapsed");
+            localStorage.setItem('sidebar_collapsed', isCollapsed);
         }
     }
 
     window.toggleDrop = function(btn, id) {
         const item = btn.parentElement;
-        item.classList.toggle("open");
-        if (id) localStorage.setItem('menu-' + id, item.classList.contains("open"));
+        const isOpen = item.classList.toggle("open");
+        if (id) localStorage.setItem('menu-' + id, isOpen);
     }
 
     function restoreMenuState() {
-        ['sales', 'branch'].forEach(id => {
+        ['sales', 'branch', 'credit'].forEach(id => {
             if (localStorage.getItem('menu-' + id) === 'true') {
                 const el = document.getElementById('menu-' + id);
                 if (el) el.classList.add('open');
@@ -287,7 +311,7 @@
 
     function getColorClass(val) {
         if (typeof val !== 'number') return '';
-        return val < 0 ? 'down' : 'up'; 
+        return val < 0 ? 'up' : 'down'; 
     }
 
     function renderWebTable() {
