@@ -73,16 +73,13 @@
             box-shadow: 10px 0 30px rgba(0,0,0,0.1);
         }
         
-        /* สภาวะปกติบนจอใหญ่ */
         @media(min-width:769px) { 
             body:not(.collapsed) { padding-left: var(--sidebar-width); }
             body:not(.collapsed) .top-header { left: var(--sidebar-width); }
-            
             body.collapsed .sidebar { transform: translateX(-100%); }
             body.collapsed .top-header { left: 0; }
         }
 
-        /* สภาวะบนมือถือ */
         @media(max-width:768px) {
             .sidebar { transform: translateX(-100%); }
             .sidebar.show { transform: translateX(0); }
@@ -98,7 +95,6 @@
         }
         .overlay.show { display: block; }
 
-        /* สไตล์ภายใน Sidebar */
         .sidebar-header { padding: 25px 20px; font-size: 18px; font-weight: 600; background: #0f172a; color: #fff; border-bottom: 1px solid rgba(255,255,255,0.05); }
         .menu { display: flex; flex-direction: column; padding: 10px 0; }
         .item { border-bottom: 1px solid rgba(255,255,255,0.03); }
@@ -119,6 +115,23 @@
         .modern-date { appearance: none; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 10px 15px; font-size: 15px; color: #1e293b; outline: none; }
         .btn-fetch { background: var(--luxury-blue); color: white; border: none; padding: 12px 24px; border-radius: 10px; cursor: pointer; font-weight: 600; transition: 0.3s; }
         .btn-fetch:hover { transform: translateY(-2px); box-shadow: var(--hover-shadow); }
+
+        /* หน้าว่างเริ่มต้น */
+        .empty-state-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 400px;
+            background: white;
+            border-radius: 16px;
+            border: 2px dashed #e2e8f0;
+            color: #94a3b8;
+            margin-top: 20px;
+        }
+
+        /* ซ่อนส่วน Dashboard จริงตอนแรก */
+        #realDashboard { display: none; }
 
         .card { background: white; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
         .card-header-bar { padding: 14px 20px; color: white; font-size: 16px; font-weight: 500; }
@@ -179,85 +192,91 @@
             <button class="btn-fetch" onclick="fetchData()">🚀 ดึงข้อมูลล่าสุด</button>
         </div>
 
-        <div class="card">
-            <div class="card-header-bar bg-daily">📉 ยอดขายรายวัน (SHOP)</div>
-            <div style="overflow-x: auto;">
-                <table class="table-luxury">
-                    <thead>
-                        <tr>
-                            <th>วันที่</th><th>New Post</th><th>Diff</th><th>BDBC</th><th>Diff</th>
-                            <th>Apple</th><th>Diff</th><th>Smartphone</th><th>Diff</th>
-                            <th style="background:#f8fafc">รวม P</th><th style="background:#f8fafc">รวม D</th>
-                        </tr>
-                    </thead>
-                    <tbody id="dailyBody"></tbody>
-                </table>
-            </div>
+        <div id="emptyState" class="empty-state-wrapper">
+             <img src="https://cdn-icons-png.flaticon.com/512/3589/3589862.png" width="80" style="opacity: 0.5; margin-bottom: 20px;">
+             <p style="font-size: 1.1rem;">กรุณาเลือกชื่อพนักงานและกดปุ่ม "ดึงข้อมูล" เพื่อแสดงยอดขาย</p>
         </div>
 
-        <div class="card">
-            <div class="card-header-bar bg-web">🛒 รายละเอียดการขายจากเว็บ</div>
-            <div style="overflow-x: auto;">
-                <table class="table-luxury">
-                    <thead>
-                        <tr>
-                            <th>วันที่</th><th>พนักงาน</th><th>ลูกค้า</th><th>Postpay</th>
-                            <th>ยอด Post</th><th>Device</th><th>ยอด Dev</th><th>เวลา</th><th>สินเชื่อ</th>
-                        </tr>
-                    </thead>
-                    <tbody id="webBody"></tbody>
-                </table>
-            </div>
-            <div id="webPagination" class="pagination"></div>
-        </div>
-
-        <div class="grid-layout">
-            <div class="left-col">
-                <div class="card">
-                    <div class="card-header-bar bg-summary">📄 สรุปยอดแยกตาม Type</div>
+        <div id="realDashboard">
+            <div class="card">
+                <div class="card-header-bar bg-daily">📉 ยอดขายรายวัน (SHOP)</div>
+                <div style="overflow-x: auto;">
                     <table class="table-luxury">
-                        <thead><tr><th>รายการสินค้า/หมวดหมู่</th><th>ยอดขาย (บาท)</th><th>จำนวน</th></tr></thead>
-                        <tbody id="postpaySummaryBody"></tbody>
-                    </table>
-                </div>
-
-                <div class="card">
-                    <div class="card-header-bar bg-actual">🏆 สรุปผลงานสะสม MTD: <span id="displayUserName">-</span></div>
-                    <div id="actualGrid" class="stat-grid"></div>
-                </div>
-
-                <div class="card">
-                    <div class="card-header-bar bg-brand">📱 สรุปยอดขายตามแบรนด์</div>
-                    <table class="table-luxury">
-                        <thead><tr><th>แบรนด์สินค้า</th><th>ยอดรวม</th><th>จำนวนเครื่อง</th></tr></thead>
-                        <tbody id="brandBody"></tbody>
+                        <thead>
+                            <tr>
+                                <th>วันที่</th><th>New Post</th><th>Diff</th><th>BDBC</th><th>Diff</th>
+                                <th>Apple</th><th>Diff</th><th>Smartphone</th><th>Diff</th>
+                                <th style="background:#f8fafc">รวม P</th><th style="background:#f8fafc">รวม D</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dailyBody"></tbody>
                     </table>
                 </div>
             </div>
 
-            <div class="right-col">
-                <div class="card">
-                    <div class="card-header-bar bg-focus">🎯 Focus Point (KPI)</div>
+            <div class="card">
+                <div class="card-header-bar bg-web">🛒 รายละเอียดการขายจากเว็บ</div>
+                <div style="overflow-x: auto;">
                     <table class="table-luxury">
-                        <thead><tr><th>เป้าหมายหลัก</th><th style="text-align:right">ผลงานจริง</th></tr></thead>
-                        <tbody id="focusBody"></tbody>
+                        <thead>
+                            <tr>
+                                <th>วันที่</th><th>พนักงาน</th><th>ลูกค้า</th><th>Postpay</th>
+                                <th>ยอด Post</th><th>Device</th><th>ยอด Dev</th><th>เวลา</th><th>สินเชื่อ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="webBody"></tbody>
                     </table>
+                </div>
+                <div id="webPagination" class="pagination"></div>
+            </div>
+
+            <div class="grid-layout">
+                <div class="left-col">
+                    <div class="card">
+                        <div class="card-header-bar bg-summary">📄 สรุปยอดแยกตาม Type</div>
+                        <table class="table-luxury">
+                            <thead><tr><th>รายการสินค้า/หมวดหมู่</th><th>ยอดขาย (บาท)</th><th>จำนวน</th></tr></thead>
+                            <tbody id="postpaySummaryBody"></tbody>
+                        </table>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header-bar bg-actual">🏆 สรุปผลงานสะสม MTD: <span id="displayUserName">-</span></div>
+                        <div id="actualGrid" class="stat-grid"></div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header-bar bg-brand">📱 สรุปยอดขายตามแบรนด์</div>
+                        <table class="table-luxury">
+                            <thead><tr><th>แบรนด์สินค้า</th><th>ยอดรวม</th><th>จำนวนเครื่อง</th></tr></thead>
+                            <tbody id="brandBody"></tbody>
+                        </table>
+                    </div>
                 </div>
 
-                <div class="card">
-                    <div class="card-header-bar bg-target">🏁 เป้าหมายรายเดือน (Targets)</div>
-                    <table class="table-luxury">
-                        <thead><tr><th>รายการเป้าหมาย</th><th style="text-align:right">เป้าคงเหลือ</th></tr></thead>
-                        <tbody id="targetBody"></tbody>
-                    </table>
+                <div class="right-col">
+                    <div class="card">
+                        <div class="card-header-bar bg-focus">🎯 Focus Point (KPI)</div>
+                        <table class="table-luxury">
+                            <thead><tr><th>เป้าหมายหลัก</th><th style="text-align:right">ผลงานจริง</th></tr></thead>
+                            <tbody id="focusBody"></tbody>
+                        </table>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header-bar bg-target">🏁 เป้าหมายรายเดือน (Targets)</div>
+                        <table class="table-luxury">
+                            <thead><tr><th>รายการเป้าหมาย</th><th style="text-align:right">เป้าคงเหลือ</th></tr></thead>
+                            <tbody id="targetBody"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
+        </div> </div>
 </div>
 
 <script>
-    // --- Sidebar System (จากไฟล์เดิมที่คุณแม่ต้องการย้ายมา) ---
+    // --- Sidebar System ---
     function includeSidebar() {
         const cached = localStorage.getItem('sidebar_cache');
         if (cached) {
@@ -306,7 +325,7 @@
         });
     }
 
-    // --- Dashboard Data System (ข้อมูลเดิม) ---
+    // --- Dashboard Data System ---
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzQc4FuQLM0DCh9HQrKPewIKgMmd23pH8hMFfaAVdO1zpnc8ChPPLRX0gqDFZu0LQeOrg/exec";
     const DEFAULT_USER_NAME = "นวพล"; 
     
@@ -315,7 +334,7 @@
     let allWebData = [];
 
     window.addEventListener('DOMContentLoaded', () => {
-        includeSidebar(); // เรียกใช้ Sidebar ทันทีที่โหลดหน้า
+        includeSidebar();
         const now = new Date();
         document.getElementById('targetDate').value = now.toISOString().split('T')[0];
     });
@@ -342,6 +361,7 @@
     async function fetchData() {
         const dateInput = document.getElementById('targetDate').value;
         if(!dateInput) return alert('เลือกวันที่ก่อนนะคะคุณแม่!');
+        
         document.getElementById('loader').style.display = 'flex';
         const dayNum = new Date(dateInput).getDate();
 
@@ -350,10 +370,17 @@
                 fetch(`${WEB_APP_URL}?action=getSales&day=${dayNum}&name=${DEFAULT_USER_NAME}`).then(r => r.json()),
                 fetch(`${WEB_APP_URL}?action=getWebDetails&day=${dayNum}`).then(r => r.json())
             ]);
+            
             allWebData = webRes.rows || [];
             currentWebPage = 1;
+            
             renderData(salesRes);
             renderWebTable();
+
+            // === ส่วนสำคัญ: ซ่อนหน้าว่าง และเปิด Dashboard จริง ===
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('realDashboard').style.display = 'block';
+
         } catch (err) {
             alert('โหลดข้อมูลไม่สำเร็จจ้า');
         } finally {
