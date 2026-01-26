@@ -1,1001 +1,357 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>รายงานยอดขายของสาขา</title>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap"
-        rel="stylesheet"
-    />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📊 Dashboard ยอดขายรายบุคคล - Premium</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #5bb7aa;
-            --bg: #f5f7fa;
-            --text-dark: #2d3748;
-            --white: #ffffff;
-            --sidebar-width: 260px;
-            --sidebar-bg: #1e293b;
-            --sidebar-hover: #334155;
-            --sidebar-text: #cbd5e1;
-            --success: #059669;
-            --danger: #dc2626;
-            --pdf: #e11d48;
-            --excel: #166534;
-            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            --info: #3b82f6;
-        }
-        * {
-            box-sizing: border-box;
-            font-family: 'Kanit', sans-serif !important;
-            -webkit-tap-highlight-color: transparent;
+            --primary-gradient: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            --glass-bg: rgba(255, 255, 255, 0.8);
+            --sidebar-color: #1e293b;
+            --text-main: #334155;
+            --text-light: #64748b;
+            --sidebar-width: 280px;
+            --luxury-blue: #0f172a;
+            --border-color: #e2e8f0;
+            --success: #10b981;
+            --danger: #ef4444;
+            --hover-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
         }
 
-        html,
-        body {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            background-color: var(--bg);
-            color: var(--text-dark);
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-        body {
-            display: flex;
-        }
+        * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
+        body { margin: 0; background: #f1f5f9; color: var(--text-main); -webkit-font-smoothing: antialiased; transition: padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        
+        .sidebar { position: fixed; top: 0; left: 0; width: var(--sidebar-width); height: 100vh; background: var(--sidebar-color); color: #fff; overflow-y: auto; transition: all .3s ease; z-index: 2000; box-shadow: 10px 0 30px rgba(0,0,0,0.1); }
+        .sidebar-header { padding: 25px 20px; font-size: 18px; font-weight: 600; background: #0f172a; color: #fff; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .menu { display: flex; flex-direction: column; padding: 10px 0; }
+        .item { border-bottom: 1px solid rgba(255,255,255,0.03); }
+        .menu a, .menu .drop-btn { width: 100%; min-height: 50px; padding: 12px 20px; background: none; border: none; color: #cbd5e1; text-align: left; font-size: 15px; cursor: pointer; display: flex; align-items: center; text-decoration: none; transition: 0.3s; }
+        .menu a:hover, .menu .drop-btn:hover { background: #334155; color: #fff; padding-left: 30px; }
+        .sub { display: none; background: #0f172a; padding: 5px 0; }
+        .item.open .sub { display: block; }
+        .sub a { padding-left: 45px; font-size: 14px; color: #94a3b8; }
+        .arrow { margin-left: auto; transition: 0.3s; font-size: 10px; opacity: 0.6; }
+        .item.open .arrow { transform: rotate(90deg); }
 
-        .loading {
-            position: fixed;
-            inset: 0;
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(8px);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-            flex-direction: column;
-            gap: 15px;
-        }
-        .spinner {
-            width: 50px;
-            height: 50px;
-            border: 5px solid #f3f3f3;
-            border-top: 5px solid var(--primary);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            box-shadow: 0 0 15px rgba(91, 183, 170, 0.2);
-        }
-        @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-        .loading-text {
-            color: var(--text-dark);
-            font-weight: 500;
-            font-size: 18px;
-            letter-spacing: 1px;
-        }
+        .top-header { position: fixed; top: 0; left: 0; right: 0; height: 65px; background: var(--glass-bg); backdrop-filter: blur(10px); z-index: 1100; display: flex; align-items: center; padding: 0 20px; border-bottom: 1px solid var(--border-color); transition: left 0.3s ease; }
+        .top-toggle { width: 40px; height: 40px; border-radius: 10px; border: none; background: var(--sidebar-color); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+        
+        @media(min-width:769px) { body:not(.collapsed) { padding-left: var(--sidebar-width); } body:not(.collapsed) .top-header { left: var(--sidebar-width); } body.collapsed .sidebar { transform: translateX(-100%); } body.collapsed .top-header { left: 0; } }
+        @media(max-width:768px) { .sidebar { transform: translateX(-100%); } .sidebar.show { transform: translateX(0); } body { padding-left: 0 !important; } .top-header { left: 0 !important; } }
 
-        #sidebar-container {
-            width: var(--sidebar-width);
-            background: var(--sidebar-bg);
-            height: 100vh;
-            position: fixed;
-            left: 0;
-            top: 0;
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 2000;
-            overflow-y: auto;
-            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.2);
-            padding-top: 0;
-        }
+        .main-wrapper { padding: 85px 20px 40px; display: flex; justify-content: center; }
+        .content-container { width: 100%; max-width: 1200px; }
 
-        .menu .item .sub {
-            display: none;
-            background: #0f172a;
-        }
-        .menu .item.open .sub {
-            display: block;
-        }
-        .menu .item.open .arrow {
-            transform: rotate(90deg);
-        }
-        .arrow {
-            margin-left: auto;
-            transition: 0.3s;
-            font-size: 10px;
-        }
+        .toolbar { background: white; padding: 18px 25px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); display: flex; justify-content: flex-end; align-items: center; margin-bottom: 30px; border: 1px solid var(--border-color); gap: 15px; flex-wrap: wrap; }
+        .modern-date { appearance: none; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 10px 15px; font-size: 15px; color: #1e293b; outline: none; }
+        .btn-fetch { background: var(--luxury-blue); color: white; border: none; padding: 12px 24px; border-radius: 10px; cursor: pointer; font-weight: 600; transition: 0.3s; }
+        .btn-fetch:hover { transform: translateY(-2px); box-shadow: var(--hover-shadow); }
 
-        .menu a,
-        .drop-btn {
-            width: 100%;
-            padding: 15px 20px;
-            background: none;
-            border: none;
-            color: var(--sidebar-text) !important;
-            text-align: left;
-            font-size: 15px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            text-decoration: none !important;
-            transition: var(--transition);
-            border-left: 4px solid transparent;
-        }
+        .card { background: white; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+        .card-header-bar { padding: 14px 20px; color: white; font-size: 16px; font-weight: 500; }
+        
+        .table-luxury { width: 100%; border-collapse: collapse; background: white; }
+        .table-luxury th { background: #f8fafc; padding: 14px 12px; text-align: left; font-size: 13px; color: #64748b; border-bottom: 2px solid var(--border-color); }
+        .table-luxury td { padding: 14px 12px; font-size: 14px; border-bottom: 1px solid #f1f5f9; }
+        .table-luxury tbody tr:hover { background-color: #fcfcfd; }
 
-        .menu a:hover,
-        .drop-btn:hover {
-            background: var(--sidebar-hover);
-            color: var(--primary) !important;
-            border-left: 4px solid var(--primary);
-            padding-left: 28px;
-        }
+        .pagination { display: flex; gap: 8px; padding: 15px 20px; justify-content: center; background: #fff; border-top: 1px solid #f1f5f9; }
+        .page-btn { padding: 6px 12px; border: 1px solid #e2e8f0; background: #fff; border-radius: 6px; cursor: pointer; font-size: 13px; color: #64748b; transition: 0.2s; }
+        .page-btn:hover { background: #f1f5f9; border-color: #cbd5e1; }
+        .page-btn.active { background: var(--luxury-blue); color: white; border-color: var(--luxury-blue); }
 
-        .sub a {
-            padding-left: 45px;
-            font-size: 14px;
-            opacity: 0.8;
-        }
-        .sub a:hover {
-            opacity: 1;
-            padding-left: 50px;
-            background: rgba(91, 183, 170, 0.1);
-        }
+        .grid-layout { display: grid; grid-template-columns: 1.7fr 1.3fr; gap: 25px; }
+        @media (max-width: 1000px) { .grid-layout { grid-template-columns: 1fr; } }
 
-        .main-content {
-            flex-grow: 1;
-            margin-left: var(--sidebar-width);
-            padding: 25px 15px;
-            width: calc(100% - var(--sidebar-width));
-            transition: var(--transition);
-        }
+        .stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 20px; }
+        .stat-box { padding: 18px; border: 1px solid #f1f5f9; border-left: 6px solid var(--success); border-radius: 12px; background: #fff; }
+        .stat-val { font-size: 28px; font-weight: 700; color: var(--luxury-blue); }
 
-        body.collapsed #sidebar-container {
-            transform: translateX(calc(var(--sidebar-width) * -1));
-        }
-        body.collapsed .main-content {
-            margin-left: 0;
-            width: 100%;
-        }
+        .bg-daily { background: #334155; }
+        .bg-web { background: #0284c7; }
+        .bg-summary { background: #6366f1; }
+        .bg-brand { background: #8b5cf6; }
+        .bg-actual { background: #059669; }
+        .bg-focus { background: #1e293b; }
+        .bg-target { background: #b45309; }
 
-        @media (max-width: 900px) {
-            #sidebar-container {
-                transform: translateX(-100%);
-            }
-            .main-content {
-                margin-left: 0;
-                width: 100%;
-                padding: 15px 10px;
-            }
-            body.show-sidebar #sidebar-container {
-                transform: translateX(0);
-            }
-            body.collapsed #sidebar-container {
-                transform: translateX(-100%);
-            }
-        }
+        .up { color: var(--danger); font-weight: 600; }
+        .down { color: var(--success); font-weight: 600; }
 
-        .overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(15, 23, 42, 0.6);
-            display: none;
-            backdrop-filter: blur(4px);
-            z-index: 1500;
-        }
-        .overlay.show {
-            display: block;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            width: 100%;
-        }
-
-        .header-bar {
-            background: var(--primary);
-            padding: 18px 25px;
-            border-radius: 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-            box-shadow: 0 10px 25px rgba(91, 183, 170, 0.25);
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-        .header-bar h2 {
-            color: white !important;
-            font-weight: 500;
-            letter-spacing: 0.5px;
-            font-size: 22px;
-            margin: 0;
-        }
-
-        .action-group {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-        #daySelect {
-            padding: 10px 18px;
-            border-radius: 12px;
-            border: none;
-            font-size: 16px;
-            background-color: white;
-            cursor: pointer;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-        }
-
-        .btn-fetch,
-        .btn-pdf,
-        .btn-excel {
-            padding: 10px 20px;
-            border-radius: 12px;
-            cursor: pointer;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            border: none;
-            transition: var(--transition);
-            color: white;
-        }
-        .btn-fetch {
-            background: #2d3748;
-        }
-        .btn-pdf {
-            background: var(--pdf);
-        }
-        .btn-excel {
-            background: var(--excel);
-        }
-
-        .btn-fetch:hover,
-        .btn-pdf:hover,
-        .btn-excel:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-            filter: brightness(1.1);
-        }
-
-        .main-grid {
-            display: grid;
-            grid-template-columns: 1.25fr 0.75fr;
-            gap: 20px;
-        }
-        @media (max-width: 1024px) {
-            .main-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        #dashboardData {
-            display: none;
-            animation: fadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .card {
-            background: var(--white);
-            border-radius: 18px;
-            overflow: hidden;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.04);
-            border: 1px solid #edf2f7;
-            margin-bottom: 20px;
-        }
-        .card-header {
-            padding: 15px 20px;
-            color: white;
-            font-weight: 500;
-            background: var(--primary);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 17px;
-        }
-
-        .table-wrapper {
-            width: 100%;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        #dailyCard table {
-            min-width: 900px;
-        }
-
-        th {
-            padding: 15px;
-            text-align: left;
-            font-size: 14px;
-            background: #f8fafc;
-            border-bottom: 2px solid #edf2f7;
-            color: #4a5568;
-            font-weight: 600;
-        }
-        td {
-            padding: 12px 15px;
-            border-bottom: 1px solid #f1f5f9;
-            font-size: 15px;
-            color: #2d3748;
-            transition: background 0.2s;
-        }
-
-        tbody tr:hover td {
-            background-color: rgba(91, 183, 170, 0.08);
-        }
-        .target-row:hover {
-            background-color: #f8fafc;
-        }
-
-        .row-summary td {
-            font-weight: 700 !important;
-            background-color: rgba(91, 183, 170, 0.08);
-            border-bottom: 2px solid var(--primary);
-        }
-
-        .bottom-stats-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-            padding: 20px;
-            background: #fafbfc;
-        }
-        @media (max-width: 480px) {
-            .bottom-stats-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .stat-item {
-            background: #ffffff;
-            padding: 20px;
-            border-radius: 14px;
-            border: 1px solid #e2e8f0;
-            border-left: 6px solid var(--primary);
-            transition: var(--transition);
-        }
-        .stat-item:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
-        }
-        .stat-main {
-            font-size: 32px;
-            font-weight: 700;
-            color: var(--text-dark);
-        }
-
-        .target-group-header {
-            padding: 12px 18px;
-            font-weight: 600;
-            color: white;
-            font-size: 15px;
-        }
-        .target-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 14px 20px;
-            border-bottom: 1px solid #f1f5f9;
-            transition: var(--transition);
-        }
-
-        .bg-grad-yellow {
-            background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%);
-        }
-        .bg-grad-orange-light {
-            background: linear-gradient(90deg, #f97316 0%, #fb923c 100%);
-        }
-        .bg-grad-orange-dark {
-            background: linear-gradient(90deg, #ea580c 0%, #f97316 100%);
-        }
-        .bg-grad-blue-dark {
-            background: linear-gradient(90deg, #334155 0%, #475569 100%);
-        }
-        .bg-grad-blue-slate {
-            background: linear-gradient(90deg, #475569 0%, #64748b 100%);
-        }
-        .bg-grad-blue-teal {
-            background: linear-gradient(90deg, #0d9488 0%, #14b8a6 100%);
-        }
-
-        .bg-amber {
-            background: #ffb100;
-        }
-        .bg-orange {
-            background: #ff5722;
-        }
-        .bg-slate {
-            background: #4a5568;
-        }
-        .bg-teal {
-            background: #38b2ac;
-        }
-
-        .val-actual {
-            color: var(--primary);
-            font-weight: 700;
-        }
-        .val-diff {
-            color: #dc2626;
-            font-weight: 700;
-        }
-        .v-sep {
-            border-left: 2px solid #e2e8f0 !important;
-        }
-        .text-right {
-            text-align: right;
-        }
-
-        #webSalesCard table {
-            min-width: 1100px;
-            border-collapse: separate;
-            border-spacing: 0;
-        }
-        #webSalesCard th {
-            background-color: #f1f5f9;
-            color: #4a5568;
-            border-bottom: 2px solid #cbd5e1;
-            border-right: 1px solid #cbd5e1;
-            font-weight: 600;
-        }
-        #webSalesCard td {
-            border-right: 1px solid #e2e8f0;
-            border-bottom: 1px solid #e2e8f0;
-        }
-        #webSalesCard th:last-child,
-        #webSalesCard td:last-child {
-            border-right: none;
-        }
-
-        /* --- New Pagination Styles --- */
-        .pagination-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 15px;
-            gap: 5px;
-            background: #fff;
-        }
-        .page-btn {
-            padding: 6px 12px;
-            border: 1px solid #e2e8f0;
-            background: white;
-            color: var(--text-dark);
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: var(--transition);
-        }
-        .page-btn:hover {
-            background: #f1f5f9;
-            border-color: var(--primary);
-            color: var(--primary);
-        }
-        .page-btn.active {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
-        }
-        .page-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        footer {
-            width: 100%;
-            text-align: center;
-            padding: 20px;
-            background: #fff;
-            color: #94a3b8;
-            font-size: 12px;
-            border: 1px solid #edf2f7;
-            border-radius: 18px;
-            margin-top: 20px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
-        }
+        #loader { display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.8); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+        .spinner { width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid var(--luxury-blue); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
-<body id="mainBody">
-    <div class="loading" id="loader">
-        <div class="spinner"></div>
-        <div class="loading-text" id="loader-text">กำลังประมวลผลข้อมูล...</div>
-    </div>
+<body>
 
-    <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
-
-    <aside id="sidebar-container">
-        <nav class="menu" id="dynamic-menu">
-            <div style="padding: 20px; color: var(--sidebar-text); text-align: center; font-size: 14px;">⌛ กำลังโหลดเมนู...</div>
-        </nav>
-    </aside>
-
-    <main class="main-content">
-        <div class="container">
-            <div class="header-bar">
-                <div style="display:flex; align-items:center; gap:15px;">
-                    <button onclick="toggleSidebar()" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 10px 15px; border-radius: 10px; cursor: pointer; font-size: 18px;">☰</button>
-                    <h2>รายงานยอดขายของสาขา</h2>
-                </div>
-                <div class="action-group">
-                    <select id="daySelect">
-                        <option value="">📅 เลือกวันที่</option>
-                        <script>
-                            const todayNum = new Date().getDate();
-                            for(let i=1; i<=31; i++) {
-                                const isSelected = (i === todayNum) ? 'selected' : '';
-                                document.write(`<option value="${i}" ${isSelected}>วันที่ ${i}</option>`);
-                            }
-                        </script>
-                    </select>
-                    <button class="btn-fetch" onclick="loadData()">🚀 ดึงข้อมูล</button>
-                    <button class="btn-pdf" onclick="exportPDF()">📄 PDF</button>
-                    <button class="btn-excel" onclick="exportExcel()">📊 Excel</button>
-                </div>
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">MENU DASHBOARD</div>
+    <div class="menu">
+        <div class="item" id="menu-sales">
+            <button class="drop-btn" onclick="toggleDrop(this, 'sales')">
+                📊 ยอดขายรายบุคคล <span class="arrow">▶</span>
+            </button>
+            <div class="sub">
+                <a href="#">สรุปภาพรวม</a>
+                <a href="#">เป้าหมายรายเดือน</a>
             </div>
-
-            <div id="noData" style="text-align: center; padding: 100px 20px; color: #a0aec0; background: white; border-radius: 20px; border: 2px dashed #cbd5e1; margin-bottom: 20px;">
-                <div style="font-size: 50px; margin-bottom: 15px;">📊</div>
-                <p style="font-size: 18px;">กรุณาเลือกวันที่และกดปุ่ม <b>"ดึงข้อมูล"</b> เพื่อแสดงรายงาน</p>
-            </div>
-
-            <div id="dashboardData">
-                <div class="card" id="dailyCard">
-                    <div class="card-header">
-                        <span>📅 ข้อมูลรายวัน (วันที่ <span id="dailyDateNum">-</span>)</span>
-                        <span id="labelStaff" style="font-size: 14px; background: rgba(0,0,0,0.2); padding: 4px 12px; border-radius: 6px;"></span>
-                    </div>
-                    <div class="table-wrapper">
-                        <table class="daily-table" id="tableDaily">
-                            <thead>
-                                <tr>
-                                    <th rowspan="2" style="background:#4a5568; color:white; min-width: 80px; text-align:center;">วันที่</th>
-                                    <th colspan="2" class="bg-amber" style="color:white; text-align:center;">New Post</th>
-                                    <th colspan="2" class="bg-orange" style="color:white; text-align:center;">BDBC</th>
-                                    <th colspan="2" class="bg-slate" style="color:white; text-align:center;">Apple</th>
-                                    <th colspan="2" class="bg-teal" style="color:white; text-align:center;">SmartPhone</th>
-                                    <th colspan="2" style="background:#2d3748; color:white; text-align:center;">Total</th>
-                                </tr>
-                                <tr style="background: #f1f5f9; text-align:center;">
-                                    <th class="v-sep">Actual</th><th>Diff</th>
-                                    <th class="v-sep">Actual</th><th>Diff</th>
-                                    <th class="v-sep">Actual</th><th>Diff</th>
-                                    <th class="v-sep">Actual</th><th>Diff</th>
-                                    <th class="v-sep">Post</th><th>Device</th>
-                                </tr>
-                            </thead>
-                            <tbody id="dailyBody" style="text-align:center;"></tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="card" id="webSalesCard">
-                    <div class="card-header">
-                        <span>📝 รายละเอียดการขายทั้งหมด (วันที่ <span id="webSalesDateNum">-</span>)</span>
-                    </div>
-                    <div class="table-wrapper">
-                        <table id="tableWebSales">
-                            <thead>
-                                <tr>
-                                    <th>วันที่</th>
-                                    <th>พนักงาน</th>
-                                    <th>คนที่ขายให้</th>
-                                    <th>Postpay</th>
-                                    <th class="text-right">ยอด Postpay</th>
-                                    <th>Device</th>
-                                    <th class="text-right">ยอด Device</th>
-                                    <th>เวลา</th>
-                                    <th>บันทึกสินเชื่อ</th>
-                                </tr>
-                            </thead>
-                            <tbody id="webSalesBody"></tbody>
-                        </table>
-                    </div>
-                    <div class="pagination-container" id="webSalesPagination"></div>
-                </div>
-
-                <div class="main-grid">
-                    <div class="left-panel">
-                        <div class="card">
-                            <div class="card-header">📍 สรุปยอดขาย: <span id="labelL"></span></div>
-                            <div class="table-wrapper">
-                                <table id="tableSummary">
-                                    <thead>
-                                        <tr>
-                                            <th>Type การขาย</th>
-                                            <th class="text-right">ยอด PostPay</th>
-                                            <th class="text-right">จำนวน</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="summaryBody"></tbody>
-                                </table>
-                            </div>
-                            <div class="bottom-stats-grid" id="bottomStats"></div>
-                        </div>
-
-                        <div class="card">
-                            <div class="card-header">📊 ยอดขายแยกตามแบรนด์</div>
-                            <div class="table-wrapper" style="padding: 15px; background: #f8fafc;">
-                                <table id="tableBrand" style="background: white; border-radius: 12px; overflow: hidden; border: 1px solid #edf2f7;">
-                                    <thead>
-                                        <tr>
-                                            <th>แบรนด์</th>
-                                            <th class="text-right">ยอดขาย</th>
-                                            <th class="text-right">จำนวน</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="brandBody"></tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="side-panel">
-                        <div class="card">
-                            <div class="card-header">🎯 Focus: <span id="labelR"></span></div>
-                            <div class="table-wrapper">
-                                <table id="tableFocus">
-                                    <thead><tr><th>Target</th><th class="text-right">Actual</th></tr></thead>
-                                    <tbody id="focusBody"></tbody>
-                                </table>
-                            </div>
-                        </div>
-                        <div class="card">
-                            <div class="card-header" style="background:#2d3748;">🏁 เป้าหมายรายเดือน</div>
-                            <div id="targetBody"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <footer>© 2026 Copy Right By Angerina Frog</footer>
         </div>
-    </main>
+        <div class="item" id="menu-branch">
+            <button class="drop-btn" onclick="toggleDrop(this, 'branch')">
+                🏢 ยอดขายรายสาขา <span class="arrow">▶</span>
+            </button>
+            <div class="sub">
+                <a href="#">สาขาทั้งหมด</a>
+            </div>
+        </div>
+    </div>
+</aside>
 
-    <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyMIWc0W_Fcu0f0w4JtkaAwEr1t27CEO_ZV5aMeeWgtxH4Hku4U1e8lGglLj55SdwAKBg/exec";
+<header class="top-header">
+    <button class="top-toggle" onclick="toggleSidebar()">☰</button>
+    <div style="margin-left: 15px; font-weight: 600; font-size: 1.1rem; color: #1e293b;">Dashboard By Indy</div>
+</header>
 
-        // ตัวแปรสำหรับคุม Pagination
-        let allWebSalesData = [];
-        let currentPage = 1;
-        const rowsPerPage = 5;
+<div id="loader">
+    <div class="spinner"></div>
+    <p style="margin-top:20px; font-weight: 500;">กำลังปรุงข้อมูลให้คุณแม่นะคะ...</p>
+</div>
 
-        document.addEventListener('DOMContentLoaded', () => {
-            const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
-            const body = document.getElementById('mainBody');
-            if (isCollapsed && window.innerWidth > 900) body.classList.add('collapsed');
-            loadSidebar();
-        });
+<div class="main-wrapper">
+    <div class="content-container">
+        <div class="toolbar">
+            <label style="color:var(--text-light); font-weight:600">📅 เลือกวันที่:</label>
+            <input type="date" id="targetDate" class="modern-date">
+            <button class="btn-fetch" onclick="fetchData()">🚀 ดึงข้อมูลล่าสุด</button>
+        </div>
 
-        async function loadSidebar() {
-            const menuContainer = document.getElementById('dynamic-menu');
-            try {
-                const response = await fetch('sidebar.html');
-                if (response.ok) {
-                    menuContainer.innerHTML = await response.text();
-                    setupSidebarEvents(menuContainer);
-                }
-            } catch (error) {
-                menuContainer.innerHTML = 'Error loading menu';
-            }
-        }
-
-        function setupSidebarEvents(container) {
-            const openedMenus = JSON.parse(localStorage.getItem('openedSubMenus') || "[]");
-            const dropBtns = container.querySelectorAll('.drop-btn');
-            dropBtns.forEach((btn, index) => {
-                const parent = btn.parentElement;
-                if (openedMenus.includes(index)) parent.classList.add('open');
-                btn.addEventListener('click', function() {
-                    parent.classList.toggle('open');
-                    const currentOpened = [];
-                    container.querySelectorAll('.item.open').forEach((openItem) => {
-                        const allItems = Array.from(container.querySelectorAll('.item'));
-                        currentOpened.push(allItems.indexOf(openItem));
-                    });
-                    localStorage.setItem('openedSubMenus', JSON.stringify(currentOpened));
-                });
-            });
-        }
-
-        function toggleSidebar() {
-            const body = document.getElementById('mainBody');
-            const overlay = document.getElementById('overlay');
-            if (window.innerWidth > 900) {
-                body.classList.toggle('collapsed');
-                localStorage.setItem('sidebarCollapsed', body.classList.contains('collapsed'));
-            } else {
-                body.classList.toggle('show-sidebar');
-                overlay.classList.toggle('show', body.classList.contains('show-sidebar'));
-            }
-        }
-
-        async function loadData() {
-            const loader = document.getElementById('loader');
-            const selectedDay = document.getElementById('daySelect').value;
-            if (!selectedDay) return alert("โปรดเลือกวันที่");
-
-            loader.style.display = 'flex';
-            try {
-                const res = await fetch(`${SCRIPT_URL}?sheetName=SHOP&targetDay=${selectedDay}`);
-                const data = await res.json();
-
-                if (data.result === "success") {
-                    document.getElementById('labelL').innerText = data.staffName;
-                    document.getElementById('labelR').innerText = data.staffName;
-                    document.getElementById('labelStaff').innerText = data.staffName;
-                    document.getElementById('dailyDateNum').innerText = selectedDay;
-                    document.getElementById('webSalesDateNum').innerText = selectedDay;
-
-                    // 1. สรุปยอดขาย
-                    document.getElementById('summaryBody').innerHTML = data.summary.map(r => {
-                        const isTotal = r[0].includes("รวมยอด");
-                        return `<tr class="${isTotal?'row-summary':''}"><td>${r[0]}</td><td class="text-right">${r[1]}</td><td class="text-right">${r[2]}</td></tr>`;
-                    }).join('');
-
-                    // 2. แบรนด์
-                    document.getElementById('brandBody').innerHTML = data.brandSummary.map(r => {
-                        const isTotal = r[0].includes("รวม");
-                        const rowStyle = isTotal ? 'font-weight:700; background:#f1f5f9;' : '';
-                        return `<tr style="${rowStyle}"><td>${r[0]}</td><td class="text-right">${r[1]}</td><td class="text-right">${r[2]}</td></tr>`;
-                    }).join('');
-
-                    // 3. Focus
-                    document.getElementById('focusBody').innerHTML = data.focus.filter(r => r[0] && r[0] !== "Target")
-                        .map(r => `<tr><td>${r[0]}</td><td class="text-right" style="color:#dc2626; font-weight:700;">${r[1]}</td></tr>`).join('');
-
-                    // 4. Targets
-                    const tDiv = document.getElementById('targetBody');
-                    tDiv.innerHTML = "";
-                    data.targets.forEach(r => {
-                        if (!r[0]) return;
-                        if (
-                            r[0].includes("คำนวณ Target") ||
-                            r[0].includes("เป้าหมาย")
-                        ) {
-                            let cls = r[0].includes("All Post")
-                                ? "bg-grad-yellow"
-                                : r[0].includes("New Post")
-                                ? "bg-grad-orange-light"
-                                : r[0].includes("BDBC")
-                                ? "bg-grad-orange-dark"
-                                : r[0].includes("All Device")
-                                ? "bg-grad-blue-dark"
-                                : r[0].includes("Apple")
-                                ? "bg-grad-blue-slate"
-                                : r[0].includes("SmartPhone")
-                                ? "bg-grad-blue-teal"
-                                : "bg-slate";
-                            tDiv.innerHTML += `<div class="target-group-header ${cls}">${r[0]}</div>`;
-                        } else if (r[0] !== "Target") {
-                            tDiv.innerHTML += `<div class="target-row"><span>${r[0]}</span><b>${r[1]}</b></div>`;
-                        }
-                    });
-
-                    // 5. Bottom Stats Cards
-                    const s = data.topStats;
-                    const ach = data.achieve;
-                    const stats = [
-                        {
-                            l: s[0][0],
-                            v: s[1][0],
-                            d: s[1][1],
-                            a: ach.newPost,
-                            c: '#ffb100'
-                        },
-                        {
-                            l: s[0][2],
-                            v: s[1][2],
-                            d: s[1][3],
-                            a: ach.bdbc,
-                            c: '#ff5722'
-                        },
-                        {
-                            l: s[0][4],
-                            v: s[1][4],
-                            d: s[1][5],
-                            a: ach.apple,
-                            c: '#4a5568'
-                        },
-                        {
-                            l: s[0][6],
-                            v: s[1][6],
-                            d: s[1][7],
-                            a: ach.smartPhone,
-                            c: '#38b2ac'
-                        }
-                    ];
-                    document.getElementById('bottomStats').innerHTML = stats
-                        .map(
-                            (i) => `
-                        <div class="stat-item" style="border-left-color:${i.c}">
-                            <span style="font-size:14px; font-weight:600; color:#718096; display:block; margin-bottom:8px;">${i.l}</span>
-                            <div style="display:flex; justify-content:space-between; align-items:flex-end;">
-                                <div><div class="stat-main">${i.v}</div><div style="color:var(--success); font-weight:700; font-size:18px;">${i.a}%</div></div>
-                                <div style="text-align:right;"><span style="font-size:10px; color:#a0aec0; font-weight:600;">ขาด/เกิน</span><div class="val-diff" style="font-size:18px;">${i.d}</div></div>
-                            </div>
-                        </div>
-                        `
-                        )
-                        .join('');
-
-                    // 6. Daily Table
-                    if (data.dailyRow) {
-                        const dr = data.dailyRow;
-                        document.getElementById('dailyBody').innerHTML = `
+        <div class="card">
+            <div class="card-header-bar bg-daily">📉 ยอดขายรายวัน (SHOP)</div>
+            <div style="overflow-x: auto;">
+                <table class="table-luxury">
+                    <thead>
                         <tr>
-                            <td style="background:#f8fafc;">${dr[0]}</td>
-                            <td class="v-sep val-actual">${dr[1]}</td>
-                            <td class="val-diff">${dr[2]}</td>
-                            <td class="v-sep val-actual">${dr[3]}</td>
-                            <td class="val-diff">${dr[4]}</td>
-                            <td class="v-sep val-actual">${dr[5]}</td>
-                            <td class="val-diff">${dr[6]}</td>
-                            <td class="v-sep val-actual">${dr[7]}</td>
-                            <td class="val-diff">${dr[8]}</td>
-                            <td class="v-sep"><b>${dr[9]}</b></td>
-                            <td><b>${dr[10]}</b></td>
-                        </tr>`;
-                    }
+                            <th>วันที่</th><th>New Post</th><th>Diff</th><th>BDBC</th><th>Diff</th>
+                            <th>Apple</th><th>Diff</th><th>Smartphone</th><th>Diff</th>
+                            <th style="background:#f8fafc">รวม P</th><th style="background:#f8fafc">รวม D</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dailyBody"></tbody>
+                </table>
+            </div>
+        </div>
 
-                    // 7. Web Sales Detail with Pagination
-                    allWebSalesData = data.webSalesData || [];
-                    currentPage = 1;
-                    renderWebSalesTable();
+        <div class="card">
+            <div class="card-header-bar bg-web">🛒 รายละเอียดการขายจากเว็บ</div>
+            <div style="overflow-x: auto;">
+                <table class="table-luxury">
+                    <thead>
+                        <tr>
+                            <th>วันที่</th><th>พนักงาน</th><th>ลูกค้า</th><th>Postpay</th>
+                            <th>ยอด Post</th><th>Device</th><th>ยอด Dev</th><th>เวลา</th><th>สินเชื่อ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="webBody"></tbody>
+                </table>
+            </div>
+            <div id="webPagination" class="pagination"></div>
+        </div>
 
-                    document.getElementById('dashboardData').style.display = 'block';
-                    document.getElementById('noData').style.display = 'none';
-                }
-            } catch (e) {
-                alert("ดึงข้อมูลไม่สำเร็จ: " + e.message);
-            } finally {
-                loader.style.display = 'none';
-            }
+        <div class="grid-layout">
+            <div class="left-col">
+                <div class="card">
+                    <div class="card-header-bar bg-summary">📄 สรุปยอดแยกตาม Type</div>
+                    <table class="table-luxury">
+                        <thead><tr><th>รายการสินค้า/หมวดหมู่</th><th>ยอดขาย (บาท)</th><th>จำนวน</th></tr></thead>
+                        <tbody id="postpaySummaryBody"></tbody>
+                    </table>
+                </div>
+
+                <div class="card">
+                    <div class="card-header-bar bg-actual">🏆 สรุปผลงานสะสม MTD: <span id="displayUserName">-</span></div>
+                    <div id="actualGrid" class="stat-grid"></div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header-bar bg-brand">📱 สรุปยอดขายตามแบรนด์</div>
+                    <table class="table-luxury">
+                        <thead><tr><th>แบรนด์สินค้า</th><th>ยอดรวม</th><th>จำนวนเครื่อง</th></tr></thead>
+                        <tbody id="brandBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="right-col">
+                <div class="card">
+                    <div class="card-header-bar bg-focus">🎯 Focus Point (KPI)</div>
+                    <table class="table-luxury">
+                        <thead><tr><th>เป้าหมายหลัก</th><th style="text-align:right">ผลงานจริง</th></tr></thead>
+                        <tbody id="focusBody"></tbody>
+                    </table>
+                </div>
+
+                <div class="card">
+                    <div class="card-header-bar bg-target">🏁 เป้าหมายรายเดือน (Targets)</div>
+                    <table class="table-luxury">
+                        <thead><tr><th>รายการเป้าหมาย</th><th style="text-align:right">เป้าคงเหลือ</th></tr></thead>
+                        <tbody id="targetBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzQc4FuQLM0DCh9HQrKPewIKgMmd23pH8hMFfaAVdO1zpnc8ChPPLRX0gqDFZu0LQeOrg/exec";
+    const DEFAULT_USER_NAME = "นวพล"; 
+    
+    let currentWebPage = 1;
+    const itemsPerPage = 5;
+    let allWebData = [];
+
+    window.addEventListener('DOMContentLoaded', () => {
+        const now = new Date();
+        document.getElementById('targetDate').value = now.toISOString().split('T')[0];
+        restoreMenuState();
+    });
+
+    function toggleSidebar() {
+        if (window.innerWidth <= 768) {
+            document.getElementById("sidebar").classList.toggle("show");
+        } else {
+            document.body.classList.toggle("collapsed");
         }
+    }
 
-        // ฟังก์ชันสำหรับ Render ตาราง Web Sales และ Pagination
-        function renderWebSalesTable() {
-            const webSalesBody = document.getElementById('webSalesBody');
-            const paginationContainer = document.getElementById('webSalesPagination');
+    window.toggleDrop = function(btn, id) {
+        const item = btn.parentElement;
+        item.classList.toggle("open");
+        if (id) localStorage.setItem('menu-' + id, item.classList.contains("open"));
+    }
 
-            if (allWebSalesData.length === 0) {
-                webSalesBody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:30px; color:#a0aec0;">❌ ไม่พบข้อมูลการขายในวันที่เลือก</td></tr>`;
-                paginationContainer.innerHTML = "";
-                return;
+    function restoreMenuState() {
+        ['sales', 'branch'].forEach(id => {
+            if (localStorage.getItem('menu-' + id) === 'true') {
+                const el = document.getElementById('menu-' + id);
+                if (el) el.classList.add('open');
             }
+        });
+    }
 
-            // คำนวณขอบเขตข้อมูล
-            const startIndex = (currentPage - 1) * rowsPerPage;
-            const endIndex = startIndex + rowsPerPage;
-            const paginatedData = allWebSalesData.slice(startIndex, endIndex);
+    function formatNumber(val) {
+        const n = Math.floor(parseFloat(val));
+        if (isNaN(n)) return val;
+        return n.toLocaleString('th-TH');
+    }
 
-            // แสดงผลตาราง
-            webSalesBody.innerHTML = paginatedData
-                .map(
-                    (r) =>
-                        `<tr>
-                <td>${r[0]}</td>
-                <td><b>${r[1]}</b></td>
-                <td>${r[2]}</td>
-                <td><span class="badge-postpay">${r[3]}</span></td>
-                <td class="text-right">${r[4]}</td>
-                <td><span class="badge-device">${r[5]}</span></td>
-                <td class="text-right">${r[6]}</td>
-                <td>${r[7]}</td>
-                <td style="font-size:13px; color:#64748b;">${r[8] || '-'}</td>
-            </tr>`
-                )
-                .join("");
+    function formatDecimalTwo(val) {
+        const n = parseFloat(val);
+        if (isNaN(n)) return val;
+        return n.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
 
-            // สร้างปุ่ม Pagination
-            const totalPages = Math.ceil(allWebSalesData.length / rowsPerPage);
-            let paginationHtml = "";
+    function getFixedDate() {
+        const inputVal = document.getElementById('targetDate').value;
+        if(!inputVal) return "-";
+        const [y, m, d] = inputVal.split('-');
+        return `${d}/${m}/${y}`;
+    }
 
+    async function fetchData() {
+        const dateInput = document.getElementById('targetDate').value;
+        if(!dateInput) return alert('เลือกวันที่ก่อนนะคะคุณแม่!');
+        document.getElementById('loader').style.display = 'flex';
+        const dayNum = new Date(dateInput).getDate();
+
+        try {
+            const [salesRes, webRes] = await Promise.all([
+                fetch(`${WEB_APP_URL}?action=getSales&day=${dayNum}&name=${DEFAULT_USER_NAME}`).then(r => r.json()),
+                fetch(`${WEB_APP_URL}?action=getWebDetails&day=${dayNum}`).then(r => r.json())
+            ]);
+            allWebData = webRes.rows || [];
+            currentWebPage = 1;
+            renderData(salesRes);
+            renderWebTable();
+        } catch (err) {
+            alert('โหลดข้อมูลไม่สำเร็จจ้า');
+        } finally {
+            document.getElementById('loader').style.display = 'none';
+        }
+    }
+
+    function getColorClass(val) {
+        if (typeof val !== 'number') return '';
+        return val < 0 ? 'down' : 'up'; 
+    }
+
+    function renderWebTable() {
+        const fixedDate = getFixedDate();
+        const start = (currentWebPage - 1) * itemsPerPage;
+        const end = start + itemsPerPage;
+        const paginatedData = allWebData.slice(start, end);
+        document.getElementById('webBody').innerHTML = paginatedData.map(row => {
+            let timePart = row[7] || "";
+            if (timePart.includes("T")) timePart = timePart.split("T")[1].split(".")[0];
+            return `<tr><td>${fixedDate}</td><td>${row[1]}</td><td>${row[2]}</td><td>${row[3]}</td><td>${formatNumber(row[4])}</td><td>${row[5]}</td><td>${formatNumber(row[6])}</td><td>${timePart}</td><td>${row[8]}</td></tr>`;
+        }).join('');
+
+        const totalPages = Math.ceil(allWebData.length / itemsPerPage);
+        const paginationEl = document.getElementById('webPagination');
+        if (totalPages > 1) {
+            let btns = '';
             for (let i = 1; i <= totalPages; i++) {
-                paginationHtml += `<button class="page-btn ${
-                    i === currentPage ? 'active' : ''
-                }" onclick="goToPage(${i})">${i}</button>`;
+                btns += `<button class="page-btn ${i === currentWebPage ? 'active' : ''}" onclick="changeWebPage(${i})">${i}</button>`;
             }
-            paginationContainer.innerHTML = paginationHtml;
+            paginationEl.innerHTML = btns;
+            paginationEl.style.display = 'flex';
+        } else {
+            paginationEl.style.display = 'none';
         }
+    }
 
-        function goToPage(page) {
-            currentPage = page;
-            renderWebSalesTable();
+    window.changeWebPage = function(page) {
+        currentWebPage = page;
+        renderWebTable();
+    }
+
+    function renderData(s) {
+        const fixedDate = getFixedDate();
+        const d = s.daily;
+        document.getElementById('dailyBody').innerHTML = `<tr><td style="font-weight:600">${fixedDate}</td><td>${formatNumber(d.np)}</td><td class="${getColorClass(d.npD)}">${formatNumber(d.npD)}</td><td>${formatNumber(d.bd)}</td><td class="${getColorClass(d.bdD)}">${formatNumber(d.bdD)}</td><td>${formatNumber(d.ap)}</td><td class="${getColorClass(d.apD)}">${formatNumber(d.apD)}</td><td>${formatNumber(d.sm)}</td><td class="${getColorClass(d.smD)}">${formatNumber(d.smD)}</td><td style="font-weight:700; background:#fafafa">${formatNumber(d.totalP)}</td><td style="font-weight:700; background:#fafafa">${formatNumber(d.totalD)}</td></tr>`;
+        document.getElementById('postpaySummaryBody').innerHTML = (s.summary || []).map(row => `<tr><td>${row[0]}</td><td>${formatNumber(row[1])}</td><td style="font-weight:600">${formatNumber(row[2])}</td></tr>`).join('');
+        document.getElementById('brandBody').innerHTML = (s.brands || []).map(row => `<tr><td>${row[0]}</td><td>${formatNumber(row[1])}</td><td style="font-weight:600">${formatNumber(row[2])}</td></tr>`).join('');
+        document.getElementById('focusBody').innerHTML = (s.focus || []).map(row => `<tr><td>${row[0]}</td><td style="text-align:right; font-weight:700; color:#4f46e5">${formatNumber(row[1])}</td></tr>`).join('');
+        document.getElementById('targetBody').innerHTML = (s.targets || []).map(row => `<tr><td>${row[0]}</td><td style="text-align:right; font-weight:600">${formatNumber(row[1])}</td></tr>`).join('');
+        document.getElementById('displayUserName').innerText = s.name;
+        const act = s.actuals;
+        if(act) {
+            const configs = [
+                { label: 'New Post', data: act.np, color: '#0284c7' },
+                { label: 'BDBC', data: act.bd, color: '#059669' },
+                { label: 'Apple', data: act.ap, color: '#d97706' },
+                { label: 'Smartphone', data: act.sm, color: '#be123c' }
+            ];
+            document.getElementById('actualGrid').innerHTML = configs.map(item => {
+                return `
+                <div class="stat-box" style="border-left-color: ${item.color}">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom:5px;">
+                        <span style="font-size:18px; color:var(--text-light); font-weight:600;">${item.label}</span>
+                        <span class="${getColorClass(item.data.diff)}" style="font-size:16px;">Diff: ${formatNumber(item.data.diff)}</span>
+                    </div>
+                    <div class="stat-val" style="font-size:32px;">${formatNumber(item.data.val)}</div>
+                    <div style="font-size:18px; margin-top:5px;">
+                        <span style="color:#4f46e5; font-weight:600">Ach: ${formatDecimalTwo(item.data.ach)}%</span>
+                    </div>
+                </div>`;
+            }).join('');
         }
-
-        function exportPDF() {
-            const element = document.getElementById('dashboardData');
-            const loader = document.getElementById('loader');
-            const loaderText = document.getElementById('loader-text');
-
-            // ก่อน Export PDF ให้แสดงข้อมูลทั้งหมดในตาราง WebSales เพื่อให้ PDF มีข้อมูลครบ (ชั่วคราว)
-            const currentRows = rowsPerPage;
-            const currentActivePage = currentPage;
-
-            loader.style.display = 'flex';
-            loaderText.innerText = 'กำลังเตรียมไฟล์ PDF...';
-
-            // ปรับเป็นแสดงทั้งหมดชั่วคราวเพื่อให้ PDF เห็นครบ
-            const webSalesBody = document.getElementById('webSalesBody');
-            const oldHtml = webSalesBody.innerHTML;
-            const oldPagHtml = document.getElementById('webSalesPagination').innerHTML;
-
-            webSalesBody.innerHTML = allWebSalesData
-                .map(
-                    (r) =>
-                        `<tr>
-                <td>${r[0]}</td>
-                <td><b>${r[1]}</b></td>
-                <td>${r[2]}</td>
-                <td><span class="badge-postpay">${r[3]}</span></td>
-                <td class="text-right">${r[4]}</td>
-                <td><span class="badge-device">${r[5]}</span></td>
-                <td class="text-right">${r[6]}</td>
-                <td>${r[7]}</td>
-                <td>${r[8] || '-'}</td>
-            </tr>`
-                )
-                .join('');
-            document.getElementById('webSalesPagination').innerHTML = '';
-
-            setTimeout(() => {
-                const opt = {
-                    margin: 5,
-                    filename: 'Performance_Report.pdf',
-                    image: { type: 'jpeg', quality: 0.98 },
-                    html2canvas: { scale: 2, useCORS: true },
-                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
-                };
-                html2pdf().set(opt).from(element).save().then(() => {
-                    // คืนค่าเดิมหลัง Export
-                    renderWebSalesTable();
-                    loader.style.display = 'none';
-                    loaderText.innerText = 'กำลังประมวลผลข้อมูล...';
-                });
-            }, 500);
-        }
-
-        function exportExcel() {
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, XLSX.utils.table_to_sheet(document.getElementById('tableDaily')), "Daily");
-
-            // สำหรับ Excel เราจะสร้างตารางชั่วคราวที่มีข้อมูลทั้งหมด (allWebSalesData)
-            const tempTable = document.createElement('table');
-            tempTable.innerHTML =
-                `<thead>${document.querySelector('#tableWebSales thead').innerHTML}</thead><tbody>` +
-                allWebSalesData
-                    .map((r) => `<tr>${r.map((cell) => `<td>${cell}</td>`).join('')}</tr>`)
-                    .join('') +
-                `</tbody>`;
-
-            XLSX.utils.book_append_sheet(wb, XLSX.utils.table_to_sheet(tempTable), 'WebSalesDetails');
-            XLSX.utils.book_append_sheet(wb, XLSX.utils.table_to_sheet(document.getElementById('tableSummary')), 'Summary');
-            XLSX.utils.book_append_sheet(wb, XLSX.utils.table_to_sheet(document.getElementById('tableBrand')), 'Brands');
-            XLSX.writeFile(wb, 'Performance_Report.xlsx');
-        }
-    </script>
+    }
+</script>
 </body>
 </html>
