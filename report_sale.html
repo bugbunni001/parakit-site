@@ -144,7 +144,9 @@
 
     <div id="welcome-card">
         <div id="welcome-icon" style="font-size: 50px; margin-bottom: 15px;">📊</div>
-        <p id="welcome-text" style="font-size: 18px;">กรุณาเลือกชื่อพนักงานและกดปุ่ม <b>"ดึงข้อมูล"</b> เพื่อแสดงยอดขาย</p>
+        <div id="welcome-text-container">
+            <p id="welcome-text" style="font-size: 18px;">กรุณาเลือกชื่อพนักงานและกดปุ่ม <b>"ดึงข้อมูล"</b> เพื่อแสดงยอดขาย</p>
+        </div>
     </div>
         
     <div id="dashboard">
@@ -291,21 +293,30 @@
             const name = document.getElementById('name').value;
             const dateVal = document.getElementById('day').value;
             if (!dateVal) throw new Error("กรุณาเลือกวันที่");
-            const day = new Date(dateVal).getDate(); 
 
-            const response = await fetch(`${WEB_APP_URL}?action=getSales&name=${name}&day=${day}`);
+            // แก้ไข: ใช้ Full Date สำหรับ WebDetails เพื่อความแม่นยำ
+            const dateObj = new Date(dateVal);
+            const dayNum = dateObj.getDate();
+            const formattedDate = dateVal; // YYYY-MM-DD
+
+            // Fetch ข้อมูล
+            const response = await fetch(`${WEB_APP_URL}?action=getSales&name=${name}&day=${dayNum}`);
             const res = await response.json();
-            const webResponse = await fetch(`${WEB_APP_URL}?action=getWebDetails&day=${day}`);
+            
+            // แก้ไข: ส่ง formattedDate ไปแทน day เพื่อดึงข้อมูลให้ตรงวันเป๊ะๆ
+            const webResponse = await fetch(`${WEB_APP_URL}?action=getWebDetails&day=${formattedDate}`);
             const webRes = await webResponse.json();
 
-            // ตรวจสอบความสำเร็จของข้อมูล
-            if(!res.success) {
-                // กรณีไม่พบข้อมูล (เช่น Script ส่ง success: false กลับมา)
+            // ตรวจสอบความสำเร็จและข้อมูล
+            // ถ้า res.daily เป็น null หรือข้อมูลไม่มีค่าสำคัญ ให้ถือว่าไม่พบข้อมูล
+            if(!res.success || !res.daily || res.daily.totalP === 0 && res.daily.totalD === 0 && (!webRes.rows || webRes.rows.length === 0)) {
                 dashboard.style.display = 'none';
                 welcomeCard.style.display = 'block';
                 welcomeCard.style.border = '2px dashed var(--danger)';
                 welcomeIcon.innerText = '⚠️';
-                welcomeText.innerHTML = '<b style="color:var(--danger); font-size: 22px;">‼️ระบบยังไม่พบข้อมูลการขายของวันที่ ที่คุณเลือก</b>';
+                // แก้ไข: แสดงข้อความตามที่แม่ต้องการ
+                const displayDate = new Date(dateVal).toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' });
+                welcomeText.innerHTML = `<b style="color:var(--danger); font-size: 22px;">‼️ยังไม่พบข้อมูลการขายในวันที่ ${displayDate}</b>`;
                 return;
             }
 
@@ -313,11 +324,17 @@
             welcomeCard.style.display = 'none';
             dashboard.style.display = 'block';
             render(res);
-            webData = webRes.rows || [];
-            renderWebTable(1);
+            
+            // กรองข้อมูลพนักงานในฝั่ง Web Data อีกชั้นหนึ่งเพื่อให้ตรงกับชื่อที่เลือก
+            webData = (webRes.rows || []).filter(row => row[1] === name); 
+            
+            if(webData.length === 0) {
+                 renderWebTable(1, "‼️ยังไม่พบรายละเอียดการขายของ " + name);
+            } else {
+                 renderWebTable(1);
+            }
             
         } catch (err) {
-            // กรณีเกิด Error ในการ Fetch
             dashboard.style.display = 'none';
             welcomeCard.style.display = 'block';
             welcomeIcon.innerText = '‼️';
@@ -327,18 +344,21 @@
         }
     }
 
-    function renderWebTable(page) {
+    function renderWebTable(page, customMsg) {
         const tbody = document.getElementById('body-web');
         const pagination = document.getElementById('web-pagination');
         tbody.innerHTML = '';
         pagination.innerHTML = '';
+
         if (webData.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding: 30px;">ไม่พบข้อมูลการขายจากเว็บในวันที่เลือก</td></tr>';
+            tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding: 30px; color: var(--danger); font-weight: 500;">${customMsg || 'ไม่พบข้อมูลการขายในวันที่เลือก'}</td></tr>`;
             return;
         }
+
         const start = (page - 1) * rowsPerPage;
         const end = start + rowsPerPage;
         const paginatedData = webData.slice(start, end);
+
         paginatedData.forEach(row => {
             const tr = document.createElement('tr');
             row.forEach(cell => {
@@ -348,13 +368,16 @@
             });
             tbody.appendChild(tr);
         });
+
         const totalPages = Math.ceil(webData.length / rowsPerPage);
-        for (let i = 1; i <= totalPages; i++) {
-            const btn = document.createElement('button');
-            btn.innerText = i;
-            btn.className = `page-btn ${i === page ? 'active' : ''}`;
-            btn.onclick = () => renderWebTable(i);
-            pagination.appendChild(btn);
+        if(totalPages > 1) {
+            for (let i = 1; i <= totalPages; i++) {
+                const btn = document.createElement('button');
+                btn.innerText = i;
+                btn.className = `page-btn ${i === page ? 'active' : ''}`;
+                btn.onclick = () => renderWebTable(i);
+                pagination.appendChild(btn);
+            }
         }
     }
 
