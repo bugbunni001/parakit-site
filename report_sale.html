@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>📊ยอดขายรายบุคคล</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -10,11 +10,15 @@
     <style>
         :root {
             --primary-gradient: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-            --glass-bg: rgba(255, 255, 255, 0.9);
+            --glass-bg: rgba(255, 255, 255, 0.8);
+            --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
             --sidebar-color: #1e293b;
             --text-main: #334155;
+            --text-light: #64748b;
+            --sidebar-width: 280px;
             --luxury-blue: #0f172a;
             --border-color: #e2e8f0;
+            --bg-silver: #f1f5f9;
             --head-daily: #334155;
             --head-detail: #0284c7;
             --head-mtd: #059669;
@@ -22,312 +26,306 @@
             --head-target: #b45309;
             --success: #10b981;
             --danger: #ef4444;
-            --sidebar-width: 280px;
+            --hover-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
         }
 
         * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
+        body { margin: 0; background: #f1f5f9; color: var(--text-main); -webkit-font-smoothing: antialiased; transition: padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         
-        body { 
-            margin: 0; 
-            background: #f1f5f9; 
-            color: var(--text-main); 
-            overflow-x: hidden;
-            transition: padding-left 0.3s ease;
-        }
+        /* Fix Layout for Mobile */
+        .top-header { position: fixed; top: 0; left: 0; right: 0; height: 65px; background: var(--glass-bg); backdrop-filter: blur(10px); z-index: 1100; display: flex; align-items: center; padding: 0 20px; border-bottom: 1px solid rgba(0,0,0,0.05); transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .top-toggle { width: 40px; height: 40px; border-radius: 10px; border: none; background: var(--sidebar-color); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; z-index: 1300; margin-right: 15px; transition: 0.2s; }
+        .top-toggle:hover { background: #475569; transform: scale(1.05); }
 
-        /* Responsive Layout Logic */
-        @media(min-width:1025px) {
-            body:not(.collapsed) { padding-left: var(--sidebar-width); }
-            body:not(.collapsed) .top-header { left: var(--sidebar-width); width: calc(100% - var(--sidebar-width)); }
-        }
+        .sidebar { position: fixed; top: 0; left: 0; width: var(--sidebar-width); height: 100vh; background: var(--sidebar-color); color: #fff; overflow-y: auto; transition: all .3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 2000; box-shadow: 10px 0 30px rgba(0,0,0,0.1); }
+        
+        @media(min-width:769px) { body:not(.collapsed) { padding-left: var(--sidebar-width); } body:not(.collapsed) .top-header { left: var(--sidebar-width); } body.collapsed .sidebar { transform: translateX(-100%); } body.collapsed .top-header { left: 0; } }
+        @media(max-width:768px) { .sidebar { transform: translateX(-100%); } .sidebar.show { transform: translateX(0); } body { padding-left: 0 !important; } .top-header { left: 0 !important; } }
 
-        .top-header { 
-            position: fixed; top: 0; left: 0; right: 0; height: 65px; 
-            background: var(--glass-bg); backdrop-filter: blur(10px); 
-            z-index: 1100; display: flex; align-items: center; 
-            padding: 0 20px; border-bottom: 1px solid rgba(0,0,0,0.05);
-            transition: all 0.3s ease;
-        }
-
-        .top-toggle { 
-            width: 40px; height: 40px; border-radius: 10px; border: none; 
-            background: var(--sidebar-color); color: white; cursor: pointer; 
-            display: flex; align-items: center; justify-content: center; 
-            transition: transform 0.2s;
-        }
-        .top-toggle:hover { transform: scale(1.05); background: #334155; }
-
-        .sidebar { 
-            position: fixed; top: 0; left: 0; width: var(--sidebar-width); 
-            height: 100vh; background: var(--sidebar-color); color: #fff; 
-            z-index: 2000; transition: transform 0.3s ease; 
-            box-shadow: 10px 0 30px rgba(0,0,0,0.1); 
-        }
-
-        /* Sidebar Mobile state */
-        @media(max-width:1024px) {
-            .sidebar { transform: translateX(-100%); }
-            .sidebar.show { transform: translateX(0); }
-            body { padding-left: 0 !important; }
-        }
-
-        /* Sidebar Collapsed state (Desktop) */
-        body.collapsed .sidebar { transform: translateX(-100%); }
-        body.collapsed .top-header { left: 0; width: 100%; }
-
-        .overlay { 
-            position: fixed; inset: 0; background: rgba(0,0,0,0.4); 
-            display: none; z-index: 1500; backdrop-filter: blur(2px);
-        }
+        .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.5); backdrop-filter: blur(4px); display: none; z-index: 1500; }
         .overlay.show { display: block; }
 
-        /* Toolbar & Controls */
-        .main-wrapper { padding: 85px 15px 40px; }
-        .content-container { width: 100%; max-width: 1400px; margin: 0 auto; }
+        /* Sidebar Item Hover */
+        .sidebar-header { padding: 25px 20px; font-size: 18px; font-weight: 600; background: #0f172a; color: #fff; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .menu { display: flex; flex-direction: column; padding: 10px 0; }
+        .item { border-bottom: 1px solid rgba(255,255,255,0.03); }
+        .menu a, .menu .drop-btn { width: 100%; min-height: 50px; padding: 12px 20px; background: none; border: none; color: #cbd5e1; text-align: left; font-size: 15px; cursor: pointer; display: flex; align-items: center; text-decoration: none; transition: 0.3s; }
+        .menu a:hover, .menu .drop-btn:hover { background: #334155; color: #fff; padding-left: 30px; }
+        .sub { display: none; background: #0f172a; padding: 5px 0; }
+        .item.open .sub { display: block; }
+        .sub a { padding-left: 45px; font-size: 14px; color: #94a3b8; min-height: 40px; }
+        .sub a:hover { color: #5bbf8a; padding-left: 55px; }
 
-        .toolbar { 
-            background: white; padding: 20px; border-radius: 16px; 
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); 
-            display: flex; flex-wrap: wrap; gap: 15px; 
-            align-items: flex-end; margin-bottom: 25px;
-        }
-
-        .select-group { flex: 1; min-width: 200px; }
-        .select-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 8px; color: var(--head-daily); }
+        /* Main Content & Toolbar */
+        .main-wrapper { padding: 85px 20px 40px; display: flex; justify-content: center; }
+        .content-container { width: 100%; max-width: 1200px; }
+        .toolbar { background: white; padding: 18px 25px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; margin-bottom: 30px; border: 1px solid var(--border-color); gap: 20px; }
         
-        .modern-select, .modern-date { 
-            width: 100%; background: #f8fafc; border: 1.5px solid #e2e8f0; 
-            border-radius: 10px; padding: 10px; font-size: 15px; outline: none;
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }
-        .modern-select:focus, .modern-date:focus { border-color: var(--head-detail); box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.1); }
+        @media (max-width: 768px) { .toolbar { justify-content: center; flex-direction: column; align-items: stretch; } }
 
-        .btn-fetch { 
-            background: var(--luxury-blue); color: white; border: none; 
-            padding: 12px 25px; border-radius: 10px; cursor: pointer; 
-            font-weight: 600; transition: all 0.2s; height: 45px;
-        }
-        .btn-fetch:hover { background: #334155; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-
-        /* Cards & Tables */
-        .card { 
-            background: white; border-radius: 12px; overflow: hidden; 
-            border: 1px solid var(--border-color); margin-bottom: 20px; 
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        .card:hover { box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
-
-        .card-header-bar { padding: 12px 18px; color: white; font-weight: 500; display: flex; justify-content: space-between; align-items: center; }
-
-        .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-        .table-luxury { width: 100%; border-collapse: collapse; min-width: 600px; }
-        .table-luxury th { background: #f8fafc; padding: 12px; font-size: 13px; text-align: left; color: #64748b; border-bottom: 2px solid #edf2f7; }
-        .table-luxury td { padding: 12px; font-size: 14px; border-bottom: 1px solid #f1f5f9; }
+        .select-group { position: relative; display: flex; align-items: center; gap: 10px; }
+        .select-group label { font-size: 14px; font-weight: 600; color: #64748b; white-space: nowrap; }
+        .modern-select, .modern-date { appearance: none; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 10px 15px; font-size: 15px; color: #1e293b; cursor: pointer; min-width: 150px; outline: none; transition: 0.2s; }
+        .modern-select:hover, .modern-date:hover { border-color: #cbd5e1; background: #fff; }
         
-        /* Table Hover Effect */
-        .table-luxury tbody tr:hover { background-color: #f8fafc; cursor: default; }
+        button.btn-fetch { background: var(--luxury-blue); color: white; border: none; padding: 12px 24px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.3s; }
+        button.btn-fetch:hover { background: #1e293b; transform: translateY(-2px); box-shadow: var(--hover-shadow); }
 
-        /* Grid System */
-        .grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; }
-        @media (max-width: 480px) { .grid-container { grid-template-columns: 1fr; } }
+        /* Dashboard & Cards */
+        #welcome-card { background: white; padding: 100px 20px; border-radius: 16px; border: 2px dashed #e2e8f0; text-align: center; color: #64748b; font-size: 20px; }
+        .card { background: white; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); transition: 0.3s; }
+        .card:hover { box-shadow: var(--hover-shadow); }
+        .card-header-bar { padding: 14px 20px; color: white; font-size: 17px; font-weight: 500; display: flex; justify-content: space-between; align-items: center; }
 
-        /* Stats Boxes */
-        .mtd-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 15px; }
+        /* Tables Responsive */
+        .table-luxury { width: 100%; border-collapse: collapse; background: white; }
+        .table-luxury th { background: #f8fafc; padding: 16px 12px; text-align: left; font-size: 13px; color: #64748b; border-bottom: 2px solid var(--border-color); border-right: 1px solid #edf2f7; }
+        .table-luxury td { padding: 16px 12px; font-size: 14px; border-bottom: 1px solid #f1f5f9; border-right: 1px solid #f1f5f9; }
+        .table-luxury tbody tr:hover { background-color: #fcfcfd; }
+        
+        .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+        /* Grid Layout */
+        .grid-container { display: grid; grid-template-columns: 1.5fr 1fr; gap: 25px; }
+        @media (max-width: 1000px) { .grid-container { grid-template-columns: 1fr; } }
+
+        /* Stats & MTD */
+        .mtd-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 20px; }
         @media (max-width: 500px) { .mtd-grid { grid-template-columns: 1fr; } }
-        
-        .stat-box { 
-            padding: 15px; border-radius: 12px; border: 1px solid #f1f5f9; 
-            border-left: 5px solid; background: #fff; transition: transform 0.2s;
-        }
-        .stat-box:hover { transform: scale(1.02); }
-        .stat-box .val { font-size: 24px; font-weight: 700; }
+        .stat-box { padding: 22px; border: 1px solid #f1f5f9; border-left: 6px solid var(--head-mtd); border-radius: 12px; background: #fff; transition: 0.3s; }
+        .stat-box:hover { transform: translateY(-5px); border-color: var(--head-mtd); }
+        .stat-box .val { font-size: 32px; font-weight: 700; color: var(--luxury-blue); }
 
-        /* Animation & Loader */
-        #loader { 
-            position: fixed; inset: 0; background: rgba(255,255,255,0.9); 
-            z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; 
-        }
-        .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid var(--luxury-blue); border-radius: 50%; animation: spin 1s linear infinite; }
+        /* Targets */
+        .target-list { padding: 10px 20px 20px; }
+        .target-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f8fafc; font-size: 15px; }
+        .tag-title-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 14px; color: white; border-radius: 6px; margin: 15px 0 8px; font-weight: 600; font-size: 14px; }
+        
+        /* Helpers */
+        .up { color: var(--success); font-weight: 600; } 
+        .down { color: var(--danger); font-weight: 600; } 
+        .badge-white { background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 6px; font-size: 13px; }
+
+        #loader { display: none; position: fixed; inset: 0; background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(5px); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; }
+        .spinner { width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid var(--luxury-blue); border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        #welcome-card { padding: 80px 20px; text-align: center; background: white; border-radius: 16px; border: 2px dashed #e2e8f0; }
-        
-        /* Pagination hover */
-        .page-btn { 
-            border: 1px solid #e2e8f0; background: white; padding: 8px 15px; 
-            border-radius: 8px; cursor: pointer; transition: 0.2s; 
-        }
-        .page-btn:hover:not(.active) { background: #f1f5f9; border-color: #cbd5e1; }
-        .page-btn.active { background: var(--luxury-blue); color: white; }
+        /* Pagination */
+        .pagination { display: flex; justify-content: center; padding: 15px; gap: 8px; background: #fff; }
+        .page-btn { border: 1px solid #e2e8f0; background: white; padding: 6px 12px; border-radius: 6px; cursor: pointer; transition: 0.2s; }
+        .page-btn:hover { background: var(--luxury-blue); color: white; }
+        .page-btn.active { background: var(--luxury-blue); color: white; border-color: var(--luxury-blue); }
 
-        /* Color classes */
         .bg-daily { background: var(--head-daily); }
         .bg-detail { background: var(--head-detail); }
         .bg-mtd { background: var(--head-mtd); }
         .bg-focus { background: var(--head-focus); }
         .bg-target { background: var(--head-target); }
         .bg-extra { background: #6366f1; }
-        .up { color: var(--success); font-weight: 600; }
-        .down { color: var(--danger); font-weight: 600; }
     </style>
 </head>
 <body>
 
 <header class="top-header">
     <button class="top-toggle" onclick="toggleSidebar()">☰</button>
-    <div style="font-weight: 600; font-size: 1.1rem; color: #1e293b; margin-left: 10px;">ยอดขาย By Indy</div>
+    <div style="font-weight: 600; font-size: 1.1rem; color: #1e293b;">ยอดขาย By Indy</div>
 </header>
 
 <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 <aside class="sidebar" id="sidebar"></aside>
 
 <div id="loader">
-    <div class="spinner"></div>
-    <p style="margin-top:20px; font-weight: 500;">กำลังประมวลผลข้อมูล...</p>
+  <div class="spinner"></div>
+  <p style="margin-top:25px; font-size: 20px; font-weight: 500; color: var(--luxury-blue);">กำลังดึงข้อมูลการขาย...</p>
 </div>
 
 <div class="main-wrapper">
-    <div class="content-container">
-        <div class="toolbar">
-            <div class="select-group">
-                <label>👤 เลือกพนักงาน</label>
-                <select id="name" class="modern-select">
-                    <option>นวพล</option>
-                    <option>ปิยะพร</option>
-                    <option>กรทักษ์</option>
-                </select>
-            </div>
-            <div class="select-group">
-                <label>📅 เลือกวันที่</label>
-                <input type="date" id="day" class="modern-date">
-            </div>
-            <button class="btn-fetch" onclick="pullData()">🚀 ดึงข้อมูล</button>
+  <div class="content-container">
+    <div class="toolbar">
+        <div class="select-group">
+          <label>👤 เลือกพนักงาน</label>
+          <div class="select-wrapper" style="position:relative;">
+            <select id="name" class="modern-select">
+              <option>นวพล</option>
+              <option>ปิยะพร</option>
+              <option>กรทักษ์</option>
+            </select>
+          </div>
         </div>
-
-        <div id="welcome-card">
-            <div id="welcome-icon" style="font-size: 50px; margin-bottom: 15px;">📊</div>
-            <div id="welcome-text-container">
-                <p id="welcome-text">ระบุชื่อพนักงานและวันที่เพื่อดูสรุปยอดขาย</p>
-            </div>
+        <div class="select-group">
+          <label>📅 เลือกวันที่</label>
+          <input type="date" id="day" class="modern-date">
         </div>
+      <button class="btn-fetch" onclick="pullData()">
+        <span>🚀 ดึงข้อมูล</span>
+      </button>
+    </div>
 
-        <div id="dashboard" style="display: none;">
-            <div class="card">
-                <div class="card-header-bar bg-daily">
-                    <span>📉 สรุปยอดขายรายวัน</span>
-                    <span id="out-date" style="font-size: 0.85rem; opacity: 0.9;"></span>
-                </div>
-                <div class="table-responsive">
-                    <table class="table-luxury">
-                        <thead>
-                            <tr>
-                                <th>วันที่</th><th>New Post</th><th>Diff</th><th>BDBC</th><th>Diff</th>
-                                <th>Apple</th><th>Diff</th><th>Smart</th><th>Diff</th>
-                                <th style="background:#f1f5f9">รวม Postpay</th><th style="background:#f1f5f9">รวม Device</th>
-                            </tr>
-                        </thead>
-                        <tbody id="body-daily"></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-header-bar bg-daily"><span>🛒 รายละเอียดการขาย (จากเว็บ)</span></div>
-                <div class="table-responsive">
-                    <table class="table-luxury" id="tbl-web">
-                        <thead>
-                            <tr>
-                                <th>วันที่</th><th>พนักงาน</th><th>ลูกค้า</th><th>Postpay</th>
-                                <th>ยอดขาย</th><th>Device</th><th>ยอดขาย</th><th>เวลา</th><th>สินเชื่อ</th>
-                            </tr>
-                        </thead>
-                        <tbody id="body-web"></tbody>
-                    </table>
-                </div>
-                <div id="web-pagination" class="pagination" style="padding: 15px; display: flex; justify-content: center; gap: 5px;"></div>
-            </div>
-
-            <div class="grid-container">
-                <div class="col-left">
-                    <div class="card">
-                        <div class="card-header-bar bg-detail">📑 รายละเอียด: <span class="out-name"></span></div>
-                        <div class="table-responsive">
-                            <table class="table-luxury" id="tbl-sum">
-                                <thead><tr><th>รายการสินค้า</th><th>ยอดขาย (บาท)</th><th>จำนวน</th></tr></thead>
-                                <tbody></tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <div class="card">
-                        <div class="card-header-bar bg-mtd">🚀 ยอดขายสะสมทั้งเดือน</div>
-                        <div class="mtd-grid" id="out-actual"></div>
-                    </div>
-
-                    <div class="card">
-                        <div class="card-header-bar bg-extra">📋 ยอดขาย Device</div>
-                        <div class="table-responsive">
-                            <table class="table-luxury" id="tbl-extra">
-                                <thead><tr><th>แบรนด์</th><th>ยอดขาย</th><th>จำนวน</th></tr></thead>
-                                <tbody id="body-extra"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-right">
-                    <div class="card">
-                        <div class="card-header-bar bg-focus">🎯 Focus Point (KPI)</div>
-                        <div class="table-responsive">
-                            <table class="table-luxury" id="tbl-focus">
-                                <thead><tr><th>เป้าหมายหลัก</th><th style="text-align:right">ผลงานจริง</th></tr></thead>
-                                <tbody></tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <div class="card">
-                        <div class="card-header-bar bg-target">🏁 เป้าหมายรายเดือน (Targets)</div>
-                        <div id="target-list-container" style="padding: 15px;"></div>
-                    </div>
-                </div>
-            </div>
+    <div id="welcome-card">
+        <div id="welcome-icon" style="font-size: 50px; margin-bottom: 15px;">📊</div>
+        <div id="welcome-text-container">
+            <p id="welcome-text" style="font-size: 18px;">กรุณาเลือกชื่อพนักงานและกดปุ่ม <b>"ดึงข้อมูล"</b> เพื่อแสดงยอดขาย</p>
         </div>
     </div>
+        
+    <div id="dashboard" style="display:none;">
+      <div class="card">
+        <div class="card-header-bar bg-daily">
+          <span>📉 สรุปยอดขายรายวัน</span>
+          <span class="badge-white" id="out-date"></span>
+        </div>
+        <div class="table-scroll">
+          <table class="table-luxury">
+            <thead>
+              <tr>
+                <th>วันที่</th><th>New Post</th><th>Diff+/-</th><th>BDBC</th><th>Diff+/-</th>
+                <th>Apple</th><th>Diff+/-</th><th>Smart</th><th>Diff+/-</th>
+                <th style="background:#f1f5f9">รวม Postpay</th><th style="background:#f1f5f9">รวม Device</th>
+              </tr>
+            </thead>
+            <tbody id="body-daily"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card" id="web-data-card">
+        <div class="card-header-bar bg-daily">
+          <span>🛒 รายละเอียดการขาย (จากเว็บ)</span>
+        </div>
+        <div class="table-scroll">
+          <table class="table-luxury" id="tbl-web">
+            <thead>
+              <tr>
+                <th>วันที่</th><th>พนักงาน</th><th>คนที่ขายให้</th><th>Postpay</th>
+                <th>ยอดขายPostpay</th><th>Device</th><th>ยอดขายDevice</th><th>เวลาบันทึก</th><th>สินเชื่อ</th>
+              </tr>
+            </thead>
+            <tbody id="body-web"></tbody>
+          </table>
+        </div>
+        <div id="web-pagination" class="pagination"></div>
+      </div>
+
+      <div class="grid-container">
+        <div class="col-left">
+          <div class="card">
+            <div class="card-header-bar bg-detail">
+              <span>📑 รายละเอียด: <span class="out-name"></span></span>
+            </div>
+            <div class="table-scroll">
+                <table class="table-luxury" id="tbl-sum">
+                  <thead><tr><th>รายการสินค้า/หมวดหมู่</th><th>ยอดขาย (บาท)</th><th>จำนวน</th></tr></thead>
+                  <tbody></tbody>
+                </table>
+            </div>
+          </div>
+          
+          <div class="card">
+            <div class="card-header-bar bg-mtd"><span>🚀 ยอดขายสะสมทั้งเดือน</span></div>
+            <div class="mtd-grid" id="out-actual"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-header-bar bg-extra"><span>📋 ยอดขาย Device</span></div>
+            <div class="table-scroll">
+              <table class="table-luxury" id="tbl-extra">
+                <thead>
+                  <tr style="background: #f8fafc;">
+                    <th>แบรนด์</th><th>ยอดขาย</th><th>จำนวน</th>
+                  </tr>
+                </thead>
+                <tbody id="body-extra"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-right">
+          <div class="card">
+            <div class="card-header-bar bg-focus"><span>🎯 Focus Point (KPI)</span></div>
+            <div class="table-scroll">
+                <table class="table-luxury" id="tbl-focus">
+                  <thead><tr><th>เป้าหมายหลัก</th><th style="text-align:right">ผลงานจริง</th></tr></thead>
+                  <tbody></tbody>
+                </table>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header-bar bg-target"><span>🏁 เป้าหมายรายเดือน (Targets)</span></div>
+            <div id="target-list-container" class="target-list"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxICBOAi-EiGDGOP3oyzJujqG2mAL-J7ZD_9nKmjuQKx-uq2WW807PbXugDzBOMqkiKYw/exec";
-    let webData = [];
-    const rowsPerPage = 5;
-
-    // Initialize Date
-    window.addEventListener('DOMContentLoaded', () => {
-        const now = new Date();
-        document.getElementById('day').value = now.toISOString().split('T')[0];
-        includeSidebar();
-    });
+    // --- UI Navigation Script ---
+    function includeSidebar() {
+        const cached = localStorage.getItem('sidebar_cache');
+        if (cached) {
+            document.getElementById('sidebar').innerHTML = cached;
+            restoreMenuState();
+        }
+        fetch('sidebar.html')
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('sidebar').innerHTML = data;
+                localStorage.setItem('sidebar_cache', data);
+                restoreMenuState();
+            })
+            .catch(err => console.warn("Sidebar Load Error"));
+    }
 
     function toggleSidebar() {
-        const sidebar = document.getElementById("sidebar");
-        const overlay = document.getElementById("overlay");
-        if (window.innerWidth <= 1024) {
-            sidebar.classList.toggle("show");
-            overlay.classList.toggle("show");
+        if (window.innerWidth <= 768) {
+            document.getElementById("sidebar").classList.toggle("show");
+            document.getElementById("overlay").classList.toggle("show");
         } else {
             document.body.classList.toggle("collapsed");
         }
     }
 
+    // Function for sidebar dropdowns (original)
+    window.toggleDrop = function(btn, id) {
+        const item = btn.parentElement;
+        const isOpen = item.classList.toggle("open");
+        if (id) localStorage.setItem('menu-' + id, isOpen);
+    }
+
+    function restoreMenuState() {
+        ['credit', 'branch', 'sales'].forEach(id => {
+            if (localStorage.getItem('menu-' + id) === 'true') {
+                const el = document.getElementById('menu-' + id);
+                if (el) el.classList.add('open');
+            }
+        });
+    }
+
+    // --- Data Fetching Script ---
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxICBOAi-EiGDGOP3oyzJujqG2mAL-J7ZD_9nKmjuQKx-uq2WW807PbXugDzBOMqkiKYw/exec";
+    
+    // Set Default Date
+    const dayInput = document.getElementById('day');
+    const now = new Date();
+    dayInput.value = now.toISOString().split('T')[0];
+
+    let webData = [];
+    const rowsPerPage = 5;
+
     async function pullData() {
         const loader = document.getElementById('loader');
+        const welcomeCard = document.getElementById('welcome-card');
         const dashboard = document.getElementById('dashboard');
-        const welcome = document.getElementById('welcome-card');
         
-        loader.style.display = 'flex';
+        loader.style.display = 'flex'; 
         try {
             const name = document.getElementById('name').value;
             const dateVal = document.getElementById('day').value;
+            if (!dateVal) throw new Error("กรุณาเลือกวันที่");
+
             const dayNum = new Date(dateVal).getDate();
 
             const [res, webRes] = await Promise.all([
@@ -335,23 +333,26 @@
                 fetch(`${WEB_APP_URL}?action=getWebDetails&day=${dateVal}`).then(r => r.json())
             ]);
 
-            if(!res.success || (res.daily.totalP === 0 && res.daily.totalD === 0 && (!webRes.rows || webRes.rows.length === 0))) {
-                throw new Error("ไม่พบข้อมูลการขายในวันที่เลือก");
+            if(!res.success || !res.daily || (res.daily.totalP === 0 && res.daily.totalD === 0 && (!webRes.rows || webRes.rows.length === 0))) {
+                dashboard.style.display = 'none';
+                welcomeCard.style.display = 'block';
+                document.getElementById('welcome-text').innerHTML = `<b style="color:var(--danger);">‼️ยังไม่พบข้อมูลการขายในวันที่เลือก</b>`;
+                return;
             }
 
-            welcome.style.display = 'none';
+            welcomeCard.style.display = 'none';
             dashboard.style.display = 'block';
-            
             render(res);
-            webData = (webRes.rows || []).filter(row => row[1] === name);
+            
+            webData = (webRes.rows || []).filter(row => row[1] === name); 
             renderWebTable(1);
-
+            
         } catch (err) {
             dashboard.style.display = 'none';
-            welcome.style.display = 'block';
-            document.getElementById('welcome-text').innerHTML = `<b style="color:var(--danger)">${err.message}</b>`;
+            welcomeCard.style.display = 'block';
+            document.getElementById('welcome-text').innerHTML = `<b style="color:var(--danger);">เกิดข้อผิดพลาด: ${err.message}</b>`;
         } finally {
-            loader.style.display = 'none';
+            loader.style.display = 'none'; 
         }
     }
 
@@ -361,14 +362,14 @@
         tbody.innerHTML = ''; pagination.innerHTML = '';
 
         if (webData.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:20px; color:var(--danger)">ไม่พบข้อมูลรายละเอียด</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding: 20px; color: var(--danger);">ไม่พบรายละเอียดการขายของชื่อนี้</td></tr>`;
             return;
         }
 
         const start = (page - 1) * rowsPerPage;
-        const paginated = webData.slice(start, start + rowsPerPage);
+        const paginatedData = webData.slice(start, start + rowsPerPage);
 
-        paginated.forEach(row => {
+        paginatedData.forEach(row => {
             const tr = document.createElement('tr');
             row.forEach(cell => {
                 const td = document.createElement('td');
@@ -378,12 +379,12 @@
             tbody.appendChild(tr);
         });
 
-        const pages = Math.ceil(webData.length / rowsPerPage);
-        if(pages > 1) {
-            for(let i=1; i<=pages; i++) {
+        const totalPages = Math.ceil(webData.length / rowsPerPage);
+        if(totalPages > 1) {
+            for (let i = 1; i <= totalPages; i++) {
                 const btn = document.createElement('button');
-                btn.className = `page-btn ${i === page ? 'active' : ''}`;
                 btn.innerText = i;
+                btn.className = `page-btn ${i === page ? 'active' : ''}`;
                 btn.onclick = () => renderWebTable(i);
                 pagination.appendChild(btn);
             }
@@ -393,23 +394,39 @@
     function render(data) {
         document.querySelectorAll('.out-name').forEach(el => el.innerText = data.name);
         document.getElementById('out-date').innerText = data.daily.date;
-        
-        const getCls = (v) => v.toString().includes('-') ? 'up' : 'down';
+        const getCls = (v) => v.toString().includes('-') ? `class="up"` : `class="down"`;
         const d = data.daily;
-        
+
         document.getElementById('body-daily').innerHTML = `<tr>
             <td style="font-weight:600;">${d.date}</td>
-            <td>${d.np}</td><td><span class="${getCls(d.npD)}">${d.npD}</span></td>
-            <td>${d.bd}</td><td><span class="${getCls(d.bdD)}">${d.bdD}</span></td>
-            <td>${d.ap}</td><td><span class="${getCls(d.apD)}">${d.apD}</span></td>
-            <td>${d.sm}</td><td><span class="${getCls(d.smD)}">${d.smD}</span></td>
+            <td>${d.np}</td><td><span ${getCls(d.npD)}>${d.npD}</span></td>
+            <td>${d.bd}</td><td><span ${getCls(d.bdD)}>${d.bdD}</span></td>
+            <td>${d.ap}</td><td><span ${getCls(d.apD)}>${d.apD}</span></td>
+            <td>${d.sm}</td><td><span ${getCls(d.smD)}>${d.smD}</span></td>
             <td style="font-weight:700; background:#f8fafc;">${d.totalP}</td>
             <td style="font-weight:700; background:#f8fafc;">${d.totalD}</td>
         </tr>`;
 
         document.querySelector('#tbl-sum tbody').innerHTML = data.summary.map(r => 
-            r[0] ? `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>` : ''
+            r[0] ? `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[0].includes('รวม') ? '<b>'+r[2]+'</b>' : r[2]}</td></tr>` : ''
         ).join('');
+
+        document.querySelector('#tbl-focus tbody').innerHTML = data.focus.map(r => 
+            r[0] ? `<tr><td>${r[0]}</td><td style="text-align:right; font-weight:700; color:var(--head-mtd);">${r[1]}</td></tr>` : ''
+        ).join('');
+
+        document.getElementById('target-list-container').innerHTML = data.targetList.map(r => {
+            if(!r[0]) return '';
+            const lbl = r[0].toUpperCase();
+            let bg = "";
+            if(lbl.includes('TARGET NEW')) bg = "#0284c7";
+            else if(lbl.includes('TARGET BDBC')) bg = "#059669";
+            else if(lbl.includes('TARGET APPLE')) bg = "#d97706";
+            else if(lbl.includes('TARGET SMARTPHONE')) bg = "#be123c";
+            
+            if(bg) return `<div class="tag-title-row" style="background:${bg}"><span>${r[0]}</span></div>`;
+            return `<div class="target-row"><span>${r[0]}</span><span style="font-weight:600;">${r[1] || '0'}</span></div>`;
+        }).join('');
 
         const act = data.actuals;
         const config = [
@@ -418,39 +435,21 @@
         ];
         document.getElementById('out-actual').innerHTML = config.map(i => `
             <div class="stat-box" style="border-left-color:${i.b}">
-                <div style="font-size:13px; color:#64748b; font-weight:600;">${i.l}</div>
+                <div style="font-size:14px; color:#64748b; font-weight:600;">${i.l}</div>
                 <div class="val">${i.v.val}</div>
-                <div style="font-size:12px;" class="${getCls(i.v.diff)}">DIFF: ${i.v.diff}</div>
-                <div style="font-size:14px; margin-top:5px; font-weight:600; color:var(--head-mtd)">${i.v.ach}%</div>
+                <div style="font-size:13px;"><span ${getCls(i.v.diff)}>DIFF (${i.v.diff})</span></div>
+                <div style="font-size:18px; color:var(--head-mtd); font-weight:700; margin-top:5px;">${i.v.ach}%</div>
             </div>
         `).join('');
 
-        document.getElementById('target-list-container').innerHTML = data.targetList.map(r => {
-            if(!r[0]) return '';
-            if(r[0].includes('TARGET')) return `<div style="background:#f1f5f9; padding:8px; border-radius:6px; margin:10px 0 5px; font-size:12px; font-weight:700; color:#475569">${r[0]}</div>`;
-            return `<div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #f1f5f9; font-size:14px;">
-                <span>${r[0]}</span><span style="font-weight:600">${r[1]||0}</span>
-            </div>`;
-        }).join('');
-
-        document.querySelector('#tbl-focus tbody').innerHTML = data.focus.map(r => 
-            r[0] ? `<tr><td>${r[0]}</td><td style="text-align:right; font-weight:700; color:var(--head-mtd);">${r[1]}</td></tr>` : ''
-        ).join('');
-
         if(data.extraStats) {
             document.getElementById('body-extra').innerHTML = data.extraStats.map(r => 
-                `<tr><td><b>${r[0]}</b></td><td>${r[1]}</td><td>${r[2]}</td></tr>`
+                `<tr><td style="font-weight:600;">${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`
             ).join('');
         }
     }
 
-    function includeSidebar() {
-        fetch('sidebar.html').then(r => r.text()).then(html => {
-            document.getElementById('sidebar').innerHTML = html;
-        }).catch(() => {
-            document.getElementById('sidebar').innerHTML = '<div style="padding:20px">Sidebar Menu</div>';
-        });
-    }
+    window.addEventListener('DOMContentLoaded', includeSidebar);
 </script>
 </body>
 </html>
