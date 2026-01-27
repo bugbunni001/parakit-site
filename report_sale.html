@@ -201,26 +201,6 @@
           <div class="card">
             <div class="card-header-bar bg-mtd"><span>🚀 ยอดขายสะสมทั้งเดือน</span></div>
             <div class="mtd-grid" id="out-actual"></div>
-            
-            <div style="padding: 0 20px 20px 20px;">
-                <div style="border-top: 1px dashed #cbd5e1; padding-top: 15px; margin-top: 5px;">
-                    <h4 style="margin: 0 0 10px 0; color: var(--head-mtd); font-size: 16px;">📊 รายละเอียดเชิงลึกรายเดือน</h4>
-                    <div style="overflow-x: auto;">
-                        <table class="table-luxury" id="tbl-extra-data">
-                            <thead>
-                                <tr style="background: #f8fafc;">
-                                    <th style="padding: 10px;">รายการ</th>
-                                    <th style="padding: 10px; text-align: center;">ข้อมูล A</th>
-                                    <th style="padding: 10px; text-align: center;">ข้อมูล B</th>
-                                </tr>
-                            </thead>
-                            <tbody id="body-extra">
-                                <tr><td colspan="3" style="text-align:center; color:#94a3b8;">รอการดึงข้อมูล...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
           </div>
         </div>
         <div class="col-right">
@@ -288,8 +268,9 @@
         });
     }
 
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxgePj0aj2R9gTdMSD3p3m-5Qz9Hps5FYmx-YcpFxxZuPMT0HMYSMGcNLF71FpGOrV4yQ/exec";
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxoh-gm2CyrhLmQ4-MUDg2E_m5QBZj-NIbFSMGKK2Sk7Vj3sPB5x5lks50SJ5QVo_d3Ww/exec";
     
+    // ตั้งค่าวันที่ปัจจุบันในปฏิทิน
     const dayInput = document.getElementById('day');
     const now = new Date();
     const year = now.getFullYear();
@@ -313,43 +294,38 @@
             const dateVal = document.getElementById('day').value;
             if (!dateVal) throw new Error("กรุณาเลือกวันที่");
 
+            // แก้ไข: ใช้ Full Date สำหรับ WebDetails เพื่อความแม่นยำ
             const dateObj = new Date(dateVal);
             const dayNum = dateObj.getDate();
-            const formattedDate = dateVal;
+            const formattedDate = dateVal; // YYYY-MM-DD
 
-            // Fetch ข้อมูลหลัก
+            // Fetch ข้อมูล
             const response = await fetch(`${WEB_APP_URL}?action=getSales&name=${name}&day=${dayNum}`);
             const res = await response.json();
             
-            // Fetch ข้อมูล Web Details
+            // แก้ไข: ส่ง formattedDate ไปแทน day เพื่อดึงข้อมูลให้ตรงวันเป๊ะๆ
             const webResponse = await fetch(`${WEB_APP_URL}?action=getWebDetails&day=${formattedDate}`);
             const webRes = await webResponse.json();
 
-            // --- ส่วนที่ดึงข้อมูลเพิ่ม B27:D38 จากชีต ชื่อ2 ---
-            // หมายเหตุ: หลังบ้าน (Apps Script) ต้องรองรับ action: getExtraData
-            const extraResponse = await fetch(`${WEB_APP_URL}?action=getExtraData&sheetName=${name}2`);
-            const extraRes = await extraResponse.json();
-
-            if(!res.success || !res.daily || (res.daily.totalP === 0 && res.daily.totalD === 0 && (!webRes.rows || webRes.rows.length === 0))) {
+            // ตรวจสอบความสำเร็จและข้อมูล
+            // ถ้า res.daily เป็น null หรือข้อมูลไม่มีค่าสำคัญ ให้ถือว่าไม่พบข้อมูล
+            if(!res.success || !res.daily || res.daily.totalP === 0 && res.daily.totalD === 0 && (!webRes.rows || webRes.rows.length === 0)) {
                 dashboard.style.display = 'none';
                 welcomeCard.style.display = 'block';
                 welcomeCard.style.border = '2px dashed var(--danger)';
                 welcomeIcon.innerText = '⚠️';
+                // แก้ไข: แสดงข้อความตามที่แม่ต้องการ
                 const displayDate = new Date(dateVal).toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' });
                 welcomeText.innerHTML = `<b style="color:var(--danger); font-size: 22px;">‼️ยังไม่พบข้อมูลการขายในวันที่ ${displayDate}</b>`;
                 return;
             }
 
+            // ถ้ามีข้อมูล ให้แสดง Dashboard ปกติ
             welcomeCard.style.display = 'none';
             dashboard.style.display = 'block';
-            
-            // รวมข้อมูลพิเศษเข้าไปใน res เพื่อส่งให้ฟังก์ชัน render
-            if(extraRes.success) {
-                res.extraData = extraRes.rows; 
-            }
-
             render(res);
             
+            // กรองข้อมูลพนักงานในฝั่ง Web Data อีกชั้นหนึ่งเพื่อให้ตรงกับชื่อที่เลือก
             webData = (webRes.rows || []).filter(row => row[1] === name); 
             
             if(webData.length === 0) {
@@ -461,19 +437,6 @@
                 </div>
             </div>
         `).join('');
-
-        // --- ส่วน Render ข้อมูลพิเศษ B27:D38 ---
-        if (data.extraData) {
-            document.getElementById('body-extra').innerHTML = data.extraData.map(r => {
-                return `<tr>
-                    <td style="font-weight: 500;">${r[0] || '-'}</td>
-                    <td style="text-align: center;">${r[1] || '0'}</td>
-                    <td style="text-align: center;">${r[2] || '0'}</td>
-                </tr>`;
-            }).join('');
-        } else {
-            document.getElementById('body-extra').innerHTML = `<tr><td colspan="3" style="text-align:center; color:var(--danger);">ไม่พบข้อมูลเพิ่มเติม</td></tr>`;
-        }
     }
 
     window.addEventListener('DOMContentLoaded', () => {
