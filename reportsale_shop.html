@@ -16,10 +16,10 @@
             --text-main: #334155;
             --text-light: #64748b;
             --luxury-blue: #0f172a;
-            --border-color: #cbd5e1; /* ปรับสีเส้นขอบให้เข้มขึ้นเล็กน้อย */
-            --success: #10b981; /* สีเขียว */
-            --danger: #ef4444;  /* สีแดง */
-            --hover-row: #f1f5f9;
+            --border-color: #e2e8f0; /* ปรับให้จางลงตามคำสั่งคุณแม่ */
+            --success: #10b981; 
+            --danger: #ef4444;  
+            --hover-row: #f8fafc;
             --sidebar-width: 280px;
         }
 
@@ -122,11 +122,10 @@
         .card { background: white; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
         .card-header-bar { padding: 14px 20px; color: white; font-size: 16px; font-weight: 500; }
         
-        /* ปรับปรุงตารางให้ชัดเจนและมี Hover */
-        .table-luxury { width: 100%; border-collapse: collapse; background: white; border: 1px solid var(--border-color); }
-        .table-luxury th { background: #f8fafc; padding: 14px 12px; text-align: left; font-size: 13px; color: #1e293b; border: 1px solid var(--border-color); font-weight: 600; }
-        .table-luxury td { padding: 14px 12px; font-size: 14px; border: 1px solid var(--border-color); }
-        .table-luxury tbody tr:hover { background-color: var(--hover-row); transition: 0.2s; }
+        .table-luxury { width: 100%; border-collapse: collapse; background: white; border: 0.5px solid var(--border-color); }
+        .table-luxury th { background: #f8fafc; padding: 14px 12px; text-align: left; font-size: 13px; color: #1e293b; border: 0.5px solid var(--border-color); font-weight: 600; }
+        .table-luxury td { padding: 14px 12px; font-size: 14px; border: 0.5px solid var(--border-color); }
+        .table-luxury tbody tr:hover { background-color: var(--hover-row); transition: 0.1s; }
 
         .pagination { display: flex; gap: 8px; padding: 15px 20px; justify-content: center; background: #fff; border-top: 1px solid var(--border-color); }
         .page-btn { padding: 6px 12px; border: 1px solid #e2e8f0; background: #fff; border-radius: 6px; cursor: pointer; font-size: 13px; color: #64748b; transition: 0.2s; }
@@ -149,9 +148,8 @@
         .bg-focus { background: #1e293b; }
         .bg-target { background: #b45309; }
 
-        /* แก้สีตามความต้องการของคุณแม่ */
-        .up { color: var(--success) !important; font-weight: 600; } /* ติดลบ (-) เป็นเขียว */
-        .down { color: var(--danger) !important; font-weight: 600; }  /* ปกติ (บวก) เป็นแดง */
+        .up { color: var(--success) !important; font-weight: 600; } 
+        .down { color: var(--danger) !important; font-weight: 600; }  
 
         #loader { display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.8); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
         .spinner { width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid var(--luxury-blue); border-radius: 50%; animation: spin 1s linear infinite; }
@@ -266,14 +264,12 @@
 </div>
 
 <script>
-    // --- Sidebar System ---
     function includeSidebar() {
         const cached = localStorage.getItem('sidebar_cache');
         if (cached) {
             document.getElementById('sidebar').innerHTML = cached;
             restoreMenuState();
         }
-
         fetch('sidebar.html')
             .then(response => response.text())
             .then(data => {
@@ -284,7 +280,6 @@
                 }
             })
             .catch(err => console.warn("Sidebar Load Error"));
-            
         if(localStorage.getItem('sidebar_collapsed') === 'true' && window.innerWidth > 768) {
             document.body.classList.add('collapsed');
         }
@@ -315,7 +310,6 @@
         });
     }
 
-    // --- Dashboard Data System ---
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzQc4FuQLM0DCh9HQrKPewIKgMmd23pH8hMFfaAVdO1zpnc8ChPPLRX0gqDFZu0LQeOrg/exec";
     const DEFAULT_USER_NAME = "นวพล"; 
     
@@ -351,25 +345,19 @@
     async function fetchData() {
         const dateInput = document.getElementById('targetDate').value;
         if(!dateInput) return alert('เลือกวันที่ก่อนนะคะคุณแม่!');
-        
         document.getElementById('loader').style.display = 'flex';
         const dayNum = new Date(dateInput).getDate();
-
         try {
             const [salesRes, webRes] = await Promise.all([
                 fetch(`${WEB_APP_URL}?action=getSales&day=${dayNum}&name=${DEFAULT_USER_NAME}`).then(r => r.json()),
                 fetch(`${WEB_APP_URL}?action=getWebDetails&day=${dayNum}`).then(r => r.json())
             ]);
-            
             allWebData = webRes.rows || [];
             currentWebPage = 1;
-            
             renderData(salesRes);
             renderWebTable();
-
             document.getElementById('emptyState').style.display = 'none';
             document.getElementById('realDashboard').style.display = 'block';
-
         } catch (err) {
             alert('โหลดข้อมูลไม่สำเร็จจ้า');
         } finally {
@@ -377,11 +365,9 @@
         }
     }
 
-    // === ฟังก์ชันตัดสินใจสีตามคำสั่งคุณแม่ ===
     function getColorClassCustom(val) {
         const num = parseFloat(val);
         if (isNaN(num)) return '';
-        // หากติดลบให้เป็นเขียว (up), หากปกติ/บวกให้เป็นแดง (down)
         return num < 0 ? 'up' : 'down'; 
     }
 
@@ -395,7 +381,6 @@
             if (timePart.includes("T")) timePart = timePart.split("T")[1].split(".")[0];
             return `<tr><td>${fixedDate}</td><td>${row[1]}</td><td>${row[2]}</td><td>${row[3]}</td><td>${formatNumber(row[4])}</td><td>${row[5]}</td><td>${formatNumber(row[6])}</td><td>${timePart}</td><td>${row[8]}</td></tr>`;
         }).join('');
-
         const totalPages = Math.ceil(allWebData.length / itemsPerPage);
         const paginationEl = document.getElementById('webPagination');
         if (totalPages > 1) {
@@ -418,7 +403,6 @@
     function renderData(s) {
         const fixedDate = getFixedDate();
         const d = s.daily;
-        // ปรับส่วนสี Diff ในตารางรายวัน
         document.getElementById('dailyBody').innerHTML = `
             <tr>
                 <td style="font-weight:600">${fixedDate}</td>
@@ -441,21 +425,27 @@
         
         const act = s.actuals;
         if(act) {
+            // ปรับสีพื้นหลังการคำนวณตามคำสั่งคุณแม่
             const configs = [
-                { label: 'New Post', data: act.np, color: '#0284c7' },
-                { label: 'BDBC', data: act.bd, color: '#059669' },
-                { label: 'Apple', data: act.ap, color: '#d97706' },
-                { label: 'Smartphone', data: act.sm, color: '#be123c' }
+                { label: 'All Post', data: { val: (parseFloat(act.np.val)+parseFloat(act.bd.val)), diff: (parseFloat(act.np.diff)+parseFloat(act.bd.diff)), ach: ((parseFloat(act.np.ach)+parseFloat(act.bd.ach))/2) }, color: '#1e3a8a' }, // น้ำเงินเข้ม
+                { label: 'New Post', data: act.np, color: '#0369a1' }, // ฟ้าเข้ม
+                { label: 'BDBC', data: act.bd, color: '#15803d' }, // เขียวเข้ม
+                { label: 'All Device', data: { val: (parseFloat(act.ap.val)+parseFloat(act.sm.val)), diff: (parseFloat(act.ap.diff)+parseFloat(act.sm.diff)), ach: ((parseFloat(act.ap.ach)+parseFloat(act.sm.ach))/2) }, color: '#a16207' }, // เหลืองเข้ม
+                { label: 'Apple', data: act.ap, color: '#c2410c' }, // ส้มเข้ม
+                { label: 'Smartphone', data: act.sm, color: '#b91c1c' }  // แดงเข้ม
             ];
             document.getElementById('actualGrid').innerHTML = configs.map(item => {
                 return `
-                <div class="stat-box" style="border-left-color: ${item.color}">
-                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom:5px;">
-                        <span style="font-size:18px; color:var(--text-light); font-weight:600;">${item.label}</span>
-                        <span class="${getColorClassCustom(item.data.diff)}" style="font-size:16px;">Diff: ${formatNumber(item.data.diff)}</span>
+                <div class="stat-box" style="border-left-color: ${item.color}; background-color: white;">
+                    <div style="background-color: ${item.color}; margin: -18px -18px 15px -18px; padding: 10px 18px; border-radius: 11px 11px 0 0;">
+                        <span style="font-size:16px; color:white; font-weight:600;">คำนวณ Target ${item.label}</span>
                     </div>
-                    <div class="stat-val" style="font-size:32px;">${formatNumber(item.data.val)}</div>
-                    <div style="font-size:18px; margin-top:5px;">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom:5px;">
+                        <span style="font-size:14px; color:var(--text-light); font-weight:500;">ยอดสะสม</span>
+                        <span class="${getColorClassCustom(item.data.diff)}" style="font-size:15px;">Diff: ${formatNumber(item.data.diff)}</span>
+                    </div>
+                    <div class="stat-val" style="font-size:28px;">${formatNumber(item.data.val)}</div>
+                    <div style="font-size:16px; margin-top:5px;">
                         <span style="color:#4f46e5; font-weight:600">Ach: ${formatDecimalTwo(item.data.ach)}%</span>
                     </div>
                 </div>`;
