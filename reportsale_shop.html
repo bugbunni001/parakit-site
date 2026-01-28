@@ -233,14 +233,19 @@
         .up { color: var(--success) !important; font-weight: 600; } 
         .down { color: var(--danger) !important; font-weight: 600; }
 
-        /* ส่วนที่ปรับปรุง: ตัวหนังสือใหญ่และหนาสำหรับสรุป */
-        .summary-highlight { font-size: 1.15rem; font-weight: 700; color: var(--luxury-blue); }
-
         #loader { display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.8); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
         .spinner { width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid var(--luxury-blue); border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
         #realDashboard { display: none; }
+
+        /* ส่วนปรับปรุงพิเศษสำหรับยอดรวม Postpay */
+        .summary-total-row td {
+            font-size: 18px !important;
+            font-weight: 700 !important;
+            color: #1e293b !important;
+            background-color: #f1f5f9 !important;
+        }
     </style>
 </head>
 <body>
@@ -485,9 +490,13 @@
         const d = s.daily;
         document.getElementById('dailyBody').innerHTML = `<tr><td style="font-weight:600">${fixedDate}</td><td>${formatNumber(d.np)}</td><td class="${d.npD<0?'up':'down'}">${formatNumber(d.npD)}</td><td>${formatNumber(d.bd)}</td><td class="${d.bdD<0?'up':'down'}">${formatNumber(d.bdD)}</td><td>${formatNumber(d.ap)}</td><td class="${d.apD<0?'up':'down'}">${formatNumber(d.apD)}</td><td>${formatNumber(d.sm)}</td><td class="${d.smD<0?'up':'down'}">${formatNumber(d.smD)}</td><td style="font-weight:700; background:#f8fafc">${formatNumber(d.totalP)}</td><td style="font-weight:700; background:#f8fafc">${formatNumber(d.totalD)}</td></tr>`;
         
-        // แก้ไขส่วนนี้: เพิ่มคลาส summary-highlight เพื่อขยายตัวเลขในตารางสรุป
-        document.getElementById('postpaySummaryBody').innerHTML = (s.summary || []).map(row => `<tr><td>${row[0]}</td><td class="summary-highlight">${formatNumber(row[1])}</td><td class="summary-highlight">${formatNumber(row[2])}</td></tr>`).join('');
-        
+        // แก้ไขส่วนสรุปยอดขาย Postpay ให้ตัวหนาและใหญ่ขึ้นเฉพาะแถว "รวมยอด"
+        document.getElementById('postpaySummaryBody').innerHTML = (s.summary || []).map(row => {
+            const isTotalRow = row[0].includes("รวมยอด");
+            const rowClass = isTotalRow ? 'class="summary-total-row"' : '';
+            return `<tr ${rowClass}><td>${row[0]}</td><td>${formatNumber(row[1])}</td><td>${formatNumber(row[2])}</td></tr>`;
+        }).join('');
+
         document.getElementById('brandBody').innerHTML = (s.brands || []).map(row => `<tr><td>${row[0]}</td><td>${formatNumber(row[1])}</td><td style="font-weight:600">${formatNumber(row[2])}</td></tr>`).join('');
         document.getElementById('focusBody').innerHTML = (s.focus || []).map(row => `<tr><td>${row[0]}</td><td style="text-align:right; font-weight:700; color:#4f46e5">${formatNumber(row[1])}</td></tr>`).join('');
         
