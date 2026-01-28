@@ -27,6 +27,7 @@
             --success: #10b981;
             --danger: #ef4444;
             --hover-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            --accent-line: #4f46e5; /* สีแถบด้านซ้ายเวลา Hover */
         }
 
         * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
@@ -75,9 +76,24 @@
 
         .table-luxury { width: 100%; border-collapse: collapse; background: white; }
         .table-luxury th { background: #f8fafc; padding: 16px 12px; text-align: left; font-size: 13px; color: #64748b; border-bottom: 2px solid var(--border-color); border-right: 1px solid #edf2f7; }
-        .table-luxury td { padding: 16px 12px; font-size: 14px; border-bottom: 1px solid #f1f5f9; border-right: 1px solid #f1f5f9; }
-        .table-luxury tbody tr:hover { background-color: #fcfcfd; }
         
+        /* Hover Effect ทุกบรรทัด */
+        .table-luxury tbody tr { position: relative; transition: 0.2s; }
+        .table-luxury td { padding: 16px 12px; font-size: 14px; border-bottom: 1px solid #f1f5f9; border-right: 1px solid #f1f5f9; position: relative; }
+        
+        .table-luxury tbody tr:hover { background-color: #f8faff; }
+        /* เส้นแถบด้านหน้าซ้ายมือเวลา Hover */
+        .table-luxury tbody tr:hover td:first-child::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: var(--accent-line);
+            z-index: 10;
+        }
+
         .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
         .grid-container { display: grid; grid-template-columns: 1.5fr 1fr; gap: 25px; }
@@ -112,6 +128,9 @@
         .bg-focus { background: var(--head-focus); }
         .bg-target { background: var(--head-target); }
         .bg-extra { background: #6366f1; }
+
+        /* สไตล์พิเศษสำหรับแถวรวมยอด */
+        .row-highlight { font-size: 1.1rem !important; font-weight: 700 !important; background-color: #f1f5f9; }
     </style>
 </head>
 <body>
@@ -126,7 +145,7 @@
 
 <div id="loader">
   <div class="spinner"></div>
-  <p style="margin-top:25px; font-size: 14px; font-weight: 500; color: var(--luxury-blue);">กำลังดึงข้อมูลการขาย...</p>
+  <p style="margin-top:25px; font-size: 16px; font-weight: 500; color: var(--luxury-blue);">กำลังดึงข้อมูลการขาย...</p>
 </div>
 
 <div class="main-wrapper">
@@ -180,7 +199,7 @@
 
       <div class="card" id="web-data-card">
         <div class="card-header-bar bg-daily">
-          <span>🛒 รายละเอียดการขาย (จากเว็บ)</span>
+          <span>🛒 รายละเอียดการขาย </span>
         </div>
         <div class="table-scroll">
           <table class="table-luxury" id="tbl-web">
@@ -200,7 +219,7 @@
         <div class="col-left">
           <div class="card">
             <div class="card-header-bar bg-detail">
-              <span>📑 รายละเอียด: <span class="out-name"></span></span>
+              <span>📑 รายละเอียดการขาย Postpay ของ : <span class="out-name"></span></span>
             </div>
             <div class="table-scroll">
                 <table class="table-luxury" id="tbl-sum">
@@ -393,9 +412,21 @@
             <td style="font-weight:700; background:#f8fafc;">${d.totalD}</td>
         </tr>`;
 
-        document.querySelector('#tbl-sum tbody').innerHTML = data.summary.map(r => 
-            r[0] ? `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[0].includes('รวม') ? '<b>'+r[2]+'</b>' : r[2]}</td></tr>` : ''
-        ).join('');
+        // ปรับปรุงส่วนแสดงตารางรายละเอียด Postpay (เพิ่มตัวหนาและฟอนต์ใหญ่สำหรับ รวมยอด New/BDBC)
+        document.querySelector('#tbl-sum tbody').innerHTML = data.summary.map(r => {
+            if(!r[0]) return '';
+            
+            // เช็คว่าเป็นแถว รวมยอด New หรือ รวมยอด BDBC หรือไม่
+            const isHighlight = r[0].includes('รวมยอด New') || r[0].includes('รวมยอด BDBC');
+            const rowClass = isHighlight ? 'class="row-highlight"' : '';
+            const countContent = r[0].includes('รวม') ? '<b>'+r[2]+'</b>' : r[2];
+
+            return `<tr ${rowClass}>
+                <td>${r[0]}</td>
+                <td>${r[1]}</td>
+                <td>${countContent}</td>
+            </tr>`;
+        }).join('');
 
         document.querySelector('#tbl-focus tbody').innerHTML = data.focus.map(r => 
             r[0] ? `<tr><td>${r[0]}</td><td style="text-align:right; font-weight:700; color:var(--head-mtd);">${r[1]}</td></tr>` : ''
@@ -431,7 +462,7 @@
                     </div>
                 </div>
                 <div style="font-size:18px; color:var(--head-mtd); font-weight:700; margin-top:5px; border-top: 1px solid #f1f5f9; padding-top: 5px;">
-                    %Achieve ${i.v.ach}%
+                    %Ach ${i.v.ach}%
                 </div>
             </div>
         `).join('');
