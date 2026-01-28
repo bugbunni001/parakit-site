@@ -153,7 +153,6 @@
             align-items: center;
             gap: 8px;
         }
-        /* --- เพิ่ม Hover ปุ่มดึงข้อมูล --- */
         .btn-fetch:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 15px rgba(15, 23, 42, 0.25);
@@ -185,18 +184,9 @@
         }
 
         .table-luxury tbody tr { transition: transform 0.2s ease; }
-        .table-luxury tbody tr:not(.row-summary):hover { 
+        .table-luxury tbody tr:hover { 
             background-color: var(--hover-row); 
             box-shadow: inset 4px 0 0 var(--luxury-blue);
-        }
-
-        /* --- สไตล์ส่วนยอดรวมที่เพิ่มเข้ามาใหม่ --- */
-        .row-summary {
-            background-color: #e2e8f0 !important; /* สีเทาเข้มขึ้น */
-            font-weight: 600;
-        }
-        .row-summary td {
-            border-top: 2px solid #cbd5e1 !important;
         }
 
         .grid-layout { display: grid; grid-template-columns: 1.7fr 1.3fr; gap: 25px; }
@@ -213,7 +203,6 @@
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
             cursor: default; 
         }
-        /* --- เพิ่ม Hover ยอดสะสมทั้งเดือน --- */
         .stat-box:hover {
             transform: translateY(-5px);
             box-shadow: var(--hover-shadow);
@@ -228,6 +217,9 @@
         .row-target-alldevice { background-color: #059669 !important; color: white !important; }
         .row-target-apple { background-color: #10b981 !important; color: white !important; }
         .row-target-smartphone { background-color: #34d399 !important; color: white !important; }
+
+        /* --- สไตล์ใหม่สำหรับแถวผลรวมในรายละเอียดการขาย Postpay --- */
+        .row-summary-highlight { background-color: #eef2ff !important; font-weight: 600; }
 
         .pagination { display: flex; gap: 8px; padding: 15px 20px; justify-content: center; background: #fff; border-top: 1px solid #e2e8f0; flex-wrap: wrap; }
         .page-btn { padding: 8px 16px; border: 1px solid #e2e8f0; background: #fff; border-radius: 8px; cursor: pointer; font-size: 14px; color: #64748b; transition: 0.2s; }
@@ -493,11 +485,12 @@
         const d = s.daily;
         document.getElementById('dailyBody').innerHTML = `<tr><td style="font-weight:600">${fixedDate}</td><td>${formatNumber(d.np)}</td><td class="${d.npD<0?'up':'down'}">${formatNumber(d.npD)}</td><td>${formatNumber(d.bd)}</td><td class="${d.bdD<0?'up':'down'}">${formatNumber(d.bdD)}</td><td>${formatNumber(d.ap)}</td><td class="${d.apD<0?'up':'down'}">${formatNumber(d.apD)}</td><td>${formatNumber(d.sm)}</td><td class="${d.smD<0?'up':'down'}">${formatNumber(d.smD)}</td><td style="font-weight:700; background:#f8fafc">${formatNumber(d.totalP)}</td><td style="font-weight:700; background:#f8fafc">${formatNumber(d.totalD)}</td></tr>`;
         
-        // --- แก้ไขส่วนรายละเอียดการขาย Postpay (เพิ่มพื้นหลังสีเทาเข้มให้แถวสรุป) ---
+        // --- ปรับปรุงการ Render ส่วนรายละเอียดการขาย Postpay พร้อมใส่พื้นหลังไฮไลท์ ---
         document.getElementById('postpaySummaryBody').innerHTML = (s.summary || []).map(row => {
-            const isSummaryRow = row[0].toString().includes("รวมยอด");
-            return `<tr class="${isSummaryRow ? 'row-summary' : ''}">
-                <td>${row[0]}</td>
+            const label = row[0].toString();
+            const isTotalRow = label.includes("รวมยอด"); // ตรวจสอบว่าเป็นแถวผลรวมหรือไม่
+            return `<tr class="${isTotalRow ? 'row-summary-highlight' : ''}">
+                <td>${label}</td>
                 <td>${formatNumber(row[1])}</td>
                 <td style="font-weight:600">${formatNumber(row[2])}</td>
             </tr>`;
