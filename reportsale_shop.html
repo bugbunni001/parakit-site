@@ -238,14 +238,9 @@
         @keyframes spin { to { transform: rotate(360deg); } }
 
         #realDashboard { display: none; }
-
-        /* ส่วนปรับปรุงพิเศษสำหรับยอดรวม Postpay */
-        .summary-total-row td {
-            font-size: 18px !important;
-            font-weight: 700 !important;
-            color: #1e293b !important;
-            background-color: #f1f5f9 !important;
-        }
+        
+        /* สไตล์พิเศษสำหรับแถวสรุปยอด */
+        .row-highlight-summary { font-size: 1.1rem !important; font-weight: 600 !important; }
     </style>
 </head>
 <body>
@@ -490,11 +485,12 @@
         const d = s.daily;
         document.getElementById('dailyBody').innerHTML = `<tr><td style="font-weight:600">${fixedDate}</td><td>${formatNumber(d.np)}</td><td class="${d.npD<0?'up':'down'}">${formatNumber(d.npD)}</td><td>${formatNumber(d.bd)}</td><td class="${d.bdD<0?'up':'down'}">${formatNumber(d.bdD)}</td><td>${formatNumber(d.ap)}</td><td class="${d.apD<0?'up':'down'}">${formatNumber(d.apD)}</td><td>${formatNumber(d.sm)}</td><td class="${d.smD<0?'up':'down'}">${formatNumber(d.smD)}</td><td style="font-weight:700; background:#f8fafc">${formatNumber(d.totalP)}</td><td style="font-weight:700; background:#f8fafc">${formatNumber(d.totalD)}</td></tr>`;
         
-        // แก้ไขส่วนสรุปยอดขาย Postpay ให้ตัวหนาและใหญ่ขึ้นเฉพาะแถว "รวมยอด"
+        // ปรับส่วน รายละเอียดการขาย Postpay (เพิ่มตัวหนาและขนาดฟอนต์ 1 step)
         document.getElementById('postpaySummaryBody').innerHTML = (s.summary || []).map(row => {
-            const isTotalRow = row[0].includes("รวมยอด");
-            const rowClass = isTotalRow ? 'class="summary-total-row"' : '';
-            return `<tr ${rowClass}><td>${row[0]}</td><td>${formatNumber(row[1])}</td><td>${formatNumber(row[2])}</td></tr>`;
+            const label = row[0].toString();
+            const isSummaryRow = label.includes("รวมยอด New") || label.includes("รวมยอด BDBC");
+            const highlightClass = isSummaryRow ? 'row-highlight-summary' : '';
+            return `<tr class="${highlightClass}"><td>${row[0]}</td><td>${formatNumber(row[1])}</td><td style="font-weight:600">${formatNumber(row[2])}</td></tr>`;
         }).join('');
 
         document.getElementById('brandBody').innerHTML = (s.brands || []).map(row => `<tr><td>${row[0]}</td><td>${formatNumber(row[1])}</td><td style="font-weight:600">${formatNumber(row[2])}</td></tr>`).join('');
