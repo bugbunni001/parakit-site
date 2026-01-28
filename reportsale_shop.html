@@ -185,9 +185,18 @@
         }
 
         .table-luxury tbody tr { transition: transform 0.2s ease; }
-        .table-luxury tbody tr:hover { 
+        .table-luxury tbody tr:not(.row-summary):hover { 
             background-color: var(--hover-row); 
             box-shadow: inset 4px 0 0 var(--luxury-blue);
+        }
+
+        /* --- สไตล์ส่วนยอดรวมที่เพิ่มเข้ามาใหม่ --- */
+        .row-summary {
+            background-color: #e2e8f0 !important; /* สีเทาเข้มขึ้น */
+            font-weight: 600;
+        }
+        .row-summary td {
+            border-top: 2px solid #cbd5e1 !important;
         }
 
         .grid-layout { display: grid; grid-template-columns: 1.7fr 1.3fr; gap: 25px; }
@@ -483,7 +492,17 @@
         const fixedDate = `${d_val}/${m}/${y}`;
         const d = s.daily;
         document.getElementById('dailyBody').innerHTML = `<tr><td style="font-weight:600">${fixedDate}</td><td>${formatNumber(d.np)}</td><td class="${d.npD<0?'up':'down'}">${formatNumber(d.npD)}</td><td>${formatNumber(d.bd)}</td><td class="${d.bdD<0?'up':'down'}">${formatNumber(d.bdD)}</td><td>${formatNumber(d.ap)}</td><td class="${d.apD<0?'up':'down'}">${formatNumber(d.apD)}</td><td>${formatNumber(d.sm)}</td><td class="${d.smD<0?'up':'down'}">${formatNumber(d.smD)}</td><td style="font-weight:700; background:#f8fafc">${formatNumber(d.totalP)}</td><td style="font-weight:700; background:#f8fafc">${formatNumber(d.totalD)}</td></tr>`;
-        document.getElementById('postpaySummaryBody').innerHTML = (s.summary || []).map(row => `<tr><td>${row[0]}</td><td>${formatNumber(row[1])}</td><td style="font-weight:600">${formatNumber(row[2])}</td></tr>`).join('');
+        
+        // --- แก้ไขส่วนรายละเอียดการขาย Postpay (เพิ่มพื้นหลังสีเทาเข้มให้แถวสรุป) ---
+        document.getElementById('postpaySummaryBody').innerHTML = (s.summary || []).map(row => {
+            const isSummaryRow = row[0].toString().includes("รวมยอด");
+            return `<tr class="${isSummaryRow ? 'row-summary' : ''}">
+                <td>${row[0]}</td>
+                <td>${formatNumber(row[1])}</td>
+                <td style="font-weight:600">${formatNumber(row[2])}</td>
+            </tr>`;
+        }).join('');
+
         document.getElementById('brandBody').innerHTML = (s.brands || []).map(row => `<tr><td>${row[0]}</td><td>${formatNumber(row[1])}</td><td style="font-weight:600">${formatNumber(row[2])}</td></tr>`).join('');
         document.getElementById('focusBody').innerHTML = (s.focus || []).map(row => `<tr><td>${row[0]}</td><td style="text-align:right; font-weight:700; color:#4f46e5">${formatNumber(row[1])}</td></tr>`).join('');
         
