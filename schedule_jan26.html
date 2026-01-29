@@ -5,11 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ตารางงาน มกราคม 2026 - Parakit-site</title>
     <link rel="icon" type="image/png" href="favicon.png">
-
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
 
     <style>
-        /* ===== SETUP & LAYOUT ===== */
+        :root {
+            --ios-blue: #007aff;
+            --ios-bg: #f2f2f7;
+            --glass-white: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.5);
+            --sidebar-bg: #1e293b;
+            --sidebar-width: 260px;
+            --transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* ===== GLOBAL RESET ===== */
         * { 
             box-sizing: border-box; 
             font-family: 'Kanit', sans-serif !important; 
@@ -17,57 +26,52 @@
         
         body {
             margin: 0;
-            background: #f8fafc;
-            padding-bottom: 100px;
-            color: #334155;
+            background-color: var(--ios-bg);
+            background-image: radial-gradient(at 0% 0%, rgba(0, 122, 255, 0.08) 0px, transparent 50%), 
+                              radial-gradient(at 100% 100%, rgba(255, 45, 85, 0.05) 0px, transparent 50%);
+            background-attachment: fixed;
+            padding-bottom: 80px;
+            color: #1c1c1e;
             -webkit-font-smoothing: antialiased;
             overflow-x: hidden;
         }
 
-        /* ===== SIDEBAR NAVIGATION (PREMIUM STYLE) ===== */
+        /* ===== SIDEBAR NAVIGATION (KEEP ORIGINAL DESIGN AS REQUESTED) ===== */
         .top-toggle {
             position: fixed;
-            top: 15px;
-            left: 15px;
+            top: 15px; left: 15px;
             z-index: 1400;
-            width: 45px;
-            height: 45px;
+            width: 45px; height: 45px;
             border-radius: 12px;
             border: none;
-            background: #1e293b;
+            background: var(--sidebar-bg);
             color: #fff;
             font-size: 20px;
             cursor: pointer;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: transform 0.2s;
+            display: flex; align-items: center; justify-content: center;
         }
-        .top-toggle:active { transform: scale(0.9); }
 
         .sidebar {
             position: fixed;
             top: 0; left: 0;
-            width: 260px;
+            width: var(--sidebar-width);
             height: 100vh;
-            background: #1e293b;
+            background: var(--sidebar-bg);
             color: #fff;
             overflow-y: auto;
             transform: translateX(-260px);
-            transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform 0.3s ease;
             z-index: 2000;
+            box-shadow: 4px 0 15px rgba(0,0,0,0.1);
         }
         .sidebar.show { transform: translateX(0); }
 
         .sidebar-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
+            display: flex; align-items: center; gap: 12px;
             padding: 25px 20px;
             background: #0f172a;
-            font-weight: 600;
-            font-size: 18px;
+            font-weight: 600; font-size: 18px;
             border-bottom: 1px solid rgba(255,255,255,0.05);
         }
 
@@ -75,53 +79,37 @@
         .item { border-bottom: 1px solid rgba(255,255,255,.05); }
 
         .menu a, .menu .drop-btn {
-            width: 100%;
-            min-height: 55px;
-            padding: 0 20px;
-            background: none;
-            border: none;
-            color: #cbd5e1;
-            text-align: left;
-            font-size: 15px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            text-decoration: none;
-            transition: all 0.3s ease; /* สำหรับ Rollover */
+            width: 100%; min-height: 55px; padding: 0 20px;
+            background: none; border: none; color: #cbd5e1;
+            text-align: left; font-size: 15px; cursor: pointer;
+            display: flex; align-items: center; text-decoration: none;
+            transition: all 0.3s ease; font-weight: 400;
         }
 
-        /* [ROLLOVER EFFECT] เมนูหลักเลื่อนขวาเมื่อ Hover */
         .menu a:hover, .menu .drop-btn:hover { 
-            background: #334155; 
-            color: #fff; 
-            padding-left: 35px; /* จุดสำคัญของ Rollover */
+            background: #334155; color: #fff; padding-left: 35px;
         }
 
         .arrow { margin-left: auto; font-size: 12px; transition: .3s; opacity: 0.5; }
         .item.open .arrow { transform: rotate(90deg); }
-        
         .sub { display: none; background: #0f172a; }
         .item.open .sub { display: block; }
         .sub a { 
-            min-height: 48px; 
-            padding-left: 45px; 
-            font-size: 14px; 
-            color: #94a3b8; 
-            border-top: 1px solid rgba(255,255,255,.03);
-            transition: all 0.3s ease;
+            min-height: 48px; padding-left: 45px; font-size: 14px; color: #94a3b8; 
+            border-top: 1px solid rgba(255,255,255,.03); transition: all 0.3s ease;
         }
-        
-        /* [ROLLOVER EFFECT] เมนูย่อยเลื่อนขวาเมื่อ Hover */
-        .sub a:hover {
-            padding-left: 55px;
-            color: #5bbf8a;
+        .sub a:hover { padding-left: 55px; color: #5bbf8a; }
+
+        /* ===== MAIN CONTENT (iOS GLASSMORTPHISM) ===== */
+        .content {
+            padding: 60px 20px;
+            transition: margin-left .3s;
+            max-width: 100%;
         }
 
-        /* ===== CONTENT & ZOOM ===== */
-        .content { padding: 80px 20px; transition: margin-left .3s; }
         @media(min-width:769px) {
             .sidebar { transform: translateX(0); }
-            .content { margin-left: 260px; padding-top: 40px; }
+            .content { margin-left: var(--sidebar-width); padding-top: 40px; }
             .top-toggle { display: none; }
         }
 
@@ -129,33 +117,114 @@
             width: 100%;
             max-width: 1100px;
             margin: 0 auto;
-            background: #fff;
-            padding: 30px 20px;
-            border-radius: 24px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            background: var(--glass-white);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            padding: 40px 25px;
+            border-radius: 35px;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.05);
             text-align: center;
+            animation: fadeIn 0.8s ease-out;
         }
 
-        .zoom-controls { margin-bottom: 20px; display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .header-section h3 {
+            color: #1c1c1e;
+            margin: 0;
+            font-size: 30px;
+            font-weight: 600;
+            letter-spacing: -0.8px;
+        }
+        .header-section p {
+            color: var(--ios-blue);
+            margin: 8px 0 35px 0;
+            font-size: 18px;
+            font-weight: 500;
+            background: rgba(0, 122, 255, 0.08);
+            display: inline-block;
+            padding: 5px 20px;
+            border-radius: 20px;
+        }
+
+        /* ===== ZOOM SYSTEM (iOS STYLE) ===== */
+        .zoom-controls { 
+            margin-bottom: 25px; 
+            display: flex; 
+            justify-content: center; 
+            gap: 12px;
+            flex-wrap: wrap;
+        }
         .zoom-controls button {
-            padding: 10px 18px; border-radius: 12px; border: 1.5px solid #e2e8f0;
-            background: #fff; cursor: pointer; transition: 0.2s; color: #475569;
+            padding: 12px 22px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            transition: var(--transition);
+            color: #1c1c1e;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.04);
         }
-        .zoom-controls button:hover { border-color: #5bbf8a; color: #5bbf8a; transform: translateY(-2px); }
-
-        .zoom-wrapper { 
-            width: 100%; overflow: auto; border: 2px solid #f1f5f9; 
-            border-radius: 16px; background: #f8fafc; min-height: 400px; 
+        .zoom-controls button:hover {
+            background: var(--ios-blue);
+            color: #fff;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 122, 255, 0.25);
         }
-        .zoom-content { transform-origin: top center; transition: transform 0.2s ease; padding: 10px; }
-        .zoom-content img { max-width: 100%; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .zoom-controls button:active { transform: scale(0.95); }
 
-        .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: none; backdrop-filter: blur(4px); z-index: 1500; }
+        .zoom-wrapper {
+            width: 100%;
+            overflow: auto;
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            background: rgba(255, 255, 255, 0.3);
+            position: relative;
+            min-height: 450px;
+            scrollbar-width: thin;
+        }
+
+        .zoom-content {
+            transform-origin: top center;
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            display: inline-block;
+            min-width: 100%;
+            padding: 20px;
+        }
+
+        .zoom-content img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+            border-radius: 15px;
+            box-shadow: 0 12px 45px rgba(0,0,0,0.12);
+        }
+
+        .overlay { 
+            position: fixed; 
+            inset: 0; 
+            background: rgba(0, 0, 0, 0.3); 
+            display: none; 
+            backdrop-filter: blur(5px);
+            z-index: 1500; 
+        }
         .overlay.show { display: block; }
 
         footer {
-            width: 100%; text-align: center; padding: 20px 0; background: #fff; color: #94a3b8; 
-            position: fixed; bottom: 0; left: 0; font-size: 12px; z-index: 1000; border-top: 1px solid #f1f5f9;
+            width: 100%; text-align: center; padding: 25px 0;
+            color: #8e8e93; font-size: 13px;
+            position: relative;
+            margin-top: 30px;
         }
     </style>
 </head>
@@ -185,22 +254,22 @@
                 <img src="https://i.postimg.cc/DyQJtk5n/Jan26.png" alt="Work Schedule January 2026">
             </div>
         </div>
+
+        <footer>
+            © 2026 Copy Right By Angerina Frog
+        </footer>
     </div>
 </main>
-
-<footer>© 2026 Copy Right By Angerina Frog</footer>
 
 <script>
     let scale = 1;
 
-    // --- SIDEBAR SYSTEM ---
-    
+    // --- SIDEBAR SYSTEM (ORIGINAL LOGIC) ---
     function toggleSidebar() {
         document.getElementById("sidebar").classList.toggle("show");
         document.getElementById("overlay").classList.toggle("show");
     }
 
-    // ฟังก์ชันกางเมนู (ใช้ร่วมกับ sidebar.html)
     window.toggleDrop = function(btn, id) {
         const item = btn.parentElement;
         const isOpen = item.classList.toggle("open");
@@ -209,9 +278,8 @@
         }
     }
 
-    // ฟังก์ชันโหลด Sidebar พร้อมระบบ Timestamp Versioning เพื่อป้องกัน Cache
     function includeSidebar() {
-        const ts = new Date().getTime(); // สร้างเลข Timestamp
+        const ts = new Date().getTime();
         fetch(`sidebar.html?v=${ts}`)
             .then(res => res.text())
             .then(data => {
@@ -221,7 +289,6 @@
             .catch(err => console.error("Sidebar load error:", err));
     }
 
-    // คืนค่าเมนูที่เคยเปิดไว้
     function restoreMenuState() {
         ['credit', 'branch', 'sales'].forEach(id => {
             if (localStorage.getItem('menu-' + id) === 'true') {
@@ -232,7 +299,6 @@
     }
 
     // --- ZOOM SYSTEM ---
-
     function zoomIn() { scale += 0.2; applyZoom(); }
     function zoomOut() { if (scale > 0.4) { scale -= 0.2; applyZoom(); } }
     function resetZoom() { scale = 1; applyZoom(); }
@@ -243,11 +309,8 @@
         content.style.transformOrigin = (scale > 1) ? "top left" : "top center";
     }
 
-    // เริ่มทำงานเมื่อโหลดหน้า
     window.onload = includeSidebar;
 </script>
 
 </body>
 </html>
-
-
