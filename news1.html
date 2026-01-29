@@ -5,66 +5,142 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>5G Device Extra - Parakit-site</title>
     <link rel="icon" type="image/png" href="favicon.png">
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
     
     <style>
-        /* ===== GLOBAL RESET & STRUCTURE ===== */
-        * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
-        body { margin: 0; background: #f8fafc; padding-bottom: 80px; color: #334155; overflow-x: hidden; }
+        :root {
+            --ios-blue: #007aff;
+            --ios-red: #ff3b30;
+            --glass-white: rgba(255, 255, 255, 0.75);
+            --glass-border: rgba(255, 255, 255, 0.5);
+            --sidebar-dark: rgba(28, 28, 30, 0.94);
+            --text-main: #1c1c1e;
+            --text-light: #8e8e93;
+            --sidebar-width: 280px;
+            --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
 
-        /* ปุ่ม Toggle สำหรับมือถือ */
-        .top-toggle { position: fixed; top: 15px; left: 15px; z-index: 1400; width: 45px; height: 45px; border-radius: 12px; border: none; background: #1e293b; color: #fff; font-size: 20px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; }
+        /* ===== GLOBAL RESET & iOS 26 VIBES ===== */
+        * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
+        
+        body { 
+            margin: 0; 
+            background: linear-gradient(135deg, #e2e2e7 0%, #ffffff 100%);
+            background-attachment: fixed;
+            color: var(--text-main); 
+            -webkit-font-smoothing: antialiased;
+            padding-bottom: 100px;
+            transition: padding-left 0.3s ease;
+        }
+
+        /* ปุ่ม Toggle สำหรับมือถือ (Modern Glass Style) */
+        .top-toggle { 
+            position: fixed; top: 20px; left: 20px; z-index: 1400; 
+            width: 44px; height: 44px; border-radius: 14px; border: none; 
+            background: var(--glass-white); 
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            color: var(--ios-blue); font-size: 20px; cursor: pointer; 
+            box-shadow: 0 8px 32px rgba(0,0,0,0.08); 
+            display: flex; align-items: center; justify-content: center;
+            border: 1px solid var(--glass-border);
+            transition: var(--transition);
+        }
+        .top-toggle:active { transform: scale(0.92); }
         @media(min-width:769px) { .top-toggle { display: none; } }
 
-        /* Sidebar พื้นฐาน */
-        .sidebar { position: fixed; top: 0; left: 0; width: 260px; height: 100vh; background: #1e293b; color: #fff; overflow-y: auto; transform: translateX(-260px); transition: all .3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 2000; }
+        /* Sidebar Glass Design */
+        .sidebar { 
+            position: fixed; top: 0; left: 0; width: var(--sidebar-width); height: 100vh; 
+            background: var(--sidebar-dark); 
+            backdrop-filter: blur(40px) saturate(180%); -webkit-backdrop-filter: blur(40px) saturate(180%);
+            color: #fff; overflow-y: auto; 
+            transform: translateX(-100%); transition: var(--transition); 
+            z-index: 2000; 
+            box-shadow: 15px 0 50px rgba(0,0,0,0.1);
+            border-right: 1px solid rgba(255,255,255,0.1);
+        }
         .sidebar.show { transform: translateX(0); }
         
-        .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: none; backdrop-filter: blur(4px); z-index: 1500; }
+        .overlay { 
+            position: fixed; inset: 0; background: rgba(0, 0, 0, 0.3); 
+            display: none; backdrop-filter: blur(8px); z-index: 1500; 
+        }
         .overlay.show { display: block; }
 
         /* ส่วนเนื้อหาหลัก */
-        .content { padding: 70px 15px 40px; transition: margin-left .3s; }
-        @media(min-width:769px) { .sidebar { transform: translateX(0); } .content { margin-left: 260px; padding: 80px 20px 40px; } }
+        .content { 
+            padding: 90px 20px 40px; 
+            transition: margin-left 0.4s ease; 
+            animation: fadeIn 0.8s ease-out;
+        }
+        @media(min-width:769px) { 
+            .sidebar { transform: translateX(0); } 
+            .content { margin-left: var(--sidebar-width); padding: 50px 40px 40px; } 
+        }
 
-        /* การตกแต่งการ์ดเนื้อหา (Mobile Optimized) */
+        /* iOS 26 Info Card */
         .info-card { 
             max-width: 800px; 
             margin: 0 auto; 
-            background: #ffffff; 
-            padding: 25px; /* ลด Padding บนมือถือ */
-            border-radius: 20px; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            background: var(--glass-white); 
+            backdrop-filter: blur(30px) saturate(150%); -webkit-backdrop-filter: blur(30px) saturate(150%);
+            padding: 30px; 
+            border-radius: 32px; 
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
             line-height: 1.6;
-            border: 1px solid #f1f5f9;
+            border: 1px solid var(--glass-border);
+            position: relative;
         }
-        @media(min-width:769px) { .info-card { padding: 40px; line-height: 1.8; } }
+        @media(min-width:769px) { .info-card { padding: 50px; line-height: 1.8; } }
 
-        /* จัดการรูปภาพให้พอดีจอ */
+        /* จัดการรูปภาพ (iOS Style Radius) */
         .responsive-img {
             max-width: 100%;
             height: auto;
             display: block;
-            margin: 20px auto;
-            border-radius: 10px;
+            margin: 30px auto;
+            border-radius: 22px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
         }
+        .responsive-img:hover { transform: scale(1.02); }
 
         .highlight-box {
-            background: #eff6ff;
-            border-left: 5px solid #3b82f6;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 20px 0;
-            font-size: 0.95rem;
+            background: rgba(0, 122, 255, 0.06);
+            border-left: 5px solid var(--ios-blue);
+            padding: 20px;
+            border-radius: 18px;
+            margin: 25px 0;
+            font-size: 1rem;
+            color: var(--text-main);
         }
 
-        .footer-text { font-weight: 600; color: #1e293b; font-size: 1.1rem; display: block; margin-bottom: 10px; }
-        .price-tag { color: #2563eb; font-weight: 600; font-size: 1.1rem; }
-        .discount { color: #dc2626; font-weight: 600; }
+        .footer-text { font-weight: 600; color: var(--text-main); font-size: 1.5rem; display: block; margin-bottom: 5px; letter-spacing: -0.5px; }
+        .price-tag { color: var(--ios-blue); font-weight: 600; font-size: 1.3rem; display: inline-block; margin-right: 5px; }
+        .discount { color: var(--ios-red); font-weight: 600; font-size: 1rem; }
 
-        footer { width: 100%; text-align: center; padding: 20px 0; background: #fff; color: #94a3b8; position: fixed; bottom: 0; left: 0; font-size: 11px; z-index: 1100; border-top: 1px solid #f1f5f9; }
+        footer { 
+            width: 100%; text-align: center; padding: 25px 0; 
+            background: rgba(255,255,255,0.4); 
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            color: var(--text-light); position: fixed; bottom: 0; left: 0; 
+            font-size: 11px; z-index: 1100; border-top: 1px solid var(--glass-border); 
+        }
 
-        .item.open .sub { display: block; }
+        /* Sidebar Item Styles (Injected via script) */
+        .item { margin-bottom: 5px; }
+        .drop-btn, .menu a { 
+            display: flex; align-items: center; width: 100%; padding: 14px 20px; 
+            color: #fff; text-decoration: none; border: none; background: none; 
+            cursor: pointer; border-radius: 12px; transition: 0.3s;
+        }
+        .drop-btn:hover, .menu a:hover { background: rgba(255,255,255,0.1); }
+        .sub { padding-left: 20px; display: none; }
+        .sub a { font-size: 14px; opacity: 0.8; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 
@@ -78,11 +154,11 @@
 <div class="content">
     <div class="info-card">
         <span class="footer-text">🆕 5G Device Extra</span>
-        <span style="font-size: 0.9rem;">🔄 เปลี่ยนเครื่องเปล่า มาเป็น Device Bundling</span>
+        <span style="font-size: 1rem; color: var(--text-light);">🔄 เปลี่ยนเครื่องเปล่า มาเป็น Device Bundling</span>
         <br><br>
         
-        <strong>สำหรับลูกค้า:</strong>
-        <div style="padding-left: 15px; font-size: 0.95rem; margin-top: 5px;">
+        <strong style="font-size: 1.1rem; color: var(--ios-blue);">สำหรับลูกค้า:</strong>
+        <div style="padding-left: 15px; font-size: 1rem; margin-top: 10px; border-left: 2px solid #d1d1d6; margin-left: 5px;">
             🔹 เปิดใหม่<br>
             🔹 ย้ายค่ายเบอร์เดิม<br>
             🔹 เปลี่ยนจากเติมเงินเป็นรายเดือน อายุ 30 วัน
@@ -90,22 +166,22 @@
         
         <div class="highlight-box">
             ✨ <strong>ไม่มีค่าบริการล่วงหน้า</strong> + สัญญา 12 เดือน<br>
-            ✅ โทรฟรีทุกเครือข่าย 15 นาทีต่อครั้ง
+            ✅ <span style="color: #28a745;">โทรฟรีทุกเครือข่าย 15 นาทีต่อครั้ง</span>
         </div>
 
-        <div style="margin-bottom: 15px;">
+        <div style="margin-bottom: 25px; padding: 20px; background: rgba(255,255,255,0.3); border-radius: 20px; border: 1px solid rgba(0,0,0,0.03);">
             <span class="price-tag">399.-</span> 🌐 50 GB / FUP 10 Mbps<br>
-            <span class="discount" style="font-size: 0.95rem;">✨ รับส่วนลดค่าเครื่อง 1,000 บาท</span><br>
+            <span class="discount">✨ รับส่วนลดค่าเครื่อง 1,000 บาท</span><br>
             <small style="color: #64748b;">(สำหรับ SMP RRP 0-13,000 บาท)</small>
         </div>
 
-        <div style="margin-bottom: 15px;">
+        <div style="margin-bottom: 25px; padding: 20px; background: rgba(255,255,255,0.3); border-radius: 20px; border: 1px solid rgba(0,0,0,0.03);">
             <span class="price-tag">699.-</span> 🌐 100 GB / FUP 20 Mbps<br>
-            <span class="discount" style="font-size: 0.95rem;">✨ ส่วนลดค่าเครื่อง 2,000 บาท</span><br>
+            <span class="discount">✨ ส่วนลดค่าเครื่อง 2,000 บาท</span><br>
             <small style="color: #64748b;">(สำหรับ SMP RRP 13,000 บาท ขึ้นไป)</small>
         </div>
 
-        <p style="text-align: center; color: #94a3b8; margin-top: 25px; font-size: 0.85rem; border-top: 1px dashed #e2e8f0; padding-top: 15px;">
+        <p style="text-align: center; color: var(--text-light); margin-top: 35px; font-size: 0.9rem; border-top: 1px dashed #d1d1d6; padding-top: 20px;">
             📅 วันนี้ - 28 ก.พ. 69 เท่านั้น
         </p>
         
@@ -116,6 +192,7 @@
 <footer>© 2026 Copy Right By Angerina Frog</footer>
 
 <script>
+    // ฟังก์ชันดึง Sidebar (เหมือนเดิม 100% แต่แก้การแสดงผลให้ลื่นไหล)
     function includeSidebar() {
         const version = new Date().getTime(); 
         fetch('sidebar.html?v=' + version)
@@ -135,6 +212,7 @@
         document.getElementById("overlay").classList.toggle("show");
     }
 
+    // ฟังก์ชันจัดการเมนู (ห้ามลบ/หาย ตามคำสั่ง)
     window.toggleDrop = function(btn, id) {
         const item = btn.parentElement;
         const isOpen = item.classList.toggle("open");
