@@ -5,11 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ตารางงาน ธันวาคม 2025 - Parakit-site</title>
     <link rel="icon" type="image/png" href="favicon.png">
-
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
 
     <style>
-        /* ===== SETUP & LAYOUT ===== */
+        :root {
+            --ios-blue: #007aff;
+            --ios-bg: #f2f2f7;
+            --glass-white: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.5);
+            --sidebar-bg: #1e293b;
+            --sidebar-width: 260px;
+            --transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* ===== GLOBAL RESET ===== */
         * { 
             box-sizing: border-box; 
             font-family: 'Kanit', sans-serif !important; 
@@ -17,52 +26,51 @@
         
         body {
             margin: 0;
-            background: #f8fafc;
-            padding-bottom: 100px;
-            color: #334155;
+            background-color: var(--ios-bg);
+            background-image: radial-gradient(at 0% 0%, rgba(0, 122, 255, 0.05) 0px, transparent 50%), 
+                              radial-gradient(at 100% 100%, rgba(94, 92, 230, 0.05) 0px, transparent 50%);
+            background-attachment: fixed;
+            padding-bottom: 80px;
+            color: #1c1c1e;
             -webkit-font-smoothing: antialiased;
             overflow-x: hidden;
         }
 
-        /* ===== SIDEBAR NAVIGATION (NEW STYLE) ===== */
+        /* ===== SIDEBAR NAVIGATION (KEEP ORIGINAL DESIGN) ===== */
         .top-toggle {
             position: fixed;
-            top: 15px;
-            left: 15px;
+            top: 15px; left: 15px;
             z-index: 1400;
-            width: 45px;
-            height: 45px;
+            width: 45px; height: 45px;
             border-radius: 12px;
             border: none;
-            background: #1e293b;
+            background: var(--sidebar-bg);
             color: #fff;
             font-size: 20px;
             cursor: pointer;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: flex; align-items: center; justify-content: center;
         }
 
         .sidebar {
             position: fixed;
             top: 0; left: 0;
-            width: 260px;
+            width: var(--sidebar-width);
             height: 100vh;
-            background: #1e293b;
+            background: var(--sidebar-bg);
             color: #fff;
             overflow-y: auto;
             transform: translateX(-260px);
-            transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform 0.3s ease;
             z-index: 2000;
+            box-shadow: 4px 0 15px rgba(0,0,0,0.1);
         }
         .sidebar.show { transform: translateX(0); }
 
+        /* Sidebar Header & Menu logic remains same as original */
         .sidebar-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 25px 20px; /* ปรับ Padding ให้สมดุล */
+            display: flex; align-items: center; gap: 12px;
+            padding: 25px 20px;
             background: #0f172a;
             font-weight: 600;
             font-size: 18px;
@@ -73,59 +81,37 @@
         .item { border-bottom: 1px solid rgba(255,255,255,.05); }
 
         .menu a, .menu .drop-btn {
-            width: 100%;
-            min-height: 55px;
-            padding: 0 20px;
-            background: none;
-            border: none;
-            color: #cbd5e1;
-            text-align: left;
-            font-size: 15px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            text-decoration: none;
-            transition: all 0.3s ease; /* ใช้ ease เพื่อความลื่นไหล */
-            font-weight: 400;
+            width: 100%; min-height: 55px; padding: 0 20px;
+            background: none; border: none; color: #cbd5e1;
+            text-align: left; font-size: 15px; cursor: pointer;
+            display: flex; align-items: center; text-decoration: none;
+            transition: all 0.3s ease; font-weight: 400;
         }
 
-        /* [ROLLOVER EFFECT] เอฟเฟกต์เลื่อนขวาเมื่อ Hover */
         .menu a:hover, .menu .drop-btn:hover { 
-            background: #334155; 
-            color: #fff; 
-            padding-left: 35px; /* เลื่อนข้อความไปทางขวา */
+            background: #334155; color: #fff; padding-left: 35px;
         }
 
         .arrow { margin-left: auto; font-size: 12px; transition: .3s; opacity: 0.5; }
         .item.open .arrow { transform: rotate(90deg); }
-        
         .sub { display: none; background: #0f172a; }
         .item.open .sub { display: block; }
         .sub a { 
-            min-height: 48px; 
-            padding-left: 45px; 
-            font-size: 14px; 
-            color: #94a3b8; 
+            min-height: 48px; padding-left: 45px; 
+            font-size: 14px; color: #94a3b8; 
             border-top: 1px solid rgba(255,255,255,.03);
-            transition: all 0.3s ease;
         }
 
-        /* [ROLLOVER EFFECT] สำหรับเมนูย่อย */
-        .sub a:hover {
-            padding-left: 55px; /* เลื่อนเมนูย่อยไปทางขวา */
-            color: #5bbf8a;
-        }
-
-        /* ===== MAIN CONTENT AREA ===== */
+        /* ===== MAIN CONTENT AREA (iOS Glassmorphism) ===== */
         .content {
-            padding: 80px 20px;
+            padding: 60px 20px;
             transition: margin-left .3s;
             max-width: 100%;
         }
 
         @media(min-width:769px) {
             .sidebar { transform: translateX(0); }
-            .content { margin-left: 260px; padding-top: 40px; }
+            .content { margin-left: var(--sidebar-width); padding-top: 40px; }
             .top-toggle { display: none; }
         }
 
@@ -133,60 +119,75 @@
             width: 100%;
             max-width: 1100px;
             margin: 0 auto;
-            background: #fff;
-            padding: 30px 20px;
-            border-radius: 24px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            background: var(--glass-white);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 40px 25px;
+            border-radius: 30px;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
             text-align: center;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .header-section h3 {
-            color: #1e293b;
+            color: #1c1c1e;
             margin: 0;
-            font-size: 24px;
+            font-size: 28px;
             font-weight: 600;
+            letter-spacing: -0.5px;
         }
         .header-section p {
-            color: #64748b;
-            margin: 5px 0 25px 0;
-            font-size: 16px;
+            color: var(--ios-blue);
+            margin: 8px 0 30px 0;
+            font-size: 18px;
+            font-weight: 500;
+            background: rgba(0, 122, 255, 0.1);
+            display: inline-block;
+            padding: 4px 16px;
+            border-radius: 20px;
         }
 
-        /* ===== ZOOM SYSTEM ===== */
+        /* ===== ZOOM SYSTEM (iOS Style) ===== */
         .zoom-controls { 
-            margin-bottom: 20px; 
+            margin-bottom: 25px; 
             display: flex; 
             justify-content: center; 
-            gap: 12px;
-            flex-wrap: wrap;
+            gap: 10px;
         }
         .zoom-controls button {
-            padding: 10px 18px;
-            font-size: 14px;
+            padding: 12px 20px;
+            font-size: 15px;
             font-weight: 500;
             cursor: pointer;
             background: #fff;
-            border: 1.5px solid #e2e8f0;
-            border-radius: 12px;
-            transition: all 0.2s;
-            color: #475569;
+            border: 1px solid var(--glass-border);
+            border-radius: 14px;
+            transition: var(--transition);
+            color: #1c1c1e;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.03);
         }
         .zoom-controls button:hover {
-            border-color: #5bbf8a;
-            color: #5bbf8a;
-            background: #f0fdf4;
+            background: var(--ios-blue);
+            color: #fff;
             transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(0, 122, 255, 0.2);
         }
 
         .zoom-wrapper {
             width: 100%;
             overflow: auto;
-            border: 2px solid #f1f5f9;
-            border-radius: 16px;
-            background: #f8fafc;
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.4);
             position: relative;
             min-height: 400px;
             scrollbar-width: thin;
@@ -194,10 +195,10 @@
 
         .zoom-content {
             transform-origin: top center;
-            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: inline-block;
             min-width: 100%;
-            padding: 10px;
+            padding: 15px;
         }
 
         .zoom-content img {
@@ -205,26 +206,25 @@
             height: auto;
             display: block;
             margin: 0 auto;
-            border-radius: 8px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
         }
 
         .overlay { 
             position: fixed; 
             inset: 0; 
-            background: rgba(15, 23, 42, 0.6); 
+            background: rgba(0, 0, 0, 0.3); 
             display: none; 
-            backdrop-filter: blur(4px);
+            backdrop-filter: blur(5px);
             z-index: 1500; 
         }
         .overlay.show { display: block; }
 
         footer {
             width: 100%; text-align: center; padding: 20px 0;
-            background: #fff; color: #94a3b8; position: fixed;
-            bottom: 0; left: 0; font-size: 12px; 
-            z-index: 1000;
-            border-top: 1px solid #f1f5f9;
+            color: #8e8e93; font-size: 13px;
+            border-top: 1px solid var(--glass-border);
+            margin-top: 20px;
         }
     </style>
 </head>
@@ -254,12 +254,12 @@
                 <img src="https://i.postimg.cc/wgNm74Pv/tarang-ngan.png" alt="Work Schedule">
             </div>
         </div>
+        
+        <footer>
+            © 2026 Copy Right By Angerina Frog
+        </footer>
     </div>
 </main>
-
-<footer>
-    © 2026 Copy Right By Angerina Frog
-</footer>
 
 <script>
     let scale = 1;
@@ -269,9 +269,7 @@
         document.getElementById("overlay").classList.toggle("show");
     }
 
-    /* 1. ฟังก์ชันโหลด Sidebar พร้อมระบบ Timestamp Versioning */
     function includeSidebar() {
-        // สร้าง Timestamp เพื่อป้องกัน Browser จำ Cache (Version ใหม่เสมอ)
         const version = new Date().getTime();
         fetch('sidebar.html?v=' + version)
             .then(res => {
@@ -285,7 +283,6 @@
             .catch(err => console.warn("ไม่สามารถโหลด Sidebar ได้:", err));
     }
 
-    /* 2. ฟังก์ชันกางเมนูและบันทึกค่าลงเครื่อง (localStorage) */
     window.toggleDrop = function(btn, id) {
         const item = btn.parentElement;
         const isOpen = item.classList.toggle("open");
@@ -294,9 +291,8 @@
         }
     }
 
-    /* 3. ฟังก์ชันเช็คค่าที่บันทึกไว้ แล้วสั่งเปิดเมนู */
     function restoreMenuState() {
-        const menuIds = ['credit', 'branch', 'sales']; // รายชื่อ ID ทั้งหมดในระบบ
+        const menuIds = ['credit', 'branch', 'sales']; 
         menuIds.forEach(id => {
             const savedState = localStorage.getItem('menu-' + id);
             if (savedState === 'true') {
@@ -336,11 +332,8 @@
         }
     }
 
-    // เรียกใช้ฟังก์ชันตอนโหลดหน้าเว็บ
     window.onload = includeSidebar;
 </script>
 
 </body>
 </html>
-
-
