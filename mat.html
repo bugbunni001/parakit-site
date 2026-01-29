@@ -6,77 +6,143 @@
     <title>Matเครื่อง - Parakit-ste</title>
     <link rel="icon" type="image/png" href="favicon.png">
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
     <style>
-        /* ===== SETUP & LAYOUT ===== */
+        :root {
+            --ios-blue: #007aff;
+            --ios-green: #34c759;
+            --sidebar-dark: rgba(28, 28, 30, 0.95);
+            --glass-white: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.4);
+            --text-main: #1c1c1e;
+            --text-light: #8e8e93;
+            --sidebar-width: 280px;
+        }
+
+        /* ===== GLOBAL RESET & STRUCTURE ===== */
         * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
-        body { margin: 0; background: #f8fafc; padding-bottom: 100px; color: #334155; overflow-x: hidden; }
         
-        /* SIDEBAR (สไตล์ที่รวมการจัดการภายในและ Rollover) */
+        body { 
+            margin: 0; 
+            background: linear-gradient(135deg, #e5e5ea 0%, #ffffff 100%);
+            background-attachment: fixed;
+            color: var(--text-main); 
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+            transition: padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* ===== SIDEBAR (iOS Glass Dark) ===== */
         .sidebar { 
-            position: fixed; top: 0; left: 0; width: 260px; height: 100vh; 
-            background: #1e293b; color: #fff; overflow-y: auto; 
-            transform: translateX(-260px); 
+            position: fixed; top: 0; left: 0; width: var(--sidebar-width); height: 100vh; 
+            background: var(--sidebar-dark); 
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            color: #fff; overflow-y: auto; 
+            transform: translateX(-100%); 
             transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 2000; 
+            box-shadow: 10px 0 30px rgba(0,0,0,0.1);
         }
         .sidebar.show { transform: translateX(0); }
-        .sidebar-header { display: flex; align-items: center; gap: 12px; padding: 25px 20px; background: #0f172a; font-weight: 600; font-size: 18px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .sidebar-header { padding: 25px 20px; font-weight: 600; font-size: 18px; background: rgba(0,0,0,0.2); border-bottom: 0.5px solid rgba(255,255,255,0.1); }
         
-        .menu { display: flex; flex-direction: column; padding: 10px 0; }
-        .item { border-bottom: 1px solid rgba(255,255,255,.05); }
-        
-        /* สไตล์ปุ่มเมนูหลัก + Rollover ขยับได้ */
+        .menu { padding: 10px 0; }
         .menu a, .menu .drop-btn { 
             width: 100%; min-height: 55px; padding: 0 20px; background: none; 
-            border: none; color: #cbd5e1; text-align: left; font-size: 15px; 
+            border: none; color: #ebebf5; font-size: 15px; 
             cursor: pointer; display: flex; align-items: center; text-decoration: none; 
-            transition: all 0.3s ease; /* ทำให้ขยับลื่นไหล */
-        }
-        .menu a:hover, .menu .drop-btn:hover { 
-            background: #334155; color: #fff; 
-            padding-left: 35px; /* Effect ขยับตอนชี้ */
-        }
-        
-        /* เมนูย่อย */
-        .sub { display: none; background: #0f172a; }
-        .item.open .sub { display: block; }
-        .sub a { 
-            min-height: 48px; padding-left: 45px; font-size: 14px; 
-            color: #94a3b8; border-top: 1px solid rgba(255,255,255,.03); 
             transition: all 0.3s ease;
         }
-        .sub a:hover { 
-            padding-left: 55px; /* Effect ขยับตอนชี้สำหรับเมนูย่อย */
-            color: #5bbf8a; 
-        }
+        .menu a:hover, .menu .drop-btn:hover { background: rgba(255,255,255,0.1); padding-left: 30px; color: #fff; }
+        
+        .sub { display: none; background: rgba(0,0,0,0.2); }
+        .item.open .sub { display: block; }
+        .sub a { padding-left: 45px; font-size: 14px; color: #8e8e93; }
+        .sub a:hover { padding-left: 55px; color: var(--ios-green); }
 
-        .arrow { margin-left: auto; transition: .3s; font-size: 12px; opacity: 0.5; }
+        .arrow { margin-left: auto; transition: .3s; font-size: 10px; opacity: 0.5; }
         .item.open .arrow { transform: rotate(90deg); }
 
-        .top-toggle { position: fixed; top: 15px; left: 15px; z-index: 1400; width: 45px; height: 45px; border-radius: 12px; border: none; background: #1e293b; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: none; z-index: 1500; backdrop-filter: blur(4px); }
+        /* Mobile Toggle */
+        .top-toggle { 
+            position: fixed; top: 15px; left: 15px; z-index: 1400; width: 42px; height: 42px; 
+            border-radius: 12px; border: none; background: var(--ios-blue); color: #fff; 
+            cursor: pointer; display: flex; align-items: center; justify-content: center; 
+            box-shadow: 0 4px 12px rgba(0,122,255,0.3); 
+        }
+        .overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.3); display: none; z-index: 1500; backdrop-filter: blur(4px); }
         .overlay.show { display: block; }
 
         /* MAIN CONTENT */
-        .content { padding: 80px 20px; transition: margin-left .3s; }
-        @media(min-width:769px) { .sidebar { transform: translateX(0); } .content { margin-left: 260px; padding-top: 40px; } .top-toggle { display: none; } }
+        .content { padding: 80px 20px 40px; transition: all .3s; }
+        @media(min-width:769px) { 
+            .sidebar { transform: translateX(0); } 
+            body:not(.collapsed) .content { padding-left: calc(var(--sidebar-width) + 20px); } 
+            .top-toggle { display: none; } 
+        }
         
-        .header-section { text-align: center; margin-bottom: 30px; }
-        .editor-card { background: white; border-radius: 24px; padding: 25px; box-shadow: 0 10px 40px rgba(0,0,0,0.08); max-width: 1000px; margin: 0 auto; }
-        #editor-container { height: 600px; font-size: 16px; border: 1px solid #e2e8f0; border-radius: 0 0 12px 12px; }
-        .locked .ql-toolbar { display: none; }
-        .locked #editor-container { border-radius: 12px; border-top: 1px solid #e2e8f0; background: #fff; }
-        
-        .btn-group { display: flex; justify-content: center; gap: 15px; margin-top: 25px; }
-        .btn { padding: 12px 35px; border-radius: 12px; border: none; font-weight: 600; cursor: pointer; transition: 0.3s; font-size: 16px; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .btn-edit { background: #1e293b; color: white; }
-        .btn-save { background: #22c55e; color: white; display: none; }
+        .header-section { text-align: center; margin-bottom: 30px; animation: fadeIn 0.6s ease-out; }
+        .header-section h2 { margin-bottom: 5px; letter-spacing: -0.5px; }
+        .header-section p { color: var(--text-light); font-weight: 500; }
 
-        /* MODAL */
-        .modal { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.8); display: none; align-items: center; justify-content: center; z-index: 3000; backdrop-filter: blur(8px); }
-        .modal-content { background: white; padding: 35px; border-radius: 28px; text-align: center; width: 380px; }
-        .modal-content input { width: 100%; padding: 16px; margin: 20px 0; border: 2px solid #e2e8f0; border-radius: 15px; font-size: 22px; text-align: center; outline: none; }
+        /* EDITOR CARD (Glassmorphism) */
+        .editor-card { 
+            background: var(--glass-white); 
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            border-radius: 30px; padding: 25px; 
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.07); 
+            max-width: 1000px; margin: 0 auto; 
+            animation: slideUp 0.6s ease-out;
+        }
+        
+        #editor-container { 
+            height: 600px; font-size: 16px; 
+            border: 1px solid rgba(0,0,0,0.05); 
+            border-radius: 0 0 18px 18px; 
+            background: rgba(255,255,255,0.5);
+        }
+        
+        .locked .ql-toolbar { display: none; }
+        .locked #editor-container { border-radius: 18px; border-top: 1px solid rgba(0,0,0,0.05); }
+
+        /* Quill Customization */
+        .ql-toolbar.ql-snow { border: 1px solid rgba(0,0,0,0.05); border-radius: 18px 18px 0 0; background: rgba(255,255,255,0.8); }
+        
+        /* BUTTONS */
+        .btn-group { display: flex; justify-content: center; gap: 15px; margin-top: 25px; }
+        .btn { 
+            padding: 14px 40px; border-radius: 16px; border: none; 
+            font-weight: 600; cursor: pointer; transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            font-size: 16px; display: flex; align-items: center; gap: 10px; 
+        }
+        .btn-edit { background: var(--ios-blue); color: white; box-shadow: 0 8px 20px rgba(0,122,255,0.2); }
+        .btn-save { background: var(--ios-green); color: white; display: none; box-shadow: 0 8px 20px rgba(52,199,89,0.2); }
+        .btn:hover { transform: translateY(-3px); opacity: 0.9; }
+        .btn:active { transform: scale(0.95); }
+
+        /* MODAL (iOS Alert Style) */
+        .modal { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.2); display: none; align-items: center; justify-content: center; z-index: 3000; backdrop-filter: blur(8px); }
+        .modal-content { 
+            background: var(--glass-white); 
+            backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            padding: 30px; border-radius: 24px; text-align: center; width: 320px; 
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+        }
+        .modal-content h3 { margin-top: 0; font-size: 18px; }
+        .modal-content input { 
+            width: 100%; padding: 14px; margin: 15px 0; 
+            border: 1px solid rgba(0,0,0,0.1); border-radius: 12px; 
+            font-size: 20px; text-align: center; outline: none; background: rgba(0,0,0,0.03);
+        }
+        .modal-content input:focus { border-color: var(--ios-blue); background: #fff; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
@@ -84,9 +150,9 @@
 <div id="pwdModal" class="modal">
     <div class="modal-content">
         <h3>🔑 ยืนยันรหัสผ่าน</h3>
-        <input type="password" id="pwdInput" placeholder="••••••••" onkeydown="if(event.key==='Enter') checkPassword()">
-        <button class="btn btn-edit" style="width: 100%; justify-content: center;" onclick="checkPassword()">ยืนยันความปลอดภัย</button>
-        <button onclick="closeModal()" style="margin-top:15px; background:none; border:none; color:gray; cursor:pointer;">ยกเลิก</button>
+        <input type="password" id="pwdInput" placeholder="รหัสผ่าน" onkeydown="if(event.key==='Enter') checkPassword()">
+        <button class="btn btn-edit" style="width: 100%; justify-content: center;" onclick="checkPassword()">ยืนยัน</button>
+        <button onclick="closeModal()" style="margin-top:15px; background:none; border:none; color:var(--text-light); cursor:pointer; font-size:14px;">ยกเลิก</button>
     </div>
 </div>
 
@@ -103,7 +169,7 @@
 
     <div class="editor-card locked" id="editor-wrapper">
         <div id="editor-container">
-            <p id="loading-text">⏳ กำลังดึงข้อมูล...</p>
+            <p id="loading-text" style="padding:20px; text-align:center;">⏳ กำลังดึงข้อมูลล่าสุดจากระบบ...</p>
         </div>
         <div class="btn-group">
             <button id="btnEdit" class="btn btn-edit" onclick="openModal()">✏️ แก้ไขข้อมูล</button>
@@ -122,7 +188,6 @@
         includeSidebar();
     });
 
-    /* --- 1. ระบบ Sidebar พร้อม Timestamp --- */
     function toggleSidebar() {
         document.getElementById("sidebar").classList.toggle("show");
         document.getElementById("overlay").classList.toggle("show");
@@ -145,7 +210,7 @@
 
     function includeSidebar() {
         const timestamp = new Date().getTime();
-        fetch('sidebar.html?v=' + timestamp) // บังคับดึงไฟล์สดใหม่
+        fetch('sidebar.html?v=' + timestamp)
             .then(res => res.text())
             .then(data => { 
                 document.getElementById('sidebar').innerHTML = data; 
@@ -153,7 +218,6 @@
             }).catch(err => console.warn("Sidebar fail"));
     }
 
-    /* --- 2. ระบบ Editor & Data พร้อม Timestamp --- */
     let quill;
     function initEditor() {
         quill = new Quill('#editor-container', {
@@ -165,10 +229,9 @@
     async function loadData() {
         const ts = new Date().getTime();
         try {
-            const response = await fetch(scriptURL + "?t=" + ts); // บังคับดึงข้อมูลล่าสุดจาก Sheets
-            if (!response.ok) throw new Error('Network response was not ok');
+            const response = await fetch(scriptURL + "?t=" + ts);
+            if (!response.ok) throw new Error('Network error');
             const data = await response.text();
-            
             if (data) {
                 quill.root.innerHTML = data;
             } else {
@@ -176,7 +239,7 @@
             }
         } catch (error) {
             console.error(error);
-            quill.root.innerHTML = "<p style='color:red;'>❌ โหลดไม่สำเร็จ: กรุณาตรวจสอบ URL หรือสิทธิ์การเข้าถึง</p>";
+            quill.root.innerHTML = "<p style='color:#ff3b30; text-align:center; padding:20px;'>❌ โหลดข้อมูลไม่สำเร็จ</p>";
         }
     }
 
@@ -192,7 +255,7 @@
                 headers: { 'Content-Type': 'text/plain' },
                 body: quill.root.innerHTML
             });
-            alert("✅ บันทึกข้อมูลลง Google Sheets เรียบร้อย!");
+            alert("✅ บันทึกข้อมูลเรียบร้อยแล้ว!");
             location.reload();
         } catch (e) {
             alert("❌ เกิดข้อผิดพลาดในการบันทึก");
@@ -201,7 +264,6 @@
         }
     }
 
-    /* --- 3. ระบบรหัสผ่าน --- */
     function openModal() { document.getElementById('pwdModal').style.display = 'flex'; document.getElementById('pwdInput').focus(); }
     function closeModal() { document.getElementById('pwdModal').style.display = 'none'; document.getElementById('pwdInput').value = ''; }
 
@@ -217,4 +279,3 @@
 </script>
 </body>
 </html>
-
