@@ -10,64 +10,68 @@
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary-gradient: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-            --glass-bg: rgba(255, 255, 255, 0.8);
-            --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
-            --sidebar-color: #1e293b;
-            --text-main: #334155;
-            --text-light: #64748b;
-            --luxury-blue: #0f172a;
-            --border-color: #f1f5f9;
-            --success: #10b981;
-            --danger: #ef4444;
-            --hover-row: #f8fafc;
+            /* iOS Concept Colors */
+            --ios-bg: #f2f2f7;
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.4);
+            --primary-blue: #007aff;
+            --sidebar-color: rgba(28, 28, 30, 0.95);
+            --text-main: #1c1c1e;
+            --text-light: #8e8e93;
+            --card-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+            
+            /* Original Category Colors - Adjusted for Glass Theme */
+            --success: #34c759;
+            --danger: #ff3b30;
             --sidebar-width: 280px;
-            --hover-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.1);
         }
 
         * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
         
         body { 
             margin: 0; 
-            background: #f1f5f9; 
+            background: linear-gradient(135deg, #e5e5ea 0%, #ffffff 100%);
+            background-attachment: fixed;
             color: var(--text-main); 
             -webkit-font-smoothing: antialiased;
             transition: padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
+        /* Glass Header */
         .top-header {
             position: fixed;
             top: 0; left: 0; right: 0;
             height: 65px;
             background: var(--glass-bg);
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
             z-index: 1200;
             display: flex;
             align-items: center;
             padding: 0 20px;
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 0.5px solid rgba(0, 0, 0, 0.1);
             transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .top-toggle {
-            width: 40px; height: 40px;
+            width: 36px; height: 36px;
             border-radius: 10px;
             border: none;
-            background: var(--sidebar-color);
+            background: var(--primary-blue);
             color: white;
             cursor: pointer;
             display: flex; align-items: center; justify-content: center;
             font-size: 18px;
-            z-index: 1300;
-            margin-right: 15px;
-            transition: 0.2s;
+            transition: all 0.2s;
         }
-        .top-toggle:hover { background: #475569; transform: scale(1.05); }
+        .top-toggle:hover { transform: scale(1.05); opacity: 0.9; }
 
+        /* Sidebar Glass */
         .sidebar { 
             position: fixed; top: 0; left: 0; 
             width: var(--sidebar-width); height: 100vh; 
             background: var(--sidebar-color); 
+            backdrop-filter: blur(15px);
             color: #fff; overflow-y: auto; 
             transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 2000;
@@ -90,165 +94,172 @@
 
         .overlay { 
             position: fixed; inset: 0; 
-            background: rgba(15, 23, 42, 0.5); 
+            background: rgba(0, 0, 0, 0.3); 
             backdrop-filter: blur(4px); 
             display: none; z-index: 1500; 
         }
         .overlay.show { display: block; }
 
-        .sidebar-header { padding: 25px 20px; font-size: 18px; font-weight: 600; background: #0f172a; color: #fff; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .menu { display: flex; flex-direction: column; padding: 10px 0; }
-        .item { border-bottom: 1px solid rgba(255,255,255,0.03); }
-        .menu a, .menu .drop-btn { width: 100%; min-height: 50px; padding: 12px 20px; background: none; border: none; color: #cbd5e1; text-align: left; font-size: 15px; cursor: pointer; display: flex; align-items: center; text-decoration: none; transition: 0.3s; }
-        .menu a:hover, .menu .drop-btn:hover { background: #334155; color: #fff; padding-left: 30px; }
-        .sub { display: none; background: #0f172a; padding: 5px 0; }
-        .item.open .sub { display: block; }
-        .sub a { padding-left: 45px; font-size: 14px; color: #94a3b8; min-height: 40px; }
-        .sub a:hover { color: #5bbf8a; padding-left: 55px; }
-        .arrow { margin-left: auto; transition: 0.3s; font-size: 10px; opacity: 0.6; }
-        .item.open .arrow { transform: rotate(90deg); }
+        .sidebar-header { padding: 25px 20px; font-size: 18px; font-weight: 600; background: rgba(0,0,0,0.2); border-bottom: 0.5px solid rgba(255,255,255,0.1); }
+        .menu { padding: 10px 0; }
+        .menu a, .menu .drop-btn { 
+            width: 100%; min-height: 50px; padding: 12px 20px; background: none; border: none; 
+            color: #ebebf5; font-size: 15px; cursor: pointer; display: flex; align-items: center; 
+            text-decoration: none; transition: 0.3s; 
+        }
+        .menu a:hover, .menu .drop-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
 
+        /* Content Container */
         .main-wrapper { padding: 85px 15px 40px; display: flex; justify-content: center; }
         .content-container { width: 100%; max-width: 1200px; }
 
+        /* iOS Toolbar */
         .toolbar { 
-            background: white; 
-            padding: 20px 25px; 
-            border-radius: 16px; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            padding: 15px 25px; 
+            border-radius: 20px; 
+            box-shadow: var(--card-shadow); 
             display: flex; 
             justify-content: flex-end; 
             align-items: center; 
             margin-bottom: 30px; 
-            border: 1px solid #e2e8f0; 
-            gap: 20px; 
+            border: 1px solid var(--glass-border); 
+            gap: 15px; 
             flex-wrap: wrap; 
         }
-        @media (max-width: 600px) { .toolbar { justify-content: center; } .modern-date { width: 100%; } .btn-fetch { width: 100%; } }
 
         .modern-date { 
             appearance: none; 
-            background: #f8fafc; 
-            border: 1.5px solid #cbd5e1; 
-            border-radius: 10px; 
+            background: rgba(0, 122, 255, 0.05);
+            border: 1px solid rgba(0, 122, 255, 0.2); 
+            border-radius: 12px; 
             padding: 10px 16px; 
-            font-size: 16px; 
-            color: #1e293b; 
+            font-size: 15px; 
+            color: var(--primary-blue); 
             outline: none; 
             transition: 0.2s; 
             cursor: pointer;
         }
-        .modern-date:focus { border-color: #6366f1; background: #fff; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1); }
 
         .btn-fetch { 
-            background: var(--luxury-blue); 
+            background: var(--primary-blue); 
             color: white; 
             border: none; 
-            padding: 12px 28px; 
-            border-radius: 10px; 
+            padding: 10px 24px; 
+            border-radius: 12px; 
             cursor: pointer; 
             font-weight: 500; 
-            font-size: 16px; 
-            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            font-size: 15px; 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+            display: flex; align-items: center; gap: 8px;
         }
         .btn-fetch:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 15px rgba(15, 23, 42, 0.25);
-            background: #1e293b;
+            box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+            filter: brightness(1.1);
         }
         .btn-fetch:active { transform: translateY(0); }
 
-        .card { background: white; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); transition: 0.3s; }
-        .card:hover { box-shadow: var(--card-shadow); }
-        .card-header-bar { padding: 16px 20px; color: white; font-size: 16px; font-weight: 500; letter-spacing: 0.5px; }
+        /* Glass Cards */
+        .card { 
+            background: var(--glass-bg); 
+            backdrop-filter: blur(10px);
+            border-radius: 20px; 
+            overflow: hidden; 
+            border: 1px solid var(--glass-border); 
+            margin-bottom: 25px; 
+            box-shadow: var(--card-shadow);
+        }
         
-        .table-luxury { width: 100%; border-collapse: collapse; background: white; }
+        .card-header-bar { 
+            padding: 14px 20px; 
+            color: white; 
+            font-size: 15px; 
+            font-weight: 500; 
+            letter-spacing: 0.3px;
+            backdrop-filter: brightness(0.9);
+        }
+        
+        /* Table Style */
+        .table-luxury { width: 100%; border-collapse: collapse; }
         .table-luxury th { 
-            background: #f8fafc; 
-            padding: 18px 15px; 
+            background: rgba(0, 0, 0, 0.02);
+            padding: 15px; 
             text-align: left; 
-            font-size: 14px; 
-            color: #475569; 
-            border: 1px solid var(--border-color); 
+            font-size: 13px; 
+            color: var(--text-light); 
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
             font-weight: 600; 
-            white-space: nowrap; 
+            text-transform: uppercase;
         }
         .table-luxury td { 
-            padding: 16px 15px; 
+            padding: 14px 15px; 
             font-size: 14.5px; 
-            border: 1px solid var(--border-color); 
-            line-height: 1.5;
-            transition: all 0.2s ease;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+            transition: 0.2s;
         }
+        .table-luxury tbody tr:hover { background-color: rgba(0, 122, 255, 0.03); }
 
-        .table-luxury tbody tr { transition: transform 0.2s ease; }
-        .table-luxury tbody tr:hover { 
-            background-color: var(--hover-row); 
-            box-shadow: inset 4px 0 0 var(--luxury-blue);
-        }
-
+        /* Grid Layout */
         .grid-layout { display: grid; grid-template-columns: 1.7fr 1.3fr; gap: 25px; }
         @media (max-width: 1024px) { .grid-layout { grid-template-columns: 1fr; } }
 
+        /* iOS Stat Boxes */
         .stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 20px; }
-        
         .stat-box { 
             padding: 18px; 
-            border: 1px solid #e2e8f0; 
-            border-left: 8px solid var(--success); 
-            border-radius: 12px; 
-            background: #fff; 
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
-            cursor: default; 
+            border: 1px solid var(--glass-border); 
+            border-radius: 18px; 
+            background: rgba(255, 255, 255, 0.5); 
+            transition: all 0.3s ease; 
         }
-        .stat-box:hover {
-            transform: translateY(-5px);
-            box-shadow: var(--hover-shadow);
-            border-color: #cbd5e1;
+        .stat-box:hover { transform: scale(1.02); background: rgba(255, 255, 255, 0.8); }
+        .stat-val { font-size: 28px; font-weight: 700; color: #000; letter-spacing: -1px; }
+
+        /* Categorized Backgrounds - Refined */
+        .bg-daily { background: rgba(58, 58, 60, 0.9); }
+        .bg-web { background: rgba(0, 122, 255, 0.9); }
+        .bg-summary { background: rgba(88, 86, 214, 0.9); }
+        .bg-brand { background: rgba(175, 82, 222, 0.9); }
+        .bg-actual { background: rgba(52, 199, 89, 0.9); }
+        .bg-focus { background: rgba(72, 72, 74, 0.9); }
+        .bg-target { background: rgba(28, 28, 30, 0.9); }
+
+        /* Target Rows - Original Logic with Glass style */
+        .row-target-allpost { background-color: rgba(0, 122, 255, 0.15) !important; font-weight: 500; }
+        .row-target-newpost { background-color: rgba(0, 122, 255, 0.1) !important; }
+        .row-target-bdbc { background-color: rgba(90, 200, 250, 0.1) !important; }
+        .row-target-alldevice { background-color: rgba(52, 199, 89, 0.1) !important; font-weight: 500; }
+        .row-target-apple { background-color: rgba(255, 59, 48, 0.05) !important; }
+        .row-target-smartphone { background-color: rgba(255, 149, 0, 0.05) !important; }
+
+        /* Pagination */
+        .pagination { display: flex; gap: 8px; padding: 15px 20px; justify-content: center; }
+        .page-btn { 
+            width: 32px; height: 32px; border: none; background: rgba(0,0,0,0.05); 
+            border-radius: 50%; cursor: pointer; font-size: 13px; transition: 0.2s; 
         }
+        .page-btn.active { background: var(--primary-blue); color: white; }
 
-        .stat-val { font-size: 28px; font-weight: 700; color: var(--luxury-blue); }
-
-        .row-target-allpost { background-color: #1e3a8a !important; color: white !important; }
-        .row-target-newpost { background-color: #2563eb !important; color: white !important; }
-        .row-target-bdbc { background-color: #3b82f6 !important; color: white !important; }
-        .row-target-alldevice { background-color: #059669 !important; color: white !important; }
-        .row-target-apple { background-color: #10b981 !important; color: white !important; }
-        .row-target-smartphone { background-color: #34d399 !important; color: white !important; }
-
-        .pagination { display: flex; gap: 8px; padding: 15px 20px; justify-content: center; background: #fff; border-top: 1px solid #e2e8f0; flex-wrap: wrap; }
-        .page-btn { padding: 8px 16px; border: 1px solid #e2e8f0; background: #fff; border-radius: 8px; cursor: pointer; font-size: 14px; color: #64748b; transition: 0.2s; }
-        .page-btn.active { background: var(--luxury-blue); color: white; border-color: var(--luxury-blue); }
-
-        .bg-daily { background: #334155; }
-        .bg-web { background: #0284c7; }
-        .bg-summary { background: #6366f1; }
-        .bg-brand { background: #8b5cf6; }
-        .bg-actual { background: #059669; }
-        .bg-focus { background: #1e293b; }
-        .bg-target { background: #0f172a; }
-
-        .up { color: var(--success) !important; font-weight: 600; } 
-        .down { color: var(--danger) !important; font-weight: 600; }
-
-        #loader { display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.8); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
-        .spinner { width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid var(--luxury-blue); border-radius: 50%; animation: spin 1s linear infinite; }
+        /* UI Helpers */
+        .up { color: var(--success) !important; } 
+        .down { color: var(--danger) !important; }
+        #loader { display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.7); z-index: 9999; backdrop-filter: blur(10px); flex-direction: column; align-items: center; justify-content: center; }
+        .spinner { width: 40px; height: 40px; border: 3px solid rgba(0,122,255,0.1); border-top: 3px solid var(--primary-blue); border-radius: 50%; animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        #realDashboard { display: none; }
+        #realDashboard { display: none; animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
-        /* สไตล์พิเศษสำหรับแถวสรุปยอด */
-        .row-highlight-summary { font-size: 1.1rem !important; font-weight: 600 !important; }
+        .row-highlight-summary { font-size: 1.05rem !important; font-weight: 600 !important; background: rgba(0,0,0,0.02); }
     </style>
 </head>
 <body>
 
 <header class="top-header">
     <button class="top-toggle" onclick="toggleSidebar()">☰</button>
-    <div style="font-weight: 600; font-size: 1.1rem; color: #1e293b;">รายงานยอดขายสาขา</div>
+    <div style="font-weight: 600; font-size: 1.1rem; color: var(--text-main); margin-left: 10px;">รายงานยอดขายสาขา</div>
 </header>
 
 <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
@@ -256,20 +267,20 @@
 
 <div id="loader">
     <div class="spinner"></div>
-    <p style="margin-top:20px; font-weight: 500;">กำลังดึงข้อมูลการขาย...</p>
+    <p style="margin-top:20px; font-weight: 500; color: var(--primary-blue);">กำลังดึงข้อมูล...</p>
 </div>
 
 <div class="main-wrapper">
     <div class="content-container">
         <div class="toolbar">
-            <label style="color:var(--text-light); font-weight:500; font-size: 1rem;">📅 เลือกวันที่ข้อมูล:</label>
+            <label style="color:var(--text-light); font-weight:500;">📅 วันที่ข้อมูล:</label>
             <input type="date" id="targetDate" class="modern-date">
             <button class="btn-fetch" onclick="fetchData()">🚀 ดึงข้อมูล</button>
         </div>
 
-        <div id="emptyState" class="empty-state-wrapper" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 400px; background: white; border-radius: 16px; border: 2px dashed #e2e8f0; color: #94a3b8; margin-top: 20px;">
-            <div style="font-size: 50px; margin-bottom: 20px; opacity: 0.8;">📊</div>
-            <p style="font-size: 1.1rem;">กรุณากดปุ่มดึงข้อมูล เพื่อแสดงยอดขาย</p>
+        <div id="emptyState" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 400px; background: var(--glass-bg); backdrop-filter: blur(10px); border-radius: 24px; border: 1px solid var(--glass-border); color: var(--text-light); margin-top: 20px; box-shadow: var(--card-shadow);">
+            <div style="font-size: 64px; margin-bottom: 20px;">📊</div>
+            <p style="font-size: 1.1rem; font-weight: 300;">กรุณากดปุ่มดึงข้อมูล เพื่อแสดงยอดขาย</p>
         </div>
 
         <div id="realDashboard">
@@ -281,7 +292,7 @@
                             <tr>
                                 <th>วันที่</th><th>New Post</th><th>Diff+/-</th><th>BDBC</th><th>Diff+/-</th>
                                 <th>Apple</th><th>Diff+/-</th><th>Smartphone</th><th>Diff+/-</th>
-                                <th style="background:#f8fafc">รวม Postpay</th><th style="background:#f8fafc">รวม Device</th>
+                                <th>รวม Postpay</th><th>รวม Device</th>
                             </tr>
                         </thead>
                         <tbody id="dailyBody"></tbody>
@@ -290,7 +301,7 @@
             </div>
 
             <div class="card">
-                <div class="card-header-bar bg-daily">🛒 รายละเอียดการขาย</div>
+                <div class="card-header-bar bg-web">🛒 รายละเอียดการขาย</div>
                 <div style="overflow-x: auto;">
                     <table class="table-luxury">
                         <thead>
@@ -359,6 +370,7 @@
 </div>
 
 <script>
+    // -- Logic Remains Identical to Preserve Functionality --
     function includeSidebar() {
         const cached = localStorage.getItem('sidebar_cache');
         if (cached) {
@@ -484,9 +496,8 @@
         const [y, m, d_val] = document.getElementById('targetDate').value.split('-');
         const fixedDate = `${d_val}/${m}/${y}`;
         const d = s.daily;
-        document.getElementById('dailyBody').innerHTML = `<tr><td style="font-weight:600">${fixedDate}</td><td>${formatNumber(d.np)}</td><td class="${d.npD<0?'up':'down'}">${formatNumber(d.npD)}</td><td>${formatNumber(d.bd)}</td><td class="${d.bdD<0?'up':'down'}">${formatNumber(d.bdD)}</td><td>${formatNumber(d.ap)}</td><td class="${d.apD<0?'up':'down'}">${formatNumber(d.apD)}</td><td>${formatNumber(d.sm)}</td><td class="${d.smD<0?'up':'down'}">${formatNumber(d.smD)}</td><td style="font-weight:700; background:#f8fafc">${formatNumber(d.totalP)}</td><td style="font-weight:700; background:#f8fafc">${formatNumber(d.totalD)}</td></tr>`;
+        document.getElementById('dailyBody').innerHTML = `<tr><td style="font-weight:600">${fixedDate}</td><td>${formatNumber(d.np)}</td><td class="${d.npD<0?'up':'down'}">${formatNumber(d.npD)}</td><td>${formatNumber(d.bd)}</td><td class="${d.bdD<0?'up':'down'}">${formatNumber(d.bdD)}</td><td>${formatNumber(d.ap)}</td><td class="${d.apD<0?'up':'down'}">${formatNumber(d.apD)}</td><td>${formatNumber(d.sm)}</td><td class="${d.smD<0?'up':'down'}">${formatNumber(d.smD)}</td><td style="font-weight:700;">${formatNumber(d.totalP)}</td><td style="font-weight:700;">${formatNumber(d.totalD)}</td></tr>`;
         
-        // ปรับส่วน รายละเอียดการขาย Postpay (เพิ่มตัวหนาและขนาดฟอนต์ 1 step)
         document.getElementById('postpaySummaryBody').innerHTML = (s.summary || []).map(row => {
             const label = row[0].toString();
             const isSummaryRow = label.includes("รวมยอด New") || label.includes("รวมยอด BDBC");
@@ -495,7 +506,7 @@
         }).join('');
 
         document.getElementById('brandBody').innerHTML = (s.brands || []).map(row => `<tr><td>${row[0]}</td><td>${formatNumber(row[1])}</td><td style="font-weight:600">${formatNumber(row[2])}</td></tr>`).join('');
-        document.getElementById('focusBody').innerHTML = (s.focus || []).map(row => `<tr><td>${row[0]}</td><td style="text-align:right; font-weight:700; color:#4f46e5">${formatNumber(row[1])}</td></tr>`).join('');
+        document.getElementById('focusBody').innerHTML = (s.focus || []).map(row => `<tr><td>${row[0]}</td><td style="text-align:right; font-weight:700; color:var(--primary-blue)">${formatNumber(row[1])}</td></tr>`).join('');
         
         document.getElementById('targetBody').innerHTML = (s.targets || []).map(row => {
             let rowClass = "";
@@ -512,19 +523,19 @@
         const act = s.actuals;
         if(act) {
             const configs = [
-                { label: 'New Post', data: act.np, color: '#0284c7' },
-                { label: 'BDBC', data: act.bd, color: '#059669' },
-                { label: 'Apple', data: act.ap, color: '#d97706' },
-                { label: 'Smartphone', data: act.sm, color: '#be123c' }
+                { label: 'New Post', data: act.np, color: '#007aff' },
+                { label: 'BDBC', data: act.bd, color: '#34c759' },
+                { label: 'Apple', data: act.ap, color: '#ff9500' },
+                { label: 'Smartphone', data: act.sm, color: '#ff3b30' }
             ];
             document.getElementById('actualGrid').innerHTML = configs.map(item => `
-                <div class="stat-box" style="border-left-color: ${item.color}">
+                <div class="stat-box" style="border-top: 4px solid ${item.color}">
                     <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom:5px;">
-                        <span style="font-size:18px; color:var(--text-light); font-weight:600;">${item.label}</span>
-                        <span class="${item.data.diff<0?'up':'down'}" style="font-size:16px;">Diff: ${formatNumber(item.data.diff)}</span>
+                        <span style="font-size:15px; color:var(--text-light); font-weight:500;">${item.label}</span>
+                        <span class="${item.data.diff<0?'up':'down'}" style="font-size:13px; font-weight:600;">${formatNumber(item.data.diff)}</span>
                     </div>
-                    <div class="stat-val" style="font-size:32px;">${formatNumber(item.data.val)}</div>
-                    <div style="font-size:18px; margin-top:5px;"><span style="color:#4f46e5; font-weight:600">Ach: ${formatDecimalTwo(item.data.ach)}%</span></div>
+                    <div class="stat-val">${formatNumber(item.data.val)}</div>
+                    <div style="font-size:14px; margin-top:8px;"><span style="color:var(--primary-blue); font-weight:600">Ach: ${formatDecimalTwo(item.data.ach)}%</span></div>
                 </div>`).join('');
         }
     }
