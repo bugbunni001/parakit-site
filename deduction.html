@@ -12,14 +12,16 @@
     <style>
         :root {
             --ios-blue: #007aff;
+            --ios-bg: #f2f2f7;
             --ios-system-gray: #f2f2f7;
-            --sidebar-dark: rgba(28, 28, 30, 0.95);
+            --sidebar-dark: rgba(28, 28, 30, 0.94); /* ปรับให้ตรงกับหน้าหลัก */
             --glass-white: rgba(255, 255, 255, 0.7);
-            --glass-border: rgba(255, 255, 255, 0.4);
+            --glass-border: rgba(255, 255, 255, 0.5);
             --text-main: #1c1c1e;
             --text-light: #8e8e93;
             --sidebar-width: 280px;
             --card-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.08);
+            --transition-swift: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         /* ===== GLOBAL RESET & STRUCTURE ===== */
@@ -40,9 +42,8 @@
             position: fixed;
             top: 0; left: 0; right: 0;
             height: 65px;
-            background: var(--glass-white);
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
             z-index: 1200;
             display: flex;
             align-items: center;
@@ -55,24 +56,22 @@
             width: 36px; height: 36px;
             border-radius: 10px;
             border: none;
-            background: var(--ios-blue);
-            color: white;
+            background: transparent;
+            color: var(--ios-blue);
             cursor: pointer;
             display: flex; align-items: center; justify-content: center;
-            font-size: 18px;
-            z-index: 1300;
+            font-size: 22px;
+            transition: background 0.2s;
             margin-right: 15px;
-            transition: transform 0.2s;
         }
-        .top-toggle:active { transform: scale(0.9); }
+        .top-toggle:hover { background: rgba(0, 122, 255, 0.1); }
 
-        /* ===== Sidebar Style Glass Dark ===== */
+        /* ===== Sidebar Style (As Requested from Main Page) ===== */
         .sidebar { 
             position: fixed; top: 0; left: 0; 
             width: var(--sidebar-width); height: 100vh; 
             background: var(--sidebar-dark); 
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
+            backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
             color: #fff; overflow-y: auto; 
             transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 2000;
@@ -92,6 +91,19 @@
             body { padding-left: 0 !important; }
             .top-header { left: 0 !important; }
         }
+
+        /* Sidebar Internals (Styles needed for injected sidebar.html) */
+        .sidebar-header { padding: 30px 20px; font-size: 20px; font-weight: 600; border-bottom: 0.5px solid rgba(255,255,255,0.1); }
+        .menu { padding: 10px 0; }
+        .menu a, .menu .drop-btn { 
+            width: 100%; min-height: 50px; padding: 12px 20px; background: none; border: none; 
+            color: #ebebf5; text-align: left; font-size: 15px; cursor: pointer; 
+            display: flex; align-items: center; text-decoration: none; transition: 0.3s;
+        }
+        .menu a:hover, .menu .drop-btn:hover { background: rgba(255,255,255,0.1); padding-left: 30px; }
+        .sub { display: none; background: rgba(0,0,0,0.2); }
+        .item.open .sub { display: block; }
+        .sub a { padding-left: 45px; font-size: 14px; color: #8e8e93; }
 
         .content { padding: 100px 20px 40px; display: flex; justify-content: center; animation: fadeIn 0.5s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -298,6 +310,56 @@
 <footer>© 2026 Copy Right By Angerina Frog</footer>
 
 <script>
+    // --- Sidebar System (Recovered from Memory) ---
+    function includeSidebar() {
+        const cached = localStorage.getItem('sidebar_cache');
+        if (cached) {
+            document.getElementById('sidebar').innerHTML = cached;
+            restoreMenuState();
+        }
+
+        fetch('sidebar.html')
+            .then(response => response.text())
+            .then(data => {
+                if (data !== cached) {
+                    document.getElementById('sidebar').innerHTML = data;
+                    localStorage.setItem('sidebar_cache', data);
+                    restoreMenuState();
+                }
+            })
+            .catch(err => console.warn("Sidebar Load Error"));
+            
+        if(localStorage.getItem('sidebar_collapsed') === 'true' && window.innerWidth > 768) {
+            document.body.classList.add('collapsed');
+        }
+    }
+
+    function toggleSidebar() {
+        if (window.innerWidth <= 768) {
+            document.getElementById("sidebar").classList.toggle("show");
+            document.getElementById("overlay").classList.toggle("show");
+        } else {
+            const isCollapsed = document.body.classList.toggle("collapsed");
+            localStorage.setItem('sidebar_collapsed', isCollapsed);
+        }
+    }
+
+    window.toggleDrop = function(btn, id) {
+        const item = btn.parentElement;
+        const isOpen = item.classList.toggle("open");
+        if (id) localStorage.setItem('menu-' + id, isOpen);
+    }
+
+    function restoreMenuState() {
+        ['credit', 'branch', 'sales'].forEach(id => {
+            if (localStorage.getItem('menu-' + id) === 'true') {
+                const el = document.getElementById('menu-' + id);
+                if (el) el.classList.add('open');
+            }
+        });
+    }
+
+    // --- Deduction Form Logic (Original) ---
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxCbTFWMVTHKrlJZGR0NcvXTH7LPeF_FV-0A_M-zpCiHmvQn_xgO20H7jnihbMd7GZJ/exec";
     const SECRET_PASSWORD = "150402"; 
 
@@ -316,7 +378,6 @@
         }
     }
 
-    // ฟังก์ชันเปิด Popup รหัสผ่าน
     function openAuthPopup() {
         const form = document.getElementById('deductionForm');
         if (!form.checkValidity()) {
@@ -332,15 +393,12 @@
         document.getElementById("confirmPassword").value = "";
     }
 
-    // ตรวจสอบรหัสผ่าน
     function verifyAndSubmit() {
         const passInput = document.getElementById("confirmPassword").value;
-        
         if (passInput === SECRET_PASSWORD) {
             closeAuthPopup();
             submitData();
         } else {
-            // กรณีรหัสผิด: ปิดหน้าต่างใส่รหัส แล้วโชว์ Popup เตือนแทน alert
             closeAuthPopup();
             setTimeout(() => {
                 showStatusPopup('มึงใส่รหัสไม่ถูกค่ะอีควาย!', false);
@@ -369,7 +427,7 @@
         })
         .then(() => {
             loader.style.display = 'none';
-            showStatusPopup('􀆅 บันทึกสำเร็จแล้วค่ะคุณแม่!', true);
+            showStatusPopup('บันทึกสำเร็จแล้วค่ะคุณแม่!', true);
             resetForm();
         })
         .catch(err => {
@@ -378,19 +436,13 @@
         });
     }
 
-    // ฟังก์ชันแสดง Popup แจ้งเตือน (ใช้ทั้งสำเร็จและไม่สำเร็จ)
     function showStatusPopup(text, isSuccess) {
         const statusPopup = document.getElementById("statusPopup");
         document.getElementById("statusText").innerText = text;
-        
-        // สลับไอคอน
         document.getElementById("successIcon").style.display = isSuccess ? "block" : "none";
         document.getElementById("errorIcon").style.display = isSuccess ? "none" : "block";
-        
-        // ปรับสีปุ่มตามสถานะ (ถ้าต้องการ)
         const btn = document.getElementById("statusBtn");
         btn.style.background = isSuccess ? "#3a3a3c" : "#ff3b30";
-
         statusPopup.classList.add("show");
     }
 
@@ -404,19 +456,13 @@
         document.getElementById('otherReasonContainer').style.display = 'none';
     }
 
-    function toggleSidebar() {
-        if (window.innerWidth <= 768) {
-            document.getElementById("sidebar").classList.toggle("show");
-            document.getElementById("overlay").classList.toggle("show");
-        } else {
-            document.body.classList.toggle("collapsed");
-        }
-    }
-
-    // รองรับการกด Enter
+    // Handle Enter Key
     document.getElementById("confirmPassword").addEventListener("keydown", function(e) {
         if (e.key === "Enter") verifyAndSubmit();
     });
+
+    // Run Sidebar Init on Load
+    window.addEventListener('DOMContentLoaded', includeSidebar);
 </script>
 
 </body>
