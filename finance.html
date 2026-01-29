@@ -4,30 +4,57 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ลงข้อมูลสินเชื่อ - Parakit-site</title>
-	<link rel="icon" type="image/png" href="favicon.png">
+    <link rel="icon" type="image/png" href="favicon.png">
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
     
     <style>
-        /* ===== GLOBAL RESET & SIDEBAR STRUCTURE ===== */
-        * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
-        body { margin: 0; background: #f1f5f9; padding-bottom: 80px; color: #334155; -webkit-font-smoothing: antialiased; }
-        
-        .top-toggle { position: fixed; top: 15px; left: 15px; z-index: 1400; width: 45px; height: 45px; border-radius: 12px; border: none; background: #1e293b; color: #fff; font-size: 20px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; }
-        @media(min-width:769px) { .top-toggle { display: none; } }
-        
-        .sidebar { position: fixed; top: 0; left: 0; width: 260px; height: 100vh; background: #1e293b; color: #fff; overflow-y: auto; transform: translateX(-260px); transition: all .3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 2000; }
-        .sidebar.show { transform: translateX(0); }
-        .content { padding: 80px 20px 40px; transition: margin-left .3s; display: flex; justify-content: center; }
-        @media(min-width:769px) { .sidebar { transform: translateX(0); } .content { margin-left: 260px; } }
-        
-        .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: none; backdrop-filter: blur(4px); z-index: 1500; }
-        .overlay.show { display: block; }
+        :root {
+            --ios-blue: #007aff;
+            --ios-green: #34c759;
+            --ios-bg: #f2f2f7;
+            --glass-white: rgba(255, 255, 255, 0.75);
+            --glass-border: rgba(255, 255, 255, 0.5);
+            --sidebar-bg: #1e293b;
+            --text-main: #1c1c1e;
+            --text-light: #8e8e93;
+            --transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
 
-        /* ===== SIDEBAR INTERNAL MENU STYLE ===== */
-        .sidebar-header { padding: 25px 20px; font-size: 18px; font-weight: 600; background: #0f172a; color: #fff; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        /* ===== GLOBAL RESET & STRUCTURE ===== */
+        * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
+        
+        body { 
+            margin: 0; 
+            background-color: var(--ios-bg);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(0, 122, 255, 0.1) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(52, 199, 89, 0.08) 0px, transparent 50%);
+            background-attachment: fixed;
+            padding-bottom: 100px; 
+            color: var(--text-main); 
+            -webkit-font-smoothing: antialiased; 
+            overflow-x: hidden;
+        }
+        
+        /* ===== SIDEBAR (ORIGINAL DESIGN KEPT) ===== */
+        .top-toggle { 
+            position: fixed; top: 15px; left: 15px; z-index: 1400; 
+            width: 45px; height: 45px; border-radius: 12px; border: none; 
+            background: var(--sidebar-bg); color: #fff; font-size: 20px; 
+            cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15); 
+            display: flex; align-items: center; justify-content: center; 
+        }
+        
+        .sidebar { 
+            position: fixed; top: 0; left: 0; width: 260px; height: 100vh; 
+            background: var(--sidebar-bg); color: #fff; overflow-y: auto; 
+            transform: translateX(-260px); transition: var(--transition); z-index: 2000; 
+        }
+        .sidebar.show { transform: translateX(0); }
+        .sidebar-header { padding: 25px 20px; font-size: 18px; font-weight: 600; background: #0f172a; border-bottom: 1px solid rgba(255,255,255,0.05); }
         .menu { display: flex; flex-direction: column; padding: 10px 0; }
         .item { border-bottom: 1px solid rgba(255,255,255,0.03); }
         .menu a, .menu .drop-btn { width: 100%; min-height: 50px; padding: 12px 20px; background: none; border: none; color: #cbd5e1; text-align: left; font-size: 15px; cursor: pointer; display: flex; align-items: center; text-decoration: none; transition: all 0.3s ease; }
@@ -39,41 +66,122 @@
         .arrow { margin-left: auto; transition: 0.3s; font-size: 10px; opacity: 0.6; }
         .item.open .arrow { transform: rotate(90deg); }
 
-        /* ===== MAIN CONTENT BOX & FORM ===== */
-        .box { background: white; width: 100%; max-width: 500px; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
-        h3 { margin-top: 0; margin-bottom: 25px; color: #1e293b; text-align: center; font-weight: 600; }
+        .overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.3); display: none; backdrop-filter: blur(5px); z-index: 1500; }
+        .overlay.show { display: block; }
+
+        /* ===== MAIN CONTENT (iOS 18 GLASS STYLE) ===== */
+        .content { 
+            padding: 80px 20px 40px; 
+            transition: margin-left .3s; 
+            display: flex; justify-content: center; 
+            animation: fadeIn 0.8s ease-out;
+        }
+        @media(min-width:769px) { 
+            .sidebar { transform: translateX(0); } 
+            .content { margin-left: 260px; } 
+            .top-toggle { display: none; }
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .box { 
+            background: var(--glass-white); 
+            backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+            width: 100%; max-width: 550px; padding: 40px 30px; 
+            border-radius: 35px; border: 1px solid var(--glass-border);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.05); 
+        }
+
+        h3 { 
+            margin-top: 0; margin-bottom: 30px; 
+            color: var(--text-main); text-align: center; 
+            font-weight: 600; font-size: 26px; letter-spacing: -0.5px;
+        }
         
-        .form-row { margin-bottom: 18px; }
-        label { display: block; margin-bottom: 6px; font-size: 14px; color: #64748b; font-weight: 400; }
-        input, select { width: 100%; padding: 12px 15px; border: 1.5px solid #e2e8f0; border-radius: 10px; font-size: 15px; outline: none; transition: border-color 0.2s; background: #fff; }
-        input:focus, select:focus { border-color: #3b82f6; }
+        .form-row { margin-bottom: 22px; }
+        label { 
+            display: block; margin-bottom: 8px; margin-left: 5px;
+            font-size: 14px; color: var(--text-main); font-weight: 500; 
+        }
+        
+        input, select { 
+            width: 100%; padding: 14px 18px; 
+            border: 1px solid rgba(0,0,0,0.05); 
+            border-radius: 16px; font-size: 16px; outline: none; 
+            transition: var(--transition); background: rgba(255,255,255,0.5); 
+            color: var(--text-main);
+        }
+        input:focus, select:focus { 
+            border-color: var(--ios-blue); 
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1);
+        }
 
-        .btn-submit { width: 100%; padding: 14px; border: none; border-radius: 12px; background: #5bb7aa; color: white; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.2s; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .btn-submit:hover { filter: brightness(0.9); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(91, 183, 170, 0.2); }
-        .btn-submit:active { transform: translateY(0); }
+        .btn-submit { 
+            width: 100%; padding: 16px; border: none; border-radius: 20px; 
+            background: var(--ios-blue); color: white; 
+            font-size: 17px; font-weight: 600; cursor: pointer; 
+            transition: var(--transition); margin-top: 15px; 
+            display: flex; align-items: center; justify-content: center; gap: 8px; 
+            box-shadow: 0 8px 20px rgba(0, 122, 255, 0.25);
+        }
+        .btn-submit:hover { transform: translateY(-3px); box-shadow: 0 12px 25px rgba(0, 122, 255, 0.35); filter: brightness(1.1); }
+        .btn-submit:active { transform: scale(0.97); }
 
-        #reasonGroup { display: none; }
-        #preview { width: 100%; margin-top: 10px; border-radius: 8px; display: none; border: 1px solid #ddd; }
+        #reasonGroup { display: none; animation: slideDown 0.4s ease; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* ===== POPUP & LOADING ===== */
-        .loading { position: fixed; inset: 0; background: rgba(255,255,255,0.8); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 3000; backdrop-filter: blur(2px); }
-        .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #2563eb; border-radius: 50%; animation: spin 1s linear infinite; }
+        #preview { 
+            width: 100%; margin-top: 15px; border-radius: 18px; 
+            display: none; border: 2px solid var(--glass-border); 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        /* ===== POPUP & LOADING (iOS Style) ===== */
+        .loading { 
+            position: fixed; inset: 0; background: rgba(255,255,255,0.6); 
+            display: none; flex-direction: column; align-items: center; justify-content: center; 
+            z-index: 3000; backdrop-filter: blur(15px); 
+        }
+        .spinner { 
+            width: 45px; height: 45px; border: 4px solid rgba(0,0,0,0.05); 
+            border-top: 4px solid var(--ios-blue); border-radius: 50%; 
+            animation: spin 1s linear infinite; 
+        }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        .popup { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 4000; padding: 20px; }
+        .popup { position: fixed; inset: 0; background: rgba(0,0,0,0.3); display: none; align-items: center; justify-content: center; z-index: 4000; backdrop-filter: blur(10px); }
         .popup.show { display: flex; }
-        .popup-box { background: white; padding: 30px; border-radius: 20px; text-align: center; max-width: 400px; width: 100%; transform: scale(0.8); opacity: 0; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
-        .popup.show .popup-box { transform: scale(1); opacity: 1; }
+        .popup-box { 
+            background: var(--glass-white); padding: 35px; border-radius: 30px; 
+            text-align: center; max-width: 340px; width: 100%; 
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 25px 60px rgba(0,0,0,0.2);
+            animation: popupPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+        }
+        @keyframes popupPop { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
         
-        .icon-box { margin-bottom: 20px; font-size: 50px; }
-        .success .check-icon { display: block; color: #22c55e; margin: 0 auto; width: 60px; height: 60px; }
-        .error .warn-icon { display: block; color: #ef4444; font-size: 60px; }
+        .icon-box { margin-bottom: 20px; }
+        .check-icon { width: 65px; height: 65px; margin: 0 auto; display: block; }
+        .check-icon circle { stroke: var(--ios-green); stroke-width: 2.5; fill: none; }
+        .check-icon path { stroke: var(--ios-green); stroke-width: 4; fill: none; stroke-linecap: round; }
+        .warn-icon { font-size: 60px; color: #ff3b30; }
+        
         .success .warn-icon, .error .check-icon { display: none; }
         
-        .check-icon circle { stroke: #22c55e; stroke-width: 2; fill: none; }
-        .check-icon path { stroke: #22c55e; stroke-width: 3; fill: none; stroke-linecap: round; }
+        .btn-ok { 
+            background: var(--text-main); color: #fff; width: 100%; 
+            padding: 12px; border: none; border-radius: 15px; 
+            font-size: 16px; font-weight: 600; cursor: pointer;
+        }
 
-        footer { width: 100%; text-align: center; padding: 20px; color: #94a3b8; position: fixed; bottom: 0; left: 0; font-size: 11px; z-index: 1100; border-top: 1px solid #e2e8f0; background: #fff; }
+        footer { 
+            width: 100%; text-align: center; padding: 25px; 
+            color: var(--text-light); font-size: 12px; 
+            background: rgba(255,255,255,0.5); backdrop-filter: blur(10px);
+            border-top: 1px solid var(--glass-border);
+            position: fixed; bottom: 0; left: 0; z-index: 1100;
+        }
     </style>
 </head>
 
@@ -136,45 +244,44 @@
                 <select id="reason">
                     <option value="">-- เลือกเหตุผล --</option>
                     <option>ผ่าน ซื้อเครื่อง ใช้วงเงิน</option>
-		        <option>ผ่าน ไม่ซื้อเครื่อง ยังไม่ตัดสินใจซื้อ ด้วยเหตุผลอื่นๆ</option>
+                    <option>ผ่าน ไม่ซื้อเครื่อง ยังไม่ตัดสินใจซื้อ ด้วยเหตุผลอื่นๆ</option>
                     <option>ผ่าน ไม่ซื้อเครื่อง วางดาวน์สูง</option>
-                                        <option>ผ่าน ไม่ซื้อเครื่องได้วงเงินน้อย ไม่พอซื้อเครื่อง</option>
+                    <option>ผ่าน ไม่ซื้อเครื่องได้วงเงินน้อย ไม่พอซื้อเครื่อง</option>
                     <option>ผ่าน ไม่ซื้อเครื่อง ลูกค้ายังไม่อยากใช้วงเงินสินเชื่อ</option>
                 </select>
             </div>
             <div class="form-row">
                 <label>รูปภาพหลักฐาน</label>
-                <input type="file" id="imageFile" accept="image/*" onchange="previewImage()">
+                <input type="file" id="imageFile" accept="image/*" onchange="previewImage()" style="padding: 10px;">
                 <img id="preview">
             </div>
-            <button type="submit" class="btn-submit" id="submitBtn">💾 บันทึกข้อมูล</button>
+            <button type="submit" class="btn-submit" id="submitBtn">💾 บันทึกข้อมูลเข้าพารากิจ</button>
         </form>
     </div>
 </div>
 
 <div class="loading" id="loading">
     <div class="spinner"></div>
-    <div style="margin-top:15px; font-weight:600; color:#475569;">กำลังส่งข้อมูล...</div>
+    <div style="margin-top:15px; font-weight:600; color:#1c1c1e;">กำลังซิงค์ข้อมูล...</div>
 </div>
 
 <div class="popup" id="popup">
     <div class="popup-box" id="pBox">
         <div class="icon-box">
             <svg class="check-icon" viewBox="0 0 52 52">
-                <circle cx="26" cy="26" r="23" fill="none"/>
-                <path d="M14 27l7 7 16-16" fill="none"/>
+                <circle cx="26" cy="26" r="23"/>
+                <path d="M14 27l7 7 16-16"/>
             </svg>
             <div class="warn-icon">⚠️</div>
         </div>
-        <h3 id="popupText" style="margin-bottom:25px; font-size:18px; color: #1e293b;"></h3>
-        <button class="btn-submit" style="margin-top:0; background: #334155;" onclick="closePopup()">ตกลง</button>
+        <h3 id="popupText" style="margin-bottom:25px; font-size:19px; color: #1c1c1e;"></h3>
+        <button class="btn-ok" onclick="closePopup()">ตกลง</button>
     </div>
 </div>
 
 <footer>© 2026 Copy Right By Angerina Frog</footer>
 
 <script>
-// --- CONFIG URL ---
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyZqabSCrYmEBNr2z9zpWTYjyptJYoSiLsyN9tgvgPw9KbBH4RyF0FwWvx1Ofu8nE9seg/exec"; 
 
 document.getElementById('date').value = new Date().toISOString().split("T")[0];
@@ -216,8 +323,8 @@ document.getElementById('loanForm').onsubmit = function(e) {
         date: document.getElementById('date').value,
         branch: document.getElementById('branch').value,
         staffName: staffName,
-        customerName: customerName,     // ส่งค่าชื่อลูกค้า
-        customerPhone: customerPhone,   // ส่งค่าเบอร์ลูกค้า
+        customerName: customerName,
+        customerPhone: customerPhone,
         loanType: document.getElementById('loanType').value,
         result: document.getElementById('result').value,
         reason: document.getElementById('reason').value || "ไม่ผ่าน"
@@ -245,12 +352,12 @@ function sendData(data) {
     })
     .then(() => {
         document.getElementById('loading').style.display = "none";
-        showPopup("บันทึกข้อมูลเรียบร้อยแล้ว", true);
+        showPopup("บันทึกข้อมูลสำเร็จ", true);
         setTimeout(() => location.reload(), 2000);
     })
     .catch(err => {
         document.getElementById('loading').style.display = "none";
-        showPopup("เกิดข้อผิดพลาด: " + err, false);
+        showPopup("ผิดพลาด: " + err, false);
         document.getElementById('submitBtn').disabled = false;
     });
 }
@@ -279,7 +386,7 @@ function includeSidebar() {
             document.getElementById('sidebar').innerHTML = data;
             restoreMenuState();
         })
-        .catch(err => console.warn("Sidebar Load Error:", err));
+        .catch(err => console.warn("Sidebar Error:", err));
 }
 
 function toggleSidebar() {
