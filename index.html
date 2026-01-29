@@ -12,12 +12,13 @@
     
     <style>
         :root {
-            --primary-gradient: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-            --glass-bg: rgba(255, 255, 255, 0.8);
-            --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
-            --sidebar-color: #1e293b;
-            --text-main: #334155;
-            --text-light: #64748b;
+            --ios-blue: #007aff;
+            --ios-bg: #f2f2f7;
+            --glass-white: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.5);
+            --sidebar-dark: rgba(28, 28, 30, 0.95);
+            --text-main: #1c1c1e;
+            --text-light: #8e8e93;
             --sidebar-width: 280px;
         }
 
@@ -26,62 +27,63 @@
         
         body { 
             margin: 0; 
-            background: #f1f5f9; 
+            background-color: var(--ios-bg);
+            background-image: radial-gradient(at 0% 0%, rgba(0, 122, 255, 0.05) 0px, transparent 50%), 
+                              radial-gradient(at 100% 100%, rgba(255, 45, 85, 0.05) 0px, transparent 50%);
+            background-attachment: fixed;
             color: var(--text-main); 
             -webkit-font-smoothing: antialiased;
-            padding-bottom: 100px;
+            padding-bottom: 60px;
             transition: padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* ===== Header Navbar ===== */
+        /* ===== Header Navbar (iOS Style) ===== */
         .top-header {
             position: fixed;
             top: 0; left: 0; right: 0;
-            height: 65px;
-            background: var(--glass-bg);
-            backdrop-filter: blur(10px);
+            height: 60px;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
             z-index: 1200;
             display: flex;
             align-items: center;
             padding: 0 20px;
-            border-bottom: 1px solid rgba(0,0,0,0.05);
+            border-bottom: 0.5px solid rgba(0,0,0,0.1);
             transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .top-toggle {
-            width: 40px; height: 40px;
+            width: 36px; height: 36px;
             border-radius: 10px;
             border: none;
-            background: var(--sidebar-color);
-            color: white;
+            background: transparent;
+            color: var(--ios-blue);
             cursor: pointer;
             display: flex; align-items: center; justify-content: center;
-            font-size: 18px;
+            font-size: 22px;
             z-index: 1300;
-            margin-right: 15px;
+            margin-right: 10px;
         }
 
-        /* ===== Sidebar Style ===== */
+        /* ===== Sidebar Style (Dark Glass) ===== */
         .sidebar { 
             position: fixed; top: 0; left: 0; 
             width: var(--sidebar-width); height: 100vh; 
-            background: var(--sidebar-color); 
+            background: var(--sidebar-dark); 
+            backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
             color: #fff; overflow-y: auto; 
             transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 2000;
             box-shadow: 10px 0 30px rgba(0,0,0,0.1);
         }
         
-        /* สภาวะปกติบนจอใหญ่ */
         @media(min-width:769px) { 
             body:not(.collapsed) { padding-left: var(--sidebar-width); }
             body:not(.collapsed) .top-header { left: var(--sidebar-width); }
-            
             body.collapsed .sidebar { transform: translateX(-100%); }
             body.collapsed .top-header { left: 0; }
         }
 
-        /* สภาวะบนมือถือ */
         @media(max-width:768px) {
             .sidebar { transform: translateX(-100%); }
             .sidebar.show { transform: translateX(0); }
@@ -89,117 +91,114 @@
             .top-header { left: 0 !important; }
         }
 
-        .content { padding: 85px 20px 40px; max-width: 1400px; margin: 0 auto; }
+        .content { padding: 80px 16px 40px; max-width: 1200px; margin: 0 auto; animation: fadeIn 0.6s ease-out; }
 
         .overlay { 
             position: fixed; inset: 0; 
-            background: rgba(15, 23, 42, 0.5); 
+            background: rgba(0, 0, 0, 0.3); 
             backdrop-filter: blur(4px); 
             display: none; z-index: 1500; 
         }
         .overlay.show { display: block; }
 
-        /* สไตล์ภายใน Sidebar */
-        .sidebar-header { padding: 25px 20px; font-size: 18px; font-weight: 600; background: #0f172a; color: #fff; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .menu { display: flex; flex-direction: column; padding: 10px 0; }
-        .item { border-bottom: 1px solid rgba(255,255,255,0.03); }
-        .menu a, .menu .drop-btn { width: 100%; min-height: 50px; padding: 12px 20px; background: none; border: none; color: #cbd5e1; text-align: left; font-size: 15px; cursor: pointer; display: flex; align-items: center; text-decoration: none; transition: 0.3s; }
-        .menu a:hover, .menu .drop-btn:hover { background: #334155; color: #fff; padding-left: 30px; }
-        .sub { display: none; background: #0f172a; padding: 5px 0; }
+        /* Sidebar Internals */
+        .sidebar-header { padding: 30px 20px; font-size: 20px; font-weight: 600; border-bottom: 0.5px solid rgba(255,255,255,0.1); }
+        .menu { padding: 10px 0; }
+        .menu a, .menu .drop-btn { 
+            width: 100%; min-height: 50px; padding: 12px 20px; background: none; border: none; 
+            color: #ebebf5; text-align: left; font-size: 15px; cursor: pointer; 
+            display: flex; align-items: center; text-decoration: none; transition: 0.3s;
+        }
+        .menu a:hover, .menu .drop-btn:hover { background: rgba(255,255,255,0.1); padding-left: 30px; }
+        .sub { display: none; background: rgba(0,0,0,0.2); }
         .item.open .sub { display: block; }
-        .sub a { padding-left: 45px; font-size: 14px; color: #94a3b8; min-height: 40px; }
-        .sub a:hover { color: #5bbf8a; padding-left: 55px; }
-        .arrow { margin-left: auto; transition: 0.3s; font-size: 10px; opacity: 0.6; }
-        .item.open .arrow { transform: rotate(90deg); }
+        .sub a { padding-left: 45px; font-size: 14px; color: #8e8e93; }
 
-        /* ===== Modern Slider ===== */
+        /* ===== Modern Slider (Glass) ===== */
         .slider-container { 
             position: relative; 
-            max-width: 1200px; 
-            margin: 0 auto 35px; 
-            border-radius: 24px; 
+            border-radius: 28px; 
             overflow: hidden; 
-            box-shadow: var(--card-shadow); 
-            background: #cbd5e1;
-            touch-action: pan-y;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1); 
+            background: #d1d1d6;
+            margin-bottom: 35px;
         }
-        .slides { display: none; width: 100%; height: 380px; }
+        .slides { display: none; width: 100%; height: 400px; }
         .slides img { width: 100%; height: 100%; object-fit: cover; }
-        .fade { animation: fadeAnim 0.8s; }
-        @keyframes fadeAnim { from {opacity: .4} to {opacity: 1} }
-        
         .dot-container { 
-            position: absolute; bottom: 20px; width: 100%; 
+            position: absolute; bottom: 15px; width: 100%; 
             text-align: center; z-index: 10; 
         }
         .dot { 
-            cursor: pointer; height: 8px; width: 30px; 
-            margin: 0 5px; background: rgba(255,255,255,0.4); 
-            border-radius: 10px; display: inline-block; transition: 0.3s;
+            cursor: pointer; height: 6px; width: 6px; 
+            margin: 0 4px; background: rgba(255,255,255,0.5); 
+            border-radius: 50%; display: inline-block; transition: 0.3s;
         }
-        .active { background: #fff; width: 45px; }
+        .dot.active { background: #fff; transform: scale(1.5); }
 
-        @media (max-width: 768px) { .slides { height: 220px; } }
+        @media (max-width: 768px) { .slides { height: 200px; } }
 
         /* ===== Section Title ===== */
         .section-label {
-            font-size: 1.1rem; font-weight: 600;
-            margin: 30px auto 15px; max-width: 1200px;
-            display: flex; align-items: center; color: var(--text-light);
+            font-size: 19px; font-weight: 600;
+            margin: 30px 5px 15px; color: var(--text-main);
+            letter-spacing: -0.5px;
         }
-        .section-label::after { content: ""; flex: 1; height: 1px; background: #e2e8f0; margin-left: 15px; }
 
-        /* ===== Service Grid ===== */
+        /* ===== Service Grid (iOS App Style) ===== */
         .service-grid { 
             display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); 
-            gap: 15px; max-width: 1200px; margin: 0 auto; 
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); 
+            gap: 15px; margin-bottom: 20px;
         }
         .service-card {
-            background: #ffffff; border-radius: 18px; padding: 20px 10px;
+            background: transparent;
             text-align: center; text-decoration: none; color: var(--text-main);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.02); border: 1px solid #f1f5f9;
-            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
-            transition: 0.3s;
+            display: flex; flex-direction: column; align-items: center; gap: 8px;
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
-        .service-card:hover { transform: translateY(-5px); box-shadow: var(--card-shadow); border-color: #6366f1; color: #6366f1; }
-        .icon-box { font-size: 24px; width: 50px; height: 50px; background: #f8fafc; border-radius: 14px; display: flex; align-items: center; justify-content: center; }
-        .service-name { font-size: 14px; font-weight: 500; }
+        .service-card:active { transform: scale(0.9); }
+        .icon-box { 
+            font-size: 26px; width: 65px; height: 65px; 
+            background: var(--glass-white); 
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+        .service-name { font-size: 12px; font-weight: 400; line-height: 1.2; }
 
-        /* ===== Promotion Cards ===== */
+        /* ===== Promotion Cards (Premium Glass) ===== */
         .card-container { 
             display: grid; 
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
-            gap: 25px; max-width: 1200px; margin: 20px auto; 
+            gap: 20px; 
         }
         .card { 
-            background: #ffffff; border-radius: 22px; 
+            background: var(--glass-white); 
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            border-radius: 24px; 
             overflow: hidden; text-decoration: none; 
-            color: var(--text-main); box-shadow: var(--card-shadow); 
+            color: var(--text-main); 
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.04);
             display: flex; flex-direction: column;
-            border: 1px solid rgba(0,0,0,0.03); transition: 0.3s;
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .card:hover { transform: scale(1.02); }
-        .card-visual { height: 140px; display: flex; align-items: center; justify-content: center; padding: 20px; font-weight: 600; font-size: 1.2rem; text-align: center; }
+        .card:hover { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(0,0,0,0.08); }
+        .card-visual { height: 120px; display: flex; align-items: center; justify-content: center; padding: 20px; font-weight: 600; font-size: 1.1rem; text-align: center; }
         
-        .blue { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white; }
-        .yellow { background: linear-gradient(135deg, #facc15 0%, #ca8a04 100%); color: #422006; }
-        .green-gradient { background: linear-gradient(135deg, #10b981 0%, #047857 100%); color: white; }
-        .red-gradient { background: linear-gradient(135deg, #f43f5e 0%, #be123c 100%); color: white; }
-        .card-content { padding: 15px 20px; font-size: 13px; color: var(--text-light); background: #fff; }
+        .blue { background: linear-gradient(135deg, #007aff 0%, #0056b3 100%); color: white; }
+        .yellow { background: linear-gradient(135deg, #ffcc00 0%, #ff9500 100%); color: #000; }
+        .green-gradient { background: linear-gradient(135deg, #34c759 0%, #248a3d 100%); color: white; }
+        .red-gradient { background: linear-gradient(135deg, #ff3b30 0%, #c62828 100%); color: white; }
+        .card-content { padding: 15px 20px; font-size: 14px; color: var(--text-light); }
 
         footer { 
-            width: 100%; 
-            text-align: center; 
-            padding: 20px; 
-            background: #fff; 
-            color: #94a3b8; 
-            font-size: 12px; 
-            border: 1px solid #edf2f7; 
-            border-radius: 18px; 
-            margin-top: 20px; 
-            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            text-align: center; padding: 30px; color: var(--text-light); font-size: 12px; 
         }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 
@@ -207,8 +206,7 @@
 
 <header class="top-header">
     <button class="top-toggle" onclick="toggleSidebar()">☰</button>
-    <div style="font-weight: 600; font-size: 1.1rem; color: #1e293b;">DASHBOARD</div>
-    <div style="width: 40px;"></div>
+    <div style="font-weight: 600; font-size: 1.2rem; color: var(--text-main); letter-spacing: -0.5px;">Dashboard</div>
 </header>
 
 <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
@@ -304,9 +302,9 @@
             <div class="card-content">โปรโมชั่น Postpay (JAN 26)</div>
         </a>
     </div>
-</div>
 
-<footer>© 2026 Copy Right By Angerina Frog</footer>
+    <footer>© 2026 Copy Right By Angerina Frog</footer>
+</div>
 
 <script>
     // --- Sidebar System ---
@@ -328,7 +326,6 @@
             })
             .catch(err => console.warn("Sidebar Load Error"));
             
-        // กู้คืนสถานะการยุบ (Collapsed State) สำหรับ Desktop
         if(localStorage.getItem('sidebar_collapsed') === 'true' && window.innerWidth > 768) {
             document.body.classList.add('collapsed');
         }
@@ -336,11 +333,9 @@
 
     function toggleSidebar() {
         if (window.innerWidth <= 768) {
-            // โหมดมือถือ: Drawer เลื่อนเข้าออก
             document.getElementById("sidebar").classList.toggle("show");
             document.getElementById("overlay").classList.toggle("show");
         } else {
-            // โหมด Desktop: ยุบแถบเมนู
             const isCollapsed = document.body.classList.toggle("collapsed");
             localStorage.setItem('sidebar_collapsed', isCollapsed);
         }
@@ -384,18 +379,6 @@
 
     function currentSlide(n) { slideIndex = n - 1; showSlides(); }
 
-    // Swipe Control
-    let touchstartX = 0; let touchendX = 0;
-    const slider = document.getElementById('sliderContainer');
-    if(slider) {
-        slider.addEventListener('touchstart', e => touchstartX = e.changedTouches[0].screenX, {passive: true});
-        slider.addEventListener('touchend', e => {
-            touchendX = e.changedTouches[0].screenX;
-            if (touchendX < touchstartX - 50) showSlides();
-            if (touchendX > touchstartX + 50) { slideIndex -= 2; if(slideIndex < 0) slideIndex = 0; showSlides(); }
-        }, {passive: true});
-    }
-
     window.addEventListener('DOMContentLoaded', () => {
         includeSidebar();
         showSlides();
@@ -404,7 +387,3 @@
 
 </body>
 </html>
-
-
-
-
