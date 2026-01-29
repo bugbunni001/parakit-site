@@ -9,23 +9,26 @@
     <style>
         :root { 
             --ios-blue: #007aff;
-            --ios-bg: #f2f2f7;
-            --glass-white: rgba(255, 255, 255, 0.7);
-            --glass-border: rgba(255, 255, 255, 0.5);
-            /* กลับมาใช้สี Sidebar เดิม */
-            --sidebar-bg: #1e293b; 
-            --sidebar-width: 260px; 
-            --text-main: #1c1c1e;
-            --text-muted: #8e8e93;
-            --transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            --ios-pink: #ff2d55;
+            --ios-bg: #f5f5f7;
+            --glass-white: rgba(255, 255, 255, 0.65);
+            --glass-border: rgba(255, 255, 255, 0.4);
+            --sidebar-glass: rgba(15, 23, 42, 0.85); /* iOS 26 Dark Glass */
+            --sidebar-width: 280px; 
+            --text-main: #1d1d1f;
+            --text-muted: #86868b;
+            --transition-swift: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            --radius-ios: 24px;
         }
 
         * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
         
         body { 
             background-color: var(--ios-bg);
-            background-image: radial-gradient(at 0% 0%, rgba(0, 122, 255, 0.08) 0px, transparent 50%), 
-                              radial-gradient(at 100% 100%, rgba(255, 45, 85, 0.05) 0px, transparent 50%);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(0, 122, 255, 0.12) 0px, transparent 40%), 
+                radial-gradient(at 100% 100%, rgba(255, 45, 85, 0.1) 0px, transparent 40%),
+                radial-gradient(at 50% 50%, rgba(88, 86, 214, 0.05) 0px, transparent 50%);
             background-attachment: fixed;
             margin: 0; padding: 0; 
             display: flex; min-height: 100vh; 
@@ -33,21 +36,24 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        /* ===== SIDEBAR (BACK TO ORIGINAL STYLE) ===== */
+        /* ===== SIDEBAR (iOS 26 Glass Edition) ===== */
         #sidebar-container { 
             width: var(--sidebar-width); 
-            background: var(--sidebar-bg); 
+            background: var(--sidebar-glass); 
+            backdrop-filter: blur(30px) saturate(180%);
+            -webkit-backdrop-filter: blur(30px) saturate(180%);
             height: 100vh; position: fixed; left: 0; top: 0; 
-            transition: transform 0.3s ease; z-index: 2000; 
-            overflow-y: auto; box-shadow: 4px 0 15px rgba(0,0,0,0.2); 
+            transition: var(--transition-swift); z-index: 2000; 
+            overflow-y: auto; 
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
         }
         
         .main-content { 
             flex-grow: 1; 
             margin-left: var(--sidebar-width); 
-            padding: 20px; 
+            padding: 30px; 
             width: calc(100% - var(--sidebar-width)); 
-            transition: var(--transition);
+            transition: var(--transition-swift);
             display: flex; flex-direction: column; min-height: 100vh;
         }
         
@@ -56,110 +62,131 @@
 
         @media (max-width: 900px) {
             #sidebar-container { transform: translateX(calc(var(--sidebar-width) * -1)); }
-            .main-content { margin-left: 0; width: 100%; padding: 16px; }
+            .main-content { margin-left: 0; width: 100%; padding: 20px; }
             body.show-sidebar #sidebar-container { transform: translateX(0); }
-            body.collapsed #sidebar-container { transform: translateX(calc(var(--sidebar-width) * -1)); }
         }
 
-        .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.5); display: none; z-index: 1500; backdrop-filter: blur(4px); }
+        .overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.3); display: none; z-index: 1500; backdrop-filter: blur(8px); }
         body.show-sidebar .overlay { display: block; }
 
-        /* ===== NAVIGATION (iOS Style) ===== */
+        /* ===== NAVIGATION (Floating Glass) ===== */
         .top-nav {
             display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 25px; position: sticky; top: 0; z-index: 100; padding: 10px 0;
+            margin-bottom: 30px; position: sticky; top: 15px; z-index: 100;
         }
 
         .menu-btn {
             background: var(--glass-white); color: var(--text-main); border: 1px solid var(--glass-border);
-            padding: 10px 18px; border-radius: 14px; cursor: pointer;
-            backdrop-filter: blur(10px); font-weight: 500; transition: var(--transition);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            padding: 12px 24px; border-radius: 18px; cursor: pointer;
+            backdrop-filter: blur(15px); font-weight: 500; transition: var(--transition-swift);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
         }
-        .menu-btn:hover { background: #fff; transform: scale(1.02); color: var(--ios-blue); }
+        .menu-btn:hover { transform: scale(1.05); background: white; box-shadow: 0 8px 25px rgba(0,0,0,0.08); }
 
         .refresh-btn {
-            background: var(--ios-blue); color: white; border: none; 
-            padding: 10px 20px; border-radius: 14px; cursor: pointer;
-            box-shadow: 0 8px 15px rgba(0, 122, 255, 0.2);
-            transition: var(--transition); display: flex; align-items: center; gap: 8px; font-weight: 500;
+            background: rgba(0, 122, 255, 0.9); color: white; border: none; 
+            padding: 12px 24px; border-radius: 18px; cursor: pointer;
+            box-shadow: 0 10px 20px rgba(0, 122, 255, 0.2);
+            transition: var(--transition-swift); display: flex; align-items: center; gap: 10px; font-weight: 500;
+            backdrop-filter: blur(10px);
         }
-        .refresh-btn:hover { background: #0056b3; transform: translateY(-2px); }
+        .refresh-btn:hover { transform: translateY(-3px) scale(1.02); background: var(--ios-blue); box-shadow: 0 15px 30px rgba(0, 122, 255, 0.3); }
 
-        /* ===== HEADER BANNER ===== */
+        /* ===== HEADER BANNER (iOS 26 Mesh Gradient) ===== */
         .container { max-width: 1200px; margin: 0 auto; width: 100%; flex: 1; }
 
         .header-banner { 
-            background: linear-gradient(135deg, #007aff 0%, #5856d6 100%); 
-            padding: 50px 30px; border-radius: 30px; 
-            margin-bottom: 40px; text-align: center; color: white;
-            box-shadow: 0 20px 40px rgba(88, 86, 214, 0.2);
-            animation: fadeIn 0.8s ease-out;
+            background: linear-gradient(230deg, #5856d6, #007aff, #ff2d55);
+            background-size: 400% 400%;
+            animation: meshGradient 15s ease infinite;
+            padding: 70px 30px; border-radius: 35px; 
+            margin-bottom: 50px; text-align: center; color: white;
+            box-shadow: 0 25px 50px rgba(0, 122, 255, 0.15);
         }
-        .header-banner h1 { margin: 0; font-size: 2.2rem; font-weight: 600; letter-spacing: -0.5px; }
-        .header-banner p { opacity: 0.9; margin-top: 8px; font-weight: 300; font-size: 1.1rem; }
+        @keyframes meshGradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .header-banner h1 { margin: 0; font-size: 2.8rem; font-weight: 700; letter-spacing: -1.5px; text-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        .header-banner p { opacity: 0.9; margin-top: 12px; font-weight: 300; font-size: 1.2rem; letter-spacing: 0.5px; }
 
-        /* ===== GRID & CARDS (Glassmorphism) ===== */
-        .list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+        /* ===== GRID & CARDS (Premium Frosted Glass) ===== */
+        .list { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; }
         
         .item-card {
-            background: var(--glass-white); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-            padding: 30px 20px; border-radius: 28px;
+            background: var(--glass-white); backdrop-filter: blur(20px) saturate(160%); -webkit-backdrop-filter: blur(20px) saturate(160%);
+            padding: 40px 25px; border-radius: 32px;
             text-align: center; border: 1px solid var(--glass-border);
-            transition: var(--transition); position: relative; overflow: hidden;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.03);
+            transition: var(--transition-swift); position: relative; overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.03);
         }
-        .item-card:hover { transform: translateY(-8px) scale(1.02); background: rgba(255,255,255,0.9); box-shadow: 0 15px 30px rgba(0,0,0,0.06); }
+        .item-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 100%;
+            background: linear-gradient(135deg, rgba(255,255,255,0.4) 0%, transparent 50%);
+            pointer-events: none;
+        }
+        .item-card:hover { transform: translateY(-12px) scale(1.03); background: rgba(255,255,255,0.85); border-color: var(--ios-blue); box-shadow: 0 30px 60px rgba(0,0,0,0.08); }
         
         .phone-num { 
-            font-size: 32px; font-weight: 600; color: var(--text-main); 
-            margin-bottom: 6px; letter-spacing: -1px; 
+            font-size: 36px; font-weight: 700; color: var(--text-main); 
+            margin-bottom: 8px; letter-spacing: -1.5px; 
+            background: linear-gradient(180deg, #1d1d1f, #434345);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }
         .phone-detail { 
-            display: inline-block; padding: 4px 14px; background: rgba(0, 122, 255, 0.1);
-            border-radius: 20px; font-size: 14px; color: var(--ios-blue); 
-            margin-bottom: 25px; font-weight: 500;
+            display: inline-block; padding: 6px 18px; background: rgba(0, 122, 255, 0.1);
+            border-radius: 50px; font-size: 13px; color: var(--ios-blue); 
+            margin-bottom: 30px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;
         }
 
         .btn-use { 
             width: 100%; background: var(--ios-blue); color: white; border: none; 
-            padding: 14px; border-radius: 16px; cursor: pointer; font-weight: 600;
-            transition: var(--transition); font-size: 16px;
+            padding: 16px; border-radius: 20px; cursor: pointer; font-weight: 600;
+            transition: var(--transition-swift); font-size: 17px;
+            box-shadow: 0 8px 20px rgba(0, 122, 255, 0.25);
         }
-        .btn-use:active { transform: scale(0.96); opacity: 0.9; }
+        .btn-use:hover { filter: brightness(1.1); box-shadow: 0 12px 30px rgba(0, 122, 255, 0.4); }
+        .btn-use:active { transform: scale(0.94); }
 
-        .item-card.is-used { opacity: 0.6; filter: grayscale(0.8); }
+        .item-card.is-used { opacity: 0.5; filter: blur(1px) grayscale(1); cursor: not-allowed; }
         .item-card.is-used .phone-num { text-decoration: line-through; }
-        .item-card.is-used .btn-use { background: #d1d1d6; color: #8e8e93; cursor: not-allowed; }
+        .item-card.is-used .btn-use { background: #aeaeb2; box-shadow: none; }
 
-        /* ===== MODALS (iOS Style) ===== */
+        /* ===== MODALS (iOS 26 Dynamic Blur) ===== */
         .modal-overlay {
-            position: fixed; inset: 0; background: rgba(0, 0, 0, 0.4); 
+            position: fixed; inset: 0; background: rgba(0, 0, 0, 0.2); 
             display: none; align-items: center; justify-content: center; z-index: 3000;
-            backdrop-filter: blur(10px); animation: fadeIn 0.3s ease;
+            backdrop-filter: blur(25px) saturate(150%); animation: modalFade 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
+        @keyframes modalFade { from { opacity: 0; backdrop-filter: blur(0px); } to { opacity: 1; backdrop-filter: blur(25px); } }
+
         .modal { 
-            background: rgba(255, 255, 255, 0.9); padding: 30px; border-radius: 24px; 
-            width: 90%; max-width: 360px; text-align: center;
-            border: 1px solid var(--glass-border);
-            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            background: rgba(255, 255, 255, 0.8); padding: 40px 30px; border-radius: 35px; 
+            width: 95%; max-width: 400px; text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 40px 80px rgba(0,0,0,0.15);
+            animation: modalPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
+        @keyframes modalPop { from { transform: scale(0.8) translateY(20px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+
         .spinner {
-            width: 40px; height: 40px; border: 3.5px solid #e5e5ea;
-            border-top: 3.5px solid var(--ios-blue); border-radius: 50%;
-            animation: spin 0.8s linear infinite; margin: 0 auto 20px;
+            width: 45px; height: 45px; border: 4px solid rgba(0, 122, 255, 0.1);
+            border-top: 4px solid var(--ios-blue); border-radius: 50%;
+            animation: spin 1s cubic-bezier(0.4, 0, 0.2, 1) infinite; margin: 0 auto 25px;
         }
         @keyframes spin { 100% { transform: rotate(360deg); } }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        footer { text-align: center; padding: 30px; color: var(--text-muted); font-size: 13px; margin-top: auto; }
+        footer { text-align: center; padding: 50px; color: var(--text-muted); font-size: 14px; margin-top: auto; letter-spacing: 0.5px; }
 
         #scrollTopBtn {
-            display: none; position: fixed; bottom: 30px; right: 25px; z-index: 1200;
-            background: var(--ios-blue); color: white; border: none; width: 50px; height: 50px;
-            border-radius: 50%; cursor: pointer; box-shadow: 0 10px 20px rgba(0,122,255,0.3);
-            transition: var(--transition); font-size: 20px;
+            display: none; position: fixed; bottom: 40px; right: 30px; z-index: 1200;
+            background: var(--glass-white); color: var(--ios-blue); border: 1px solid var(--glass-border); 
+            width: 60px; height: 60px; backdrop-filter: blur(15px);
+            border-radius: 50%; cursor: pointer; box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: var(--transition-swift); font-size: 24px;
         }
+        #scrollTopBtn:hover { transform: translateY(-5px); background: white; }
     </style>
 </head>
 
@@ -170,8 +197,8 @@
 
 <main class="main-content">
     <div class="top-nav">
-        <button class="menu-btn" onclick="toggleSidebar()">☰ เมนูหลัก</button>
-        <button class="refresh-btn" onclick="handleRefresh()">🔄 อัปเดตข้อมูล</button>
+        <button class="menu-btn" onclick="toggleSidebar()">􀆨 เมนูหลัก</button>
+        <button class="refresh-btn" onclick="handleRefresh()">􀅈 อัปเดตข้อมูล</button>
     </div>
     
     <div class="container">
@@ -180,9 +207,9 @@
             <p>คัดสรรเบอร์พิเศษเพื่อยกระดับชีวิตคุณในปี 2026</p>
         </div>
         
-        <div id="loader" style="text-align: center; padding: 80px 0;">
+        <div id="loader" style="text-align: center; padding: 100px 0;">
             <div class="spinner"></div>
-            <div style="color: var(--text-muted); font-weight: 300;">กำลังค้นหาเบอร์ที่ดีที่สุดสำหรับคุณ...</div>
+            <div style="color: var(--text-muted); font-weight: 400; font-size: 18px;">กำลังค้นหาเบอร์ที่ดีที่สุดสำหรับคุณ...</div>
         </div>
 
         <div class="list" id="list"></div>
@@ -192,16 +219,16 @@
         &copy; 2026 copyright By <b>Angerina Frog</b>
     </footer>
 
-    <button id="scrollTopBtn" onclick="scrollToTop()">↑</button>
+    <button id="scrollTopBtn" onclick="scrollToTop()">􀄨</button>
 </main>
 
 <div class="modal-overlay" id="modalOverlay">
     <div class="modal">
-        <h3 style="margin: 0 0 10px 0; font-weight: 600;">ยืนยันการเลือกเบอร์</h3>
-        <p style="color: var(--text-muted); font-size: 14px;">คุณต้องการเปิดใช้งานเบอร์มงคลนี้ใช่หรือไม่?</p>
-        <p id="confirmTarget" style="font-size: 2.2rem; font-weight: 700; color: var(--ios-blue); margin: 20px 0; letter-spacing: -1px;"></p>
-        <div style="display: flex; gap: 10px; margin-top: 10px;">
-            <button class="btn-use" style="background: #e5e5ea; color: #000;" onclick="closeModal('modalOverlay')">ยกเลิก</button>
+        <h2 style="margin: 0 0 15px 0; font-weight: 700; letter-spacing: -1px;">ยืนยันการเลือกเบอร์</h2>
+        <p style="color: var(--text-muted); font-size: 16px; margin-bottom: 25px;">คุณต้องการเปิดใช้งานเบอร์มงคลนี้ใช่หรือไม่?</p>
+        <p id="confirmTarget" style="font-size: 2.8rem; font-weight: 800; color: var(--ios-blue); margin: 25px 0; letter-spacing: -2px;"></p>
+        <div style="display: flex; gap: 15px; margin-top: 20px;">
+            <button class="btn-use" style="background: rgba(0,0,0,0.05); color: #1d1d1f; box-shadow: none;" onclick="closeModal('modalOverlay')">ยกเลิก</button>
             <button class="btn-use" id="confirmBtn">ยืนยัน</button>
         </div>
     </div>
@@ -210,23 +237,23 @@
 <div class="modal-overlay" id="loadingOverlay">
     <div class="modal">
         <div class="spinner"></div>
-        <p style="font-weight: 500; margin: 0;">กำลังบันทึกข้อมูลเบอร์...</p>
+        <p style="font-weight: 600; font-size: 18px; margin: 0;">กำลังบันทึกข้อมูลเบอร์...</p>
     </div>
 </div>
 
 <div class="modal-overlay" id="successOverlay">
     <div class="modal">
-        <div style="width: 65px; height: 65px; background: #34c759; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; margin: 0 auto 20px; box-shadow: 0 10px 20px rgba(52, 199, 89, 0.2);">✓</div>
-        <h3 style="margin-bottom: 8px; font-weight: 600;">บันทึกสำเร็จ</h3>
-        <p id="successMessage" style="color: var(--text-muted); line-height: 1.5; font-size: 15px;"></p>
-        <button class="btn-use" style="margin-top: 25px;" onclick="closeModal('successOverlay')">เสร็จสิ้น</button>
+        <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #34c759, #30db5b); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px; margin: 0 auto 25px; box-shadow: 0 15px 35px rgba(52, 199, 89, 0.3);">✓</div>
+        <h2 style="margin-bottom: 12px; font-weight: 700; letter-spacing: -1px;">บันทึกสำเร็จ</h2>
+        <p id="successMessage" style="color: var(--text-muted); line-height: 1.6; font-size: 16px;"></p>
+        <button class="btn-use" style="margin-top: 30px; background: #1d1d1f;" onclick="closeModal('successOverlay')">เสร็จสิ้น</button>
     </div>
 </div>
 
 <script>
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbylkr6WhEp7kpK8WkpZw6F7Rws0OglgqbWy3wQ-3IImG8Fwqaou9VmseZvuSdrxqg83WQ/exec";
 
-/* ✅ Sidebar Logic (Original functionality with UI update) */
+/* ✅ Sidebar Logic (Functionality preserved, Style updated) */
 fetch("sidebar.html")
   .then(res => res.text())
   .then(html => {
@@ -250,6 +277,7 @@ function restoreSidebarState() {
     if (window.innerWidth > 900) {
         if (localStorage.getItem('sidebar-collapsed') === 'true') body.classList.add('collapsed');
     }
+    // Maintain dropdown states as requested
     container.querySelectorAll('.item').forEach((item, index) => {
         if (localStorage.getItem('dropdown-' + index) === 'true') item.classList.add('open');
     });
@@ -273,7 +301,7 @@ window.onscroll = function() {
 };
 function scrollToTop() { window.scrollTo({ top: 0, behavior: "smooth" }); }
 
-/* Data Logic */
+/* Data Logic - 100% Intact */
 window.onload = () => fetchData();
 function handleRefresh() {
     document.getElementById("list").innerHTML = "";
@@ -301,7 +329,7 @@ function fetchData() {
         });
       })
       .catch(err => {
-          document.getElementById("loader").innerHTML = "<div style='color:#ff3b30'>❌ ไม่สามารถเชื่อมต่อฐานข้อมูลได้</div>";
+          document.getElementById("loader").innerHTML = "<div style='color:#ff3b30; font-size: 1.2rem;'>􀋊 ไม่สามารถเชื่อมต่อฐานข้อมูลได้</div>";
       });
 }
 
