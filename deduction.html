@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>บันทึกการหักเงิน - Parakit-site</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --ios-blue: #007aff;
+            --ios-system-gray: #f2f2f7;
+            --sidebar-dark: rgba(28, 28, 30, 0.95);
+            --glass-white: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.4);
+            --text-main: #1c1c1e;
+            --text-light: #8e8e93;
+            --sidebar-width: 280px;
+            --card-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.08);
+        }
+
+        /* ===== GLOBAL RESET & STRUCTURE ===== */
+        * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
+        
+        body { 
+            margin: 0; 
+            background: linear-gradient(135deg, #e5e5ea 0%, #ffffff 100%);
+            background-attachment: fixed;
+            color: var(--text-main); 
+            -webkit-font-smoothing: antialiased;
+            padding-bottom: 80px;
+            transition: padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* ===== Header Navbar Glass ===== */
+        .top-header {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 65px;
+            background: var(--glass-white);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            z-index: 1200;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            border-bottom: 0.5px solid rgba(0,0,0,0.1);
+            transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .top-toggle {
+            width: 36px; height: 36px;
+            border-radius: 10px;
+            border: none;
+            background: var(--ios-blue);
+            color: white;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px;
+            z-index: 1300;
+            margin-right: 15px;
+            transition: transform 0.2s;
+        }
+        .top-toggle:active { transform: scale(0.9); }
+
+        /* ===== Sidebar Style Glass Dark ===== */
+        .sidebar { 
+            position: fixed; top: 0; left: 0; 
+            width: var(--sidebar-width); height: 100vh; 
+            background: var(--sidebar-dark); 
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            color: #fff; overflow-y: auto; 
+            transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 2000;
+            box-shadow: 10px 0 30px rgba(0,0,0,0.1);
+        }
+
+        @media(min-width:769px) { 
+            body:not(.collapsed) { padding-left: var(--sidebar-width); }
+            body:not(.collapsed) .top-header { left: var(--sidebar-width); }
+            body.collapsed .sidebar { transform: translateX(-100%); }
+            body.collapsed .top-header { left: 0; }
+        }
+
+        @media(max-width:768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.show { transform: translateX(0); }
+            body { padding-left: 0 !important; }
+            .top-header { left: 0 !important; }
+        }
+
+        .content { padding: 100px 20px 40px; display: flex; justify-content: center; animation: fadeIn 0.5s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .overlay-bg { 
+            position: fixed; inset: 0; 
+            background: rgba(0, 0, 0, 0.3); 
+            backdrop-filter: blur(4px); 
+            display: none; z-index: 1500; 
+        }
+        .overlay-bg.show { display: block; }
+
+        /* ===== MAIN CONTENT BOX & FORM ===== */
+        .box { 
+            background: var(--glass-white); 
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            width: 100%; 
+            max-width: 500px; 
+            padding: 30px; 
+            border-radius: 24px; 
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--card-shadow); 
+        }
+        h3 { margin-top: 0; margin-bottom: 10px; color: var(--text-main); text-align: center; font-weight: 600; letter-spacing: -0.5px; }
+        .subtitle { text-align: center; color: var(--text-light); font-size: 13px; margin-bottom: 25px; font-weight: 300; }
+        
+        .form-row { margin-bottom: 18px; }
+        label { display: block; margin-bottom: 6px; font-size: 13px; color: var(--text-light); font-weight: 500; padding-left: 4px; }
+        
+        input, select { 
+            width: 100%; 
+            padding: 12px 16px; 
+            border: 1px solid rgba(0,0,0,0.05); 
+            border-radius: 12px; 
+            font-size: 16px; 
+            outline: none; 
+            transition: all 0.2s; 
+            background: rgba(0,0,0,0.03); 
+            color: var(--text-main);
+            appearance: none;
+        }
+        input:focus, select:focus { background: #fff; border-color: var(--ios-blue); box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1); }
+
+        #otherReasonContainer { display: none; margin-top: 10px; animation: slideDown 0.3s ease; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .btn-submit { 
+            width: 100%; 
+            padding: 16px; 
+            border: none; 
+            border-radius: 16px; 
+            background: var(--ios-blue); 
+            color: white; 
+            font-size: 17px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            margin-top: 10px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 10px; 
+        }
+        .btn-submit:hover { opacity: 0.9; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0, 122, 255, 0.3); }
+
+        /* ===== POPUP & LOADING ===== */
+        .loading { 
+            position: fixed; inset: 0; 
+            background: rgba(255,255,255,0.4); 
+            display: none; flex-direction: column; align-items: center; justify-content: center; 
+            z-index: 3000; backdrop-filter: blur(10px); 
+        }
+        .spinner { width: 35px; height: 35px; border: 3px solid rgba(0, 122, 255, 0.1); border-top: 3px solid var(--ios-blue); border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        .popup { 
+            position: fixed; inset: 0; 
+            background: rgba(0,0,0,0.3); 
+            display: none; align-items: center; justify-content: center; 
+            z-index: 4000; padding: 20px; 
+            backdrop-filter: blur(5px);
+        }
+        .popup.show { display: flex; }
+        .popup-box { 
+            background: var(--glass-white); 
+            backdrop-filter: blur(25px);
+            padding: 30px; 
+            border-radius: 20px; 
+            text-align: center; 
+            max-width: 320px; 
+            width: 100%; 
+            transform: scale(0.9); opacity: 0; 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1.5);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+            border: 1px solid var(--glass-border);
+        }
+        .popup.show .popup-box { transform: scale(1); opacity: 1; }
+        
+        .check-icon circle { stroke: #34c759; stroke-width: 2; fill: none; }
+        .check-icon path { stroke: #34c759; stroke-width: 3; fill: none; stroke-linecap: round; }
+
+        footer { width: 100%; text-align: center; padding: 25px; color: var(--text-light); font-size: 11px; border-top: 0.5px solid rgba(0,0,0,0.05); margin-top: 20px; }
+    </style>
+</head>
+
+<body>
+
+<header class="top-header">
+    <button class="top-toggle" onclick="toggleSidebar()">☰</button>
+    <div style="font-weight: 600; font-size: 1.1rem; color: var(--text-main);">บันทึกการหักเงิน</div>
+</header>
+
+<div class="overlay-bg" id="overlay" onclick="toggleSidebar()"></div>
+
+<aside class="sidebar" id="sidebar"></aside>
+
+<div class="content">
+    <div class="box">
+        <h3>🧾 ระบบบันทึกการหักเงินพนักงาน</h3>
+        <p class="subtitle">หักแม่งเลยอีดอกทอง!</p>
+
+        <form id="deductionForm">
+            <div class="form-row">
+                <label>วันที่ลงบันทึก</label>
+                <input type="date" id="date" required>
+            </div>
+
+            <div class="form-row">
+                <label>ชื่อพนักงาน</label>
+                <select id="employee" required>
+                    <option value="" disabled selected>-- เลือกพนักงาน --</option>
+                    <option value="ศุภกฤต">ศุภกฤต</option>
+                    <option value="นวพล">นวพล</option>
+                    <option value="ปิยะพร">ปิยะพร</option>
+                    <option value="กรทักษ์">กรทักษ์</option>
+                </select>
+            </div>
+
+            <div class="form-row">
+                <label>เหตุผลที่หักเงิน</label>
+                <select id="reason" onchange="checkReason(this)" required>
+                    <option value="" disabled selected>-- เลือกเหตุผล --</option>
+                    <option value="มาสาย">มาสาย</option>
+                    <option value="ไม่ลงเวลาเข้า-ออกงาน">ไม่ลงเวลาเข้า-ออกงาน</option>
+                    <option value="ยอดขายไม่เป็นไปตามตกลง">ยอดขายไม่เป็นไปตามตกลง</option>
+                    <option value="มี Score 1 โดยเกิดจากการให้บริการของตัวเอง">มี Score 1 โดยเกิดจากการให้บริการของตัวเอง</option>
+                    <option value="อื่นๆ">อื่นๆ</option>
+                </select>
+                
+                <div id="otherReasonContainer">
+                    <input type="text" id="otherReason" placeholder="ระบุเหตุผลเพิ่มเติม" maxlength="50">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <label>จำนวนเงินที่หัก</label>
+                <select id="amount" required>
+                    <option value="" disabled selected>-- เลือกจำนวนเงิน --</option>
+                    <option value="10">10 บาท</option>
+                    <option value="20">20 บาท</option>
+                    <option value="30">30 บาท</option>
+                    <option value="50">50 บาท</option>
+                </select>
+            </div>
+
+            <button type="button" class="btn-submit" onclick="openAuthPopup()">💾 บันทึกข้อมูล</button>
+        </form>
+    </div>
+</div>
+
+<div class="popup" id="authPopup">
+    <div class="popup-box">
+        <div style="font-size: 40px; margin-bottom: 10px;">🔐</div>
+        <h3 style="font-size: 18px;">ยืนยันการบันทึก</h3>
+        <p style="font-size: 13px; color: var(--text-light); margin-bottom: 15px;">กรุณาใส่รหัสผ่านเพื่อดำเนินการ</p>
+        <input type="password" id="confirmPassword" placeholder="รหัสผ่าน" style="text-align: center; margin-bottom: 15px;">
+        <div style="display: flex; gap: 10px;">
+            <button class="btn-submit" style="background: #8e8e93; font-size: 15px;" onclick="closeAuthPopup()">ยกเลิก</button>
+            <button class="btn-submit" style="font-size: 15px;" onclick="verifyAndSubmit()">ตกลง</button>
+        </div>
+    </div>
+</div>
+
+<div class="popup" id="statusPopup">
+    <div class="popup-box">
+        <div class="icon-box-popup" style="margin-bottom: 15px;">
+            <svg id="successIcon" class="check-icon" viewBox="0 0 52 52" width="60" height="60" style="margin: 0 auto; display: none;">
+                <circle cx="26" cy="26" r="23" fill="none"/>
+                <path d="M14 27l7 7 16-16" fill="none"/>
+            </svg>
+            <div id="errorIcon" style="color: #ff3b30; font-size: 50px; display: none;">⚠️</div>
+        </div>
+        <h3 id="statusText" style="margin-bottom:20px; font-size:17px; color: var(--text-main);"></h3>
+        <button id="statusBtn" class="btn-submit" style="margin-top:0; background: #3a3a3c; border-radius: 12px; padding: 12px;" onclick="closeStatusPopup()">ตกลง</button>
+    </div>
+</div>
+
+<div class="loading" id="loading">
+    <div class="spinner"></div>
+    <div style="margin-top:15px; font-weight:600; color:var(--ios-blue);">กำลังส่งข้อมูล...</div>
+</div>
+
+<footer>© 2026 Copy Right By Angerina Frog</footer>
+
+<script>
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxCbTFWMVTHKrlJZGR0NcvXTH7LPeF_FV-0A_M-zpCiHmvQn_xgO20H7jnihbMd7GZJ/exec";
+    const SECRET_PASSWORD = "150402"; 
+
+    document.getElementById('date').value = new Date().toISOString().split("T")[0];
+
+    function checkReason(select) {
+        const otherContainer = document.getElementById('otherReasonContainer');
+        const otherInput = document.getElementById('otherReason');
+        if (select.value === 'อื่นๆ') {
+            otherContainer.style.display = 'block';
+            otherInput.required = true;
+        } else {
+            otherContainer.style.display = 'none';
+            otherInput.required = false;
+            otherInput.value = '';
+        }
+    }
+
+    // ฟังก์ชันเปิด Popup รหัสผ่าน
+    function openAuthPopup() {
+        const form = document.getElementById('deductionForm');
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+        document.getElementById("authPopup").classList.add("show");
+        document.getElementById("confirmPassword").focus();
+    }
+
+    function closeAuthPopup() {
+        document.getElementById("authPopup").classList.remove("show");
+        document.getElementById("confirmPassword").value = "";
+    }
+
+    // ตรวจสอบรหัสผ่าน
+    function verifyAndSubmit() {
+        const passInput = document.getElementById("confirmPassword").value;
+        
+        if (passInput === SECRET_PASSWORD) {
+            closeAuthPopup();
+            submitData();
+        } else {
+            // กรณีรหัสผิด: ปิดหน้าต่างใส่รหัส แล้วโชว์ Popup เตือนแทน alert
+            closeAuthPopup();
+            setTimeout(() => {
+                showStatusPopup('มึงใส่รหัสไม่ถูกค่ะอีควาย!', false);
+            }, 300);
+        }
+    }
+
+    function submitData() {
+        const loader = document.getElementById('loading');
+        loader.style.display = 'flex';
+
+        const formData = {
+            date: document.getElementById('date').value,
+            employee: document.getElementById('employee').value,
+            reason: document.getElementById('reason').value,
+            otherReason: document.getElementById('otherReason').value,
+            amount: document.getElementById('amount').value
+        };
+
+        fetch(APPS_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors', 
+            cache: 'no-cache',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData)
+        })
+        .then(() => {
+            loader.style.display = 'none';
+            showStatusPopup('􀆅 บันทึกสำเร็จแล้วค่ะคุณแม่!', true);
+            resetForm();
+        })
+        .catch(err => {
+            loader.style.display = 'none';
+            showStatusPopup('เกิดข้อผิดพลาด: ' + err, false);
+        });
+    }
+
+    // ฟังก์ชันแสดง Popup แจ้งเตือน (ใช้ทั้งสำเร็จและไม่สำเร็จ)
+    function showStatusPopup(text, isSuccess) {
+        const statusPopup = document.getElementById("statusPopup");
+        document.getElementById("statusText").innerText = text;
+        
+        // สลับไอคอน
+        document.getElementById("successIcon").style.display = isSuccess ? "block" : "none";
+        document.getElementById("errorIcon").style.display = isSuccess ? "none" : "block";
+        
+        // ปรับสีปุ่มตามสถานะ (ถ้าต้องการ)
+        const btn = document.getElementById("statusBtn");
+        btn.style.background = isSuccess ? "#3a3a3c" : "#ff3b30";
+
+        statusPopup.classList.add("show");
+    }
+
+    function closeStatusPopup() {
+        document.getElementById("statusPopup").classList.remove("show");
+    }
+
+    function resetForm() {
+        document.getElementById('deductionForm').reset();
+        document.getElementById('date').value = new Date().toISOString().split("T")[0];
+        document.getElementById('otherReasonContainer').style.display = 'none';
+    }
+
+    function toggleSidebar() {
+        if (window.innerWidth <= 768) {
+            document.getElementById("sidebar").classList.toggle("show");
+            document.getElementById("overlay").classList.toggle("show");
+        } else {
+            document.body.classList.toggle("collapsed");
+        }
+    }
+
+    // รองรับการกด Enter
+    document.getElementById("confirmPassword").addEventListener("keydown", function(e) {
+        if (e.key === "Enter") verifyAndSubmit();
+    });
+</script>
+
+</body>
+</html>
