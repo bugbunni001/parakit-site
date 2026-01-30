@@ -201,6 +201,8 @@
         .check-icon path { stroke: #34c759; stroke-width: 3; fill: none; stroke-linecap: round; }
 
         footer { width: 100%; text-align: center; padding: 25px; color: var(--text-light); font-size: 11px; border-top: 0.5px solid rgba(0,0,0,0.05); margin-top: 20px; }
+        
+        .otp-badge { background: #e5e5ea; padding: 5px 10px; border-radius: 8px; font-weight: 600; color: #1c1c1e; margin: 10px 0; display: inline-block; font-size: 18px; letter-spacing: 2px; }
     </style>
 </head>
 
@@ -271,22 +273,27 @@
 
 <div class="popup" id="authPopup">
     <div class="popup-box">
-        <div style="font-size: 40px; margin-bottom: 10px;">🔐</div>
-        <h3 style="font-size: 18px;">ยืนยันการบันทึก</h3>
-        <p style="font-size: 13px; color: var(--text-light); margin-bottom: 15px;">กรุณาเลือกผู้อนุมัติเพื่อรับรหัส OTP</p>
+        <div style="font-size: 40px; margin-bottom: 10px;">🛡️</div>
+        <h3 style="font-size: 18px;">ขอรหัส OTP จากผู้ดูแล</h3>
         
-        <select id="approver" style="margin-bottom: 15px; text-align: center;">
-            <option value="book16boat@gmail.com">ศุภกฤต</option>
-            <option value="malikastory2542@gmail.com">ปิยะพร</option>
-        </select>
-
-        <div id="otpInputContainer" style="display:none;">
-            <input type="number" id="otpCode" placeholder="ใส่รหัส OTP 6 หลัก" style="text-align: center; margin-bottom: 15px; letter-spacing: 5px; font-weight: bold;">
+        <div id="otpStep1">
+            <select id="adminSelect" style="margin-bottom: 15px; text-align: center;">
+                <option value="" disabled selected>-- เลือกผู้ดูแลที่จะส่งรหัสให้ --</option>
+                <option value="ศุภกฤต|0935264698">ศุภกฤต (093-526-4698)</option>
+                <option value="ปิยพร|0839949997">ปิยพร (083-994-9997)</option>
+            </select>
+            <button class="btn-submit" onclick="requestOTP()">📲 ขอรหัส OTP</button>
+            <button class="btn-submit" style="background: #8e8e93; font-size: 14px; padding: 10px;" onclick="closeAuthPopup()">ยกเลิก</button>
         </div>
 
-        <div style="display: flex; gap: 10px;">
-            <button class="btn-submit" style="background: #8e8e93; font-size: 15px;" onclick="closeAuthPopup()">ยกเลิก</button>
-            <button id="mainAuthBtn" class="btn-submit" style="font-size: 15px;" onclick="handleOTPRequest()">ส่งรหัส OTP</button>
+        <div id="otpStep2" style="display: none;">
+            <p style="font-size: 13px; color: var(--text-light); margin-bottom: 5px;">ส่งรหัสไปยังผู้ดูแลแล้ว</p>
+            <div id="displayOtp" class="otp-badge">XXXXXX</div>
+            <input type="number" id="confirmOTP" placeholder="ระบุรหัส 6 หลัก" style="text-align: center; margin-bottom: 15px; letter-spacing: 5px; font-weight: bold;">
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-submit" style="background: #8e8e93; font-size: 15px;" onclick="backToStep1()">ย้อนกลับ</button>
+                <button class="btn-submit" style="font-size: 15px;" onclick="verifyAndSubmit()">ยืนยันบันทึก</button>
+            </div>
         </div>
     </div>
 </div>
@@ -307,19 +314,20 @@
 
 <div class="loading" id="loading">
     <div class="spinner"></div>
-    <div id="loadingText" style="margin-top:15px; font-weight:600; color:var(--ios-blue);">กำลังส่งข้อมูล...</div>
+    <div style="margin-top:15px; font-weight:600; color:var(--ios-blue);">กำลังส่งข้อมูล...</div>
 </div>
 
 <footer>© 2026 Copy Right By Angerina Frog</footer>
 
 <script>
-    // --- Sidebar System (ห้ามแตะ) ---
+    // --- Sidebar System ---
     function includeSidebar() {
         const cached = localStorage.getItem('sidebar_cache');
         if (cached) {
             document.getElementById('sidebar').innerHTML = cached;
             restoreMenuState();
         }
+
         fetch('sidebar.html')
             .then(response => response.text())
             .then(data => {
@@ -330,6 +338,7 @@
                 }
             })
             .catch(err => console.warn("Sidebar Load Error"));
+            
         if(localStorage.getItem('sidebar_collapsed') === 'true' && window.innerWidth > 768) {
             document.body.classList.add('collapsed');
         }
@@ -360,10 +369,10 @@
         });
     }
 
-    // --- Deduction Form Logic (Updated to OTP) ---
-    // *** สำคัญ: เปลี่ยน URL เป็นตัวล่าสุดของคุณ ***
+    // --- Deduction Form & OTP Logic ---
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzjaYx5lxwW8Yf83GXzcz90pCp1-Fo6XevinCurRqdwnZgJQMBZMuoYOdHaW8mqb4Hd/exec";
-    
+    let currentGeneratedOTP = "";
+
     document.getElementById('date').value = new Date().toISOString().split("T")[0];
 
     function checkReason(select) {
@@ -385,82 +394,62 @@
             form.reportValidity();
             return;
         }
-        // Reset Popup State
-        document.getElementById("otpInputContainer").style.display = "none";
-        document.getElementById("approver").style.display = "block";
-        document.getElementById("mainAuthBtn").innerText = "ส่งรหัส OTP";
+        backToStep1();
         document.getElementById("authPopup").classList.add("show");
     }
 
     function closeAuthPopup() {
         document.getElementById("authPopup").classList.remove("show");
-        document.getElementById("otpCode").value = "";
+        document.getElementById("confirmOTP").value = "";
+        currentGeneratedOTP = "";
     }
 
-    // ฟังก์ชันจัดการขั้นตอน OTP
-    function handleOTPRequest() {
-        const btn = document.getElementById("mainAuthBtn");
-        const otpContainer = document.getElementById("otpInputContainer");
-        const approverSelect = document.getElementById("approver");
+    function backToStep1() {
+        document.getElementById("otpStep1").style.display = "block";
+        document.getElementById("otpStep2").style.display = "none";
+        document.getElementById("confirmOTP").value = "";
+    }
 
-        if (btn.innerText === "ส่งรหัส OTP") {
-            sendOTP(approverSelect.value);
-        } else {
-            verifyAndSubmit();
+    function requestOTP() {
+        const adminData = document.getElementById("adminSelect").value;
+        if (!adminData) {
+            alert("กรุณาเลือกผู้ดูแลก่อนค่ะ!");
+            return;
         }
-    }
 
-    function sendOTP(email) {
-        const loader = document.getElementById('loading');
-        const loadingText = document.getElementById('loadingText');
-        loadingText.innerText = "กำลังส่ง OTP...";
-        loader.style.display = 'flex';
+        const [adminName, adminPhone] = adminData.split('|');
+        // สุ่มเลข 6 หลัก
+        currentGeneratedOTP = Math.floor(100000 + Math.random() * 900000).toString();
+        
+        const empName = document.getElementById('employee').value;
+        const amount = document.getElementById('amount').value;
+        const smsBody = `รหัส OTP สำหรับยืนยันการหักเงิน ${empName} จำนวน ${amount} บาท คือ: ${currentGeneratedOTP}`;
 
-        const payload = {
-            action: "sendOTP",
-            targetEmail: email,
-            employee: document.getElementById('employee').value,
-            reason: document.getElementById('reason').value,
-            otherReason: document.getElementById('otherReason').value
-        };
+        // เปลี่ยนสถานะหน้าจอ
+        document.getElementById("displayOtp").innerText = currentGeneratedOTP;
+        document.getElementById("otpStep1").style.display = "none";
+        document.getElementById("otpStep2").style.display = "block";
 
-        fetch(APPS_SCRIPT_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            body: JSON.stringify(payload)
-        })
-        .then(() => {
-            loader.style.display = 'none';
-            // สลับหน้าตา Popup
-            document.getElementById("approver").style.display = "none";
-            document.getElementById("otpInputContainer").style.display = "block";
-            document.getElementById("mainAuthBtn").innerText = "ยืนยันรหัส OTP";
-            document.getElementById("otpCode").focus();
-        })
-        .catch(err => {
-            loader.style.display = 'none';
-            showStatusPopup('ส่ง OTP ไม่สำเร็จ: ' + err, false);
-        });
+        // เปิดแอป SMS เพื่อส่งรหัส
+        window.location.href = `sms:${adminPhone}?body=${encodeURIComponent(smsBody)}`;
     }
 
     function verifyAndSubmit() {
-        const otpCode = document.getElementById("otpCode").value;
-        if (!otpCode || otpCode.length < 4) {
-            alert("กรุณาใส่รหัส OTP ให้ถูกต้อง");
-            return;
+        const userInputOTP = document.getElementById("confirmOTP").value;
+        
+        if (userInputOTP === currentGeneratedOTP && currentGeneratedOTP !== "") {
+            closeAuthPopup();
+            submitData();
+        } else {
+            alert('รหัส OTP ไม่ถูกต้องค่ะอีควาย!');
         }
-        submitData(otpCode);
     }
 
-    function submitData(otp) {
+    function submitData() {
         const loader = document.getElementById('loading');
-        const loadingText = document.getElementById('loadingText');
-        loadingText.innerText = "กำลังตรวจสอบและบันทึก...";
         loader.style.display = 'flex';
 
         const formData = {
-            otp: otp,
-            targetEmail: document.getElementById('approver').value,
             date: document.getElementById('date').value,
             employee: document.getElementById('employee').value,
             reason: document.getElementById('reason').value,
@@ -468,18 +457,15 @@
             amount: document.getElementById('amount').value
         };
 
-        // ใช้ fetch แบบปกติเพื่อรับ Response (เปลี่ยน mode เป็น cors ถ้าเป็นไปได้ แต่ถ้าใช้ no-cors จะเช็คผลลัพธ์ไม่ได้)
-        // เพื่อให้ชัวร์และง่าย ผมใช้เทคนิคตรวจสอบความสำเร็จผ่าน Timeout หรือหน้าจอขอบคุณ
         fetch(APPS_SCRIPT_URL, {
             method: 'POST',
-            mode: 'no-cors',
+            mode: 'no-cors', 
+            cache: 'no-cache',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(formData)
         })
         .then(() => {
-            // เนื่องจาก no-cors ไม่สามารถอ่านค่ากลับมาได้ 
-            // เราจะถือว่าสำเร็จถ้าไม่มี Error Network
             loader.style.display = 'none';
-            closeAuthPopup();
             showStatusPopup('บันทึกข้อมูลการหักเงินสำเร็จ', true);
             resetForm();
         })
@@ -509,7 +495,11 @@
         document.getElementById('otherReasonContainer').style.display = 'none';
     }
 
-    // Run Sidebar Init on Load
+    // Handle Enter Key for OTP
+    document.getElementById("confirmOTP").addEventListener("keydown", function(e) {
+        if (e.key === "Enter") verifyAndSubmit();
+    });
+
     window.addEventListener('DOMContentLoaded', includeSidebar);
 </script>
 
