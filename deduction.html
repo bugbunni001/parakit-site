@@ -201,8 +201,6 @@
         .check-icon path { stroke: #34c759; stroke-width: 3; fill: none; stroke-linecap: round; }
 
         footer { width: 100%; text-align: center; padding: 25px; color: var(--text-light); font-size: 11px; border-top: 0.5px solid rgba(0,0,0,0.05); margin-top: 20px; }
-        
-        .otp-badge { background: #e5e5ea; padding: 5px 10px; border-radius: 8px; font-weight: 600; color: #1c1c1e; margin: 10px 0; display: inline-block; font-size: 18px; letter-spacing: 2px; }
     </style>
 </head>
 
@@ -273,26 +271,29 @@
 
 <div class="popup" id="authPopup">
     <div class="popup-box">
-        <div style="font-size: 40px; margin-bottom: 10px;">🛡️</div>
-        <h3 style="font-size: 18px;">ขอรหัส OTP จากผู้ดูแล</h3>
-        
-        <div id="otpStep1">
-            <select id="adminSelect" style="margin-bottom: 15px; text-align: center;">
-                <option value="" disabled selected>-- เลือกผู้ดูแลที่จะส่งรหัสให้ --</option>
-                <option value="ศุภกฤต|0935264698">ศุภกฤต (093-526-4698)</option>
-                <option value="ปิยพร|0839949997">ปิยพร (083-994-9997)</option>
+        <div id="otpSelectAdmin">
+            <div style="font-size: 40px; margin-bottom: 10px;">📩</div>
+            <h3 style="font-size: 18px;">ขอรหัส OTP จากผู้ดูแล</h3>
+            <p style="font-size: 13px; color: var(--text-light); margin-bottom: 15px;">เลือกผู้ดูแลเพื่อรับรหัสทางอีเมล</p>
+            <select id="adminEmailSelect" style="margin-bottom: 15px;">
+                <option value="" disabled selected>-- เลือกผู้รับ --</option>
+                <option value="book016boat@gmail.com">ศุภกฤต</option>
+                <option value="malikastory2542@gmail.com">ปิยพร</option>
             </select>
-            <button class="btn-submit" onclick="requestOTP()">📲 ขอรหัส OTP</button>
-            <button class="btn-submit" style="background: #8e8e93; font-size: 14px; padding: 10px;" onclick="closeAuthPopup()">ยกเลิก</button>
-        </div>
-
-        <div id="otpStep2" style="display: none;">
-            <p style="font-size: 13px; color: var(--text-light); margin-bottom: 5px;">ส่งรหัสไปยังผู้ดูแลแล้ว</p>
-            <div id="displayOtp" class="otp-badge">XXXXXX</div>
-            <input type="number" id="confirmOTP" placeholder="ระบุรหัส 6 หลัก" style="text-align: center; margin-bottom: 15px; letter-spacing: 5px; font-weight: bold;">
             <div style="display: flex; gap: 10px;">
-                <button class="btn-submit" style="background: #8e8e93; font-size: 15px;" onclick="backToStep1()">ย้อนกลับ</button>
-                <button class="btn-submit" style="font-size: 15px;" onclick="verifyAndSubmit()">ยืนยันบันทึก</button>
+                <button class="btn-submit" style="background: #8e8e93; font-size: 15px;" onclick="closeAuthPopup()">ยกเลิก</button>
+                <button class="btn-submit" style="font-size: 15px;" onclick="sendOTPRequest()">ส่งรหัส</button>
+            </div>
+        </div>
+        
+        <div id="otpInputForm" style="display:none;">
+            <div style="font-size: 40px; margin-bottom: 10px;">🔐</div>
+            <h3 style="font-size: 18px;">ยืนยัน OTP</h3>
+            <p style="font-size: 13px; color: var(--text-light); margin-bottom: 15px;">กรุณากรอกรหัส 6 หลักที่ส่งไปยังอีเมล</p>
+            <input type="number" id="confirmOTP" placeholder="รหัส OTP" style="text-align: center; margin-bottom: 15px; letter-spacing: 5px; font-weight: 600;">
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-submit" style="background: #8e8e93; font-size: 15px;" onclick="resetAuthPopup()">ย้อนกลับ</button>
+                <button class="btn-submit" style="font-size: 15px;" onclick="verifyAndSubmit()">ตกลง</button>
             </div>
         </div>
     </div>
@@ -314,13 +315,13 @@
 
 <div class="loading" id="loading">
     <div class="spinner"></div>
-    <div style="margin-top:15px; font-weight:600; color:var(--ios-blue);">กำลังส่งข้อมูล...</div>
+    <div id="loadingText" style="margin-top:15px; font-weight:600; color:var(--ios-blue);">กำลังส่งข้อมูล...</div>
 </div>
 
 <footer>© 2026 Copy Right By Angerina Frog</footer>
 
 <script>
-    // --- Sidebar System ---
+    // --- Sidebar System (Recovered from Memory) ---
     function includeSidebar() {
         const cached = localStorage.getItem('sidebar_cache');
         if (cached) {
@@ -369,9 +370,9 @@
         });
     }
 
-    // --- Deduction Form & OTP Logic ---
-    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzjaYx5lxwW8Yf83GXzcz90pCp1-Fo6XevinCurRqdwnZgJQMBZMuoYOdHaW8mqb4Hd/exec";
-    let currentGeneratedOTP = "";
+    // --- Deduction Form Logic & OTP System ---
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyP_BgTA74BCy9TCafXHCvgUZTCbHJdxP9j5PKzb41NBRGyJeflB3PmwZavEe_eltiq/exec";
+    let generatedOTP = "";
 
     document.getElementById('date').value = new Date().toISOString().split("T")[0];
 
@@ -394,50 +395,61 @@
             form.reportValidity();
             return;
         }
-        backToStep1();
+        resetAuthPopup();
         document.getElementById("authPopup").classList.add("show");
+    }
+
+    function resetAuthPopup() {
+        document.getElementById("otpSelectAdmin").style.display = "block";
+        document.getElementById("otpInputForm").style.display = "none";
+        document.getElementById("confirmOTP").value = "";
     }
 
     function closeAuthPopup() {
         document.getElementById("authPopup").classList.remove("show");
-        document.getElementById("confirmOTP").value = "";
-        currentGeneratedOTP = "";
     }
 
-    function backToStep1() {
-        document.getElementById("otpStep1").style.display = "block";
-        document.getElementById("otpStep2").style.display = "none";
-        document.getElementById("confirmOTP").value = "";
-    }
-
-    function requestOTP() {
-        const adminData = document.getElementById("adminSelect").value;
-        if (!adminData) {
-            alert("กรุณาเลือกผู้ดูแลก่อนค่ะ!");
+    function sendOTPRequest() {
+        const email = document.getElementById("adminEmailSelect").value;
+        if (!email) {
+            alert("กรุณาเลือกผู้ดูแลค่ะ!");
             return;
         }
 
-        const [adminName, adminPhone] = adminData.split('|');
-        // สุ่มเลข 6 หลัก
-        currentGeneratedOTP = Math.floor(100000 + Math.random() * 900000).toString();
+        // สุ่มรหัส 6 หลัก
+        generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
         
-        const empName = document.getElementById('employee').value;
-        const amount = document.getElementById('amount').value;
-        const smsBody = `รหัส OTP สำหรับยืนยันการหักเงิน ${empName} จำนวน ${amount} บาท คือ: ${currentGeneratedOTP}`;
+        document.getElementById('loadingText').innerText = "กำลังส่งรหัส OTP...";
+        document.getElementById('loading').style.display = 'flex';
 
-        // เปลี่ยนสถานะหน้าจอ
-        document.getElementById("displayOtp").innerText = currentGeneratedOTP;
-        document.getElementById("otpStep1").style.display = "none";
-        document.getElementById("otpStep2").style.display = "block";
+        const payload = {
+            action: "sendOTP",
+            email: email,
+            otp: generatedOTP,
+            employee: document.getElementById('employee').value,
+            amount: document.getElementById('amount').value
+        };
 
-        // เปิดแอป SMS เพื่อส่งรหัส
-        window.location.href = `sms:${adminPhone}?body=${encodeURIComponent(smsBody)}`;
+        fetch(APPS_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            body: JSON.stringify(payload)
+        })
+        .then(() => {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById("otpSelectAdmin").style.display = "none";
+            document.getElementById("otpInputForm").style.display = "block";
+            document.getElementById("confirmOTP").focus();
+        })
+        .catch(err => {
+            document.getElementById('loading').style.display = 'none';
+            alert("ส่งรหัสไม่สำเร็จ: " + err);
+        });
     }
 
     function verifyAndSubmit() {
-        const userInputOTP = document.getElementById("confirmOTP").value;
-        
-        if (userInputOTP === currentGeneratedOTP && currentGeneratedOTP !== "") {
+        const userInput = document.getElementById("confirmOTP").value;
+        if (userInput === generatedOTP) {
             closeAuthPopup();
             submitData();
         } else {
@@ -446,6 +458,7 @@
     }
 
     function submitData() {
+        document.getElementById('loadingText').innerText = "กำลังบันทึกข้อมูล...";
         const loader = document.getElementById('loading');
         loader.style.display = 'flex';
 
@@ -495,7 +508,6 @@
         document.getElementById('otherReasonContainer').style.display = 'none';
     }
 
-    // Handle Enter Key for OTP
     document.getElementById("confirmOTP").addEventListener("keydown", function(e) {
         if (e.key === "Enter") verifyAndSubmit();
     });
