@@ -10,14 +10,15 @@
         :root { 
             --ios-blue: #007aff;
             --premium-gold: #c5a059;
-            --ios-bg: #0f172a;
+            --ios-bg: #0f172a; /* พื้นหลังเข้มดูหรู */
             --glass-card: rgba(255, 255, 255, 0.03);
             --glass-border: rgba(255, 255, 255, 0.1);
-            --sidebar-dark: rgba(28, 28, 30, 0.94);
+            --sidebar-dark: rgba(28, 28, 30, 0.94); /* สี Sidebar แบบเดิม */
             --sidebar-width: 280px; 
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
             --transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            --transition-swift: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
@@ -35,14 +36,14 @@
             transition: padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* ===== SIDEBAR CORE ===== */
+        /* ===== SIDEBAR (จำค่าและดีไซน์เดิม 100%) ===== */
         .sidebar { 
             position: fixed; top: 0; left: 0; 
             width: var(--sidebar-width); height: 100vh; 
             background: var(--sidebar-dark); 
             backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
             color: #fff; overflow-y: auto; 
-            transition: transform .3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 2000;
             box-shadow: 10px 0 30px rgba(0,0,0,0.3);
         }
@@ -66,84 +67,131 @@
         }
         .overlay.show { display: block; }
 
-        /* Sidebar Menu Styles */
+        /* Sidebar Internals */
         .sidebar-header { padding: 30px 20px; font-size: 20px; font-weight: 600; border-bottom: 0.5px solid rgba(255,255,255,0.1); }
         .menu { padding: 10px 0; }
         .menu a, .menu .drop-btn { 
             width: 100%; min-height: 50px; padding: 12px 20px; background: none; border: none; 
             color: #ebebf5; text-align: left; font-size: 15px; cursor: pointer; 
-            display: flex; align-items: center; justify-content: space-between;
-            text-decoration: none; transition: 0.3s;
+            display: flex; align-items: center; text-decoration: none; transition: 0.3s;
         }
-        .menu a:hover, .menu .drop-btn:hover { background: rgba(255,255,255,0.1); }
-        
-        /* Dropdown Logic */
+        .menu a:hover, .menu .drop-btn:hover { background: rgba(255,255,255,0.1); padding-left: 30px; }
         .sub { display: none; background: rgba(0,0,0,0.2); }
         .item.open .sub { display: block; }
-        .item .arrow { transition: 0.3s; font-size: 12px; }
-        .item.open .arrow { transform: rotate(180deg); }
-        .sub a { padding-left: 45px; font-size: 14px; color: #8e8e93; justify-content: flex-start; }
+        .sub a { padding-left: 45px; font-size: 14px; color: #8e8e93; }
 
         /* ===== MAIN CONTENT ===== */
-        .main-content { padding: 40px; display: flex; flex-direction: column; min-height: 100vh; }
+        .main-content { 
+            padding: 40px; 
+            animation: fadeIn 0.8s ease-out;
+            display: flex; flex-direction: column; min-height: 100vh;
+        }
 
+        /* ===== NAVIGATION (Premium Floating) ===== */
         .top-nav {
             display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 50px; position: sticky; top: 0; z-index: 100; padding: 10px 0;
+            margin-bottom: 50px; position: sticky; top: 0; z-index: 100;
+            padding: 10px 0;
         }
 
         .menu-btn {
             background: rgba(255, 255, 255, 0.05); color: #fff; border: 1px solid var(--glass-border);
             width: 45px; height: 45px; border-radius: 12px; cursor: pointer;
             backdrop-filter: blur(20px); display: flex; align-items: center; justify-content: center;
+            transition: var(--transition); font-size: 20px;
         }
+        .menu-btn:hover { background: var(--ios-blue); border-color: var(--ios-blue); transform: translateY(-2px); }
 
         .refresh-btn {
-            background: #fff; color: #000; border: none; padding: 12px 28px; border-radius: 100px; 
-            cursor: pointer; box-shadow: 0 10px 20px rgba(0,0,0,0.2); font-weight: 500;
+            background: #fff; color: #000; border: none; 
+            padding: 12px 28px; border-radius: 100px; cursor: pointer;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            transition: var(--transition); display: flex; align-items: center; gap: 8px; font-weight: 500;
         }
+        .refresh-btn:hover { transform: translateY(-2px) scale(1.05); }
 
-        /* ===== CONTENT BODY ===== */
+        /* ===== HEADER BANNER ===== */
         .container { max-width: 1300px; margin: 0 auto; width: 100%; flex: 1; }
-        .header-banner { text-align: center; margin-bottom: 80px; }
+
+        .header-banner { 
+            text-align: center; margin-bottom: 80px; 
+        }
         .header-banner h1 { 
-            margin: 0; font-size: 3.5rem; font-weight: 200; 
+            margin: 0; font-size: 3.5rem; font-weight: 200; letter-spacing: -2px; 
             background: linear-gradient(to bottom, #fff 0%, #94a3b8 100%);
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }
-        .header-banner p { color: var(--premium-gold); letter-spacing: 4px; text-transform: uppercase; margin-top: 15px;}
-
-        .list { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 30px; }
-        .item-card {
-            background: var(--glass-card); backdrop-filter: blur(40px);
-            padding: 50px 30px; border-radius: 40px; text-align: center; border: 1px solid var(--glass-border);
-            transition: var(--transition);
+        .header-banner p { 
+            color: var(--premium-gold); margin-top: 15px; font-weight: 300; 
+            font-size: 1rem; letter-spacing: 4px; text-transform: uppercase;
         }
-        .item-card:hover { transform: translateY(-10px); background: rgba(255, 255, 255, 0.06); }
-        .phone-num { font-size: 42px; font-weight: 200; color: #fff; margin-bottom: 15px; }
+
+        /* ===== LUXURY CARDS ===== */
+        .list { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 30px; }
+        
+        .item-card {
+            background: var(--glass-card); 
+            backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px);
+            padding: 50px 30px; border-radius: 40px;
+            text-align: center; border: 1px solid var(--glass-border);
+            transition: var(--transition); position: relative; overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+        .item-card:hover { 
+            transform: translateY(-15px); 
+            border-color: rgba(255,255,255,0.3);
+            background: rgba(255, 255, 255, 0.06);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.4);
+        }
+        
+        .phone-num { 
+            font-size: 42px; font-weight: 200; color: #fff; 
+            margin-bottom: 15px; letter-spacing: -1.5px; 
+        }
         .phone-detail { 
             display: inline-block; padding: 6px 20px; background: rgba(197, 160, 89, 0.1);
-            border-radius: 100px; font-size: 13px; color: var(--premium-gold); margin-bottom: 40px;
+            border: 1px solid rgba(197, 160, 89, 0.2);
+            border-radius: 100px; font-size: 13px; color: var(--premium-gold); 
+            margin-bottom: 40px; font-weight: 300; letter-spacing: 1px;
         }
 
         .btn-use { 
             width: 100%; background: transparent; color: #fff; border: 1px solid #fff; 
-            padding: 16px; border-radius: 100px; cursor: pointer; transition: 0.3s;
+            padding: 16px; border-radius: 100px; cursor: pointer; font-weight: 300;
+            transition: var(--transition); font-size: 15px; letter-spacing: 1px;
         }
         .btn-use:hover { background: #fff; color: #000; }
+
         .item-card.is-used { opacity: 0.2; filter: grayscale(1); }
 
-        /* ===== MODALS & UTILS ===== */
+        /* ===== MODALS & SPINNER ===== */
         .modal-overlay {
             position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); 
             display: none; align-items: center; justify-content: center; z-index: 3000;
-            backdrop-filter: blur(20px);
+            backdrop-filter: blur(20px); animation: fadeIn 0.4s ease;
         }
-        .modal { background: rgba(255, 255, 255, 0.05); padding: 50px; border-radius: 40px; width: 90%; max-width: 450px; text-align: center; border: 1px solid var(--glass-border); }
-        .spinner { width: 40px; height: 40px; border: 2px solid rgba(255,255,255,0.1); border-top: 2px solid var(--premium-gold); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px; }
+        .modal { 
+            background: rgba(255, 255, 255, 0.05); padding: 50px; border-radius: 40px; 
+            width: 90%; max-width: 450px; text-align: center;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 40px 100px rgba(0,0,0,0.5);
+        }
+        .spinner {
+            width: 40px; height: 40px; border: 2px solid rgba(255,255,255,0.1);
+            border-top: 2px solid var(--premium-gold); border-radius: 50%;
+            animation: spin 1s linear infinite; margin: 0 auto 30px;
+        }
         @keyframes spin { 100% { transform: rotate(360deg); } }
-        footer { text-align: center; padding: 60px; color: var(--text-muted); font-size: 12px; letter-spacing: 2px; }
-        #scrollTopBtn { display: none; position: fixed; bottom: 40px; right: 40px; background: var(--premium-gold); border: none; width: 50px; height: 50px; border-radius: 50%; color: white; cursor: pointer; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        footer { text-align: center; padding: 60px; color: var(--text-muted); font-size: 12px; margin-top: auto; letter-spacing: 2px; }
+
+        #scrollTopBtn {
+            display: none; position: fixed; bottom: 40px; right: 40px; z-index: 1200;
+            background: var(--premium-gold); color: white; border: none; width: 60px; height: 60px;
+            border-radius: 50%; cursor: pointer; box-shadow: 0 10px 30px rgba(197, 160, 89, 0.3);
+            transition: var(--transition); font-size: 20px;
+        }
     </style>
 </head>
 
@@ -151,8 +199,7 @@
 
 <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 
-<aside class="sidebar" id="sidebar">
-    </aside>
+<aside class="sidebar" id="sidebar"></aside>
 
 <main class="main-content">
     <div class="top-nav">
@@ -168,37 +215,44 @@
         
         <div id="loader" style="text-align: center; padding: 100px 0;">
             <div class="spinner"></div>
-            <div style="color: var(--premium-gold); font-weight: 200;">CURATING YOUR DESTINY...</div>
+            <div style="color: var(--premium-gold); font-weight: 200; letter-spacing: 3px;">CURATING YOUR DESTINY...</div>
         </div>
 
         <div class="list" id="list"></div>
     </div>
 
-    <footer>&copy; 2026 copyright by <b>Angerina Frog</b></footer>
+    <footer>
+        &copy; 2026 copyright by <b>Angerina Frog</b>
+    </footer>
+
     <button id="scrollTopBtn" onclick="scrollToTop()">↑</button>
 </main>
 
 <div class="modal-overlay" id="modalOverlay">
     <div class="modal">
-        <h3 style="font-weight: 400;">Confirm Your Destiny</h3>
-        <p id="confirmTarget" style="font-size: 3.5rem; color: var(--premium-gold); margin: 20px 0;"></p>
+        <h3 style="margin: 0 0 10px 0; font-weight: 400; letter-spacing: 1px;">Confirm Your Destiny</h3>
+        <p style="color: var(--text-muted); font-size: 14px; font-weight: 300;">คุณต้องการเปิดใช้งานเบอร์มงคลนี้ใช่หรือไม่?</p>
+        <p id="confirmTarget" style="font-size: 3.5rem; font-weight: 200; color: var(--premium-gold); margin: 30px 0; letter-spacing: -2px;"></p>
         <div style="display: flex; gap: 15px;">
-            <button class="btn-use" style="border-color: transparent;" onclick="closeModal('modalOverlay')">BACK</button>
-            <button class="btn-use" id="confirmBtn" style="background: #fff; color: #000;">CONFIRM</button>
+            <button class="btn-use" style="border-color: transparent; color: #94a3b8;" onclick="closeModal('modalOverlay')">BACK</button>
+            <button class="btn-use" id="confirmBtn" style="background: #fff; color: #000; border: none;">CONFIRM</button>
         </div>
     </div>
 </div>
 
 <div class="modal-overlay" id="loadingOverlay">
-    <div class="modal"><div class="spinner"></div><p>SAVING TO CLOUD...</p></div>
+    <div class="modal">
+        <div class="spinner"></div>
+        <p style="font-weight: 300; letter-spacing: 2px;">SAVING TO CLOUD...</p>
+    </div>
 </div>
 
 <div class="modal-overlay" id="successOverlay">
     <div class="modal">
-        <div style="font-size: 40px; color: var(--premium-gold); margin-bottom: 20px;">✓</div>
-        <h3>REGISTERED</h3>
-        <p id="successMessage"></p>
-        <button class="btn-use" style="background: #fff; color: #000; margin-top: 20px;" onclick="closeModal('successOverlay')">DONE</button>
+        <div style="width: 70px; height: 70px; background: var(--premium-gold); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; margin: 0 auto 30px;">✓</div>
+        <h3 style="margin-bottom: 10px; font-weight: 400;">REGISTERED</h3>
+        <p id="successMessage" style="color: var(--text-muted); line-height: 1.8; font-size: 15px; font-weight: 300;"></p>
+        <button class="btn-use" style="margin-top: 35px; background: #fff; color: #000;" onclick="closeModal('successOverlay')">DONE</button>
     </div>
 </div>
 
@@ -206,49 +260,27 @@
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbylkr6WhEp7kpK8WkpZw6F7Rws0OglgqbWy3wQ-3IImG8Fwqaou9VmseZvuSdrxqg83WQ/exec";
 
 /* ==========================================
-   ✅ SIDEBAR & DROPDOWN LOGIC (FIXED)
+   ✅ SIDEBAR SYSTEM (Integrated)
    ========================================== */
 function includeSidebar() {
+    const cached = localStorage.getItem('sidebar_cache');
+    if (cached) {
+        document.getElementById('sidebar').innerHTML = cached;
+        restoreMenuState();
+    }
+
     fetch('sidebar.html')
-        .then(res => res.text())
+        .then(response => response.text())
         .then(data => {
-            document.getElementById('sidebar').innerHTML = data;
-            initDropdowns(); // เริ่มทำงานระบบ Dropdown หลังจากโหลดไฟล์เสร็จ
-            restoreSidebarState();
-        });
-}
-
-function initDropdowns() {
-    // ใช้ Event Delegation เพื่อจัดการการคลิกปุ่ม Dropdown
-    document.getElementById('sidebar').addEventListener('click', function(e) {
-        const dropBtn = e.target.closest('.drop-btn');
-        if (!dropBtn) return;
-
-        const item = dropBtn.parentElement;
-        const menuId = item.getAttribute('id') || dropBtn.innerText.trim();
-        
-        // Toggle class 'open'
-        const isOpen = item.classList.toggle('open');
-        
-        // บันทึกสถานะลง LocalStorage
-        localStorage.setItem('menu_state_' + menuId, isOpen);
-    });
-}
-
-function restoreSidebarState() {
-    // คืนค่าสถานะเมนูที่เคยเปิดไว้
-    document.querySelectorAll('.sidebar .item').forEach(item => {
-        const dropBtn = item.querySelector('.drop-btn');
-        if (dropBtn) {
-            const menuId = item.getAttribute('id') || dropBtn.innerText.trim();
-            if (localStorage.getItem('menu_state_' + menuId) === 'true') {
-                item.classList.add('open');
+            if (data !== cached) {
+                document.getElementById('sidebar').innerHTML = data;
+                localStorage.setItem('sidebar_cache', data);
+                restoreMenuState();
             }
-        }
-    });
-
-    // คืนค่าการ ย่อ/ขยาย Sidebar
-    if (localStorage.getItem('sidebar_collapsed') === 'true' && window.innerWidth > 768) {
+        })
+        .catch(err => console.warn("Sidebar Load Error"));
+        
+    if(localStorage.getItem('sidebar_collapsed') === 'true' && window.innerWidth > 768) {
         document.body.classList.add('collapsed');
     }
 }
@@ -263,13 +295,42 @@ function toggleSidebar() {
     }
 }
 
+// Global toggle for dropdowns in sidebar
+window.toggleDrop = function(btn, id) {
+    const item = btn.parentElement;
+    const isOpen = item.classList.toggle("open");
+    if (id) localStorage.setItem('menu-' + id, isOpen);
+}
+
+function restoreMenuState() {
+    ['credit', 'branch', 'sales'].forEach(id => {
+        if (localStorage.getItem('menu-' + id) === 'true') {
+            const el = document.getElementById('menu-' + id);
+            if (el) el.classList.add('open');
+        }
+    });
+}
+
 /* ==========================================
-   ✅ DATA LOGIC
+   ✅ DATA & UI LOGIC
    ========================================== */
 window.onload = () => {
     includeSidebar();
     fetchData();
 };
+
+window.onscroll = function() {
+    const scrollBtn = document.getElementById("scrollTopBtn");
+    if(scrollBtn) scrollBtn.style.display = (document.documentElement.scrollTop > 300) ? "block" : "none";
+};
+
+function scrollToTop() { window.scrollTo({ top: 0, behavior: "smooth" }); }
+
+function handleRefresh() {
+    document.getElementById("list").innerHTML = "";
+    document.getElementById("loader").style.display = "block";
+    fetchData();
+}
 
 function fetchData() {
     fetch(WEB_APP_URL + "?action=getData")
@@ -314,25 +375,14 @@ function use(r, phoneNum) {
         document.getElementById(`row-${r}`).classList.add("is-used");
         const btn = document.getElementById(`btn-${r}`);
         if(btn) { btn.innerText = "ใช้งานแล้ว"; btn.disabled = true; }
-        document.getElementById("successMessage").innerHTML = `เบอร์ <b>${phoneNum}</b> บันทึกสำเร็จ`;
+        document.getElementById("successMessage").innerHTML = `เบอร์ <b>${phoneNum}</b> ได้รับการบันทึกข้อมูลเรียบร้อยแล้ว`;
         document.getElementById("successOverlay").style.display = "flex";
     })
     .catch(err => {
         document.getElementById("loadingOverlay").style.display = "none";
-        alert("ขัดข้อง กรุณาลองใหม่");
+        alert("ระบบขัดข้อง กรุณาลองใหม่ภายหลัง");
     });
 }
-
-function handleRefresh() {
-    document.getElementById("list").innerHTML = "";
-    document.getElementById("loader").style.display = "block";
-    fetchData();
-}
-
-window.onscroll = () => {
-    document.getElementById("scrollTopBtn").style.display = (document.documentElement.scrollTop > 300) ? "block" : "none";
-};
-function scrollToTop() { window.scrollTo({ top: 0, behavior: "smooth" }); }
 </script>
 </body>
 </html>
