@@ -14,7 +14,7 @@
             --ios-blue: #007aff;
             --ios-bg: #f2f2f7;
             --ios-system-gray: #f2f2f7;
-            --sidebar-dark: rgba(28, 28, 30, 0.94); /* ปรับให้ตรงกับหน้าหลัก */
+            --sidebar-dark: rgba(28, 28, 30, 0.94); 
             --glass-white: rgba(255, 255, 255, 0.7);
             --glass-border: rgba(255, 255, 255, 0.5);
             --text-main: #1c1c1e;
@@ -24,7 +24,6 @@
             --transition-swift: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* ===== GLOBAL RESET & STRUCTURE ===== */
         * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
         
         body { 
@@ -37,7 +36,6 @@
             transition: padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* ===== Header Navbar Glass ===== */
         .top-header {
             position: fixed;
             top: 0; left: 0; right: 0;
@@ -66,7 +64,6 @@
         }
         .top-toggle:hover { background: rgba(0, 122, 255, 0.1); }
 
-        /* ===== Sidebar Style (As Requested from Main Page) ===== */
         .sidebar { 
             position: fixed; top: 0; left: 0; 
             width: var(--sidebar-width); height: 100vh; 
@@ -92,7 +89,6 @@
             .top-header { left: 0 !important; }
         }
 
-        /* Sidebar Internals (Styles needed for injected sidebar.html) */
         .sidebar-header { padding: 30px 20px; font-size: 20px; font-weight: 600; border-bottom: 0.5px solid rgba(255,255,255,0.1); }
         .menu { padding: 10px 0; }
         .menu a, .menu .drop-btn { 
@@ -116,7 +112,6 @@
         }
         .overlay-bg.show { display: block; }
 
-        /* ===== MAIN CONTENT BOX & FORM ===== */
         .box { 
             background: var(--glass-white); 
             backdrop-filter: blur(10px);
@@ -170,7 +165,6 @@
         }
         .btn-submit:hover { opacity: 0.9; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0, 122, 255, 0.3); }
 
-        /* ===== POPUP & LOADING ===== */
         .loading { 
             position: fixed; inset: 0; 
             background: rgba(255,255,255,0.4); 
@@ -270,7 +264,7 @@
                 </select>
             </div>
 
-            <button type="button" class="btn-submit" onclick="openAuthPopup()">💾 บันทึกข้อมูล</button>
+            <button type="button" class="btn-submit" onclick="requestOTP()">💾 บันทึกข้อมูล</button>
         </form>
     </div>
 </div>
@@ -279,8 +273,9 @@
     <div class="popup-box">
         <div style="font-size: 40px; margin-bottom: 10px;">🔐</div>
         <h3 style="font-size: 18px;">ยืนยันการบันทึก</h3>
-        <p style="font-size: 13px; color: var(--text-light); margin-bottom: 15px;">กรุณาใส่รหัสผ่านเพื่อดำเนินการ</p>
-        <input type="password" id="confirmPassword" placeholder="รหัสผ่าน" style="text-align: center; margin-bottom: 15px;">
+        <p style="font-size: 13px; color: var(--text-light); margin-bottom: 5px;">รหัสส่งไปที่ email ผู้ดูแลแล้ว</p>
+        <p style="font-size: 11px; color: #ff3b30; margin-bottom: 15px;">(book16boat@gmail.com)</p>
+        <input type="text" id="confirmPassword" placeholder="รหัส OTP 6 หลัก" maxlength="6" style="text-align: center; margin-bottom: 15px; letter-spacing: 5px; font-weight: bold;">
         <div style="display: flex; gap: 10px;">
             <button class="btn-submit" style="background: #8e8e93; font-size: 15px;" onclick="closeAuthPopup()">ยกเลิก</button>
             <button class="btn-submit" style="font-size: 15px;" onclick="verifyAndSubmit()">ตกลง</button>
@@ -304,20 +299,19 @@
 
 <div class="loading" id="loading">
     <div class="spinner"></div>
-    <div style="margin-top:15px; font-weight:600; color:var(--ios-blue);">กำลังส่งข้อมูล...</div>
+    <div id="loadingText" style="margin-top:15px; font-weight:600; color:var(--ios-blue);">กำลังส่งข้อมูล...</div>
 </div>
 
 <footer>© 2026 Copy Right By Angerina Frog</footer>
 
 <script>
-    // --- Sidebar System (Recovered from Memory) ---
+    // --- Sidebar System ---
     function includeSidebar() {
         const cached = localStorage.getItem('sidebar_cache');
         if (cached) {
             document.getElementById('sidebar').innerHTML = cached;
             restoreMenuState();
         }
-
         fetch('sidebar.html')
             .then(response => response.text())
             .then(data => {
@@ -328,7 +322,6 @@
                 }
             })
             .catch(err => console.warn("Sidebar Load Error"));
-            
         if(localStorage.getItem('sidebar_collapsed') === 'true' && window.innerWidth > 768) {
             document.body.classList.add('collapsed');
         }
@@ -359,9 +352,9 @@
         });
     }
 
-    // --- Deduction Form Logic (Original) ---
-    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxCbTFWMVTHKrlJZGR0NcvXTH7LPeF_FV-0A_M-zpCiHmvQn_xgO20H7jnihbMd7GZJ/exec";
-    const SECRET_PASSWORD = "150402"; 
+    // --- Deduction Form Logic ---
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzdadBN0KjJjX7MvCppoIUHKiBTJempbav_f9Udm0QiVyIAUyMqOgs9Xdj1Yk2ndDXR/exec";
+    let CURRENT_OTP = ""; // เก็บ OTP ที่สุ่มได้ชั่วคราว
 
     document.getElementById('date').value = new Date().toISOString().split("T")[0];
 
@@ -378,14 +371,38 @@
         }
     }
 
-    function openAuthPopup() {
+    // ฟังก์ชันใหม่: สุ่มรหัสและสั่งส่ง Email
+    function requestOTP() {
         const form = document.getElementById('deductionForm');
         if (!form.checkValidity()) {
             form.reportValidity();
             return;
         }
-        document.getElementById("authPopup").classList.add("show");
-        document.getElementById("confirmPassword").focus();
+
+        // สุ่มเลข 6 หลัก
+        CURRENT_OTP = Math.floor(100000 + Math.random() * 900000).toString();
+        
+        const loader = document.getElementById('loading');
+        const loaderText = document.getElementById('loadingText');
+        loaderText.innerText = "กำลังส่งรหัส OTP...";
+        loader.style.display = 'flex';
+
+        // ส่งคำสั่งไปที่ Apps Script ให้ส่งอีเมล
+        fetch(APPS_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            cache: 'no-cache',
+            body: JSON.stringify({ action: "sendOTP", otp: CURRENT_OTP })
+        })
+        .then(() => {
+            loader.style.display = 'none';
+            document.getElementById("authPopup").classList.add("show");
+            document.getElementById("confirmPassword").focus();
+        })
+        .catch(err => {
+            loader.style.display = 'none';
+            showStatusPopup('ส่งรหัสล้มเหลว: ' + err, false);
+        });
     }
 
     function closeAuthPopup() {
@@ -395,19 +412,21 @@
 
     function verifyAndSubmit() {
         const passInput = document.getElementById("confirmPassword").value;
-        if (passInput === SECRET_PASSWORD) {
+        if (passInput === CURRENT_OTP && CURRENT_OTP !== "") {
             closeAuthPopup();
             submitData();
         } else {
             closeAuthPopup();
             setTimeout(() => {
-                showStatusPopup('มึงใส่รหัสไม่ถูกค่ะอีควาย!', false);
+                showStatusPopup('รหัส OTP ไม่ถูกต้องค่ะอีควาย!', false);
             }, 300);
         }
     }
 
     function submitData() {
         const loader = document.getElementById('loading');
+        const loaderText = document.getElementById('loadingText');
+        loaderText.innerText = "กำลังส่งข้อมูล...";
         loader.style.display = 'flex';
 
         const formData = {
@@ -454,14 +473,13 @@
         document.getElementById('deductionForm').reset();
         document.getElementById('date').value = new Date().toISOString().split("T")[0];
         document.getElementById('otherReasonContainer').style.display = 'none';
+        CURRENT_OTP = ""; // ล้างค่ารหัสทิ้ง
     }
 
-    // Handle Enter Key
     document.getElementById("confirmPassword").addEventListener("keydown", function(e) {
         if (e.key === "Enter") verifyAndSubmit();
     });
 
-    // Run Sidebar Init on Load
     window.addEventListener('DOMContentLoaded', includeSidebar);
 </script>
 
