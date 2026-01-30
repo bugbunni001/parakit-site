@@ -32,11 +32,11 @@
             transition: padding-left 0.3s ease;
         }
 
-        /* Header & Sidebar */
+        /* Header & Sidebar - กลับมาเป็นแบบเดิม */
         .top-header {
             position: fixed; top: 0; left: 0; right: 0; height: 65px;
-            background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            z-index: 1200; display: flex; align-items: center; padding: 0 25px;
+            background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            z-index: 1200; display: flex; align-items: center; padding: 0 20px;
             border-bottom: 0.5px solid rgba(0,0,0,0.1); transition: left 0.3s ease;
         }
 
@@ -51,6 +51,12 @@
             background: var(--sidebar-dark); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
             color: #fff; overflow-y: auto; transition: all .3s ease; z-index: 2000;
         }
+
+        .overlay-bg {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.2); 
+            display: none; z-index: 1500; backdrop-filter: blur(4px);
+        }
+        .overlay-bg.show { display: block; }
 
         @media(min-width:769px) { 
             body:not(.collapsed) { padding-left: var(--sidebar-width); }
@@ -298,7 +304,7 @@
 
 <div class="loading" id="loading">
     <div class="spinner"></div>
-    <div id="loadingText" style="margin-top:15px; font-weight:600; color:var(--ios-blue);">กำลังดึงข้อมูล...</div>
+    <div id="loadingText" style="margin-top:15px; font-weight:600; color:var(--ios-blue);">กำลังดำเนินการ...</div>
 </div>
 
 <footer>© 2026 Copy Right By Angerina Frog</footer>
@@ -316,12 +322,34 @@
         fetchData();
     };
 
+    // Sidebar Functions (เหมือนเดิมทุกประการ)
+    function includeSidebar() {
+        const cached = localStorage.getItem('sidebar_cache');
+        if (cached) document.getElementById('sidebar').innerHTML = cached;
+        fetch('sidebar.html').then(r => r.text()).then(data => {
+            document.getElementById('sidebar').innerHTML = data;
+            localStorage.setItem('sidebar_cache', data);
+        });
+        if(localStorage.getItem('sidebar_collapsed') === 'true' && window.innerWidth > 768) document.body.classList.add('collapsed');
+    }
+
+    function toggleSidebar() {
+        if (window.innerWidth <= 768) {
+            document.getElementById("sidebar").classList.toggle("show");
+            document.getElementById("overlay").classList.toggle("show");
+        } else {
+            localStorage.setItem('sidebar_collapsed', document.body.classList.toggle("collapsed"));
+        }
+    }
+
+    // Data Functions
     async function fetchData() {
+        document.getElementById('loadingText').innerText = "กำลังดึงข้อมูล...";
         document.getElementById('loading').style.display = 'flex';
         try {
             const response = await fetch(APPS_SCRIPT_URL + "?action=getData");
             const data = await response.json();
-            allData = data.rows.reverse(); // ล่าสุดขึ้นก่อน
+            allData = data.rows.reverse();
             updateSummary(data.rows);
             displayTable();
         } catch (err) {
@@ -334,14 +362,11 @@
     function displayTable() {
         const tbody = document.getElementById('tableBody');
         const pagination = document.getElementById('paginationContainer');
-        
-        // Calculate pagination
         const start = (currentPage - 1) * rowsPerPage;
         const end = start + rowsPerPage;
         const paginatedItems = allData.slice(start, end);
         const totalPages = Math.ceil(allData.length / rowsPerPage);
 
-        // Render Table Rows
         tbody.innerHTML = paginatedItems.map(row => `
             <tr>
                 <td>${row.date}</td>
@@ -352,9 +377,7 @@
             </tr>
         `).join('');
 
-        // Render Pagination Buttons
         let pgHtml = `<button class="pg-btn" onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>&lt;</button>`;
-        
         for (let i = 1; i <= totalPages; i++) {
             if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
                 pgHtml += `<button class="pg-btn ${i === currentPage ? 'active' : ''}" onclick="changePage(${i})">${i}</button>`;
@@ -362,7 +385,6 @@
                 pgHtml += `<span style="color:#ccc;">...</span>`;
             }
         }
-
         pgHtml += `<button class="pg-btn" onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>&gt;</button>`;
         pagination.innerHTML = totalPages > 1 ? pgHtml : '';
     }
@@ -383,26 +405,7 @@
         }
     }
 
-    // ฟังก์ชันเดิม (Sidebar/OTP/Submit)
-    function includeSidebar() {
-        const cached = localStorage.getItem('sidebar_cache');
-        if (cached) document.getElementById('sidebar').innerHTML = cached;
-        fetch('sidebar.html').then(r => r.text()).then(data => {
-            document.getElementById('sidebar').innerHTML = data;
-            localStorage.setItem('sidebar_cache', data);
-        });
-        if(localStorage.getItem('sidebar_collapsed') === 'true' && window.innerWidth > 768) document.body.classList.add('collapsed');
-    }
-
-    function toggleSidebar() {
-        if (window.innerWidth <= 768) {
-            document.getElementById("sidebar").classList.toggle("show");
-            document.getElementById("overlay").classList.toggle("show");
-        } else {
-            localStorage.setItem('sidebar_collapsed', document.body.classList.toggle("collapsed"));
-        }
-    }
-
+    // Logic Functions
     function checkReason(select) {
         document.getElementById('otherReasonContainer').style.display = select.value === 'อื่นๆ' ? 'block' : 'none';
     }
@@ -428,6 +431,7 @@
         const email = document.getElementById("adminEmailSelect").value;
         if (!email) { showStatusPopup("กรุณาเลือกผู้ดูแล", false); return; }
         generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
+        document.getElementById('loadingText').innerText = "กำลังส่ง OTP...";
         document.getElementById('loading').style.display = 'flex';
         fetch(APPS_SCRIPT_URL, {
             method: 'POST', mode: 'no-cors',
@@ -451,11 +455,12 @@
             closeAuthPopup();
             submitData();
         } else {
-            showStatusPopup("รหัส OTP ไม่ถูกต้อง!", false);
+            showStatusPopup("มึงใส่รหัส OTP ไม่ถูกค่ะอีควาย! รบกวนแหกตาดูรหัส OTP ก่อนกรอกใส่มาเนอะ ลูกอีหน่อแตด ช้างลากเย็ด!", false);
         }
     }
 
     async function submitData() {
+        document.getElementById('loadingText').innerText = "กำลังดำเนินการ...";
         document.getElementById('loading').style.display = 'flex';
         const formData = {
             date: document.getElementById('date').value,
