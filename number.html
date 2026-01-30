@@ -13,69 +13,92 @@
             --ios-bg: #0f172a; /* พื้นหลังเข้มดูหรู */
             --glass-card: rgba(255, 255, 255, 0.03);
             --glass-border: rgba(255, 255, 255, 0.1);
-            --sidebar-bg: #1e293b; 
-            --sidebar-width: 260px; 
+            --sidebar-dark: rgba(28, 28, 30, 0.94); /* สี Sidebar แบบเดิม */
+            --sidebar-width: 280px; 
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
             --transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            --transition-swift: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
         
         body { 
             background-color: var(--ios-bg);
-            /* พื้นหลังแบบ Aurora Glow */
             background-image: 
                 radial-gradient(at 0% 0%, rgba(0, 122, 255, 0.15) 0px, transparent 50%), 
                 radial-gradient(at 100% 100%, rgba(197, 160, 89, 0.1) 0px, transparent 50%);
             background-attachment: fixed;
             margin: 0; padding: 0; 
-            display: flex; min-height: 100vh; 
+            min-height: 100vh; 
             color: var(--text-main);
             -webkit-font-smoothing: antialiased;
+            transition: padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* ===== SIDEBAR (คงเดิม 100%) ===== */
-        #sidebar-container { 
-            width: var(--sidebar-width); 
-            background: var(--sidebar-bg); 
-            height: 100vh; position: fixed; left: 0; top: 0; 
-            transition: transform 0.3s ease; z-index: 2000; 
-            overflow-y: auto; box-shadow: 10px 0 30px rgba(0,0,0,0.5); 
+        /* ===== SIDEBAR (จำค่าและดีไซน์เดิม 100%) ===== */
+        .sidebar { 
+            position: fixed; top: 0; left: 0; 
+            width: var(--sidebar-width); height: 100vh; 
+            background: var(--sidebar-dark); 
+            backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+            color: #fff; overflow-y: auto; 
+            transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 2000;
+            box-shadow: 10px 0 30px rgba(0,0,0,0.3);
         }
         
+        @media(min-width:769px) { 
+            body:not(.collapsed) { padding-left: var(--sidebar-width); }
+            body.collapsed .sidebar { transform: translateX(-100%); }
+        }
+
+        @media(max-width:768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.show { transform: translateX(0); }
+            body { padding-left: 0 !important; }
+        }
+
+        .overlay { 
+            position: fixed; inset: 0; 
+            background: rgba(0, 0, 0, 0.3); 
+            backdrop-filter: blur(4px); 
+            display: none; z-index: 1500; 
+        }
+        .overlay.show { display: block; }
+
+        /* Sidebar Internals */
+        .sidebar-header { padding: 30px 20px; font-size: 20px; font-weight: 600; border-bottom: 0.5px solid rgba(255,255,255,0.1); }
+        .menu { padding: 10px 0; }
+        .menu a, .menu .drop-btn { 
+            width: 100%; min-height: 50px; padding: 12px 20px; background: none; border: none; 
+            color: #ebebf5; text-align: left; font-size: 15px; cursor: pointer; 
+            display: flex; align-items: center; text-decoration: none; transition: 0.3s;
+        }
+        .menu a:hover, .menu .drop-btn:hover { background: rgba(255,255,255,0.1); padding-left: 30px; }
+        .sub { display: none; background: rgba(0,0,0,0.2); }
+        .item.open .sub { display: block; }
+        .sub a { padding-left: 45px; font-size: 14px; color: #8e8e93; }
+
+        /* ===== MAIN CONTENT ===== */
         .main-content { 
-            flex-grow: 1; 
-            margin-left: var(--sidebar-width); 
             padding: 40px; 
-            width: calc(100% - var(--sidebar-width)); 
-            transition: var(--transition);
+            animation: fadeIn 0.8s ease-out;
             display: flex; flex-direction: column; min-height: 100vh;
         }
-        
-        body.collapsed #sidebar-container { transform: translateX(calc(var(--sidebar-width) * -1)); }
-        body.collapsed .main-content { margin-left: 0; width: 100%; }
-
-        @media (max-width: 900px) {
-            #sidebar-container { transform: translateX(calc(var(--sidebar-width) * -1)); }
-            .main-content { margin-left: 0; width: 100%; padding: 20px; }
-            body.show-sidebar #sidebar-container { transform: translateX(0); }
-        }
-
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; z-index: 1500; backdrop-filter: blur(8px); }
-        body.show-sidebar .overlay { display: block; }
 
         /* ===== NAVIGATION (Premium Floating) ===== */
         .top-nav {
             display: flex; justify-content: space-between; align-items: center;
             margin-bottom: 50px; position: sticky; top: 0; z-index: 100;
+            padding: 10px 0;
         }
 
         .menu-btn {
             background: rgba(255, 255, 255, 0.05); color: #fff; border: 1px solid var(--glass-border);
-            padding: 12px 24px; border-radius: 100px; cursor: pointer;
-            backdrop-filter: blur(20px); font-weight: 300; transition: var(--transition);
-            letter-spacing: 1px;
+            width: 45px; height: 45px; border-radius: 12px; cursor: pointer;
+            backdrop-filter: blur(20px); display: flex; align-items: center; justify-content: center;
+            transition: var(--transition); font-size: 20px;
         }
         .menu-btn:hover { background: var(--ios-blue); border-color: var(--ios-blue); transform: translateY(-2px); }
 
@@ -87,11 +110,11 @@
         }
         .refresh-btn:hover { transform: translateY(-2px) scale(1.05); }
 
-        /* ===== HEADER BANNER (Elegance Design) ===== */
+        /* ===== HEADER BANNER ===== */
         .container { max-width: 1300px; margin: 0 auto; width: 100%; flex: 1; }
 
         .header-banner { 
-            text-align: center; margin-bottom: 80px; animation: fadeIn 1s ease-out;
+            text-align: center; margin-bottom: 80px; 
         }
         .header-banner h1 { 
             margin: 0; font-size: 3.5rem; font-weight: 200; letter-spacing: -2px; 
@@ -103,7 +126,7 @@
             font-size: 1rem; letter-spacing: 4px; text-transform: uppercase;
         }
 
-        /* ===== LUXURY CARDS (Glassmorphism 2.0) ===== */
+        /* ===== LUXURY CARDS ===== */
         .list { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 30px; }
         
         .item-card {
@@ -113,11 +136,6 @@
             text-align: center; border: 1px solid var(--glass-border);
             transition: var(--transition); position: relative; overflow: hidden;
             box-shadow: 0 20px 40px rgba(0,0,0,0.2);
-        }
-        .item-card::before {
-            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(circle at top right, rgba(255,255,255,0.05), transparent);
-            pointer-events: none;
         }
         .item-card:hover { 
             transform: translateY(-15px); 
@@ -146,7 +164,7 @@
 
         .item-card.is-used { opacity: 0.2; filter: grayscale(1); }
 
-        /* ===== MODALS (Blur Overlay) ===== */
+        /* ===== MODALS & SPINNER ===== */
         .modal-overlay {
             position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); 
             display: none; align-items: center; justify-content: center; z-index: 3000;
@@ -179,8 +197,9 @@
 
 <body id="mainBody">
 
-<div class="overlay" onclick="toggleSidebar()"></div>
-<aside id="sidebar-container"></aside>
+<div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+<aside class="sidebar" id="sidebar"></aside>
 
 <main class="main-content">
     <div class="top-nav">
@@ -240,55 +259,73 @@
 <script>
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbylkr6WhEp7kpK8WkpZw6F7Rws0OglgqbWy3wQ-3IImG8Fwqaou9VmseZvuSdrxqg83WQ/exec";
 
-/* ✅ Sidebar Logic (เดิม 100%) */
-fetch("sidebar.html")
-  .then(res => res.text())
-  .then(html => {
-      document.getElementById("sidebar-container").innerHTML = html;
-      restoreSidebarState();
-  });
+/* ==========================================
+   ✅ SIDEBAR SYSTEM (Integrated)
+   ========================================== */
+function includeSidebar() {
+    const cached = localStorage.getItem('sidebar_cache');
+    if (cached) {
+        document.getElementById('sidebar').innerHTML = cached;
+        restoreMenuState();
+    }
 
-function toggleSidebar() {
-    const body = document.getElementById('mainBody');
-    if (window.innerWidth <= 900) {
-        body.classList.toggle('show-sidebar');
-    } else {
-        const isCurrentlyCollapsed = body.classList.toggle('collapsed');
-        localStorage.setItem('sidebar-collapsed', isCurrentlyCollapsed);
+    fetch('sidebar.html')
+        .then(response => response.text())
+        .then(data => {
+            if (data !== cached) {
+                document.getElementById('sidebar').innerHTML = data;
+                localStorage.setItem('sidebar_cache', data);
+                restoreMenuState();
+            }
+        })
+        .catch(err => console.warn("Sidebar Load Error"));
+        
+    if(localStorage.getItem('sidebar_collapsed') === 'true' && window.innerWidth > 768) {
+        document.body.classList.add('collapsed');
     }
 }
 
-function restoreSidebarState() {
-    const body = document.getElementById('mainBody');
-    const container = document.getElementById('sidebar-container');
-    if (window.innerWidth > 900) {
-        if (localStorage.getItem('sidebar-collapsed') === 'true') body.classList.add('collapsed');
+function toggleSidebar() {
+    if (window.innerWidth <= 768) {
+        document.getElementById("sidebar").classList.toggle("show");
+        document.getElementById("overlay").classList.toggle("show");
+    } else {
+        const isCollapsed = document.body.classList.toggle("collapsed");
+        localStorage.setItem('sidebar_collapsed', isCollapsed);
     }
-    container.querySelectorAll('.item').forEach((item, index) => {
-        if (localStorage.getItem('dropdown-' + index) === 'true') item.classList.add('open');
+}
+
+// Global toggle for dropdowns in sidebar
+window.toggleDrop = function(btn, id) {
+    const item = btn.parentElement;
+    const isOpen = item.classList.toggle("open");
+    if (id) localStorage.setItem('menu-' + id, isOpen);
+}
+
+function restoreMenuState() {
+    ['credit', 'branch', 'sales'].forEach(id => {
+        if (localStorage.getItem('menu-' + id) === 'true') {
+            const el = document.getElementById('menu-' + id);
+            if (el) el.classList.add('open');
+        }
     });
 }
 
-document.addEventListener('click', function (e) {
-    const dropBtn = e.target.closest('.drop-btn');
-    if (dropBtn) {
-        const parent = dropBtn.parentElement;
-        parent.classList.toggle('open');
-        document.querySelectorAll('#sidebar-container .item').forEach((item, index) => {
-            localStorage.setItem('dropdown-' + index, item.classList.contains('open'));
-        });
-    }
-});
+/* ==========================================
+   ✅ DATA & UI LOGIC
+   ========================================== */
+window.onload = () => {
+    includeSidebar();
+    fetchData();
+};
 
-/* UI Control */
 window.onscroll = function() {
     const scrollBtn = document.getElementById("scrollTopBtn");
-    scrollBtn.style.display = (document.documentElement.scrollTop > 300) ? "block" : "none";
+    if(scrollBtn) scrollBtn.style.display = (document.documentElement.scrollTop > 300) ? "block" : "none";
 };
+
 function scrollToTop() { window.scrollTo({ top: 0, behavior: "smooth" }); }
 
-/* Data Logic (เดิม 100%) */
-window.onload = () => fetchData();
 function handleRefresh() {
     document.getElementById("list").innerHTML = "";
     document.getElementById("loader").style.display = "block";
