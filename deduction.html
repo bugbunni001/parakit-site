@@ -289,7 +289,7 @@
         <div id="otpInputForm" style="display:none;">
             <div style="font-size: 40px; margin-bottom: 10px;">🔐</div>
             <h3 style="font-size: 18px;">ยืนยัน OTP</h3>
-            <p style="font-size: 13px; color: var(--text-light); margin-bottom: 15px;">กรุณากรอกรหัส 6 หลักที่ส่งไปยังอีเมล</p>
+            <p style="font-size: 13px; color: var(--text-light); margin-bottom: 15px;">กรุณากรอกรหัส 6 หลักที่ส่งไปยังผู้ดูแล</p>
             <input type="number" id="confirmOTP" placeholder="รหัส OTP" style="text-align: center; margin-bottom: 15px; letter-spacing: 5px; font-weight: 600;">
             <div style="display: flex; gap: 10px;">
                 <button class="btn-submit" style="background: #8e8e93; font-size: 15px;" onclick="resetAuthPopup()">ย้อนกลับ</button>
@@ -409,18 +409,33 @@
         document.getElementById("authPopup").classList.remove("show");
     }
 
+    // เพิ่มฟังก์ชันแสดง Popup สถานะ (แทน alert)
+    function showStatusPopup(text, isSuccess) {
+        const statusPopup = document.getElementById("statusPopup");
+        document.getElementById("statusText").innerText = text;
+        document.getElementById("successIcon").style.display = isSuccess ? "block" : "none";
+        document.getElementById("errorIcon").style.display = isSuccess ? "none" : "block";
+        const btn = document.getElementById("statusBtn");
+        btn.style.background = isSuccess ? "#3a3a3c" : "#ff3b30";
+        statusPopup.classList.add("show");
+    }
+
+    function closeStatusPopup() {
+        document.getElementById("statusPopup").classList.remove("show");
+    }
+
     function sendOTPRequest() {
         const email = document.getElementById("adminEmailSelect").value;
         if (!email) {
-            alert("กรุณาเลือกผู้ดูแลค่ะ!");
+            showStatusPopup("กรุณาเลือกผู้ดูแลก่อนค่ะ!", false);
             return;
         }
 
         // สุ่มรหัส 6 หลัก
         generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
         
-        // Show Loading with specific text
-        document.getElementById('loadingText').innerText = "กำลังส่งรหัส OTP ไปยังผู้ดูแล\nกรุณารอสักครู่ค่ะ...";
+        // แสดง Loading ตอนส่งรหัส
+        document.getElementById('loadingText').innerText = "กำลังส่งรหัส OTP ไปยังผู้ดูแล\nกรุณารอสักครู่...";
         document.getElementById('loading').style.display = 'flex';
 
         const payload = {
@@ -437,7 +452,7 @@
             body: JSON.stringify(payload)
         })
         .then(() => {
-            // Delay นิดนึงเพื่อให้ User เห็นว่าส่งแล้ว
+            // หน่วงเวลาเล็กน้อยเพื่อให้ดูเหมือนโหลดเสร็จจริงๆ
             setTimeout(() => {
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById("otpSelectAdmin").style.display = "none";
@@ -447,7 +462,7 @@
         })
         .catch(err => {
             document.getElementById('loading').style.display = 'none';
-            alert("ส่งรหัสไม่สำเร็จ: " + err);
+            showStatusPopup("ส่งรหัสไม่สำเร็จ: " + err, false);
         });
     }
 
@@ -457,15 +472,14 @@
             closeAuthPopup();
             submitData();
         } else {
-            // ใช้ Browser Popup ตามที่ขอ
-            alert('รหัส OTP ไม่ถูกต้องค่ะอีควาย! ลองใหม่อีกครั้งนะคะ');
+            // เปลี่ยนจาก alert เป็น popup
+            showStatusPopup('รหัส OTP ไม่ถูกต้องค่ะอีควาย!', false);
             document.getElementById("confirmOTP").value = "";
-            document.getElementById("confirmOTP").focus();
         }
     }
 
     function submitData() {
-        document.getElementById('loadingText').innerText = "กำลังบันทึกข้อมูลลงระบบ...";
+        document.getElementById('loadingText').innerText = "กำลังบันทึกข้อมูลลงฐานข้อมูล...";
         const loader = document.getElementById('loading');
         loader.style.display = 'flex';
 
@@ -493,20 +507,6 @@
             loader.style.display = 'none';
             showStatusPopup('เกิดข้อผิดพลาด: ' + err, false);
         });
-    }
-
-    function showStatusPopup(text, isSuccess) {
-        const statusPopup = document.getElementById("statusPopup");
-        document.getElementById("statusText").innerText = text;
-        document.getElementById("successIcon").style.display = isSuccess ? "block" : "none";
-        document.getElementById("errorIcon").style.display = isSuccess ? "none" : "block";
-        const btn = document.getElementById("statusBtn");
-        btn.style.background = isSuccess ? "#3a3a3c" : "#ff3b30";
-        statusPopup.classList.add("show");
-    }
-
-    function closeStatusPopup() {
-        document.getElementById("statusPopup").classList.remove("show");
     }
 
     function resetForm() {
