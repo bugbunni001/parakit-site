@@ -32,7 +32,7 @@
             transition: padding-left 0.3s ease;
         }
 
-        /* Header & Sidebar - กลับมาเป็นแบบเดิม */
+        /* Header & Sidebar */
         .top-header {
             position: fixed; top: 0; left: 0; right: 0; height: 65px;
             background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
@@ -51,6 +51,11 @@
             background: var(--sidebar-dark); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
             color: #fff; overflow-y: auto; transition: all .3s ease; z-index: 2000;
         }
+
+        /* Sidebar Item States */
+        .sidebar .item .sub { display: none; background: rgba(0,0,0,0.2); }
+        .sidebar .item.open .sub { display: block; }
+        .sidebar .drop-btn { cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
 
         .overlay-bg {
             position: fixed; inset: 0; background: rgba(0,0,0,0.2); 
@@ -103,7 +108,7 @@
         h3 { margin-top: 0; margin-bottom: 8px; color: var(--text-main); font-weight: 600; font-size: 1.2rem; }
         .subtitle { color: var(--text-light); font-size: 13.5px; margin-bottom: 22px; }
 
-        /* Summary Horizontal Layout */
+        /* Summary */
         .summary-row {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -141,7 +146,7 @@
         }
         .btn-submit:hover { opacity: 0.9; transform: translateY(-1px); }
 
-        /* Table & Pagination */
+        /* Table */
         .table-wrapper { overflow-x: auto; margin-top: 10px; }
         table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 600px; }
         th { padding: 15px; text-align: left; color: var(--text-light); font-weight: 500; border-bottom: 1px solid #f2f2f7; }
@@ -194,7 +199,7 @@
     <div class="content-grid">
         <div class="box">
             <h3>🧾 บันทึกการหักเงิน</h3>
-            <p class="subtitle">หักเงินแม่งเลยอีดอกทอง!!</p>
+            <p class="subtitle">บันทึกรายการหักเงินพนักงานตามเงื่อนไขที่กำหนด</p>
 
             <form id="deductionForm">
                 <div class="form-row">
@@ -322,15 +327,45 @@
         fetchData();
     };
 
-    // Sidebar Functions (เหมือนเดิมทุกประการ)
+    /* ✅ FIXED SIDEBAR & DROPDOWN SYSTEM */
     function includeSidebar() {
         const cached = localStorage.getItem('sidebar_cache');
-        if (cached) document.getElementById('sidebar').innerHTML = cached;
+        if (cached) {
+            document.getElementById('sidebar').innerHTML = cached;
+            restoreMenuState();
+        }
         fetch('sidebar.html').then(r => r.text()).then(data => {
             document.getElementById('sidebar').innerHTML = data;
             localStorage.setItem('sidebar_cache', data);
+            restoreMenuState();
         });
         if(localStorage.getItem('sidebar_collapsed') === 'true' && window.innerWidth > 768) document.body.classList.add('collapsed');
+    }
+
+    // ฟังก์ชันจัดการคลิก Dropdown แบบ Global
+    document.addEventListener('click', function(e) {
+        const dropBtn = e.target.closest('.drop-btn');
+        if (dropBtn) {
+            const item = dropBtn.closest('.item');
+            if (item) {
+                const isOpen = item.classList.toggle('open');
+                // บันทึกสถานะไว้ตาม ID หรือข้อความในเมนู
+                const menuId = item.id || dropBtn.textContent.trim();
+                localStorage.setItem('menu_' + menuId, isOpen);
+            }
+        }
+    });
+
+    function restoreMenuState() {
+        document.querySelectorAll('.sidebar .item').forEach(item => {
+            const dropBtn = item.querySelector('.drop-btn');
+            if (dropBtn) {
+                const menuId = item.id || dropBtn.textContent.trim();
+                if (localStorage.getItem('menu_' + menuId) === 'true') {
+                    item.classList.add('open');
+                }
+            }
+        });
     }
 
     function toggleSidebar() {
@@ -338,11 +373,12 @@
             document.getElementById("sidebar").classList.toggle("show");
             document.getElementById("overlay").classList.toggle("show");
         } else {
-            localStorage.setItem('sidebar_collapsed', document.body.classList.toggle("collapsed"));
+            const isCollapsed = document.body.classList.toggle("collapsed");
+            localStorage.setItem('sidebar_collapsed', isCollapsed);
         }
     }
 
-    // Data Functions
+    /* 📊 DATA FUNCTIONS (เหมือนเดิม 100%) */
     async function fetchData() {
         document.getElementById('loadingText').innerText = "กำลังดึงข้อมูล...";
         document.getElementById('loading').style.display = 'flex';
@@ -389,10 +425,7 @@
         pagination.innerHTML = totalPages > 1 ? pgHtml : '';
     }
 
-    function changePage(page) {
-        currentPage = page;
-        displayTable();
-    }
+    function changePage(page) { currentPage = page; displayTable(); }
 
     function updateSummary(rows) {
         const sums = { "ศุภกฤต": 0, "นวพล": 0, "ปิยะพร": 0, "กรทักษ์": 0 };
@@ -405,7 +438,6 @@
         }
     }
 
-    // Logic Functions
     function checkReason(select) {
         document.getElementById('otherReasonContainer').style.display = select.value === 'อื่นๆ' ? 'block' : 'none';
     }
@@ -455,7 +487,7 @@
             closeAuthPopup();
             submitData();
         } else {
-            showStatusPopup("มึงใส่รหัส OTP ไม่ถูกค่ะอีควาย! รบกวนแหกตาดูรหัส OTP ก่อนกรอกใส่มาเนอะ ลูกอีหน่อแตด ช้างลากเย็ด!", false);
+            showStatusPopup("รหัส OTP ไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง", false);
         }
     }
 
