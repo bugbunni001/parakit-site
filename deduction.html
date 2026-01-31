@@ -12,6 +12,7 @@
     <style>
         :root {
             --ios-blue: #007aff;
+            --ios-blue-dark: #005ecb;
             --ios-bg: #f2f2f7;
             --sidebar-dark: rgba(28, 28, 30, 0.94);
             --glass-white: rgba(255, 255, 255, 0.8);
@@ -19,6 +20,7 @@
             --text-light: #8e8e93;
             --sidebar-width: 280px;
             --card-shadow: 0 10px 40px rgba(0,0,0,0.06);
+            --hover-shadow: 0 15px 45px rgba(0,0,0,0.12);
         }
 
         * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
@@ -42,8 +44,9 @@
         .top-toggle {
             width: 40px; height: 40px; border-radius: 10px; border: none; background: transparent;
             color: var(--ios-blue); cursor: pointer; display: flex; align-items: center; justify-content: center;
-            font-size: 24px; margin-right: 10px;
+            font-size: 24px; margin-right: 10px; transition: background 0.2s;
         }
+        .top-toggle:hover { background: rgba(0,122,255,0.1); }
 
         .sidebar { 
             position: fixed; top: 0; left: 0; width: var(--sidebar-width); height: 100vh; 
@@ -91,6 +94,11 @@
             background: #fff; padding: 20px; border-radius: 20px;
             box-shadow: var(--card-shadow); text-align: center;
             border: 1px solid rgba(0,0,0,0.02);
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+        }
+        .summary-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--hover-shadow);
         }
         .summary-name { font-size: 13px; color: var(--text-light); margin-bottom: 5px; }
         .summary-val { font-size: 20px; font-weight: 600; color: #ff3b30; }
@@ -98,7 +106,7 @@
         /* Main Grid (Form & Table) */
         .content-grid {
             display: grid;
-            grid-template-columns: 1fr; /* Default Mobile */
+            grid-template-columns: 1fr;
             gap: 25px;
         }
 
@@ -120,16 +128,18 @@
         label { display: block; margin-bottom: 8px; font-size: 14px; color: var(--text-light); font-weight: 500; }
         input, select { 
             width: 100%; padding: 14px; border: 1.5px solid #f2f2f7; border-radius: 14px; 
-            font-size: 16px; background: #f9f9f9; outline: none; transition: 0.2s;
+            font-size: 16px; background: #f9f9f9; outline: none; transition: all 0.2s ease;
         }
         input:focus, select:focus { background: #fff; border-color: var(--ios-blue); box-shadow: 0 0 0 4px rgba(0,122,255,0.1); }
+        input:hover, select:hover { border-color: #d1d1d6; }
 
         .btn-submit { 
             width: 100%; padding: 16px; border: none; border-radius: 16px; background: var(--ios-blue); 
-            color: white; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.3s;
+            color: white; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex; align-items: center; justify-content: center; gap: 8px;
         }
-        .btn-submit:active { transform: scale(0.98); }
+        .btn-submit:hover { background: var(--ios-blue-dark); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,122,255,0.3); }
+        .btn-submit:active { transform: scale(0.97); }
 
         /* Responsive Table */
         .table-container { 
@@ -140,7 +150,8 @@
         }
         table { width: 100%; border-collapse: collapse; min-width: 650px; }
         th { padding: 15px; text-align: left; color: var(--text-light); font-weight: 500; border-bottom: 1px solid #f2f2f7; }
-        td { padding: 16px 15px; border-bottom: 1px solid #f9f9f9; font-size: 14px; }
+        td { padding: 16px 15px; border-bottom: 1px solid #f9f9f9; font-size: 14px; transition: background 0.2s; }
+        tr:hover td { background: #fdfdfd; }
         .amt-red { color: #ff3b30; font-weight: 600; }
 
         /* Pagination */
@@ -148,19 +159,28 @@
         .pg-btn {
             min-width: 40px; height: 40px; border-radius: 12px; border: 1.5px solid #f2f2f7;
             background: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s;
         }
+        .pg-btn:hover:not(:disabled) { border-color: var(--ios-blue); color: var(--ios-blue); background: #f0f7ff; }
         .pg-btn.active { background: var(--ios-blue); color: #fff; border-color: var(--ios-blue); }
+        .pg-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
         /* Popups */
         .popup { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: none; align-items: center; justify-content: center; z-index: 4000; padding: 20px; backdrop-filter: blur(5px); }
         .popup.show { display: flex; }
-        .popup-box { background: #fff; padding: 30px; border-radius: 28px; text-align: center; max-width: 360px; width: 100%; }
+        .popup-box { background: #fff; padding: 30px; border-radius: 28px; text-align: center; max-width: 360px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
 
         .loading { position: fixed; inset: 0; background: rgba(255,255,255,0.85); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 5000; backdrop-filter: blur(10px); }
         .spinner { width: 40px; height: 40px; border: 4px solid rgba(0,122,255,0.1); border-top: 4px solid var(--ios-blue); border-radius: 50%; animation: spin 0.8s linear infinite; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
         footer { text-align: center; padding: 40px 20px; color: var(--text-light); font-size: 12px; }
+        
+        .refresh-btn { 
+            background:none; border:none; color:var(--ios-blue); cursor:pointer; font-weight:500; 
+            padding: 8px 12px; border-radius: 8px; transition: 0.2s;
+        }
+        .refresh-btn:hover { background: rgba(0,122,255,0.08); }
     </style>
 </head>
 <body>
@@ -233,7 +253,7 @@
         <div class="box">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
                 <h3 style="margin:0;">📋 รายการล่าสุด</h3>
-                <button onclick="fetchData(true)" style="background:none; border:none; color:var(--ios-blue); cursor:pointer; font-weight:500;">🔄 รีเฟรช</button>
+                <button onclick="fetchData(true)" class="refresh-btn">🔄 รีเฟรช</button>
             </div>
             
             <div class="table-container">
@@ -341,7 +361,6 @@
         }
     }
 
-    // Sidebar Dropdown Handler
     document.addEventListener('click', (e) => {
         const dropBtn = e.target.closest('.drop-btn');
         if (dropBtn) {
@@ -360,7 +379,6 @@
         });
     }
 
-    /* 📊 DATA FUNCTIONS */
     async function fetchData(showLoading = true) {
         if(showLoading) {
             document.getElementById('loadingText').innerText = "กำลังอัปเดตข้อมูล...";
@@ -432,7 +450,6 @@
         document.getElementById('otherReasonContainer').style.display = select.value === 'อื่นๆ' ? 'block' : 'none';
     }
 
-    /* 🔐 AUTH & SUBMIT */
     function openAuthPopup() {
         if (!document.getElementById('deductionForm').checkValidity()) {
             document.getElementById('deductionForm').reportValidity();
