@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Report ยอดขายรายบุคคล - Parakit-site</title>
     <link rel="icon" type="image/png" href="favicon.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -10,21 +10,18 @@
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            /* iOS Concept Colors */
             --ios-bg: #f2f2f7;
-            --glass-bg: rgba(255, 255, 255, 0.7);
+            --glass-bg: rgba(255, 255, 255, 0.75);
             --glass-border: rgba(255, 255, 255, 0.4);
             --primary-blue: #007aff;
             --sidebar-color: rgba(28, 28, 30, 0.95);
             --text-main: #1c1c1e;
             --text-light: #8e8e93;
             --card-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
-            
             --success: #34c759;
             --danger: #ff3b30;
             --sidebar-width: 280px;
 
-            /* Category Headings */
             --bg-daily: rgba(58, 58, 60, 0.9);
             --bg-detail: rgba(0, 122, 255, 0.9);
             --bg-mtd: rgba(52, 199, 89, 0.9);
@@ -42,7 +39,7 @@
             color: var(--text-main); 
             -webkit-font-smoothing: antialiased;
             transition: padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            min-height: 100vh;
+            overflow-x: hidden;
         }
 
         /* Glass Header */
@@ -56,14 +53,14 @@
             z-index: 1200;
             display: flex;
             align-items: center;
-            padding: 0 20px;
+            padding: 0 15px;
             border-bottom: 0.5px solid rgba(0, 0, 0, 0.1);
             transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .top-toggle {
-            width: 36px; height: 36px;
-            border-radius: 10px;
+            width: 40px; height: 40px;
+            border-radius: 12px;
             border: none;
             background: var(--primary-blue);
             color: white;
@@ -71,6 +68,7 @@
             display: flex; align-items: center; justify-content: center;
             font-size: 18px;
             transition: all 0.2s;
+            flex-shrink: 0;
         }
         .top-toggle:hover { transform: scale(1.05); opacity: 0.9; }
 
@@ -86,15 +84,14 @@
             box-shadow: 10px 0 30px rgba(0,0,0,0.1);
         }
         
-        /* Responsive Padding Control */
-        @media(min-width:769px) { 
+        @media(min-width:1025px) { 
             body:not(.collapsed) { padding-left: var(--sidebar-width); }
             body:not(.collapsed) .top-header { left: var(--sidebar-width); }
             body.collapsed .sidebar { transform: translateX(-100%); }
             body.collapsed .top-header { left: 0; }
         }
 
-        @media(max-width:768px) {
+        @media(max-width:1024px) {
             .sidebar { transform: translateX(-100%); }
             .sidebar.show { transform: translateX(0); }
             body { padding-left: 0 !important; }
@@ -103,7 +100,7 @@
 
         .overlay { 
             position: fixed; inset: 0; 
-            background: rgba(0, 0, 0, 0.3); 
+            background: rgba(0, 0, 0, 0.4); 
             backdrop-filter: blur(4px); 
             display: none; z-index: 1500; 
         }
@@ -120,7 +117,7 @@
 
         /* Content Container */
         .main-wrapper { padding: 85px 15px 40px; display: flex; justify-content: center; }
-        .content-container { width: 100%; max-width: 1200px; }
+        .content-container { width: 100%; max-width: 1280px; }
 
         /* iOS Toolbar */
         .toolbar { 
@@ -132,33 +129,28 @@
             display: flex; 
             justify-content: flex-end; 
             align-items: center; 
-            margin-bottom: 30px; 
+            margin-bottom: 25px; 
             border: 1px solid var(--glass-border); 
             gap: 15px; 
             flex-wrap: wrap; 
         }
 
-        /* Mobile Toolbar Adjustment */
-        @media (max-width: 600px) {
-            .toolbar { justify-content: center; flex-direction: column; align-items: stretch; }
-            .toolbar div { display: flex; flex-direction: column; }
-            .btn-fetch { width: 100%; justify-content: center; }
-        }
+        .input-group { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 200px; }
+        .input-group label { white-space: nowrap; font-size: 14px; color: var(--text-light); font-weight: 500; }
 
         .modern-select, .modern-date { 
             appearance: none; 
-            background: white;
+            background: rgba(0, 122, 255, 0.05);
             border: 1px solid rgba(0, 122, 255, 0.2); 
             border-radius: 12px; 
-            padding: 12px 16px; 
+            padding: 10px 14px; 
             font-size: 15px; 
-            color: var(--text-main); 
+            color: var(--primary-blue); 
             outline: none; 
             transition: 0.2s; 
             cursor: pointer;
-            min-width: 180px;
+            width: 100%;
         }
-        .modern-select:focus, .modern-date:focus { border-color: var(--primary-blue); box-shadow: 0 0 0 3px rgba(0,122,255,0.1); }
 
         .btn-fetch { 
             background: var(--primary-blue); 
@@ -168,9 +160,14 @@
             border-radius: 12px; 
             cursor: pointer; 
             font-weight: 500; 
-            font-size: 16px; 
+            font-size: 15px; 
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
-            display: flex; align-items: center; gap: 8px;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            width: 100%;
+        }
+        @media(min-width: 768px) {
+            .btn-fetch { width: auto; }
+            .input-group { flex: 0; }
         }
         .btn-fetch:hover {
             transform: translateY(-2px);
@@ -197,11 +194,12 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            backdrop-filter: brightness(0.9);
         }
         
         /* Table Style */
         .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-        .table-luxury { width: 100%; border-collapse: collapse; min-width: 600px; }
+        .table-luxury { width: 100%; border-collapse: collapse; min-width: 700px; }
         .table-luxury th { 
             background: rgba(0, 0, 0, 0.02);
             padding: 15px; 
@@ -211,77 +209,75 @@
             border-bottom: 1px solid rgba(0, 0, 0, 0.05);
             font-weight: 600; 
             text-transform: uppercase;
-            white-space: nowrap;
         }
         .table-luxury td { 
             padding: 14px 15px; 
             font-size: 14.5px; 
             border-bottom: 1px solid rgba(0, 0, 0, 0.03);
             transition: 0.2s;
-            white-space: nowrap;
         }
-        .table-luxury tbody tr:hover { background-color: rgba(0, 122, 255, 0.05); }
+        .table-luxury tbody tr:hover { background-color: rgba(0, 122, 255, 0.03); }
 
         /* Layout Grids */
-        .grid-container { display: grid; grid-template-columns: 1.5fr 1fr; gap: 25px; }
-        @media (max-width: 1024px) { .grid-container { grid-template-columns: 1fr; } }
+        .grid-container { display: grid; grid-template-columns: 1fr; gap: 25px; }
+        @media (min-width: 1025px) { .grid-container { grid-template-columns: 1.6fr 1fr; } }
 
         /* Stat Boxes */
-        .mtd-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 20px; }
-        @media (max-width: 500px) { .mtd-grid { grid-template-columns: 1fr; } }
+        .mtd-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; padding: 20px; }
         
         .stat-box { 
-            padding: 18px; 
+            padding: 20px; 
             border: 1px solid var(--glass-border); 
             border-radius: 18px; 
             background: rgba(255, 255, 255, 0.5); 
             transition: all 0.3s ease; 
         }
-        .stat-box:hover { transform: scale(1.02); background: rgba(255, 255, 255, 0.8); box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        .stat-box .val { font-size: 28px; font-weight: 700; color: #000; letter-spacing: -1px; }
+        .stat-box:hover { transform: translateY(-5px); background: rgba(255, 255, 255, 0.8); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
+        .stat-box .val { font-size: 32px; font-weight: 700; color: #000; letter-spacing: -1px; margin: 5px 0; }
 
         /* Targets */
         .target-list { padding: 10px 20px 20px; }
-        .target-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(0,0,0,0.05); font-size: 15px; }
-        .tag-title-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; color: white; border-radius: 10px; margin: 15px 0 8px; font-weight: 600; font-size: 14px; }
+        .target-row { display: flex; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid rgba(0,0,0,0.05); font-size: 15px; }
+        .tag-title-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; color: white; border-radius: 12px; margin: 20px 0 10px; font-weight: 600; font-size: 14px; }
         
         /* Helpers */
         .up { color: var(--success) !important; font-weight: 600; } 
         .down { color: var(--danger) !important; font-weight: 600; } 
-        .badge-white { background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 8px; font-size: 12px; }
+        .badge-white { background: rgba(255,255,255,0.25); padding: 4px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; }
 
-        #loader { display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.8); z-index: 9999; backdrop-filter: blur(10px); flex-direction: column; align-items: center; justify-content: center; }
-        .spinner { width: 45px; height: 45px; border: 4px solid rgba(0,122,255,0.1); border-top: 4px solid var(--primary-blue); border-radius: 50%; animation: spin 0.8s linear infinite; }
+        #loader { display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.8); z-index: 9999; backdrop-filter: blur(15px); flex-direction: column; align-items: center; justify-content: center; }
+        .spinner { width: 45px; height: 45px; border: 4px solid rgba(0,122,255,0.1); border-top: 4px solid var(--primary-blue); border-radius: 50%; animation: spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        .pagination { display: flex; gap: 8px; padding: 15px 20px; justify-content: center; flex-wrap: wrap; }
-        .page-btn { width: 35px; height: 35px; border: none; background: rgba(0,0,0,0.05); border-radius: 50%; cursor: pointer; font-size: 14px; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
-        .page-btn.active { background: var(--primary-blue); color: white; box-shadow: 0 4px 10px rgba(0,122,255,0.3); }
+        .pagination { display: flex; gap: 8px; padding: 20px; justify-content: center; }
+        .page-btn { width: 36px; height: 36px; border: none; background: rgba(0,0,0,0.05); border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: 500; transition: 0.2s; }
+        .page-btn:hover { background: rgba(0,0,0,0.1); }
+        .page-btn.active { background: var(--primary-blue); color: white; }
 
-        .row-highlight { font-size: 1.05rem !important; font-weight: 600 !important; background: rgba(0,122,255,0.03); }
+        .row-highlight { font-size: 1.05rem !important; font-weight: 600 !important; background: rgba(0,0,0,0.02); }
 
         #welcome-card { 
             background: var(--glass-bg); 
             backdrop-filter: blur(10px); 
-            padding: 60px 20px; 
+            padding: 80px 20px; 
             border-radius: 24px; 
             border: 1px solid var(--glass-border); 
             text-align: center; 
-            color: var(--text-light); 
             box-shadow: var(--card-shadow);
         }
-
         footer { 
-            width: 100%; text-align: center; padding: 25px; 
+            width: 100%; text-align: center; padding: 30px; 
             color: var(--text-light); font-size: 12px; 
             border-top: 0.5px solid rgba(0,0,0,0.05); 
-            background: transparent; margin-top: 20px; 
+            margin-top: 40px; 
         }
 
+        /* Animations */
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+        .fade-in { animation: fadeIn 0.5s ease forwards; }
     </style>
 </head>
 <body>
@@ -296,22 +292,22 @@
 
 <div id="loader">
   <div class="spinner"></div>
-  <p style="margin-top:20px; font-weight: 500; color: var(--primary-blue); font-size: 1.1rem;">กำลังดึงข้อมูลการขาย...</p>
+  <p style="margin-top:20px; font-weight: 500; color: var(--primary-blue);">กำลังดึงข้อมูลการขาย...</p>
 </div>
 
 <div class="main-wrapper">
   <div class="content-container">
     <div class="toolbar">
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <label style="color:var(--text-light); font-weight:500;">👤 พนักงาน:</label>
+        <div class="input-group">
+          <label>👤 พนักงาน:</label>
           <select id="name" class="modern-select">
             <option>นวพล</option>
             <option>ปิยะพร</option>
             <option>กรทักษ์</option>
           </select>
         </div>
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <label style="color:var(--text-light); font-weight:500;">📅 วันที่:</label>
+        <div class="input-group">
+          <label>📅 วันที่:</label>
           <input type="date" id="day" class="modern-date">
         </div>
       <button class="btn-fetch" onclick="pullData()">🚀 ดึงข้อมูล</button>
@@ -319,11 +315,11 @@
 
     <div id="welcome-card">
         <div style="font-size: 64px; margin-bottom: 20px;">📊</div>
-        <p id="welcome-text" style="font-size: 1.1rem; font-weight: 300;">กรุณาเลือกชื่อพนักงานและกดปุ่ม <b>"ดึงข้อมูล"</b> เพื่อแสดงยอดขาย</p>
+        <p id="welcome-text" style="font-size: 1.1rem; font-weight: 300; color: var(--text-light);">กรุณาเลือกชื่อพนักงานและกดปุ่ม <b>"ดึงข้อมูล"</b> เพื่อแสดงยอดขาย</p>
     </div>
         
-    <div id="dashboard" style="display:none; animation: fadeIn 0.5s ease-out forwards;">
-      <div class="card">
+    <div id="dashboard" style="display:none;">
+      <div class="card fade-in">
         <div class="card-header-bar" style="background: var(--bg-daily);">
           <span>📉 สรุปยอดขายรายวัน</span>
           <span class="badge-white" id="out-date"></span>
@@ -342,9 +338,9 @@
         </div>
       </div>
 
-      <div class="card" id="web-data-card">
+      <div class="card fade-in" id="web-data-card">
         <div class="card-header-bar" style="background: var(--bg-daily);">
-          <span>🛒 รายละเอียดการขาย </span>
+          <span>🛒 รายละเอียดการขาย (Web Data)</span>
         </div>
         <div class="table-responsive">
           <table class="table-luxury" id="tbl-web">
@@ -362,9 +358,9 @@
 
       <div class="grid-container">
         <div class="col-left">
-          <div class="card">
+          <div class="card fade-in">
             <div class="card-header-bar" style="background: var(--bg-detail);">
-              <span>📑 รายละเอียดการขาย Postpay ของ: <span class="out-name"></span></span>
+              <span>📑 รายละเอียด Postpay ของ: <span class="out-name"></span></span>
             </div>
             <div class="table-responsive">
                 <table class="table-luxury" id="tbl-sum">
@@ -374,13 +370,13 @@
             </div>
           </div>
           
-          <div class="card">
+          <div class="card fade-in">
             <div class="card-header-bar" style="background: var(--bg-mtd);"><span>🚀 ยอดขายสะสมทั้งเดือน</span></div>
             <div class="mtd-grid" id="out-actual"></div>
           </div>
 
-          <div class="card">
-            <div class="card-header-bar" style="background: var(--bg-extra);"><span>📋 ยอดขาย Device</span></div>
+          <div class="card fade-in">
+            <div class="card-header-bar" style="background: var(--bg-extra);"><span>📋 ยอดขาย Device แยกแบรนด์</span></div>
             <div class="table-responsive">
               <table class="table-luxury" id="tbl-extra">
                 <thead>
@@ -393,7 +389,7 @@
         </div>
 
         <div class="col-right">
-          <div class="card">
+          <div class="card fade-in">
             <div class="card-header-bar" style="background: var(--bg-focus);"><span>🎯 Focus Point (KPI)</span></div>
             <div class="table-responsive">
                 <table class="table-luxury" id="tbl-focus">
@@ -403,7 +399,7 @@
             </div>
           </div>
 
-          <div class="card">
+          <div class="card fade-in">
             <div class="card-header-bar" style="background: var(--bg-target);"><span>🏁 เป้าหมายรายเดือน (Targets)</span></div>
             <div id="target-list-container" class="target-list"></div>
           </div>
@@ -414,7 +410,6 @@
 </div>
 
 <script>
-    // -- Sidebar Integration --
     function includeSidebar() {
         const cached = localStorage.getItem('sidebar_cache');
         if (cached) {
@@ -432,7 +427,7 @@
     }
 
     function toggleSidebar() {
-        if (window.innerWidth <= 768) {
+        if (window.innerWidth <= 1024) {
             document.getElementById("sidebar").classList.toggle("show");
             document.getElementById("overlay").classList.toggle("show");
         } else {
@@ -510,7 +505,7 @@
         tbody.innerHTML = ''; pagination.innerHTML = '';
 
         if (webData.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding: 20px; color: var(--danger);">ไม่พบรายละเอียดการขายของชื่อนี้</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding: 25px; color: var(--danger); font-weight:500;">ไม่พบรายละเอียดการขายในระบบของชื่อนี้</td></tr>`;
             return;
         }
 
@@ -522,7 +517,7 @@
             row.forEach((cell, idx) => {
                 const td = document.createElement('td');
                 let val = cell;
-                if(idx === 7 && val.includes("T")) val = val.split("T")[1].split(".")[0];
+                if(idx === 7 && val.toString().includes("T")) val = val.split("T")[1].split(".")[0];
                 td.innerText = val;
                 tr.appendChild(td);
             });
@@ -572,10 +567,10 @@
             if(!r[0]) return '';
             const lbl = r[0].toUpperCase();
             let bg = "";
-            if(lbl.includes('TARGET NEW')) bg = "rgba(0, 122, 255, 0.8)";
-            else if(lbl.includes('TARGET BDBC')) bg = "rgba(52, 199, 89, 0.8)";
-            else if(lbl.includes('TARGET APPLE')) bg = "rgba(255, 149, 0, 0.8)";
-            else if(lbl.includes('TARGET SMARTPHONE')) bg = "rgba(255, 59, 48, 0.8)";
+            if(lbl.includes('TARGET NEW')) bg = "rgba(0, 122, 255, 0.85)";
+            else if(lbl.includes('TARGET BDBC')) bg = "rgba(52, 199, 89, 0.85)";
+            else if(lbl.includes('TARGET APPLE')) bg = "rgba(255, 149, 0, 0.85)";
+            else if(lbl.includes('TARGET SMARTPHONE')) bg = "rgba(255, 59, 48, 0.85)";
             
             if(bg) return `<div class="tag-title-row" style="background:${bg}"><span>${r[0]}</span></div>`;
             return `<div class="target-row"><span>${r[0]}</span><span style="font-weight:600;">${r[1] || '0'}</span></div>`;
@@ -587,7 +582,7 @@
             {l:'Apple', v:act.ap, b:'#ff9500'}, {l:'SmartPhone', v:act.sm, b:'#ff3b30'}
         ];
         document.getElementById('out-actual').innerHTML = config.map(i => `
-            <div class="stat-box" style="border-top: 4px solid ${i.b}">
+            <div class="stat-box" style="border-top: 5px solid ${i.b}">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                     <div>
                         <div style="font-size:14px; color:var(--text-light); font-weight:500;">${i.l}</div>
@@ -597,8 +592,8 @@
                         <div style="font-size: 13px; margin-top: 5px;"><span ${getCls(i.v.diff)}>DIFF(${i.v.diff})</span></div>
                     </div>
                 </div>
-                <div style="font-size:16px; color:var(--primary-blue); font-weight:700; margin-top:8px;">
-                    Ach: ${i.v.ach}%
+                <div style="font-size:16px; color:var(--primary-blue); font-weight:700; margin-top:10px;">
+                    Achieved: ${i.v.ach}%
                 </div>
             </div>
         `).join('');
@@ -612,6 +607,8 @@
 
     window.addEventListener('DOMContentLoaded', includeSidebar);
 </script>
-    <footer>© 2026 Copy Right By Angerina Frog</footer>
+<footer>
+    © 2026 Copy Right By Angerina Frog | All rights reserved.
+</footer>
 </body>
 </html>
