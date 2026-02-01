@@ -494,8 +494,15 @@
         const end = start + itemsPerPage;
         const paginatedData = allWebData.slice(start, end);
         document.getElementById('webBody').innerHTML = paginatedData.map(row => {
-            let timePart = row[7] || "";
-            if (timePart.includes("T")) timePart = timePart.split("T")[1].split(".")[0];
+            // แก้ไขการดึงเวลา: ตรวจสอบว่าเป็นรูปแบบ ISO หรือไม่ ถ้าเป็นให้ตัดเอาแค่ HH:mm:ss
+            let timePart = row[7] ? row[7].toString() : "";
+            if (timePart.includes("T")) {
+                timePart = timePart.split("T")[1].split(".")[0];
+            } else if (timePart.includes(" ") && timePart.length > 10) {
+                // สำหรับกรณี "YYYY-MM-DD HH:mm:ss"
+                timePart = timePart.split(" ")[1];
+            }
+            
             return `<tr><td>${fixedDate}</td><td>${row[1]}</td><td>${row[2]}</td><td>${row[3]}</td><td>${formatNumber(row[4])}</td><td>${row[5]}</td><td>${formatNumber(row[6])}</td><td>${timePart}</td><td>${row[8]}</td></tr>`;
         }).join('');
 
