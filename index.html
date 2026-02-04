@@ -68,7 +68,7 @@
         }
         .top-toggle:hover { background: rgba(0, 122, 255, 0.1); }
 
-        /* ===== Sidebar Style (KEEPING ORIGINAL DESIGN AS REQUESTED) ===== */
+        /* ===== Sidebar Style (KEEPING ORIGINAL DESIGN) ===== */
         .sidebar { 
             position: fixed; top: 0; left: 0; 
             width: var(--sidebar-width); height: 100vh; 
@@ -117,32 +117,126 @@
         .item.open .sub { display: block; }
         .sub a { padding-left: 45px; font-size: 14px; color: #8e8e93; }
 
-        /* ===== Slider Container ===== */
-        .slider-container { 
-            position: relative; 
-            border-radius: 24px; 
-            overflow: hidden; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.08); 
-            background: #e5e5ea;
-            margin-bottom: 30px;
-            transition: var(--transition-swift);
+        /* ===== NEW FEATURE: Modern Hero Slider (Glass & Depth) ===== */
+        .modern-hero {
+            position: relative;
+            width: 100%;
+            height: 380px;
+            perspective: 1000px;
+            margin-bottom: 40px;
         }
-        .slider-container:hover { transform: scale(1.01); box-shadow: 0 15px 40px rgba(0,0,0,0.12); }
-        
-        .slides { display: none; width: 100%; height: 380px; }
-        .slides img { width: 100%; height: 100%; object-fit: cover; }
-        .dot-container { 
-            position: absolute; bottom: 15px; width: 100%; 
-            text-align: center; z-index: 10; 
-        }
-        .dot { 
-            cursor: pointer; height: 6px; width: 6px; 
-            margin: 0 4px; background: rgba(255,255,255,0.4); 
-            border-radius: 50%; display: inline-block; transition: 0.3s;
-        }
-        .dot.active { background: #fff; width: 18px; border-radius: 10px; }
 
-        @media (max-width: 768px) { .slides { height: 200px; } }
+        .hero-track {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .hero-slide {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 30px;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+            transform: scale(0.9) translateZ(-100px);
+        }
+
+        .hero-slide.active {
+            opacity: 1;
+            visibility: visible;
+            transform: scale(1) translateZ(0);
+            z-index: 2;
+        }
+
+        .hero-slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 6s linear;
+        }
+
+        .hero-slide.active img {
+            transform: scale(1.1);
+        }
+
+        /* Glass Content Overlay */
+        .slide-overlay {
+            position: absolute;
+            bottom: 30px;
+            left: 30px;
+            right: 30px;
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transform: translateY(20px);
+            opacity: 0;
+            transition: all 0.6s 0.3s ease-out;
+        }
+
+        .hero-slide.active .slide-overlay {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .slide-info h2 { margin: 0; font-size: 1.5rem; font-weight: 600; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .slide-info p { margin: 5px 0 0; font-size: 0.9rem; opacity: 0.9; }
+
+        .slide-btn {
+            background: white;
+            color: black;
+            padding: 10px 22px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            transition: var(--transition-bounce);
+        }
+        .slide-btn:hover { transform: scale(1.05); box-shadow: 0 5px 15px rgba(255,255,255,0.3); }
+
+        .hero-nav {
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 8px;
+            z-index: 10;
+        }
+
+        .hero-dot {
+            width: 8px; height: 8px;
+            background: #d1d1d6;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .hero-dot.active {
+            width: 30px;
+            background: var(--ios-blue);
+            border-radius: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .modern-hero { height: 220px; }
+            .slide-overlay { bottom: 15px; left: 15px; right: 15px; padding: 15px; }
+            .slide-info h2 { font-size: 1.1rem; }
+            .slide-info p { display: none; }
+            .slide-btn { padding: 6px 12px; font-size: 12px; }
+        }
 
         /* ===== Section Title ===== */
         .section-label {
@@ -151,7 +245,7 @@
             letter-spacing: -0.6px;
         }
 
-        /* ===== Service Grid (iOS App Style with Hover) ===== */
+        /* ===== Service Grid ===== */
         .service-grid { 
             display: grid; 
             grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); 
@@ -163,16 +257,12 @@
             display: flex; flex-direction: column; align-items: center; gap: 10px;
             transition: var(--transition-bounce);
         }
-        
-        /* HOVER EFFECT */
         .service-card:hover { transform: translateY(-8px); }
         .service-card:hover .icon-box { 
             background: rgba(255, 255, 255, 0.95);
             box-shadow: 0 8px 20px rgba(0,0,0,0.12);
             filter: brightness(1.1);
         }
-        .service-card:active { transform: scale(0.9); }
-
         .icon-box { 
             font-size: 28px; width: 68px; height: 68px; 
             background: var(--glass-white); 
@@ -184,7 +274,7 @@
         }
         .service-name { font-size: 12.5px; font-weight: 500; line-height: 1.2; color: #3a3a3c; }
 
-        /* ===== Promotion Cards (Premium Glass with Hover) ===== */
+        /* ===== Promotion Cards ===== */
         .card-container { 
             display: grid; 
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
@@ -201,28 +291,19 @@
             display: flex; flex-direction: column;
             transition: var(--transition-swift);
         }
-        
-        /* HOVER EFFECT */
         .card:hover { 
             transform: translateY(-8px) scale(1.02); 
             box-shadow: 0 20px 40px rgba(0,0,0,0.1);
             background: rgba(255, 255, 255, 0.85);
         }
-        .card:active { transform: scale(0.98); }
-
-        .card-visual { height: 130px; display: flex; align-items: center; justify-content: center; padding: 20px; font-weight: 600; font-size: 1.15rem; text-align: center; transition: 0.3s; }
-        
+        .card-visual { height: 130px; display: flex; align-items: center; justify-content: center; padding: 20px; font-weight: 600; font-size: 1.15rem; text-align: center; }
         .blue { background: linear-gradient(135deg, #007aff 0%, #00c6ff 100%); color: white; }
         .yellow { background: linear-gradient(135deg, #ffcc00 0%, #ffdb4d 100%); color: #1c1c1e; }
         .green-gradient { background: linear-gradient(135deg, #34c759 0%, #4cd964 100%); color: white; }
         .red-gradient { background: linear-gradient(135deg, #ff3b30 0%, #ff6b6b 100%); color: white; }
-        
         .card-content { padding: 18px 22px; font-size: 14.5px; color: var(--text-light); font-weight: 400; }
 
-        footer { 
-            text-align: center; padding: 40px 20px; color: var(--text-light); font-size: 12px; font-weight: 300;
-        }
-
+        footer { text-align: center; padding: 40px 20px; color: var(--text-light); font-size: 12px; font-weight: 300; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
@@ -238,20 +319,33 @@
 <aside class="sidebar" id="sidebar"></aside>
 
 <div class="content">
-    <div class="slider-container" id="sliderContainer">
-        <div class="slides">
-            <a href="news1.html" target="_blank">
-                <img src="https://i.postimg.cc/dJq4qHS3/A4-3x-100.jpg" loading="lazy">
-            </a>
+    
+    <div class="modern-hero" id="heroSlider">
+        <div class="hero-track">
+            <div class="hero-slide active">
+                <img src="https://i.postimg.cc/dJq4qHS3/A4-3x-100.jpg" alt="News 1">
+                <div class="slide-overlay">
+                    <div class="slide-info">
+                        <h2>DeviceExtra</h2>
+                        <p>ซื้อเครื่องพร้อมโปรโมชั่นเริ่มต้น 399</p>
+                    </div>
+                    <a href="news1.html" class="slide-btn" target="_blank">อ่านเพิ่มเติม</a>
+                </div>
+            </div>
+            <div class="hero-slide">
+                <img src="https://i.postimg.cc/NQrfzn0g/1042253.jpg" alt="News 2">
+                <div class="slide-overlay">
+                    <div class="slide-info">
+                        <h2>ประกัน Social Care+</h2>
+                        <p>ประกันคุ้มครองความปลอดภัยทางออนไลน์</p>
+                    </div>
+                    <a href="news2.html" class="slide-btn" target="_blank">ดูรายละเอียด</a>
+                </div>
+            </div>
         </div>
-        <div class="slides">
-            <a href="news2.html" target="_blank">
-                <img src="https://i.postimg.cc/NQrfzn0g/1042253.jpg" loading="lazy">
-            </a>
-        </div>
-        <div class="dot-container">
-            <span class="dot" onclick="currentSlide(1)"></span>
-            <span class="dot" onclick="currentSlide(2)"></span>
+        <div class="hero-nav">
+            <div class="hero-dot active" onclick="jumpToSlide(0)"></div>
+            <div class="hero-dot" onclick="jumpToSlide(1)"></div>
         </div>
     </div>
 
@@ -338,7 +432,7 @@
 </div>
 
 <script>
-    // --- Sidebar System ---
+    // --- Sidebar System (UNCHANGED) ---
     function includeSidebar() {
         const cached = localStorage.getItem('sidebar_cache');
         if (cached) {
@@ -387,37 +481,44 @@
         });
     }
 
-    // --- Slider System ---
-    let slideIndex = 0;
-    let slideTimer;
+    // --- NEW MODERN SLIDER SYSTEM ---
+    let currentIdx = 0;
+    const slides = document.querySelectorAll('.hero-slide');
+    const dots = document.querySelectorAll('.hero-dot');
+    let autoPlayTimer;
 
-    function showSlides() {
-        let slides = document.getElementsByClassName("slides");
-        let dots = document.getElementsByClassName("dot");
-        if (slides.length === 0) return;
-        
-        for (let i = 0; i < slides.length; i++) { slides[i].style.display = "none"; }
-        slideIndex++;
-        if (slideIndex > slides.length) {slideIndex = 1}
-        for (let i = 0; i < dots.length; i++) { dots[i].className = dots[i].className.replace(" active", ""); }
-        
-        slides[slideIndex-1].style.display = "block";  
-        if (dots.length >= slideIndex) { dots[slideIndex-1].className += " active"; }
-        
-        clearTimeout(slideTimer);
-        slideTimer = setTimeout(showSlides, 5000);
+    function updateSlides() {
+        slides.forEach((slide, i) => {
+            slide.classList.remove('active');
+            dots[i].classList.remove('active');
+            if (i === currentIdx) {
+                slide.classList.add('active');
+                dots[i].classList.add('active');
+            }
+        });
     }
 
-    function currentSlide(n) { slideIndex = n - 1; showSlides(); }
+    function nextSlide() {
+        currentIdx = (currentIdx + 1) % slides.length;
+        updateSlides();
+    }
+
+    function jumpToSlide(n) {
+        currentIdx = n;
+        updateSlides();
+        resetTimer();
+    }
+
+    function resetTimer() {
+        clearInterval(autoPlayTimer);
+        autoPlayTimer = setInterval(nextSlide, 6000);
+    }
 
     window.addEventListener('DOMContentLoaded', () => {
         includeSidebar();
-        showSlides();
+        resetTimer();
     });
 </script>
 
 </body>
 </html>
-
-
-
