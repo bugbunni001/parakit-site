@@ -23,7 +23,7 @@
             --card-shadow: 0 10px 40px rgba(0,0,0,0.06);
             --hover-shadow: 0 15px 45px rgba(0,0,0,0.12);
             --ios-red: #ff3b30;
-            --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-swift: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
@@ -33,72 +33,77 @@
             background: #f5f5f7;
             color: var(--text-main); 
             -webkit-font-smoothing: antialiased;
-            transition: padding-left 0.3s ease;
+            transition: padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* --- Navigation & Sidebar (iOS 26 Style) --- */
-        .top-header {
-            position: fixed; top: 0; left: 0; right: 0; height: 65px;
-            background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            z-index: 1200; display: flex; align-items: center; padding: 0 20px;
-            border-bottom: 0.5px solid rgba(0,0,0,0.1); transition: left 0.3s ease;
-        }
-
-        .top-toggle {
-            width: 40px; height: 40px; border-radius: 10px; border: none; background: transparent;
-            color: var(--ios-blue); cursor: pointer; display: flex; align-items: center; justify-content: center;
-            font-size: 24px; margin-right: 10px; transition: background 0.2s;
-        }
-        .top-toggle:hover { background: rgba(0,122,255,0.1); }
-
+        /* ===== SIDEBAR SYSTEM (FROM MOTHER'S CODE) ===== */
         .sidebar { 
-            position: fixed; top: 0; left: 0; width: var(--sidebar-width); height: 100vh; 
+            position: fixed; top: 0; left: 0; 
+            width: var(--sidebar-width); height: 100vh; 
             background: var(--sidebar-dark); 
-            backdrop-filter: blur(40px) saturate(180%); -webkit-backdrop-filter: blur(40px) saturate(180%);
+            backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
             color: #fff; overflow-y: auto; 
-            transform: translateX(-100%); transition: var(--transition); 
-            z-index: 2000; 
-            box-shadow: 15px 0 50px rgba(0,0,0,0.1);
-            border-right: 1px solid rgba(255,255,255,0.1);
+            transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 2000;
+            box-shadow: 10px 0 30px rgba(0,0,0,0.1);
         }
-        .sidebar.show { transform: translateX(0); }
 
-        .overlay-bg {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.3); 
-            display: none; z-index: 1500; backdrop-filter: blur(8px);
-        }
-        .overlay-bg.show { display: block; }
-
-        /* Sidebar Item Styles (Injected via script) */
-        .item { margin-bottom: 5px; padding: 0 10px; }
-        .drop-btn, .menu a { 
-            display: flex; align-items: center; width: 100%; padding: 14px 15px; 
-            color: #fff; text-decoration: none; border: none; background: none; 
-            cursor: pointer; border-radius: 12px; transition: 0.3s;
-        }
-        .drop-btn:hover, .menu a:hover { background: rgba(255,255,255,0.1); }
-        .sub { padding-left: 15px; display: none; }
-        .sub a { font-size: 14px; opacity: 0.8; }
-
-        @media(min-width: 1025px) {
-            .sidebar { transform: translateX(0); }
+        @media(min-width:769px) { 
             body:not(.collapsed) { padding-left: var(--sidebar-width); }
             body:not(.collapsed) .top-header { left: var(--sidebar-width); }
             body.collapsed .sidebar { transform: translateX(-100%); }
             body.collapsed .top-header { left: 0; }
         }
 
-        @media(max-width: 1024px) {
+        @media(max-width:768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.show { transform: translateX(0); }
             body { padding-left: 0 !important; }
             .top-header { left: 0 !important; }
         }
 
+        /* Sidebar Internals */
+        .sidebar-header { padding: 30px 20px; font-size: 20px; font-weight: 600; border-bottom: 0.5px solid rgba(255,255,255,0.1); }
+        .menu { padding: 10px 0; }
+        .menu a, .menu .drop-btn { 
+            width: 100%; min-height: 50px; padding: 12px 20px; background: none; border: none; 
+            color: #ebebf5; text-align: left; font-size: 15px; cursor: pointer; 
+            display: flex; align-items: center; text-decoration: none; transition: 0.3s;
+        }
+        .menu a:hover, .menu .drop-btn:hover { background: rgba(255,255,255,0.1); padding-left: 30px; }
+        .sub { display: none; background: rgba(0,0,0,0.2); }
+        .item.open .sub { display: block; }
+        .sub a { padding-left: 45px; font-size: 14px; color: #8e8e93; }
+
+        /* --- Header --- */
+        .top-header {
+            position: fixed; top: 0; left: 0; right: 0; height: 60px;
+            background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            z-index: 1200; display: flex; align-items: center; padding: 0 20px;
+            border-bottom: 0.5px solid rgba(0,0,0,0.1); transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .top-toggle {
+            width: 36px; height: 36px; border-radius: 10px; border: none; background: transparent;
+            color: var(--ios-blue); cursor: pointer; display: flex; align-items: center; justify-content: center;
+            font-size: 22px; margin-right: 10px; transition: background 0.2s;
+        }
+        .top-toggle:hover { background: rgba(0,122,255,0.1); }
+
+        .overlay { 
+            position: fixed; inset: 0; 
+            background: rgba(0, 0, 0, 0.3); 
+            backdrop-filter: blur(4px); 
+            display: none; z-index: 1500; 
+        }
+        .overlay.show { display: block; }
+
         /* --- Main Content --- */
-        .main-container {
-            padding: 90px 20px 40px;
-            max-width: 1400px;
+        .content {
+            padding: 80px 20px 40px;
+            max-width: 1200px;
             margin: 0 auto;
-            animation: fadeIn 0.6s ease-out;
+            animation: fadeIn 0.8s ease-out;
         }
 
         .summary-grid {
@@ -112,24 +117,14 @@
             background: #fff; padding: 20px; border-radius: 20px;
             box-shadow: var(--card-shadow); text-align: center;
             border: 1px solid rgba(0,0,0,0.02);
-            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
-        .summary-card:hover {
-            transform: translateY(-5px);
-            box-shadow: var(--hover-shadow);
-        }
+        .summary-card:hover { transform: translateY(-5px); box-shadow: var(--hover-shadow); }
         .summary-name { font-size: 13px; color: var(--text-light); margin-bottom: 5px; }
         .summary-val { font-size: 20px; font-weight: 600; color: #ff3b30; }
 
-        .content-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 25px;
-        }
-
-        @media(min-width: 1025px) {
-            .content-grid { grid-template-columns: 400px 1fr; }
-        }
+        .content-grid { display: grid; grid-template-columns: 1fr; gap: 25px; }
+        @media(min-width: 1025px) { .content-grid { grid-template-columns: 400px 1fr; } }
 
         .box { 
             background: #fff; padding: 25px; border-radius: 24px; 
@@ -161,44 +156,36 @@
         td { padding: 16px 15px; border-bottom: 1px solid #f9f9f9; font-size: 14px; }
         .amt-red { color: #ff3b30; font-weight: 600; }
         
-        .btn-delete {
-            background: none; border: none; color: #ff3b30; cursor: pointer; 
-            padding: 8px; border-radius: 8px; transition: 0.2s; font-size: 18px;
-        }
+        .btn-delete { background: none; border: none; color: #ff3b30; cursor: pointer; padding: 8px; border-radius: 8px; transition: 0.2s; font-size: 18px; }
         .btn-delete:hover { background: rgba(255,59,48,0.1); }
 
-        .pagination { display: flex; justify-content: center; gap: 8px; margin-top: 25px; flex-wrap: wrap; }
-        .pg-btn {
-            min-width: 40px; height: 40px; border-radius: 12px; border: 1.5px solid #f2f2f7;
-            background: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center;
-            transition: all 0.2s;
-        }
+        .pagination { display: flex; justify-content: center; gap: 8px; margin-top: 25px; }
+        .pg-btn { min-width: 40px; height: 40px; border-radius: 12px; border: 1.5px solid #f2f2f7; background: #fff; cursor: pointer; transition: 0.2s; }
         .pg-btn.active { background: var(--ios-blue); color: #fff; border-color: var(--ios-blue); }
 
+        /* Popups & Loading */
         .popup { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: none; align-items: center; justify-content: center; z-index: 4000; padding: 20px; backdrop-filter: blur(5px); }
         .popup.show { display: flex; }
-        .popup-box { background: #fff; padding: 30px; border-radius: 28px; text-align: center; max-width: 360px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
-
+        .popup-box { background: #fff; padding: 30px; border-radius: 28px; text-align: center; max-width: 360px; width: 100%; }
         .loading { position: fixed; inset: 0; background: rgba(255,255,255,0.85); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 5000; backdrop-filter: blur(10px); }
         .spinner { width: 40px; height: 40px; border: 4px solid rgba(0,122,255,0.1); border-top: 4px solid var(--ios-blue); border-radius: 50%; animation: spin 0.8s linear infinite; }
+        
         @keyframes spin { 100% { transform: rotate(360deg); } }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
         footer { text-align: center; padding: 40px 20px; color: var(--text-light); font-size: 12px; }
-        .refresh-btn { background:none; border:none; color:var(--ios-blue); cursor:pointer; font-weight:500; padding: 8px 12px; border-radius: 8px; }
     </style>
 </head>
 <body>
 
 <header class="top-header">
     <button class="top-toggle" onclick="toggleSidebar()">☰</button>
-    <div style="font-weight: 600; font-size: 1.1rem;">ระบบบันทึกการหักเงิน</div>
+    <div style="font-weight: 700; font-size: 1.25rem; color: var(--text-main); letter-spacing: -0.8px;">ระบบบันทึกการหักเงิน</div>
 </header>
 
-<div class="overlay-bg" id="overlay" onclick="toggleSidebar()"></div>
+<div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 <aside class="sidebar" id="sidebar"></aside>
 
-<div class="main-container">
+<div class="content">
     <div class="summary-grid">
         <div class="summary-card"><div class="summary-name">ศุภกฤต</div><div class="summary-val" id="sum-ศุภกฤต">0 ฿</div></div>
         <div class="summary-card"><div class="summary-name">นวพล</div><div class="summary-val" id="sum-นวพล">0 ฿</div></div>
@@ -210,7 +197,6 @@
         <div class="box">
             <h3>🧾 บันทึกการหักเงิน</h3>
             <p class="subtitle">บันทึกรายการหักเงินพนักงาน</p>
-
             <form id="deductionForm">
                 <div class="form-row">
                     <label>วันที่</label>
@@ -233,9 +219,9 @@
                         <option value="มาสาย">มาสาย</option>
                         <option value="ไม่ลงเวลาเข้า-ออกงาน">ไม่ลงเวลาเข้า-ออกงาน</option>
                         <option value="ยอดขายไม่เป็นไปตามตกลง">ยอดขายไม่เป็นไปตามตกลง</option>
-                        <option value="มี Score 1 โดยเกิดจากการให้บริการของตัวเอง">มี Score 1 โดยเกิดจากการให้บริการของตัวเอง</option>
+                        <option value="มี Score 1">มี Score 1</option>
                         <option value="Retention %ต่ำกว่า 88%">Retention %ต่ำกว่า 88%</option>
-                        <option value="TVS NOW ไม่มียอดภายใน 1อาทิตย์">TVS NOW ไม่มียอดภายใน 1อาทิตย์</option>
+                        <option value="TVS NOW ไม่มียอด">TVS NOW ไม่มียอด</option>
                         <option value="อื่นๆ">อื่นๆ</option>
                     </select>
                     <div id="otherReasonContainer" style="display:none; margin-top:12px;">
@@ -259,9 +245,8 @@
         <div class="box">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
                 <h3 style="margin:0;">📋 รายการล่าสุด</h3>
-                <button onclick="fetchData(true)" class="refresh-btn">🔄 รีเฟรช</button>
+                <button onclick="fetchData(true)" style="background:none; border:none; color:var(--ios-blue); cursor:pointer; font-weight:500;">🔄 รีเฟรช</button>
             </div>
-            
             <div class="table-container">
                 <table>
                     <thead>
@@ -287,9 +272,9 @@
 <div class="popup" id="authPopup">
     <div class="popup-box">
         <div id="otpSelectAdmin">
-            <div id="authIcon" style="font-size: 45px; margin-bottom: 15px;">📩</div>
-            <h3 id="authTitle">ขอรหัส OTP</h3>
-            <p class="subtitle" id="authSubtitle">เลือกผู้ดูแลเพื่อรับรหัสยืนยัน</p>
+            <div style="font-size: 45px; margin-bottom: 15px;">📩</div>
+            <h3>ขอรหัส OTP</h3>
+            <p class="subtitle">เลือกผู้ดูแลเพื่อรับรหัสยืนยัน</p>
             <select id="adminEmailSelect" style="margin-bottom: 20px;">
                 <option value="" disabled selected>-- เลือกผู้รับ --</option>
                 <option value="book016boat@gmail.com">ศุภกฤต</option>
@@ -302,8 +287,7 @@
         </div>
         <div id="otpInputForm" style="display:none;">
             <div style="font-size: 45px; margin-bottom: 15px;">🔐</div>
-            <h3>ยืนยันหรัส OTP</h3>
-            <p class="subtitle">กรอกรหัส 6 หลักที่ส่งไปทางอีเมล</p>
+            <h3>ยืนยันรหัส OTP</h3>
             <input type="number" id="confirmOTP" placeholder="000000" style="text-align: center; margin-bottom: 20px; font-size: 24px; letter-spacing: 8px;">
             <div style="display: flex; gap: 10px;">
                 <button class="btn-submit" style="background: #8e8e93;" onclick="resetAuthPopup()">ย้อนกลับ</button>
@@ -317,19 +301,17 @@
     <div class="popup-box">
         <div id="statusIcon" style="font-size: 55px; margin-bottom: 15px;"></div>
         <h3 id="statusTitle"></h3>
-        <p id="statusText" style="margin-bottom:25px; font-size:15px; color: var(--text-light);"></p>
+        <p id="statusText" style="margin-bottom:25px; color: var(--text-light);"></p>
         <button class="btn-submit" onclick="closeStatusPopup()">รับทราบ</button>
     </div>
 </div>
 
 <div class="loading" id="loading">
     <div class="spinner"></div>
-    <div id="loadingText" style="margin-top:20px; font-weight:500; color:var(--ios-blue);">กำลังประมวลผล...</div>
+    <div style="margin-top:20px; font-weight:500; color:var(--ios-blue);">กำลังประมวลผล...</div>
 </div>
 
 <footer>© 2026 Copy Right By Angerina Frog</footer>
-
-
 
 <script>
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwMoRlPuQ08-f-Eabf2QKNSW4iVZFERLJjCtUYONoZJQmrEVanL2GOcpV5bmNDlEGJK/exec";
@@ -346,27 +328,32 @@
         fetchData(false); 
     };
 
-    // ===== SIDEBAR FUNCTIONS (คุณแม่สั่งให้จำ) =====
+    // --- SIDEBAR SYSTEM (FROM MOTHER'S MEMORY) ---
     function includeSidebar() {
-        const version = new Date().getTime(); 
-        fetch('sidebar.html?v=' + version)
-            .then(response => {
-                if (!response.ok) throw new Error('ไม่พบไฟล์ sidebar.html');
-                return response.text();
-            })
-            .then(data => {
-                document.getElementById('sidebar').innerHTML = data;
-                restoreMenuState();
-            })
-            .catch(err => console.warn("Sidebar Error:", err));
+        const cached = localStorage.getItem('sidebar_cache');
+        if (cached) {
+            document.getElementById('sidebar').innerHTML = cached;
+            restoreMenuState();
+        }
 
-        if(localStorage.getItem('sidebar_collapsed') === 'true' && window.innerWidth > 1024) {
+        fetch('sidebar.html')
+            .then(response => response.text())
+            .then(data => {
+                if (data !== cached) {
+                    document.getElementById('sidebar').innerHTML = data;
+                    localStorage.setItem('sidebar_cache', data);
+                    restoreMenuState();
+                }
+            })
+            .catch(err => console.warn("Sidebar Load Error"));
+            
+        if(localStorage.getItem('sidebar_collapsed') === 'true' && window.innerWidth > 768) {
             document.body.classList.add('collapsed');
         }
     }
 
     function toggleSidebar() {
-        if (window.innerWidth <= 1024) {
+        if (window.innerWidth <= 768) {
             document.getElementById("sidebar").classList.toggle("show");
             document.getElementById("overlay").classList.toggle("show");
         } else {
@@ -378,77 +365,72 @@
     window.toggleDrop = function(btn, id) {
         const item = btn.parentElement;
         const isOpen = item.classList.toggle("open");
-        const sub = item.querySelector('.sub');
-        if (sub) sub.style.display = isOpen ? 'block' : 'none';
         if (id) localStorage.setItem('menu-' + id, isOpen);
     }
 
     function restoreMenuState() {
-        const menus = ['credit', 'branch', 'sales', 'device']; 
-        menus.forEach(id => {
-            const state = localStorage.getItem('menu-' + id);
-            const menuEl = document.getElementById('menu-' + id);
-            if (state === 'true' && menuEl) {
-                menuEl.classList.add('open');
-                const sub = menuEl.querySelector('.sub');
-                if (sub) sub.style.display = 'block';
+        ['credit', 'branch', 'sales', 'device'].forEach(id => {
+            if (localStorage.getItem('menu-' + id) === 'true') {
+                const el = document.getElementById('menu-' + id);
+                if (el) el.classList.add('open');
             }
         });
     }
 
-    // ===== DEDUCTION SYSTEM FUNCTIONS =====
-    async function fetchData(showLoadingPopup = true) {
-        if(showLoadingPopup) {
-            document.getElementById('loadingText').innerText = "กำลังอัปเดตข้อมูล...";
-            document.getElementById('loading').style.display = 'flex';
-        }
+    // --- DATA FUNCTIONS ---
+    async function fetchData(showLoading = true) {
+        if(showLoading) document.getElementById('loading').style.display = 'flex';
         try {
             const response = await fetch(APPS_SCRIPT_URL + "?action=getData");
             const data = await response.json();
+            // เก็บข้อมูลและจัดการ index สำหรับการลบ
             allData = data.rows.map((r, i) => ({...r, sheetIndex: i + 2})).reverse();
             updateSummary(data.rows);
             displayTable();
         } catch (err) {
-            document.getElementById('tableBody').innerHTML = '<tr><td colspan="6" style="text-align:center; color:red; padding:20px;">เกิดข้อผิดพลาด</td></tr>';
+            document.getElementById('tableBody').innerHTML = '<tr><td colspan="6" style="text-align:center; color:red;">โหลดข้อมูลไม่สำเร็จ</td></tr>';
         } finally {
-            if(showLoadingPopup) document.getElementById('loading').style.display = 'none';
+            document.getElementById('loading').style.display = 'none';
         }
     }
 
     function displayTable() {
         const tbody = document.getElementById('tableBody');
         if (allData.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:#8e8e93;">ไม่พบรายการ</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">ไม่พบรายการ</td></tr>';
             return;
         }
         const start = (currentPage - 1) * rowsPerPage;
         const end = start + rowsPerPage;
         const paginatedItems = allData.slice(start, end);
-        tbody.innerHTML = paginatedItems.map(row => `
-            <tr>
-                <td style="white-space:nowrap;">${row.date}</td>
-                <td><span style="font-weight:600;">${row.name}</span></td>
-                <td>${row.reason}</td>
-                <td style="color:#8e8e93; font-size:12px;">${row.other || '-'}</td>
-                <td class="amt-red">-${row.amount}฿</td>
-                <td style="text-align:center;">
-                    <button class="btn-delete" onclick="prepareDelete(${row.sheetIndex}, '${row.name}', '${row.amount}')">🗑️</button>
-                </td>
-            </tr>
-        `).join('');
+
+        tbody.innerHTML = paginatedItems.map(row => {
+            // ดึงแค่วันที่ (YYYY-MM-DD หรือรูปแบบวันที่จาก Sheet)
+            const displayDate = row.date ? row.date.split('T')[0] : '-';
+            
+            return `
+                <tr>
+                    <td style="white-space:nowrap;">${displayDate}</td>
+                    <td><span style="font-weight:600;">${row.name}</span></td>
+                    <td>${row.reason}</td>
+                    <td style="color:#8e8e93; font-size:12px;">${row.other || '-'}</td>
+                    <td class="amt-red">-${row.amount}฿</td>
+                    <td style="text-align:center;">
+                        <button class="btn-delete" onclick="prepareDelete(${row.sheetIndex}, '${row.name}', '${row.amount}')">🗑️</button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
         renderPagination(Math.ceil(allData.length / rowsPerPage));
     }
 
     function renderPagination(totalPages) {
         const container = document.getElementById('paginationContainer');
         if (totalPages <= 1) { container.innerHTML = ''; return; }
-        let html = `<button class="pg-btn" onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>&lt;</button>`;
+        let html = '';
         for (let i = 1; i <= totalPages; i++) {
-            if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
-                html += `<button class="pg-btn ${i === currentPage ? 'active' : ''}" onclick="changePage(${i})">${i}</button>`;
-            }
+            html += `<button class="pg-btn ${i === currentPage ? 'active' : ''}" onclick="changePage(${i})">${i}</button>`;
         }
-        html += `<button class="pg-btn" onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>&gt;</button>`;
         container.innerHTML = html;
     }
 
@@ -467,6 +449,7 @@
         document.getElementById('otherReasonContainer').style.display = select.value === 'อื่นๆ' ? 'block' : 'none';
     }
 
+    // --- AUTH & ACTIONS ---
     function openAuthPopup(mode) {
         currentMode = mode;
         if (mode === 'submit' && !document.getElementById('deductionForm').checkValidity()) {
@@ -550,5 +533,6 @@
     
     function closeStatusPopup() { document.getElementById("statusPopup").classList.remove("show"); }
 </script>
+
 </body>
 </html>
