@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ตารางวันหยุด กุมภาพันธ์ - Parakit-Site</title>
     <link rel="icon" type="image/png" href="favicon.png">
     
@@ -27,7 +27,11 @@
         }
 
         /* ===== GLOBAL RESET & SIDEBAR ADAPTATION ===== */
-        * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
+        * { 
+            box-sizing: border-box; 
+            font-family: 'Kanit', sans-serif !important; 
+            -webkit-tap-highlight-color: transparent;
+        }
         
         body { 
             margin: 0; 
@@ -47,7 +51,7 @@
             z-index: 1200;
             display: flex;
             align-items: center;
-            padding: 0 20px;
+            padding: 0 15px;
             border-bottom: 0.5px solid rgba(0,0,0,0.1);
             transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
@@ -63,7 +67,6 @@
             font-size: 22px;
             transition: background 0.2s;
         }
-        .top-toggle:hover { background: rgba(0, 122, 255, 0.1); }
 
         /* ===== Sidebar Style ===== */
         .sidebar { 
@@ -89,6 +92,7 @@
             .sidebar.show { transform: translateX(0); }
             body { padding-left: 0 !important; }
             .top-header { left: 0 !important; }
+            .top-header div { font-size: 1rem !important; } /* ย่อหัวข้อบนมือถือ */
         }
 
         .overlay { 
@@ -99,86 +103,85 @@
         }
         .overlay.show { display: block; }
 
-        .sidebar-header { padding: 30px 20px; font-size: 20px; font-weight: 600; border-bottom: 0.5px solid rgba(255,255,255,0.1); }
-        .menu { padding: 10px 0; }
-        .menu a, .menu .drop-btn { 
-            width: 100%; min-height: 50px; padding: 12px 20px; background: none; border: none; 
-            color: #ebebf5; text-align: left; font-size: 15px; cursor: pointer; 
-            display: flex; align-items: center; text-decoration: none; transition: 0.3s;
+        /* ===== Calendar Specific Styles (Responsive Focus) ===== */
+        .content-area { 
+            padding: 75px 10px 40px; 
+            max-width: 1300px; 
+            margin: 0 auto; 
+            animation: fadeIn 0.8s ease-out; 
         }
-        .menu a:hover, .menu .drop-btn:hover { background: rgba(255,255,255,0.1); padding-left: 30px; }
-        .sub { display: none; background: rgba(0,0,0,0.2); }
-        .item.open .sub { display: block; }
-        .sub a { padding-left: 45px; font-size: 14px; color: #8e8e93; }
-
-        /* ===== Calendar Specific Styles ===== */
-        .content-area { padding: 80px 20px 40px; max-width: 1300px; margin: 0 auto; animation: fadeIn 0.8s ease-out; }
         
         .glass { 
             background: var(--glass-white); 
             backdrop-filter: blur(25px); 
             -webkit-backdrop-filter: blur(25px); 
-            border-radius: 30px; 
+            border-radius: 24px; 
             border: 1px solid var(--glass-border); 
-            box-shadow: 0 20px 40px rgba(0,0,0,0.05);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.05);
         }
 
-        .calendar-wrapper { overflow: hidden; border-radius: 30px; background: white; }
+        .calendar-wrapper { overflow: hidden; border-radius: 24px; background: white; }
+        
+        /* ปรับความสูงช่องปฏิทินให้เหมาะกับมือถือ */
         .day-cell { 
-            height: 140px; 
+            height: 110px; 
             background: rgba(255, 255, 255, 0.6); 
             border-right: 1px solid rgba(0,0,0,0.03); 
             border-bottom: 1px solid rgba(0,0,0,0.03); 
             transition: all 0.2s ease;
             cursor: pointer;
             overflow-y: auto; 
-            padding: 8px;
+            padding: 4px;
         }
-        .day-cell:hover { background: rgba(255, 255, 255, 0.9); z-index: 10; box-shadow: inset 0 0 0 2px #0071e3; }
+
+        @media(min-width: 1024px) { .day-cell { height: 140px; padding: 8px; } }
 
         .day-header { 
-            font-size: 0.85rem; 
+            font-size: 0.75rem; 
             font-weight: 600; 
             color: #8e8e93; 
-            padding: 12px 0; 
+            padding: 10px 0; 
             background: rgba(255, 255, 255, 0.8);
             border-bottom: 1px solid rgba(0,0,0,0.05);
         }
 
-        .cell-content { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
+        .cell-content { display: flex; flex-direction: column; gap: 2px; align-items: flex-start; width: 100%; }
+        
         .date-number { 
-            font-size: 1.1rem; 
+            font-size: 0.95rem; 
             font-weight: 600; 
             color: #1d1d1f;
-            min-width: 24px;
-            height: 24px;
+            min-width: 22px;
+            height: 22px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
         }
         
         .current-day .date-number { background: #0071e3; color: white; border-radius: 50%; }
 
-        /* ปรับปรุงดีไซน์เป็นวงกลมและชื่อต่อท้าย (เพิ่มขนาดตัวหนังสือ) */
+        /* ปรับแต่งรายชื่อพนักงานในช่องปฏิทิน */
         .emp-row {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 4px;
             width: 100%;
-            padding: 2px 0;
+            padding: 1px 2px;
+            background: rgba(0,0,0,0.02);
+            border-radius: 4px;
+            margin-bottom: 1px;
         }
 
         .status-dot { 
-            width: 13px; 
-            height: 13px; 
+            width: 8px; 
+            height: 8px; 
             border-radius: 50%; 
             flex-shrink: 0;
-            box-shadow: 0 0 0 1px rgba(0,0,0,0.05);
         }
 
         .emp-name-label {
-            font-size: 14px; /* ขยายขนาดชื่อพนักงาน */
+            font-size: 10px; 
             font-weight: 500;
             color: #1c1c1e;
             white-space: nowrap;
@@ -187,10 +190,17 @@
         }
 
         .status-abbr {
-            font-size: 12px; /* ขยายขนาดตัวย่อ */
+            font-size: 9px; 
             font-weight: 700;
-            color: #636366;
-            text-transform: uppercase;
+            color: #8e8e93;
+            display: none; /* ซ่อนบนมือถือเพื่อประหยัดพื้นที่ */
+        }
+        
+        @media(min-width: 768px) {
+            .status-dot { width: 11px; height: 11px; }
+            .emp-name-label { font-size: 13px; }
+            .status-abbr { display: inline; }
+            .emp-row { gap: 6px; padding: 2px 4px; }
         }
 
         /* สีตามสถานะ */
@@ -203,28 +213,48 @@
 
         #toast {
             position: fixed;
-            top: 80px; left: 50%;
+            top: 20px; left: 50%;
             transform: translateX(-50%) translateY(-150px);
-            z-index: 5000; /* สูงสุด */
+            z-index: 5000; 
+            width: 90%; max-width: 350px;
             transition: transform 0.5s cubic-bezier(0.18, 0.89, 0.32, 1.28);
         }
         #toast.show { transform: translateX(-50%) translateY(0); }
 
-        /* ปรับ Z-Index ของ Loading ให้อยู่ใต้ Modal */
         #loading { position: fixed; inset: 0; background: rgba(245,245,247,0.7); backdrop-filter: blur(15px); z-index: 3000; display: none; justify-content: center; align-items: center; }
-        
-        /* ปรับ Z-Index ของ Modal ให้สูงกว่า Loading */
-        #modal { z-index: 4000; }
-        #confirmModal { z-index: 4500; }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        /* ปุ่มแก้ไขใหม่ */
+        .btn-edit-mode {
+            padding: 8px 16px;
+            border-radius: 14px;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .mode-locked { background: #f2f2f7; color: #8e8e93; border: 1px solid #d1d1d6; }
+        .mode-unlocked { background: #34c759; color: white; border: 1px solid #34c759; box-shadow: 0 4px 12px rgba(52, 199, 89, 0.3); }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
+        .shake { animation: shake 0.2s ease-in-out 0s 2; }
+
+        /* Hide Scrollbar for cleaner look */
+        .day-cell::-webkit-scrollbar { width: 0px; background: transparent; }
     </style>
 </head>
 <body>
 
 <header class="top-header">
     <button class="top-toggle" onclick="toggleSidebar()">☰</button>
-    <div style="font-weight: 700; font-size: 1.25rem; color: var(--text-main); letter-spacing: -0.8px; margin-left: 10px;">ตารางวันหยุดทรูช้อปบิ๊กซีประชาอุทิศ</div>
+    <div style="font-weight: 700; font-size: 1.15rem; color: var(--text-main); letter-spacing: -0.5px; margin-left: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">ตารางวันหยุดบิ๊กซีประชาอุทิศ</div>
 </header>
 
 <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
@@ -232,7 +262,7 @@
 <aside class="sidebar" id="sidebar"></aside>
 
 <div id="toast">
-    <div class="glass px-6 py-3 shadow-2xl flex items-center gap-3 border border-white/50">
+    <div class="glass px-5 py-3 shadow-2xl flex items-center gap-3 border border-white/50">
         <span id="toastIcon"></span>
         <p id="toastMsg" class="font-medium text-sm"></p>
     </div>
@@ -240,21 +270,26 @@
 
 <div id="loading">
     <div class="flex flex-col items-center">
-        <div class="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-blue-500 mb-4"></div>
-        <p class="text-blue-500 font-semibold tracking-wide">กำลังซิงค์ข้อมูล...</p>
+        <div class="animate-spin rounded-full h-10 w-10 border-t-4 border-b-4 border-blue-500 mb-4"></div>
+        <p class="text-blue-500 font-semibold text-sm">กำลังซิงค์ข้อมูล...</p>
     </div>
 </div>
 
 <main class="content-area">
-    <div class="max-w-7xl mx-auto glass shadow-2xl overflow-hidden mb-12">
-        <div class="p-8 flex flex-wrap justify-between items-center gap-6" style="background: var(--header-gradient); border-bottom: 1px solid rgba(255,255,255,0.3);">
+    <div class="glass shadow-2xl overflow-hidden mb-8">
+        <div class="p-5 sm:p-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4" style="background: var(--header-gradient); border-bottom: 1px solid rgba(255,255,255,0.3);">
             <div>
-                <h1 class="text-3xl font-semibold text-white drop-shadow-sm">ตารางวันหยุด</h1>
-                <p class="text-white/80 font-light">ทรูช้อปบิ๊กซีประชาอุทิศ</p>
+                <h1 class="text-2xl sm:text-3xl font-semibold text-white drop-shadow-sm">ตารางวันหยุด</h1>
+                <p class="text-white/80 font-light text-sm">ทรูช้อปบิ๊กซีประชาอุทิศ</p>
             </div>
-            <div class="flex gap-4">
-                <select id="mSel" class="p-3 px-6 rounded-2xl border-none shadow-lg bg-white/90 font-semibold outline-none cursor-pointer hover:bg-white transition-all w-44"></select>
-                <select id="ySel" class="p-3 px-6 rounded-2xl border-none shadow-lg bg-white/90 font-semibold outline-none cursor-pointer hover:bg-white transition-all w-32"></select>
+            <div class="flex flex-wrap gap-2 items-center w-full sm:w-auto">
+                <select id="mSel" class="flex-1 sm:flex-none p-2.5 px-4 rounded-xl border-none shadow-md bg-white/90 font-semibold text-sm outline-none cursor-pointer"></select>
+                <select id="ySel" class="flex-1 sm:flex-none p-2.5 px-4 rounded-xl border-none shadow-md bg-white/90 font-semibold text-sm outline-none cursor-pointer"></select>
+                
+                <button id="btnEditMode" onclick="toggleEditMode()" class="w-full sm:w-auto btn-edit-mode mode-locked justify-center">
+                    <span id="lockIcon">🔒</span>
+                    <span id="lockText">แก้ไข</span>
+                </button>
             </div>
         </div>
 
@@ -272,25 +307,26 @@
         </div>
     </div>
 
-    <footer class="max-w-7xl mx-auto text-center pb-10">
-        <p class="text-sm text-gray-400 font-light">© 2026 Copy Right By Angerina Frog</p>
+    <footer class="text-center pb-8">
+        <p class="text-xs text-gray-400 font-light">© 2026 Copy Right By Angerina Frog</p>
     </footer>
 </main>
 
-<div id="modal" class="fixed inset-0 bg-black/30 hidden flex justify-center items-center p-4 backdrop-blur-sm">
-    <div class="bg-white/95 rounded-[35px] p-8 w-full max-w-md shadow-2xl border border-white">
-        <h2 id="modalDate" class="text-2xl font-semibold mb-2 text-center text-gray-800"></h2>
-        <div id="existingEntries" class="mb-6 space-y-2 max-h-40 overflow-y-auto pr-2"></div>
-        <div class="space-y-4">
-            <div class="bg-gray-50 p-5 rounded-3xl space-y-3 border border-gray-100">
-                <select id="empId" class="w-full p-3.5 bg-white rounded-2xl border border-gray-200 outline-none font-medium text-sm">
+<div id="modal" class="fixed inset-0 bg-black/30 hidden flex justify-center items-end sm:items-center p-0 sm:p-4 backdrop-blur-sm">
+    <div class="bg-white/95 rounded-t-[30px] sm:rounded-[35px] p-6 sm:p-8 w-full max-w-md shadow-2xl border-t border-white">
+        <h2 id="modalDate" class="text-xl sm:text-2xl font-semibold mb-4 text-center text-gray-800"></h2>
+        <div id="existingEntries" class="mb-6 space-y-2 max-h-[30vh] overflow-y-auto pr-1"></div>
+        
+        <div id="editForm" class="space-y-4 hidden">
+            <div class="bg-gray-50 p-4 rounded-2xl space-y-3 border border-gray-100">
+                <select id="empId" class="w-full p-3 bg-white rounded-xl border border-gray-200 outline-none font-medium text-sm">
                     <option value="1100">ศุภกฤต (1100)</option>
                     <option value="3535">นวพล (3535)</option>
                     <option value="3400">ปิยะพร (3400)</option>
                     <option value="3723">กรทักษ์ (3723)</option>
-                    <option value="3400">จารุวรรณ (3400)</option>
+                    <option value="3401">จารุวรรณ (3401)</option>
                 </select>
-                <select id="status" class="w-full p-3.5 bg-white rounded-2xl border border-gray-200 outline-none font-medium text-sm">
+                <select id="status" class="w-full p-3 bg-white rounded-xl border border-gray-200 outline-none font-medium text-sm">
                     <option value="Work">🟢 มาทำงาน (Work)</option>
                     <option value="V">🔴 ลาพักร้อน (V)</option>
                     <option value="SICK">⚪ ลาป่วย (Sick)</option>
@@ -300,9 +336,25 @@
                 </select>
             </div>
             <div class="flex gap-3 pt-2">
-                <button onclick="closeModal()" class="flex-1 py-4 bg-gray-100 rounded-2xl font-semibold text-gray-500">ยกเลิก</button>
-                <button onclick="save()" class="flex-1 py-4 bg-blue-600 text-white rounded-2xl font-semibold shadow-lg shadow-blue-200">บันทึก</button>
+                <button onclick="closeModal()" class="flex-1 py-3.5 bg-gray-100 rounded-xl font-semibold text-gray-500">ยกเลิก</button>
+                <button onclick="save()" class="flex-1 py-3.5 bg-blue-600 text-white rounded-xl font-semibold shadow-lg">บันทึก</button>
             </div>
+        </div>
+        <button id="btnCloseView" onclick="closeModal()" class="w-full py-4 bg-gray-100 rounded-xl font-semibold text-gray-500 mb-2 sm:mb-0">ปิดหน้าต่าง</button>
+    </div>
+</div>
+
+<div id="passwordModal" class="fixed inset-0 bg-black/40 hidden flex justify-center items-center p-4 backdrop-blur-md">
+    <div id="passBox" class="bg-white/80 backdrop-blur-2xl rounded-[30px] p-8 w-full max-w-sm shadow-2xl border border-white/50 text-center">
+        <div class="mb-6">
+            <div class="w-14 h-14 bg-blue-500 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-4 shadow-lg">🔐</div>
+            <h2 class="text-xl font-bold text-gray-800">กรุณาใส่รหัสผ่าน</h2>
+            <p class="text-gray-500 text-xs mt-1">เฉพาะเจ้าหน้าที่ที่เกี่ยวข้องเท่านั้น</p>
+        </div>
+        <input type="password" id="passInput" inputmode="numeric" placeholder="••••" class="w-full text-center text-2xl tracking-widest p-3 bg-white/50 rounded-xl border border-gray-200 outline-none mb-6">
+        <div class="flex gap-3">
+            <button onclick="closePassModal()" class="flex-1 py-3 bg-gray-200/50 rounded-xl font-semibold text-gray-600">ยกเลิก</button>
+            <button onclick="checkPassword()" class="flex-1 py-3 bg-blue-600 text-white rounded-xl font-semibold shadow-lg">ตกลง</button>
         </div>
     </div>
 </div>
@@ -373,7 +425,48 @@
     const URL = "https://script.google.com/macros/s/AKfycbwqlWkhMFrhiTvySSSwPt7sd0aLJyW9I6g4HlnmdgX7l8SI0yBAKEEAZEKvT0fOr2VzqA/exec"; 
     let db = [];
     let selDate = "";
+    let isEditMode = false;
     const months = ["มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน","กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"];
+
+    function toggleEditMode() {
+        if (!isEditMode) openPassModal();
+        else { isEditMode = false; updateEditUI(); showToast("ปิดโหมดแก้ไขแล้ว"); }
+    }
+
+    function openPassModal() {
+        document.getElementById('passwordModal').classList.remove('hidden');
+        document.getElementById('passInput').value = "";
+        document.getElementById('passInput').focus();
+    }
+
+    function closePassModal() { document.getElementById('passwordModal').classList.add('hidden'); }
+
+    function checkPassword() {
+        const input = document.getElementById('passInput').value;
+        const passBox = document.getElementById('passBox');
+        if (input === "0285") {
+            isEditMode = true; updateEditUI(); closePassModal(); showToast("ปลดล็อกโหมดแก้ไขแล้ว");
+        } else {
+            passBox.classList.add('shake');
+            setTimeout(() => passBox.classList.remove('shake'), 400);
+            showToast("รหัสผ่านไม่ถูกต้อง", "error");
+        }
+    }
+
+    document.getElementById('passInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') checkPassword(); });
+
+    function updateEditUI() {
+        const btn = document.getElementById('btnEditMode');
+        const icon = document.getElementById('lockIcon');
+        const text = document.getElementById('lockText');
+        if (isEditMode) {
+            btn.classList.replace('mode-locked', 'mode-unlocked');
+            icon.innerText = "🔓"; text.innerText = "กำลังแก้ไข";
+        } else {
+            btn.classList.replace('mode-unlocked', 'mode-locked');
+            icon.innerText = "🔒"; text.innerText = "แก้ไข";
+        }
+    }
 
     function showToast(msg, type = 'success') {
         const toast = document.getElementById('toast');
@@ -435,7 +528,7 @@
             const records = db.filter(r => r.date === dateKey);
             
             let tags = records.map(r => `
-                <div class="emp-row" title="${r.empName} (${r.status})">
+                <div class="emp-row">
                     <div class="status-dot st-${r.status}"></div>
                     <span class="emp-name-label">${r.empName}</span>
                     <span class="status-abbr">(${r.status})</span>
@@ -460,23 +553,31 @@
         const list = document.getElementById('existingEntries');
         list.innerHTML = "";
         const records = db.filter(r => r.date === d);
+        
+        const editForm = document.getElementById('editForm');
+        const btnCloseView = document.getElementById('btnCloseView');
+        
+        if(isEditMode) { editForm.classList.remove('hidden'); btnCloseView.classList.add('hidden'); } 
+        else { editForm.classList.add('hidden'); btnCloseView.classList.remove('hidden'); }
+
         if(records.length > 0) {
             records.forEach(r => {
                 list.innerHTML += `
-                <div class="flex justify-between items-center bg-white p-3 rounded-2xl border border-gray-100 shadow-sm">
-                    <div class="flex items-center gap-2">
-                        <div class="w-3 h-3 rounded-full st-${r.status}"></div>
-                        <p class="font-medium text-gray-700 text-sm">${r.empName} (${r.status})</p>
+                <div class="flex justify-between items-center bg-white p-3.5 rounded-2xl border border-gray-100 shadow-sm">
+                    <div class="flex items-center gap-3">
+                        <div class="w-3.5 h-3.5 rounded-full st-${r.status}"></div>
+                        <p class="font-medium text-gray-700 text-sm">${r.empName} <span class="text-xs text-gray-400">(${r.status})</span></p>
                     </div>
-                    <button onclick="event.stopPropagation(); deleteEntry('${r.date}', '${r.empId}')" class="text-red-500 hover:bg-red-50 p-2 rounded-xl transition-all">
+                    ${isEditMode ? `
+                    <button onclick="event.stopPropagation(); deleteEntry('${r.date}', '${r.empId}')" class="text-red-500 bg-red-50 p-2 rounded-xl">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
-                    </button>
+                    </button>` : ''}
                 </div>`;
             });
         } else {
-            list.innerHTML = `<div class="py-4 text-center text-gray-300 font-light italic text-xs">ว่างเปล่า</div>`;
+            list.innerHTML = `<div class="py-10 text-center text-gray-300 font-light italic text-sm">ไม่มีข้อมูลการหยุด</div>`;
         }
         document.getElementById('modal').classList.remove('hidden');
     }
@@ -484,6 +585,7 @@
     function closeModal() { document.getElementById('modal').classList.add('hidden'); }
 
     async function save() {
+        if(!isEditMode) return;
         const id = document.getElementById('empId').value;
         const st = document.getElementById('status').value;
         const name = document.getElementById('empId').options[document.getElementById('empId').selectedIndex].text.split(' (')[0];
@@ -494,28 +596,21 @@
                 body: JSON.stringify({ date: selDate, empId: id, empName: name, status: st })
             });
             const out = await res.json();
-            if(out.status === "duplicate") {
-                showToast("มีข้อมูลพนักงานคนนี้อยู่แล้ว", "error");
-            } else {
-                showToast("บันทึกข้อมูลเรียบร้อย");
-                closeModal();
-                await refreshData();
-            }
+            if(out.status === "duplicate") showToast("มีข้อมูลพนักงานคนนี้อยู่แล้ว", "error");
+            else { showToast("บันทึกข้อมูลเรียบร้อย"); closeModal(); await refreshData(); }
         } catch(e) { closeModal(); await refreshData(); }
         showLoad(false);
     }
 
     async function deleteEntry(date, empId) {
+        if(!isEditMode) return;
         showConfirm(async () => {
             showLoad(true);
             try {
                 const response = await fetch(`${URL}?action=delete&date=${date}&empId=${empId}`);
                 const result = await response.json();
-                if (result.status === "success") {
-                    showToast("ลบข้อมูลสำเร็จ");
-                    closeModal();
-                    await refreshData();
-                } else { showToast("เกิดข้อผิดพลาดในการลบ", "error"); }
+                if (result.status === "success") { showToast("ลบข้อมูลสำเร็จ"); closeModal(); await refreshData(); } 
+                else { showToast("เกิดข้อผิดพลาดในการลบ", "error"); }
             } catch(e) { closeModal(); await refreshData(); }
             showLoad(false);
         });
