@@ -131,7 +131,7 @@
             border-bottom: 1px solid rgba(0,0,0,0.03); 
             transition: all 0.2s ease;
             cursor: pointer;
-            overflow: hidden; 
+            overflow-y: auto; 
             padding: 8px;
         }
         .day-cell:hover { background: rgba(255, 255, 255, 0.9); z-index: 10; box-shadow: inset 0 0 0 2px #0071e3; }
@@ -145,7 +145,7 @@
             border-bottom: 1px solid rgba(0,0,0,0.05);
         }
 
-        .cell-content { display: flex; flex-wrap: wrap; gap: 4px; align-items: flex-start; }
+        .cell-content { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
         .date-number { 
             font-size: 1.1rem; 
             font-weight: 600; 
@@ -155,33 +155,49 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            margin-bottom: 4px;
         }
         
         .current-day .date-number { background: #0071e3; color: white; border-radius: 50%; }
 
-        /* ขยายขนาด Tag และตัวหนังสือ */
-        .emp-tag { 
-            font-size: 13px; 
-            width: 58px; height: 58px; 
-            padding: 4px; border-radius: 12px; color: white; 
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            text-align: center; line-height: 1.1; word-break: break-all; font-weight: 600;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.08); transition: transform 0.1s;
+        /* ปรับปรุงดีไซน์เป็นวงกลมและชื่อต่อท้าย (เพิ่มขนาดตัวหนังสือ) */
+        .emp-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            width: 100%;
+            padding: 2px 0;
         }
 
-        /* ปรับปรุงขนาดและน้ำหนักตัวอักษรภาษาอังกฤษในวงเล็บ */
-        .status-label {
-            font-size: 11px; /* ขยายขนาด */
-            font-weight: 800; /* ทำให้หนาขึ้น */
-            margin-top: 1px;
+        .status-dot { 
+            width: 13px; 
+            height: 13px; 
+            border-radius: 50%; 
+            flex-shrink: 0;
+            box-shadow: 0 0 0 1px rgba(0,0,0,0.05);
+        }
+
+        .emp-name-label {
+            font-size: 14px; /* ขยายขนาดชื่อพนักงาน */
+            font-weight: 500;
+            color: #1c1c1e;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .status-abbr {
+            font-size: 12px; /* ขยายขนาดตัวย่อ */
+            font-weight: 700;
+            color: #636366;
             text-transform: uppercase;
         }
 
-        /* ปรับปรุงสีตามคำขอ */
+        /* สีตามสถานะ */
         .st-Work { background: #34c759; } 
         .st-V { background: #ff3b30; }    
         .st-SICK { background: #8e8e93; }  
-        .st-EVENT { background: #FFD60A; color: #1c1c1e; } /* เปลี่ยนเป็นสีเหลือง + ตัวหนังสือดำเพื่อให้เห็นชัด */
+        .st-EVENT { background: #FFD60A; } 
         .st-PH { background: #ff9500; }    
         .st-H { background: #af52de; }    
 
@@ -189,13 +205,18 @@
             position: fixed;
             top: 80px; left: 50%;
             transform: translateX(-50%) translateY(-150px);
-            z-index: 3000;
+            z-index: 5000; /* สูงสุด */
             transition: transform 0.5s cubic-bezier(0.18, 0.89, 0.32, 1.28);
         }
         #toast.show { transform: translateX(-50%) translateY(0); }
 
-        #loading { position: fixed; inset: 0; background: rgba(245,245,247,0.7); backdrop-filter: blur(15px); z-index: 4000; display: none; justify-content: center; align-items: center; }
+        /* ปรับ Z-Index ของ Loading ให้อยู่ใต้ Modal */
+        #loading { position: fixed; inset: 0; background: rgba(245,245,247,0.7); backdrop-filter: blur(15px); z-index: 3000; display: none; justify-content: center; align-items: center; }
         
+        /* ปรับ Z-Index ของ Modal ให้สูงกว่า Loading */
+        #modal { z-index: 4000; }
+        #confirmModal { z-index: 4500; }
+
         @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
@@ -256,7 +277,7 @@
     </footer>
 </main>
 
-<div id="modal" class="fixed inset-0 bg-black/30 hidden z-[2500] flex justify-center items-center p-4 backdrop-blur-sm">
+<div id="modal" class="fixed inset-0 bg-black/30 hidden flex justify-center items-center p-4 backdrop-blur-sm">
     <div class="bg-white/95 rounded-[35px] p-8 w-full max-w-md shadow-2xl border border-white">
         <h2 id="modalDate" class="text-2xl font-semibold mb-2 text-center text-gray-800"></h2>
         <div id="existingEntries" class="mb-6 space-y-2 max-h-40 overflow-y-auto pr-2"></div>
@@ -267,6 +288,7 @@
                     <option value="3535">นวพล (3535)</option>
                     <option value="3400">ปิยะพร (3400)</option>
                     <option value="3723">กรทักษ์ (3723)</option>
+                    <option value="3400">จารุวรรณ (3400)</option>
                 </select>
                 <select id="status" class="w-full p-3.5 bg-white rounded-2xl border border-gray-200 outline-none font-medium text-sm">
                     <option value="Work">🟢 มาทำงาน (Work)</option>
@@ -285,7 +307,7 @@
     </div>
 </div>
 
-<div id="confirmModal" class="fixed inset-0 bg-black/40 hidden z-[3000] flex flex-col justify-end p-4 backdrop-blur-sm">
+<div id="confirmModal" class="fixed inset-0 bg-black/40 hidden flex flex-col justify-end p-4 backdrop-blur-sm">
     <div class="max-w-md mx-auto w-full">
         <div class="bg-white/90 rounded-2xl overflow-hidden mb-3">
             <div class="p-5 text-center border-bottom border-gray-100">
@@ -367,8 +389,8 @@
         const modal = document.getElementById('confirmModal');
         const okBtn = document.getElementById('confirmOk');
         const cancelBtn = document.getElementById('confirmCancel');
-        modal.style.display = 'flex';
-        const close = () => { modal.style.display = 'none'; };
+        modal.classList.remove('hidden');
+        const close = () => { modal.classList.add('hidden'); };
         okBtn.onclick = () => { callback(); close(); };
         cancelBtn.onclick = close;
         modal.onclick = (e) => { if(e.target === modal) close(); };
@@ -411,10 +433,12 @@
             const dateKey = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
             const isToday = today.getDate() === d && today.getMonth() === m && today.getFullYear() === y;
             const records = db.filter(r => r.date === dateKey);
+            
             let tags = records.map(r => `
-                <div class="emp-tag st-${r.status}" title="${r.empName}">
-                    <span class="leading-tight text-[13px]">${r.empName}</span>
-                    <span class="status-label">(${r.status})</span>
+                <div class="emp-row" title="${r.empName} (${r.status})">
+                    <div class="status-dot st-${r.status}"></div>
+                    <span class="emp-name-label">${r.empName}</span>
+                    <span class="status-abbr">(${r.status})</span>
                 </div>
             `).join('');
 
@@ -441,7 +465,7 @@
                 list.innerHTML += `
                 <div class="flex justify-between items-center bg-white p-3 rounded-2xl border border-gray-100 shadow-sm">
                     <div class="flex items-center gap-2">
-                        <div class="w-2 h-2 rounded-full st-${r.status}"></div>
+                        <div class="w-3 h-3 rounded-full st-${r.status}"></div>
                         <p class="font-medium text-gray-700 text-sm">${r.empName} (${r.status})</p>
                     </div>
                     <button onclick="event.stopPropagation(); deleteEntry('${r.date}', '${r.empId}')" class="text-red-500 hover:bg-red-50 p-2 rounded-xl transition-all">
@@ -454,10 +478,10 @@
         } else {
             list.innerHTML = `<div class="py-4 text-center text-gray-300 font-light italic text-xs">ว่างเปล่า</div>`;
         }
-        document.getElementById('modal').style.display = 'flex';
+        document.getElementById('modal').classList.remove('hidden');
     }
 
-    function closeModal() { document.getElementById('modal').style.display = 'none'; }
+    function closeModal() { document.getElementById('modal').classList.add('hidden'); }
 
     async function save() {
         const id = document.getElementById('empId').value;
