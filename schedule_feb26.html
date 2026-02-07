@@ -104,10 +104,10 @@
         }
         .overlay.show { display: block; }
 
-        /* ===== Calendar Specific Styles ===== */
+        /* ===== Content Area - Desktop Size Optimization ===== */
         .content-area { 
-            padding: 75px 10px 40px; 
-            max-width: 1300px; 
+            padding: 75px 15px 40px; 
+            max-width: 1200px; /* ลดความกว้างลงเล็กน้อยเพื่อให้ดูเป็นก้อนปฏิทินที่กระชับขึ้น */
             margin: 0 auto; 
             animation: fadeIn 0.8s ease-out; 
         }
@@ -124,7 +124,7 @@
         .calendar-wrapper { overflow: hidden; border-radius: 24px; background: white; }
         
         .day-cell { 
-            height: 110px; 
+            height: 100px; /* ปรับลดความสูงลงเล็กน้อย */
             background: rgba(255, 255, 255, 0.6); 
             border-right: 1px solid rgba(0,0,0,0.03); 
             border-bottom: 1px solid rgba(0,0,0,0.03); 
@@ -135,16 +135,15 @@
             position: relative;
         }
         
-        /* Effect Hover วันที่ */
         .day-cell:hover {
             background: rgba(255, 255, 255, 0.95);
-            transform: scale(1.02);
+            transform: scale(1.01);
             z-index: 10;
             box-shadow: 0 10px 25px rgba(0,0,0,0.08);
             border-radius: 8px;
         }
 
-        @media(min-width: 1024px) { .day-cell { height: 140px; padding: 8px; } }
+        @media(min-width: 1024px) { .day-cell { height: 125px; padding: 6px; } }
 
         .day-header { 
             font-size: 0.75rem; 
@@ -217,13 +216,12 @@
 
         /* สีตามสถานะ */
         .st-Work { background: #34c759; box-shadow: 0 0 6px rgba(52, 199, 89, 0.4); } 
-        .st-V { background: #ff3b30; box-shadow: 0 0 6px rgba(255, 59, 48, 0.4); }    
+        .st-V { background: #ff3b30; box-shadow: 0 0 6px rgba(255, 59, 48, 0.4); }     
         .st-SICK { background: #8e8e93; }  
         .st-EVENT { background: #FFD60A; } 
-        .st-PH { background: #ff9500; }    
-        .st-H { background: #af52de; }    
+        .st-PH { background: #ff9500; }     
+        .st-H { background: #af52de; }     
 
-        /* Inputs & Selects Hover */
         select, input {
             transition: all 0.2s ease;
         }
@@ -239,9 +237,8 @@
         }
         #toast.show { transform: translateX(-50%) translateY(0); }
 
-        #loading { position: fixed; inset: 0; background: rgba(245,245,247,0.7); backdrop-filter: blur(15px); z-index: 3000; display: none; justify-content: center; align-items: center; }
+        #loading { position: fixed; inset: 0; background: rgba(245,245,247,0.8); backdrop-filter: blur(15px); z-index: 9999; display: none; justify-content: center; align-items: center; }
 
-        /* ปุ่มแก้ไขใหม่ */
         .btn-edit-mode {
             padding: 8px 16px;
             border-radius: 14px;
@@ -268,7 +265,6 @@
 
         .day-cell::-webkit-scrollbar { width: 0px; background: transparent; }
 
-        /* Button Hover Effects */
         .modal-btn { transition: all 0.2s; }
         .modal-btn:active { transform: scale(0.96); opacity: 0.8; }
     </style>
@@ -476,10 +472,8 @@
         }
     }
 
-    // Submit password with Enter
     document.getElementById('passInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') checkPassword(); });
 
-    // Submit form with Enter
     document.addEventListener('keypress', (e) => {
         if (e.key === 'Enter' && !document.getElementById('modal').classList.contains('hidden') && isEditMode) {
             save();
@@ -515,7 +509,12 @@
         const cancelBtn = document.getElementById('confirmCancel');
         modal.classList.remove('hidden');
         const close = () => { modal.classList.add('hidden'); };
-        okBtn.onclick = () => { callback(); close(); };
+        okBtn.onclick = () => { 
+            // เมื่อกดลบใน Modal คอนเฟิร์ม ให้โชว์โหลดทันที
+            showLoad(true);
+            requestAnimationFrame(() => callback()); 
+            close(); 
+        };
         cancelBtn.onclick = close;
         modal.onclick = (e) => { if(e.target === modal) close(); };
     }
@@ -617,37 +616,67 @@
 
     async function save() {
         if(!isEditMode) return;
-        const id = document.getElementById('empId').value;
-        const st = document.getElementById('status').value;
-        const name = document.getElementById('empId').options[document.getElementById('empId').selectedIndex].text.split(' (')[0];
+        
+        // ขึ้น Loading ทันที (Instant Loading)
         showLoad(true);
-        try {
-            const res = await fetch(URL, {
-                method: 'POST',
-                body: JSON.stringify({ date: selDate, empId: id, empName: name, status: st })
-            });
-            const out = await res.json();
-            if(out.status === "duplicate") showToast("มีข้อมูลพนักงานคนนี้อยู่แล้ว", "error");
-            else { showToast("บันทึกข้อมูลเรียบร้อย"); closeModal(); await refreshData(); }
-        } catch(e) { closeModal(); await refreshData(); }
-        showLoad(false);
+        
+        // ใช้ requestAnimationFrame เพื่อให้ Browser วาด Loading ก่อนเริ่มประมวลผล fetch
+        requestAnimationFrame(async () => {
+            const id = document.getElementById('empId').value;
+            const st = document.getElementById('status').value;
+            const name = document.getElementById('empId').options[document.getElementById('empId').selectedIndex].text.split(' (')[0];
+            
+            try {
+                const res = await fetch(URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ date: selDate, empId: id, empName: name, status: st })
+                });
+                const out = await res.json();
+                if(out.status === "duplicate") {
+                    showToast("มีข้อมูลพนักงานคนนี้อยู่แล้ว", "error");
+                    showLoad(false);
+                } else {
+                    showToast("บันทึกข้อมูลเรียบร้อย");
+                    closeModal();
+                    await refreshData();
+                }
+            } catch(e) {
+                closeModal();
+                await refreshData();
+            }
+        });
     }
 
     async function deleteEntry(date, empId) {
         if(!isEditMode) return;
         showConfirm(async () => {
-            showLoad(true);
+            // Loading จะถูกเรียกจากภายใน showConfirm(callback) แล้ว
             try {
                 const response = await fetch(`${URL}?action=delete&date=${date}&empId=${empId}`);
                 const result = await response.json();
-                if (result.status === "success") { showToast("ลบข้อมูลสำเร็จ"); closeModal(); await refreshData(); } 
-                else { showToast("เกิดข้อผิดพลาดในการลบ", "error"); }
-            } catch(e) { closeModal(); await refreshData(); }
-            showLoad(false);
+                if (result.status === "success") {
+                    showToast("ลบข้อมูลสำเร็จ");
+                    closeModal();
+                    await refreshData();
+                } else {
+                    showToast("เกิดข้อผิดพลาดในการลบ", "error");
+                    showLoad(false);
+                }
+            } catch(e) {
+                closeModal();
+                await refreshData();
+            }
         });
     }
 
-    function showLoad(v) { document.getElementById('loading').style.display = v ? 'flex' : 'none'; }
+    function showLoad(v) { 
+        const loader = document.getElementById('loading');
+        if(v) {
+            loader.style.display = 'flex';
+        } else {
+            loader.style.display = 'none';
+        }
+    }
 
     init();
 </script>
