@@ -10,36 +10,40 @@
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            /* iOS Concept Colors */
             --ios-bg: #f2f2f7;
-            --glass-bg: rgba(255, 255, 255, 0.7);
+            --glass-bg: rgba(255, 255, 255, 0.75);
             --glass-border: rgba(255, 255, 255, 0.4);
             --primary-blue: #007aff;
             --sidebar-color: rgba(28, 28, 30, 0.95);
             --text-main: #1c1c1e;
             --text-light: #8e8e93;
             --card-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
-            
-            /* Original Category Colors - Adjusted for Glass Theme */
             --success: #34c759;
             --danger: #ff3b30;
             --sidebar-width: 280px;
         }
 
-        * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
+        * { 
+            box-sizing: border-box; 
+            font-family: 'Kanit', sans-serif !important; 
+            -webkit-tap-highlight-color: transparent;
+        }
         
         body { 
             margin: 0; 
+            background: #e5e5ea;
             background: linear-gradient(135deg, #e5e5ea 0%, #ffffff 100%);
             background-attachment: fixed;
             color: var(--text-main); 
             -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
             transition: padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            overflow-x: hidden; /* ป้องกันหน้าจอเลื่อนซ้ายขวาบนมือถือ */
+            overflow-x: hidden;
             width: 100%;
+            min-height: 100vh;
         }
 
-        /* Glass Header */
+        /* Optimized Header */
         .top-header {
             position: fixed;
             top: 0; left: 0; right: 0;
@@ -53,6 +57,8 @@
             padding: 0 20px;
             border-bottom: 0.5px solid rgba(0, 0, 0, 0.1);
             transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateZ(0);
+            will-change: left;
         }
 
         .top-toggle {
@@ -64,21 +70,25 @@
             cursor: pointer;
             display: flex; align-items: center; justify-content: center;
             font-size: 18px;
-            transition: all 0.2s;
-            flex-shrink: 0; /* ไม่ให้ปุ่มโดนบีบ */
+            transition: transform 0.2s cubic-bezier(0.2, 0, 0.2, 1);
+            flex-shrink: 0;
         }
-        .top-toggle:hover { transform: scale(1.05); opacity: 0.9; }
+        .top-toggle:active { transform: scale(0.9); }
 
-        /* Sidebar Glass */
+        /* Optimized Sidebar */
         .sidebar { 
             position: fixed; top: 0; left: 0; 
             width: var(--sidebar-width); height: 100vh; 
             background: var(--sidebar-color); 
             backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
             color: #fff; overflow-y: auto; 
-            transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 2000;
             box-shadow: 10px 0 30px rgba(0,0,0,0.1);
+            transform: translateZ(0);
+            will-change: transform;
+            -webkit-overflow-scrolling: touch;
         }
         
         @media(min-width:769px) { 
@@ -97,7 +107,7 @@
             .toolbar { flex-direction: column; align-items: stretch !important; gap: 10px !important; padding: 15px !important; }
             .modern-date { width: 100%; }
             .btn-fetch { width: 100%; justify-content: center; }
-            .stat-grid { grid-template-columns: 1fr !important; } /* มือถือแสดง Stat เป็นแถวเดียวเพื่อให้เห็นชัดๆ */
+            .stat-grid { grid-template-columns: 1fr !important; }
             .top-header div { font-size: 1rem !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         }
 
@@ -105,35 +115,42 @@
             position: fixed; inset: 0; 
             background: rgba(0, 0, 0, 0.3); 
             backdrop-filter: blur(4px); 
+            -webkit-backdrop-filter: blur(4px);
             display: none; z-index: 1500; 
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
-        .overlay.show { display: block; }
+        .overlay.show { display: block; opacity: 1; }
 
         .sidebar-header { padding: 25px 20px; font-size: 18px; font-weight: 600; background: rgba(0,0,0,0.2); border-bottom: 0.5px solid rgba(255,255,255,0.1); }
         .menu { padding: 10px 0; }
         .menu a, .menu .drop-btn { 
             width: 100%; min-height: 50px; padding: 12px 20px; background: none; border: none; 
             color: #ebebf5; font-size: 15px; cursor: pointer; display: flex; align-items: center; 
-            text-decoration: none; transition: 0.3s; 
+            text-decoration: none; transition: background 0.2s; 
         }
         .menu a:hover, .menu .drop-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
 
-        /* Content Container */
         .main-wrapper { padding: 85px 15px 40px; display: flex; justify-content: center; width: 100%; }
         .content-container { width: 100%; max-width: 1200px; }
 
-        /* iOS Toolbar */
-        .toolbar { 
+        /* Optimized Cards & Toolbar */
+        .toolbar, .card, #emptyState {
             background: var(--glass-bg);
             backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--card-shadow);
+            transform: translateZ(0);
+        }
+
+        .toolbar { 
             padding: 15px 25px; 
-            border-radius: 20px; 
-            box-shadow: var(--card-shadow); 
             display: flex; 
             justify-content: flex-end; 
             align-items: center; 
             margin-bottom: 30px; 
-            border: 1px solid var(--glass-border); 
             gap: 15px; 
             flex-wrap: wrap; 
         }
@@ -147,7 +164,6 @@
             font-size: 15px; 
             color: var(--primary-blue); 
             outline: none; 
-            transition: 0.2s; 
             cursor: pointer;
         }
 
@@ -160,26 +176,16 @@
             cursor: pointer; 
             font-weight: 500; 
             font-size: 15px; 
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+            transition: all 0.2s ease; 
             display: flex; align-items: center; gap: 8px;
         }
-        .btn-fetch:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
-            filter: brightness(1.1);
-        }
-        .btn-fetch:active { transform: translateY(0); }
+        .btn-fetch:active { transform: scale(0.97); opacity: 0.9; }
 
-        /* Glass Cards */
         .card { 
-            background: var(--glass-bg); 
-            backdrop-filter: blur(10px);
-            border-radius: 20px; 
             overflow: hidden; 
-            border: 1px solid var(--glass-border); 
             margin-bottom: 25px; 
-            box-shadow: var(--card-shadow);
             width: 100%;
+            contain: content;
         }
         
         .card-header-bar { 
@@ -189,9 +195,29 @@
             font-weight: 500; 
             letter-spacing: 0.3px;
             backdrop-filter: brightness(0.9);
+            -webkit-backdrop-filter: brightness(0.9);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
         }
+
+        /* Search Input Styling */
+        .search-box {
+            background: rgba(255, 255, 255, 0.2);
+            border: 0.5px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            padding: 6px 12px;
+            color: white;
+            font-size: 13px;
+            outline: none;
+            width: 200px;
+            transition: all 0.2s;
+        }
+        .search-box::placeholder { color: rgba(255, 255, 255, 0.7); }
+        .search-box:focus { background: rgba(255, 255, 255, 0.3); width: 250px; }
         
-        /* Table Style */
         .table-luxury { width: 100%; border-collapse: collapse; }
         .table-luxury th { 
             background: rgba(0, 0, 0, 0.02);
@@ -208,35 +234,30 @@
             padding: 14px 15px; 
             font-size: 14.5px; 
             border-bottom: 1px solid rgba(0, 0, 0, 0.03);
-            transition: 0.2s;
             white-space: nowrap;
         }
         .table-luxury tbody tr:hover { background-color: rgba(0, 122, 255, 0.03); }
 
-        /* Scrollable Table Container */
         .table-responsive {
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
             width: 100%;
         }
 
-        /* Grid Layout */
         .grid-layout { display: grid; grid-template-columns: 1.7fr 1.3fr; gap: 25px; }
         @media (max-width: 1024px) { .grid-layout { grid-template-columns: 1fr; } }
 
-        /* iOS Stat Boxes */
         .stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 20px; }
         .stat-box { 
             padding: 18px; 
             border: 1px solid var(--glass-border); 
             border-radius: 18px; 
             background: rgba(255, 255, 255, 0.5); 
-            transition: all 0.3s ease; 
+            transition: transform 0.2s ease; 
         }
-        .stat-box:hover { transform: scale(1.02); background: rgba(255, 255, 255, 0.8); }
+        .stat-box:active { transform: scale(0.98); }
         .stat-val { font-size: 28px; font-weight: 700; color: #000; letter-spacing: -1px; }
 
-        /* Categorized Backgrounds - Refined */
         .bg-daily { background: rgba(58, 58, 60, 0.9); }
         .bg-web { background: rgba(0, 122, 255, 0.9); }
         .bg-summary { background: rgba(88, 86, 214, 0.9); }
@@ -245,15 +266,13 @@
         .bg-focus { background: rgba(72, 72, 74, 0.9); }
         .bg-target { background: rgba(28, 28, 30, 0.9); }
 
-        /* Target Rows - Original Logic with Glass style */
-        .row-target-allpost { background-color: rgba(0, 122, 255, 0.15) !important; font-weight: 500; }
-        .row-target-newpost { background-color: rgba(0, 122, 255, 0.1) !important; }
-        .row-target-bdbc { background-color: rgba(90, 200, 250, 0.1) !important; }
+        .row-target-allpost { background-color: rgba(0, 122, 255, 0.1) !important; font-weight: 500; }
+        .row-target-newpost { background-color: rgba(0, 122, 255, 0.05) !important; }
+        .row-target-bdbc { background-color: rgba(90, 200, 250, 0.05) !important; }
         .row-target-alldevice { background-color: rgba(52, 199, 89, 0.1) !important; font-weight: 500; }
         .row-target-apple { background-color: rgba(255, 59, 48, 0.05) !important; }
         .row-target-smartphone { background-color: rgba(255, 149, 0, 0.05) !important; }
 
-        /* Pagination */
         .pagination { display: flex; gap: 8px; padding: 15px 20px; justify-content: center; flex-wrap: wrap; }
         .page-btn { 
             width: 32px; height: 32px; border: none; background: rgba(0,0,0,0.05); 
@@ -261,14 +280,19 @@
         }
         .page-btn.active { background: var(--primary-blue); color: white; }
 
-        /* UI Helpers */
         .up { color: var(--success) !important; } 
         .down { color: var(--danger) !important; }
-        #loader { display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.7); z-index: 9999; backdrop-filter: blur(10px); flex-direction: column; align-items: center; justify-content: center; }
+        
+        #loader { 
+            display: none; position: fixed; inset: 0; 
+            background: rgba(255,255,255,0.8); z-index: 9999; 
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            flex-direction: column; align-items: center; justify-content: center; 
+        }
         .spinner { width: 40px; height: 40px; border: 3px solid rgba(0,122,255,0.1); border-top: 3px solid var(--primary-blue); border-radius: 50%; animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        #realDashboard { display: none; animation: fadeIn 0.5s ease; width: 100%; }
+        #realDashboard { display: none; animation: fadeIn 0.4s ease-out; width: 100%; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
         .row-highlight-summary { font-size: 1.05rem !important; font-weight: 600 !important; background: rgba(0,0,0,0.02); }
@@ -304,9 +328,9 @@
             <button class="btn-fetch" onclick="fetchData()">🚀 ดึงข้อมูล</button>
         </div>
 
-        <div id="emptyState" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 400px; background: var(--glass-bg); backdrop-filter: blur(10px); border-radius: 24px; border: 1px solid var(--glass-border); color: var(--text-light); margin-top: 20px; box-shadow: var(--card-shadow);">
+        <div id="emptyState" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 400px; margin-top: 20px;">
             <div style="font-size: 64px; margin-bottom: 20px;">📊</div>
-            <p style="font-size: 1.1rem; font-weight: 300;">กรุณากดปุ่มดึงข้อมูล เพื่อแสดงยอดขาย</p>
+            <p style="font-size: 1.1rem; font-weight: 300; color: var(--text-light);">กรุณากดปุ่มดึงข้อมูล เพื่อแสดงยอดขาย</p>
         </div>
 
         <div id="realDashboard">
@@ -327,7 +351,10 @@
             </div>
 
             <div class="card">
-                <div class="card-header-bar bg-web">🛒 รายละเอียดการขาย</div>
+                <div class="card-header-bar bg-web">
+                    <span>🛒 รายละเอียดการขาย</span>
+                    <input type="text" id="webSearch" class="search-box" placeholder="🔍 ค้นหา พนักงาน/ลูกค้า/รุ่น..." oninput="handleSearch()">
+                </div>
                 <div class="table-responsive">
                     <table class="table-luxury">
                         <thead>
@@ -396,7 +423,7 @@
 </div>
 
 <script>
-    // -- Logic Remains Identical to Preserve Functionality --
+    // -- Sidebar Logic (UNTOUCHED) --
     function includeSidebar() {
         const cached = localStorage.getItem('sidebar_cache');
         if (cached) {
@@ -442,11 +469,13 @@
         });
     }
 
+    // -- Data Logic --
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx3m4WZLDBrHlkkIGpfyL1QDu91JriD0AsLyXt9SC4cSX79EXgEUkW3YllcVqSYdrdkng/exec";
     const DEFAULT_USER_NAME = "นวพล"; 
     let currentWebPage = 1;
     const itemsPerPage = 5;
     let allWebData = [];
+    let filteredWebData = []; // Added for filter logic
 
     window.addEventListener('DOMContentLoaded', () => {
         includeSidebar();
@@ -475,6 +504,8 @@
                 fetch(`${WEB_APP_URL}?action=getWebDetails&day=${dayNum}`).then(r => r.json())
             ]);
             allWebData = webRes.rows || [];
+            filteredWebData = [...allWebData]; // Initialize filtered data
+            document.getElementById('webSearch').value = ''; // Reset search input
             currentWebPage = 1;
             renderData(salesRes);
             renderWebTable();
@@ -487,18 +518,43 @@
         }
     }
 
+    // Filter Logic
+    function handleSearch() {
+        const query = document.getElementById('webSearch').value.toLowerCase().trim();
+        if (!query) {
+            filteredWebData = [...allWebData];
+        } else {
+            filteredWebData = allWebData.filter(row => {
+                // Search in Employee (row[1]), Customer (row[2]), Postpay (row[3]), or Device (row[5])
+                return (row[1] && row[1].toString().toLowerCase().includes(query)) ||
+                       (row[2] && row[2].toString().toLowerCase().includes(query)) ||
+                       (row[3] && row[3].toString().toLowerCase().includes(query)) ||
+                       (row[5] && row[5].toString().toLowerCase().includes(query));
+            });
+        }
+        currentWebPage = 1; // Back to first page after filter
+        renderWebTable();
+    }
+
     function renderWebTable() {
         const [y, m, d] = document.getElementById('targetDate').value.split('-');
         const fixedDate = `${d}/${m}/${y}`;
         const start = (currentWebPage - 1) * itemsPerPage;
         const end = start + itemsPerPage;
-        const paginatedData = allWebData.slice(start, end);
+        const paginatedData = filteredWebData.slice(start, end);
+        
+        if (paginatedData.length === 0) {
+            document.getElementById('webBody').innerHTML = `<tr><td colspan="9" style="text-align:center; padding:30px; color:var(--text-light);">ไม่พบข้อมูลที่ค้นหา</td></tr>`;
+            document.getElementById('webPagination').style.display = 'none';
+            return;
+        }
+
         document.getElementById('webBody').innerHTML = paginatedData.map(row => {
             const timeDisplay = row[7];
             return `<tr><td>${fixedDate}</td><td>${row[1]}</td><td>${row[2]}</td><td>${row[3]}</td><td>${formatNumber(row[4])}</td><td>${row[5]}</td><td>${formatNumber(row[6])}</td><td>${timeDisplay}</td><td>${row[8]}</td></tr>`;
         }).join('');
 
-        const totalPages = Math.ceil(allWebData.length / itemsPerPage);
+        const totalPages = Math.ceil(filteredWebData.length / itemsPerPage);
         const paginationEl = document.getElementById('webPagination');
         if (totalPages > 1) {
             let btns = '';
@@ -565,6 +621,6 @@
         }
     }
 </script>
-    <footer>© 2026 Copy Right By Angerina Frog</footer>
+<footer>© 2026 Copy Right By Angerina Frog</footer>
 </body>
 </html>
