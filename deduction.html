@@ -106,7 +106,7 @@
         /* --- Content Layout --- */
         .content {
             padding: 84px 20px 40px;
-            max-width: 100%;
+            max-width: 1400px;
             margin: 0 auto;
             animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
         }
@@ -186,7 +186,7 @@
             border-radius: 16px; background: rgba(255,255,255,0.4);
             border: 1px solid rgba(0,0,0,0.05);
         }
-        table { width: 100%; border-collapse: collapse; min-width: 650px; }
+        table { width: 100%; border-collapse: collapse; min-width: 700px; }
         th { 
             padding: 14px 15px; text-align: left; color: var(--text-light); 
             font-weight: 500; font-size: 13px; border-bottom: 1px solid rgba(0,0,0,0.05);
@@ -196,12 +196,27 @@
         
         .amt-red { color: var(--ios-red); font-weight: 700; }
         
-        .btn-delete { 
-            background: rgba(255,59,48,0.1); border: none; color: var(--ios-red); 
-            width: 36px; height: 36px; border-radius: 10px; cursor: pointer; 
-            transition: var(--transition); display: inline-flex; align-items: center; justify-content: center;
+        .btn-delete-multi {
+            background: var(--ios-red); color: white; border: none; 
+            padding: 8px 16px; border-radius: 10px; font-size: 13px; font-weight: 600;
+            cursor: pointer; display: none; align-items: center; gap: 6px;
+            transition: var(--transition);
         }
-        .btn-delete:hover { background: var(--ios-red); color: white; transform: rotate(10deg) scale(1.1); }
+        .btn-delete-multi:hover { opacity: 0.9; transform: scale(1.02); }
+
+        /* Custom Checkbox */
+        .chk-container { display: flex; align-items: center; justify-content: center; }
+        .custom-chk {
+            width: 20px; height: 20px; border: 2px solid #d1d1d6; border-radius: 6px;
+            appearance: none; -webkit-appearance: none; outline: none; cursor: pointer;
+            transition: 0.2s; position: relative; background: #fff;
+        }
+        .custom-chk:checked { background: var(--ios-blue); border-color: var(--ios-blue); }
+        .custom-chk:checked::after {
+            content: ''; position: absolute; left: 6px; top: 2px;
+            width: 5px; height: 10px; border: solid white;
+            border-width: 0 2px 2px 0; transform: rotate(45deg);
+        }
 
         .pagination { display: flex; justify-content: center; gap: 8px; margin-top: 25px; }
         .pg-btn { 
@@ -212,7 +227,7 @@
         .pg-btn:hover:not(.active) { background: #fff; transform: translateY(-2px); border-color: var(--ios-blue); color: var(--ios-blue); }
         .pg-btn.active { background: var(--ios-blue); color: #fff; border-color: var(--ios-blue); }
 
-        /* --- Popups & Extras --- */
+        /* --- Popups & Status UI --- */
         .popup { 
             position: fixed; inset: 0; background: rgba(0,0,0,0.4); 
             display: none; align-items: center; justify-content: center; z-index: 4000; 
@@ -220,11 +235,19 @@
         }
         .popup.show { display: flex; }
         .popup-box { 
-            background: rgba(255,255,255,0.9); padding: 30px; border-radius: 28px; 
-            text-align: center; max-width: 380px; width: 100%; 
-            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-            border: 1px solid var(--glass-border);
+            background: rgba(255,255,255,0.95); padding: 32px; border-radius: 30px; 
+            text-align: center; max-width: 400px; width: 100%; 
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+            border: 1px solid #fff;
         }
+
+        /* Modern Status Icon */
+        .status-visual {
+            width: 64px; height: 64px; margin: 0 auto 20px;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        }
+        .status-visual.success { background: rgba(52, 199, 89, 0.15); color: #34c759; }
+        .status-visual.error { background: rgba(255, 59, 48, 0.15); color: #ff3b30; }
 
         .spinner { 
             width: 35px; height: 35px; border: 3px solid rgba(0,122,255,0.1); 
@@ -280,7 +303,7 @@
                 </div>
                 <h3>บันทึกรายการ</h3>
             </div>
-            <p class="subtitle">หักเงินแม่งเลยอีดอกทอง!</p>
+            <p class="subtitle">ระบุข้อมูลการหักเงินพนักงาน</p>
             
             <form id="deductionForm">
                 <div class="form-row">
@@ -337,28 +360,38 @@
                     </div>
                     <h3>รายการล่าสุด</h3>
                 </div>
-                <button onclick="fetchData(true)" class="btn-refresh">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M23 4v6h-6"></path><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
-                    รีเฟรช
-                </button>
+                <div style="display:flex; gap:10px; align-items:center;">
+                    <button id="btnDeleteSelected" class="btn-delete-multi" onclick="openAuthPopup('deleteMulti')">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        ลบที่เลือก (<span id="selectedCount">0</span>)
+                    </button>
+                    <button onclick="fetchData(true)" class="btn-refresh">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M23 4v6h-6"></path><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+                        รีเฟรช
+                    </button>
+                </div>
             </div>
             
             <div class="table-container">
-                <table>
+                <table id="mainTable">
                     <thead>
                         <tr>
+                            <th style="width:40px; text-align:center;">
+                                <div class="chk-container">
+                                    <input type="checkbox" class="custom-chk" id="selectAll" onclick="toggleSelectAll(this)">
+                                </div>
+                            </th>
                             <th>วันที่</th>
                             <th>พนักงาน</th>
                             <th>เหตุผล</th>
                             <th>หมายเหตุ</th>
                             <th>หักเงิน</th>
-                            <th style="width:50px;"></th>
                         </tr>
                     </thead>
                     <tbody id="tableBody">
                         <tr><td colspan="6" style="text-align:center; padding:60px;">
                             <div class="spinner" style="margin: 0 auto 10px;"></div>
-                            <div style="color:var(--ios-blue); font-size:13px;">กำลังโหลด...</div>
+                            <div style="color:var(--ios-blue); font-size:13px;">กำลังโหลดข้อมูล...</div>
                         </td></tr>
                     </tbody>
                 </table>
@@ -371,24 +404,24 @@
 <div class="popup" id="authPopup">
     <div class="popup-box">
         <div id="otpSelectAdmin">
-            <h3>ยืนยันตัวตน</h3>
-            <p class="subtitle">เลือก Admin เพื่อรับรหัส OTP</p>
-            <select id="adminEmailSelect" style="margin-bottom: 20px;">
+            <h3 style="margin-bottom:8px;">ยืนยันตัวตน</h3>
+            <p class="subtitle">เลือก Admin เพื่อรับรหัส OTP เพื่อดำเนินการ</p>
+            <select id="adminEmailSelect" style="margin-bottom: 24px;">
                 <option value="" disabled selected>-- เลือกผู้รับรหัส --</option>
                 <option value="book016boat@gmail.com">ศุภกฤต (Admin)</option>
                 <option value="malikastory2542@gmail.com">ปิยพร (Admin)</option>
             </select>
-            <div style="display: flex; gap: 10px;">
-                <button class="btn-submit" style="background: rgba(0,0,0,0.05); color: #1d1d1f; box-shadow:none;" onclick="closeAuthPopup()">ยกเลิก</button>
-                <button class="btn-submit" onclick="sendOTPRequest()">รับรหัส</button>
+            <div style="display: flex; gap: 12px;">
+                <button class="btn-submit" style="background: #f2f2f7; color: #1d1d1f; box-shadow:none;" onclick="closeAuthPopup()">ยกเลิก</button>
+                <button class="btn-submit" onclick="sendOTPRequest()">รับรหัส OTP</button>
             </div>
         </div>
         <div id="otpInputForm" style="display:none;">
-            <h3>รหัส OTP</h3>
-            <p class="subtitle">กรอกรหัส 6 หลักจากอีเมล</p>
-            <input type="number" id="confirmOTP" placeholder="000000" style="text-align: center; margin-bottom: 20px; font-size: 24px; letter-spacing: 4px; font-weight: 700;">
-            <div style="display: flex; gap: 10px;">
-                <button class="btn-submit" style="background: rgba(0,0,0,0.05); color: #1d1d1f; box-shadow:none;" onclick="resetAuthPopup()">ย้อนกลับ</button>
+            <h3 style="margin-bottom:8px;">กรอกรหัสยืนยัน</h3>
+            <p class="subtitle">รหัส 6 หลักถูกส่งไปยังอีเมลแล้ว</p>
+            <input type="number" id="confirmOTP" placeholder="000000" style="text-align: center; margin-bottom: 24px; font-size: 28px; letter-spacing: 6px; font-weight: 700; background: #f2f2f7; border:none;">
+            <div style="display: flex; gap: 12px;">
+                <button class="btn-submit" style="background: #f2f2f7; color: #1d1d1f; box-shadow:none;" onclick="resetAuthPopup()">ย้อนกลับ</button>
                 <button class="btn-submit" id="btnVerifyOtp" onclick="verifyAndExecute()">ยืนยัน</button>
             </div>
         </div>
@@ -397,17 +430,19 @@
 
 <div class="popup" id="statusPopup">
     <div class="popup-box">
-        <div id="statusIcon" style="font-size: 40px; margin-bottom: 10px;"></div>
-        <h3 id="statusTitle"></h3>
-        <p id="statusText" class="subtitle"></p>
+        <div id="statusVisual" class="status-visual">
+            <div id="statusIconSVG"></div>
+        </div>
+        <h3 id="statusTitle" style="margin-bottom:8px;"></h3>
+        <p id="statusText" class="subtitle" style="margin-bottom:24px;"></p>
         <button class="btn-submit" id="btnCloseStatus" onclick="closeStatusPopup()">ตกลง</button>
     </div>
 </div>
 
-<div class="popup" id="loading" style="background:rgba(255,255,255,0.6);">
+<div class="popup" id="loading" style="background:rgba(255,255,255,0.7); backdrop-filter: blur(5px);">
     <div style="display:flex; flex-direction:column; align-items:center;">
         <div class="spinner"></div>
-        <div style="margin-top:15px; font-weight:600; color:var(--ios-blue); font-size:14px;">กำลังดำเนินการ...</div>
+        <div style="margin-top:16px; font-weight:600; color:var(--ios-blue); font-size:15px;">กำลังประมวลผล...</div>
     </div>
 </div>
 
@@ -420,39 +455,23 @@
     let generatedOTP = "";
     let allData = [];
     let currentPage = 1;
-    const rowsPerPage = 7;
+    const rowsPerPage = 10;
     let currentMode = 'submit';
-    let rowToDelete = null;
+    let selectedRows = [];
 
     window.onload = () => {
         includeSidebar();
         document.getElementById('date').value = new Date().toISOString().split("T")[0];
         fetchData(false); 
 
-        // เพิ่มการดักจับปุ่ม Enter ทั่วไป
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Enter') {
-                // ถ้าอยู่ในหน้าใส่ OTP
                 if (document.getElementById('authPopup').classList.contains('show')) {
-                    if (document.getElementById('otpInputForm').style.display !== 'none') {
-                        verifyAndExecute();
-                    } else if (document.getElementById('otpSelectAdmin').style.display !== 'none') {
-                        sendOTPRequest();
-                    }
+                    if (document.getElementById('otpInputForm').style.display !== 'none') verifyAndExecute();
+                    else if (document.getElementById('otpSelectAdmin').style.display !== 'none') sendOTPRequest();
                 } 
-                // ถ้าอยู่ในหน้าแจ้งเตือนสถานะ
-                else if (document.getElementById('statusPopup').classList.contains('show')) {
-                    closeStatusPopup();
-                }
+                else if (document.getElementById('statusPopup').classList.contains('show')) closeStatusPopup();
             }
-        });
-        
-        // ดัก Enter เฉพาะในช่อง Input เพื่อความชัวร์
-        document.getElementById('confirmOTP').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') verifyAndExecute();
-        });
-        document.getElementById('otherReason').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') openAuthPopup('submit');
         });
     };
 
@@ -484,23 +503,10 @@
         }
     }
 
-    window.toggleDrop = function(btn, id) {
-        const item = btn.parentElement;
-        const isOpen = item.classList.toggle("open");
-        if (id) localStorage.setItem('menu-' + id, isOpen);
-    }
-
-    function restoreMenuState() {
-        ['credit', 'branch', 'sales', 'device'].forEach(id => {
-            if (localStorage.getItem('menu-' + id) === 'true') {
-                const el = document.getElementById('menu-' + id);
-                if (el) el.classList.add('open');
-            }
-        });
-    }
-
     async function fetchData(showLoading = true) {
         if(showLoading) document.getElementById('loading').style.display = 'flex';
+        selectedRows = [];
+        updateDeleteBtn();
         try {
             const response = await fetch(APPS_SCRIPT_URL + "?action=getData");
             const data = await response.json();
@@ -526,22 +532,62 @@
 
         tbody.innerHTML = paginatedItems.map(row => {
             const displayDate = row.date ? row.date.split('T')[0] : '-';
+            const isChecked = selectedRows.includes(row.sheetIndex);
             return `
                 <tr>
+                    <td style="text-align:center;">
+                        <div class="chk-container">
+                            <input type="checkbox" class="custom-chk row-chk" 
+                                   onchange="toggleRow(${row.sheetIndex})" 
+                                   ${isChecked ? 'checked' : ''}>
+                        </div>
+                    </td>
                     <td style="font-weight:500;">${displayDate}</td>
                     <td><span style="font-weight:600; color:var(--ios-blue);">${row.name}</span></td>
                     <td><span style="background:rgba(0,0,0,0.05); padding:3px 8px; border-radius:6px; font-size:12px;">${row.reason}</span></td>
                     <td style="color:var(--text-light); font-size:12px;">${row.other || '-'}</td>
                     <td class="amt-red">-${row.amount}฿</td>
-                    <td style="text-align:center;">
-                        <button class="btn-delete" onclick="prepareDelete(${row.sheetIndex}, '${row.name}', '${row.amount}')">
-                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                        </button>
-                    </td>
                 </tr>
             `;
         }).join('');
         renderPagination(Math.ceil(allData.length / rowsPerPage));
+        document.getElementById('selectAll').checked = false;
+    }
+
+    function toggleRow(index) {
+        if (selectedRows.includes(index)) {
+            selectedRows = selectedRows.filter(i => i !== index);
+        } else {
+            selectedRows.push(index);
+        }
+        updateDeleteBtn();
+    }
+
+    function toggleSelectAll(master) {
+        const start = (currentPage - 1) * rowsPerPage;
+        const end = start + rowsPerPage;
+        const currentPageItems = allData.slice(start, end).map(r => r.sheetIndex);
+        
+        if (master.checked) {
+            currentPageItems.forEach(idx => {
+                if (!selectedRows.includes(idx)) selectedRows.push(idx);
+            });
+        } else {
+            selectedRows = selectedRows.filter(idx => !currentPageItems.includes(idx));
+        }
+        displayTable();
+        updateDeleteBtn();
+    }
+
+    function updateDeleteBtn() {
+        const btn = document.getElementById('btnDeleteSelected');
+        const count = document.getElementById('selectedCount');
+        if (selectedRows.length > 0) {
+            btn.style.display = 'flex';
+            count.innerText = selectedRows.length;
+        } else {
+            btn.style.display = 'none';
+        }
     }
 
     function renderPagination(totalPages) {
@@ -567,7 +613,6 @@
 
     function checkReason(select) {
         document.getElementById('otherReasonContainer').style.display = select.value === 'อื่นๆ' ? 'block' : 'none';
-        if(select.value === 'อื่นๆ') setTimeout(() => document.getElementById('otherReason').focus(), 100);
     }
 
     function openAuthPopup(mode) {
@@ -578,11 +623,6 @@
         }
         resetAuthPopup();
         document.getElementById("authPopup").classList.add("show");
-    }
-
-    function prepareDelete(index, name, amt) {
-        rowToDelete = { index, name, amt };
-        openAuthPopup('delete');
     }
 
     function resetAuthPopup() {
@@ -612,7 +652,7 @@
     function verifyAndExecute() {
         if (document.getElementById("confirmOTP").value === generatedOTP) {
             closeAuthPopup();
-            if (currentMode === 'submit') submitData(); else deleteData();
+            if (currentMode === 'submit') submitData(); else deleteSelectedRows();
         } else {
             showStatusPopup("รหัส OTP ไม่ถูกต้อง!", false);
         }
@@ -630,28 +670,47 @@
         };
         try {
             await fetch(APPS_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(formData) });
-            showStatusPopup("บันทึกข้อมูลเรียบร้อยแล้ว", true);
+            showStatusPopup("บันทึกข้อมูลสำเร็จ", true);
             document.getElementById('deductionForm').reset();
             document.getElementById('date').value = new Date().toISOString().split("T")[0];
             fetchData(true);
-        } catch (e) { showStatusPopup("เกิดข้อผิดพลาด", false); }
+        } catch (e) { showStatusPopup("เกิดข้อผิดพลาดในการบันทึก", false); }
     }
 
-    async function deleteData() {
+    async function deleteSelectedRows() {
         document.getElementById('loading').style.display = 'flex';
+        // ดำเนินการลบทีละรายการ (เนื่องจาก API รับลบทีละ index)
         try {
-            await fetch(APPS_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: "deleteRow", rowIndex: rowToDelete.index }) });
-            showStatusPopup("ลบรายการแล้ว", true);
+            // เรียงจากมากไปหาน้อยเพื่อให้ index ไม่เคลื่อนตอนลบใน Sheet
+            const sortedIndices = [...selectedRows].sort((a, b) => b - a);
+            for (const idx of sortedIndices) {
+                await fetch(APPS_SCRIPT_URL, { 
+                    method: 'POST', mode: 'no-cors', 
+                    body: JSON.stringify({ action: "deleteRow", rowIndex: idx }) 
+                });
+            }
+            showStatusPopup("ลบข้อมูลที่เลือกเรียบร้อยแล้ว", true);
+            selectedRows = [];
             fetchData(true);
-        } catch (e) { showStatusPopup("เกิดข้อผิดพลาด", false); }
+        } catch (e) { showStatusPopup("เกิดข้อผิดพลาดในการลบ", false); }
     }
 
     function showStatusPopup(text, isSuccess) {
-        document.getElementById("statusIcon").innerHTML = isSuccess ? '✅' : '⚠️';
-        document.getElementById("statusTitle").innerText = isSuccess ? "สำเร็จ" : "ล้มเหลว";
+        const visual = document.getElementById("statusVisual");
+        const iconContainer = document.getElementById("statusIconSVG");
+        
+        visual.className = 'status-visual ' + (isSuccess ? 'success' : 'error');
+        
+        if(isSuccess) {
+            iconContainer.innerHTML = `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+            document.getElementById("statusTitle").innerText = "ดำเนินการสำเร็จ";
+        } else {
+            iconContainer.innerHTML = `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
+            document.getElementById("statusTitle").innerText = "เกิดข้อผิดพลาด";
+        }
+        
         document.getElementById("statusText").innerText = text;
         document.getElementById("statusPopup").classList.add("show");
-        // โฟกัสปุ่มตกลงเพื่อให้กด Enter ปิดได้ทันที
         setTimeout(() => document.getElementById('btnCloseStatus').focus(), 100);
     }
     
