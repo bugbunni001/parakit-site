@@ -21,217 +21,122 @@
             --success: #34c759;
             --danger: #ff3b30;
             --sidebar-width: 280px;
-            --smooth-ease: cubic-bezier(0.4, 0, 0.2, 1);
+            --smooth: cubic-bezier(0.4, 0, 0.2, 1);
         }
         * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; -webkit-tap-highlight-color: transparent; }
         
         body { 
-            margin: 0; 
-            background: var(--ios-bg); 
-            color: var(--text-main); 
-            -webkit-font-smoothing: antialiased; 
-            transition: padding-left 0.4s var(--smooth-ease); 
-            min-height: 100vh; 
-            overflow-x: hidden; 
+            margin: 0; background: var(--ios-bg); color: var(--text-main); -webkit-font-smoothing: antialiased; 
+            transition: padding-left 0.3s var(--smooth); min-height: 100vh; overflow-x: hidden;
             backface-visibility: hidden;
         }
         
-        /* Top Header */
+        /* Optimized Header & Sidebar */
         .top-header { 
-            position: fixed; 
-            top: 0; 
-            left: 0; 
-            right: 0; 
-            height: 60px; 
-            background: rgba(255,255,255,0.7); 
-            backdrop-filter: blur(20px); 
-            -webkit-backdrop-filter: blur(20px); 
-            z-index: 1200; 
-            display: flex; 
-            align-items: center; 
-            padding: 0 25px; 
-            border-bottom: 1px solid rgba(0,0,0,0.05); 
-            transition: left 0.4s var(--smooth-ease);
-            will-change: left;
+            position: fixed; top: 0; left: 0; right: 0; height: 60px; background: rgba(255,255,255,0.7); 
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); z-index: 1200; 
+            display: flex; align-items: center; padding: 0 25px; border-bottom: 1px solid rgba(0,0,0,0.05); 
+            transition: left 0.3s var(--smooth); will-change: left;
         }
         
         .top-toggle { 
-            width: 34px; 
-            height: 34px; 
-            border-radius: 10px; 
-            border: none; 
-            background: #fff; 
-            color: var(--text-main); 
-            cursor: pointer; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            font-size: 16px; 
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05); 
-            transition: 0.3s var(--smooth-ease); 
+            width: 34px; height: 34px; border-radius: 10px; border: none; background: #fff; 
+            color: var(--text-main); cursor: pointer; display: flex; align-items: center; 
+            justify-content: center; font-size: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); 
+            transition: transform 0.2s var(--smooth); transform: translateZ(0);
         }
-        .top-toggle:hover { transform: scale(1.05) translateZ(0); background: var(--primary-blue); color: #fff; }
-        
-        /* Sidebar */
+        .top-toggle:active { transform: scale(0.92); }
+
         .sidebar { 
-            position: fixed; 
-            top: 0; 
-            left: 0; 
-            width: var(--sidebar-width); 
-            height: 100vh; 
-            background: var(--sidebar-color); 
-            color: #fff; 
-            overflow-y: auto; 
-            transition: transform 0.4s var(--smooth-ease); 
-            z-index: 2000; 
-            will-change: transform;
-            transform: translateZ(0);
+            position: fixed; top: 0; left: 0; width: var(--sidebar-width); height: 100vh; 
+            background: var(--sidebar-color); color: #fff; overflow-y: auto; 
+            transition: transform 0.3s var(--smooth); z-index: 2000; 
+            will-change: transform; transform: translate3d(-100%, 0, 0);
         }
 
         @media(min-width:769px) { 
             body:not(.collapsed) { padding-left: var(--sidebar-width); } 
             body:not(.collapsed) .top-header { left: var(--sidebar-width); } 
-            body.collapsed .sidebar { transform: translateX(-100%); } 
+            body:not(.collapsed) .sidebar { transform: translate3d(0, 0, 0); }
+            body.collapsed .sidebar { transform: translate3d(-100%, 0, 0); }
             body.collapsed .top-header { left: 0; } 
         }
         
         @media(max-width:768px) { 
-            .sidebar { transform: translateX(-100%); } 
-            .sidebar.show { transform: translateX(0); } 
+            .sidebar.show { transform: translate3d(0, 0, 0); } 
             body { padding-left: 0 !important; } 
             .top-header { left: 0 !important; } 
-            .grid-container { grid-template-columns: 1fr !important; } 
-            .mtd-grid { grid-template-columns: 1fr !important; } 
+            .grid-container, .mtd-grid { grid-template-columns: 1fr !important; } 
             .toolbar { flex-direction: column; align-items: stretch !important; gap: 10px !important; } 
         }
 
         .overlay { 
-            position: fixed; 
-            inset: 0; 
-            background: rgba(0,0,0,0.3); 
-            backdrop-filter: blur(4px); 
-            display: none; 
-            z-index: 1500; 
-            opacity: 0;
-            transition: opacity 0.3s var(--smooth-ease);
+            position: fixed; inset: 0; background: rgba(0,0,0,0.3); backdrop-filter: blur(4px); 
+            display: none; z-index: 1500; opacity: 0; transition: opacity 0.3s var(--smooth);
         }
         .overlay.show { display: block; opacity: 1; }
 
-        /* Main Wrapper & Layout */
         .main-wrapper { padding: 85px 20px 40px; display: flex; justify-content: center; }
         .content-container { width: 100%; max-width: 1200px; }
 
-        /* Toolbar Glass */
         .toolbar { 
-            background: var(--glass-white); 
-            backdrop-filter: blur(15px); 
-            padding: 15px 25px; 
-            border-radius: 20px; 
-            border: 1px solid var(--glass-border); 
-            box-shadow: var(--card-shadow); 
-            display: flex; 
-            justify-content: flex-end; 
-            align-items: center; 
-            margin-bottom: 30px; 
-            gap: 15px; 
+            background: var(--glass-white); backdrop-filter: blur(15px); padding: 15px 25px; 
+            border-radius: 20px; border: 1px solid var(--glass-border); box-shadow: var(--card-shadow); 
+            display: flex; justify-content: flex-end; align-items: center; margin-bottom: 30px; gap: 15px; 
         }
         .modern-select, .modern-date { 
-            border: 1px solid #d2d2d7; 
-            border-radius: 12px; 
-            padding: 8px 12px; 
-            font-size: 14px; 
-            background: #fff; 
-            color: var(--text-main); 
-            outline: none; 
-            transition: 0.2s var(--smooth-ease); 
-            cursor: pointer; 
+            border: 1px solid #d2d2d7; border-radius: 12px; padding: 8px 12px; font-size: 14px; 
+            background: #fff; color: var(--text-main); outline: none; transition: 0.2s; cursor: pointer; 
         }
-        .modern-select:hover, .modern-date:hover { border-color: var(--primary-blue); }
-        
         .btn-fetch { 
-            background: var(--primary-blue); 
-            color: #fff; 
-            border: none; 
-            padding: 10px 20px; 
-            border-radius: 12px; 
-            cursor: pointer; 
-            font-weight: 500; 
-            transition: 0.3s var(--smooth-ease); 
-            box-shadow: 0 4px 15px rgba(0, 113, 227, 0.15); 
-            will-change: transform, box-shadow;
+            background: var(--primary-blue); color: #fff; border: none; padding: 10px 20px; 
+            border-radius: 12px; cursor: pointer; font-weight: 500; transition: 0.2s; 
+            box-shadow: 0 4px 15px rgba(0, 113, 227, 0.15); transform: translateZ(0);
         }
-        .btn-fetch:hover { transform: translateY(-2px) translateZ(0); box-shadow: 0 6px 20px rgba(0, 113, 227, 0.25); }
+        .btn-fetch:active { transform: scale(0.96); }
 
-        /* Cards Glass */
+        /* Card Animation Performance */
         .card { 
-            background: var(--glass-white); 
-            backdrop-filter: blur(15px); 
-            border-radius: 24px; 
-            border: 1px solid var(--glass-border); 
-            margin-bottom: 25px; 
-            box-shadow: var(--card-shadow); 
-            overflow: hidden; 
-            transition: transform 0.4s var(--smooth-ease), box-shadow 0.4s var(--smooth-ease);
-            will-change: transform, box-shadow;
-            transform: translateZ(0);
+            background: var(--glass-white); backdrop-filter: blur(15px); border-radius: 24px; 
+            border: 1px solid var(--glass-border); margin-bottom: 25px; box-shadow: var(--card-shadow); 
+            overflow: hidden; transition: transform 0.3s var(--smooth); transform: translateZ(0); will-change: transform;
         }
-        .card:hover { transform: translateY(-4px) translateZ(0); box-shadow: 0 20px 50px rgba(0,0,0,0.1); }
-        .card-header-bar { padding: 16px 25px; font-weight: 600; font-size: 15px; display: flex; justify-content: space-between; align-items: center; letter-spacing: -0.2px; }
+        .card-header-bar { padding: 16px 25px; font-weight: 600; font-size: 15px; display: flex; justify-content: space-between; align-items: center; }
         
-        /* Table Styling */
         .table-luxury { width: 100%; border-collapse: collapse; }
-        .table-luxury th { padding: 15px 20px; text-align: left; font-size: 11px; color: var(--text-light); border-bottom: 1px solid rgba(0,0,0,0.05); text-transform: uppercase; letter-spacing: 0.8px; }
-        .table-luxury td { padding: 14px 20px; font-size: 14px; border-bottom: 1px solid rgba(0,0,0,0.03); transition: background 0.25s var(--smooth-ease); }
-        .table-luxury tr:hover td { background: rgba(0,113,227,0.04); color: var(--primary-blue); }
-        .table-luxury tr:last-child td { border: none; }
+        .table-luxury th { padding: 15px 20px; text-align: left; font-size: 11px; color: var(--text-light); border-bottom: 1px solid rgba(0,0,0,0.05); text-transform: uppercase; }
+        .table-luxury td { padding: 14px 20px; font-size: 14px; border-bottom: 1px solid rgba(0,0,0,0.03); }
 
-        /* Grid Items */
         .grid-container { display: grid; grid-template-columns: 1.6fr 1fr; gap: 25px; }
         .mtd-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 25px; }
         .stat-box { 
-            padding: 20px; 
-            border-radius: 20px; 
-            background: rgba(255,255,255,0.4); 
-            border: 1px solid var(--glass-border); 
-            transition: transform 0.3s var(--smooth-ease), background 0.3s var(--smooth-ease), border-color 0.3s var(--smooth-ease);
-            will-change: transform;
+            padding: 20px; border-radius: 20px; background: rgba(255,255,255,0.4); 
+            border: 1px solid var(--glass-border); transition: 0.2s var(--smooth); transform: translateZ(0);
         }
-        .stat-box:hover { background: #fff; transform: scale(1.03) translateZ(0); border-color: var(--primary-blue); }
         .stat-box .val { font-size: 30px; font-weight: 700; color: #1d1d1f; margin: 4px 0; letter-spacing: -1.2px; }
 
-        /* Target & Tags */
         .target-list { padding: 5px 25px 25px; }
-        .target-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(0,0,0,0.04); font-size: 14.5px; transition: 0.2s var(--smooth-ease); }
-        .target-row:hover { padding-left: 8px; color: var(--primary-blue); }
-        .tag-title-row { padding: 12px 18px; color: #fff; border-radius: 12px; margin: 18px 0 10px; font-weight: 600; font-size: 13px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .target-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(0,0,0,0.04); font-size: 14.5px; }
+        .tag-title-row { padding: 12px 18px; color: #fff; border-radius: 12px; margin: 18px 0 10px; font-weight: 600; font-size: 13px; }
 
         .up { color: var(--success) !important; font-weight: 600; } 
         .down { color: var(--danger) !important; font-weight: 600; } 
         
-        /* Loader */
         #loader { 
-            display: none; 
-            position: fixed; 
-            inset: 0; 
-            background: rgba(255,255,255,0.8); 
-            z-index: 9999; 
-            backdrop-filter: blur(15px); 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-            opacity: 0;
-            transition: opacity 0.3s var(--smooth-ease);
+            display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.8); 
+            z-index: 9999; backdrop-filter: blur(15px); flex-direction: column; 
+            align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s var(--smooth);
         }
         #loader.show { display: flex; opacity: 1; }
         .spinner { width: 35px; height: 35px; border: 3px solid #f2f2f7; border-top: 3px solid var(--primary-blue); border-radius: 50%; animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
         .pagination { display: flex; gap: 6px; padding: 15px; justify-content: center; }
-        .page-btn { min-width: 32px; height: 32px; border: none; background: #e5e5ea; border-radius: 10px; cursor: pointer; transition: 0.2s var(--smooth-ease); font-size: 12px; font-weight: 500; }
+        .page-btn { min-width: 32px; height: 32px; border: none; background: #e5e5ea; border-radius: 10px; cursor: pointer; font-size: 12px; font-weight: 500; }
         .page-btn.active { background: var(--primary-blue); color: #fff; }
 
-        #welcome-card { background: var(--glass-white); padding: 90px 20px; border-radius: 30px; text-align: center; border: 1px solid var(--glass-border); box-shadow: var(--card-shadow); transition: 0.4s var(--smooth-ease); }
-        footer { padding: 40px; text-align: center; color: var(--text-light); font-size: 11px; letter-spacing: 0.5px; }
+        #welcome-card { background: var(--glass-white); padding: 90px 20px; border-radius: 30px; text-align: center; border: 1px solid var(--glass-border); box-shadow: var(--card-shadow); }
+        footer { padding: 40px; text-align: center; color: var(--text-light); font-size: 11px; }
     </style>
 </head>
 <body>
@@ -316,18 +221,15 @@
         fetch('sidebar.html').then(r => r.text()).then(data => {
             document.getElementById('sidebar').innerHTML = data;
             localStorage.setItem('sidebar_cache', data); restoreMenuState();
-        }).catch(() => console.warn("Sidebar Load Error"));
+        }).catch(() => {});
     }
 
     function toggleSidebar() {
-        const side = document.getElementById("sidebar");
-        const over = document.getElementById("overlay");
+        const side = document.getElementById("sidebar"), over = document.getElementById("overlay");
         if (window.innerWidth <= 768) {
-            side.classList.toggle("show");
-            over.classList.toggle("show");
-        } else { 
-            document.body.classList.toggle("collapsed"); 
-        }
+            const isShown = side.classList.toggle("show");
+            over.classList.toggle("show", isShown);
+        } else { document.body.classList.toggle("collapsed"); }
     }
 
     window.toggleDrop = (btn, id) => {
@@ -349,7 +251,7 @@
         loader.classList.add('show');
         try {
             const name = document.getElementById('name').value, dateVal = document.getElementById('day').value;
-            if (!dateVal) throw new Error("กรุณาเลือกวันที่");
+            if (!dateVal) return;
             const dayNum = new Date(dateVal).getDate();
             const [res, webRes] = await Promise.all([
                 fetch(`${WEB_APP_URL}?action=getSales&name=${name}&day=${dayNum}`).then(r => r.json()),
@@ -357,25 +259,20 @@
             ]);
             if(!res.success || !res.daily || (res.daily.totalP === 0 && res.daily.totalD === 0 && (!webRes.rows || webRes.rows.length === 0))) {
                 dash.style.display = 'none'; welcome.style.display = 'block';
-                document.getElementById('welcome-text').innerHTML = `<b style="color:var(--danger);">‼️ ไม่พบข้อมูลการขายในวันที่เลือก</b>`;
+                document.getElementById('welcome-text').innerHTML = `<b style="color:var(--danger);">‼️ ไม่พบข้อมูลการขาย</b>`;
                 return;
             }
             welcome.style.display = 'none'; dash.style.display = 'block';
             render(res); webData = (webRes.rows || []).filter(r => r[1] === name); renderWebTable(1);
         } catch (err) {
-            dash.style.display = 'none'; welcome.style.display = 'block';
             document.getElementById('welcome-text').innerHTML = `<b style="color:var(--danger);">Error: ${err.message}</b>`;
-        } finally { 
-            setTimeout(() => loader.classList.remove('show'), 300);
-        }
+        } finally { setTimeout(() => loader.classList.remove('show'), 300); }
     }
 
     function renderWebTable(page) {
         const tbody = document.getElementById('body-web'), pagin = document.getElementById('web-pagination');
         tbody.innerHTML = ''; pagin.innerHTML = '';
-        if (webData.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding: 40px; color: var(--text-light);">No transactions found.</td></tr>`; return;
-        }
+        if (!webData.length) { tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:40px;">No data</td></tr>`; return; }
         const start = (page - 1) * rowsPerPage;
         webData.slice(start, start + rowsPerPage).forEach(row => {
             const tr = document.createElement('tr');
@@ -400,25 +297,18 @@
         document.querySelectorAll('.out-name').forEach(el => el.innerText = data.name);
         document.getElementById('out-date').innerText = data.daily.date;
         const getCls = (v) => v.toString().includes('-') ? `class="up"` : `class="down"`, d = data.daily;
-        document.getElementById('body-daily').innerHTML = `<tr><td style="font-weight:600;">${d.date}</td><td>${d.np}</td><td><span ${getCls(d.npD)}>${d.npD}</span></td><td>${d.bd}</td><td><span ${getCls(d.bdD)}>${d.bdD}</span></td><td>${d.ap}</td><td><span ${getCls(d.apD)}>${d.apD}</span></td><td>${d.sm}</td><td><span ${getCls(d.smD)}>${d.smD}</span></td><td style="font-weight:700;">${d.totalP}</td><td style="font-weight:700;">${d.totalD}</td></tr>`;
-        document.querySelector('#tbl-sum tbody').innerHTML = data.summary.map(r => {
-            if(!r[0]) return '';
-            const isTotal = r[0].includes('รวมยอด');
-            return `<tr style="${isTotal ? 'background:rgba(0,113,227,0.05); font-weight:600;' : ''}"><td>${r[0]}</td><td>${r[1]}</td><td style="font-weight:600">${r[2]}</td></tr>`;
-        }).join('');
-        document.querySelector('#tbl-focus tbody').innerHTML = data.focus.map(r => r[0] ? `<tr><td>${r[0]}</td><td style="text-align:right; font-weight:700; color:var(--primary-blue);">${r[1]}</td></tr>` : '').join('');
+        document.getElementById('body-daily').innerHTML = `<tr><td>${d.date}</td><td>${d.np}</td><td><span ${getCls(d.npD)}>${d.npD}</span></td><td>${d.bd}</td><td><span ${getCls(d.bdD)}>${d.bdD}</span></td><td>${d.ap}</td><td><span ${getCls(d.apD)}>${d.apD}</span></td><td>${d.sm}</td><td><span ${getCls(d.smD)}>${d.smD}</span></td><td>${d.totalP}</td><td>${d.totalD}</td></tr>`;
+        document.querySelector('#tbl-sum tbody').innerHTML = data.summary.map(r => r[0] ? `<tr style="${r[0].includes('รวม') ? 'background:rgba(0,113,227,0.05);font-weight:600;' : ''}"><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>` : '').join('');
+        document.querySelector('#tbl-focus tbody').innerHTML = data.focus.map(r => r[0] ? `<tr><td>${r[0]}</td><td style="text-align:right;font-weight:700;color:var(--primary-blue);">${r[1]}</td></tr>` : '').join('');
         document.getElementById('target-list-container').innerHTML = data.targetList.map(r => {
             if(!r[0]) return '';
             let bg = ""; const lbl = r[0].toUpperCase();
-            if(lbl.includes('TARGET NEW')) bg = "#0071e3";
-            else if(lbl.includes('TARGET BDBC')) bg = "#34c759";
-            else if(lbl.includes('TARGET APPLE')) bg = "#ff9500";
-            else if(lbl.includes('TARGET SMARTPHONE')) bg = "#ff3b30";
-            return bg ? `<div class="tag-title-row" style="background:${bg}"><span>${r[0]}</span></div>` : `<div class="target-row"><span>${r[0]}</span><span style="font-weight:600;">${r[1] || '0'}</span></div>`;
+            if(lbl.includes('NEW')) bg = "#0071e3"; else if(lbl.includes('BDBC')) bg = "#34c759"; else if(lbl.includes('APPLE')) bg = "#ff9500"; else if(lbl.includes('SMART')) bg = "#ff3b30";
+            return bg ? `<div class="tag-title-row" style="background:${bg}"><span>${r[0]}</span></div>` : `<div class="target-row"><span>${r[0]}</span><b>${r[1] || '0'}</b></div>`;
         }).join('');
-        const config = [{l:'New Post', v:data.actuals.np, b:'#0071e3'}, {l:'BDBC', v:data.actuals.bd, b:'#34c759'}, {l:'Apple', v:data.actuals.ap, b:'#ff9500'}, {l:'Smart', v:data.actuals.sm, b:'#ff3b30'}];
-        document.getElementById('out-actual').innerHTML = config.map(i => `<div class="stat-box" style="border-top:4px solid ${i.b}"><div style="display:flex;justify-content:space-between;align-items:flex-start;"><div><div style="font-size:12px;color:var(--text-light);font-weight:500;">${i.l}</div><div class="val">${i.v.val}</div></div><div style="text-align:right;"><div style="font-size:11px;"><span ${getCls(i.v.diff)}>Diff ${i.v.diff}</span></div></div></div><div style="font-size:14px;color:var(--primary-blue);font-weight:700;margin-top:10px;">Ach: ${i.v.ach}%</div></div>`).join('');
-        if(data.extraStats) document.getElementById('body-extra').innerHTML = data.extraStats.map(r => `<tr><td style="font-weight:600;">${r[0]}</td><td>${r[1]}</td><td style="font-weight:600;">${r[2]}</td></tr>`).join('');
+        const cfg = [{l:'New Post', v:data.actuals.np, b:'#0071e3'}, {l:'BDBC', v:data.actuals.bd, b:'#34c759'}, {l:'Apple', v:data.actuals.ap, b:'#ff9500'}, {l:'Smart', v:data.actuals.sm, b:'#ff3b30'}];
+        document.getElementById('out-actual').innerHTML = cfg.map(i => `<div class="stat-box" style="border-top:4px solid ${i.b}"><div><div style="font-size:12px;color:var(--text-light);">${i.l}</div><div class="val">${i.v.val}</div><span ${getCls(i.v.diff)}>Diff ${i.v.diff}</span></div><div style="font-size:14px;color:var(--primary-blue);font-weight:700;margin-top:5px;">Ach: ${i.v.ach}%</div></div>`).join('');
+        if(data.extraStats) document.getElementById('body-extra').innerHTML = data.extraStats.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('');
     }
     window.addEventListener('DOMContentLoaded', includeSidebar);
 </script>
