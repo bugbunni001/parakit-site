@@ -10,174 +10,151 @@
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --ios-bg: #f5f5f7;
-            --glass-white: rgba(255, 255, 255, 0.75);
-            --glass-border: rgba(255, 255, 255, 0.4);
-            --primary-blue: #0071e3;
-            --sidebar-color: rgba(28, 28, 30, 0.95);
-            --text-main: #1d1d1f;
-            --text-light: #86868b;
-            --card-shadow: 0 12px 40px rgba(0,0,0,0.06);
-            --success: #34c759;
-            --danger: #ff3b30;
-            --sidebar-width: 280px;
-            --smooth-ease: cubic-bezier(0.4, 0, 0.2, 1);
+            --ios-bg: #f5f5f7; --glass: rgba(255, 255, 255, 0.8); --glass-border: rgba(255, 255, 255, 0.4);
+            --primary: #0071e3; --text: #1d1d1f; --text-light: #86868b;
+            --shadow: 0 8px 30px rgba(0,0,0,0.04); --sidebar-width: 280px;
         }
         * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; -webkit-tap-highlight-color: transparent; }
-        
         body { 
-            margin: 0; background: var(--ios-bg); color: var(--text-main); -webkit-font-smoothing: antialiased; 
-            transition: padding-left 0.4s var(--smooth-ease); min-height: 100vh; overflow-x: hidden; 
+            margin: 0; background: var(--ios-bg); color: var(--text); -webkit-font-smoothing: antialiased; 
+            transition: padding-left 0.4s cubic-bezier(0.4, 0, 0.2, 1); min-height: 100vh;
         }
-        
+        /* Layout & Header */
         .top-header { 
-            position: fixed; top: 0; left: 0; right: 0; height: 60px; background: rgba(255,255,255,0.7); 
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); z-index: 1200; 
-            display: flex; align-items: center; padding: 0 25px; border-bottom: 1px solid rgba(0,0,0,0.05); 
-            transition: left 0.4s var(--smooth-ease);
+            position: fixed; top: 0; left: 0; right: 0; height: 60px; background: var(--glass); 
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); z-index: 1000; 
+            display: flex; align-items: center; padding: 0 15px; border-bottom: 1px solid rgba(0,0,0,0.05); 
+            transition: left 0.4s;
         }
-        
-        .top-toggle { 
-            width: 34px; height: 34px; border-radius: 10px; border: none; background: #fff; color: var(--text-main); 
-            cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; 
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05); transition: 0.3s var(--smooth-ease); 
+        .top-toggle { width: 36px; height: 36px; border-radius: 10px; border: none; background: #fff; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .sidebar { position: fixed; top: 0; left: 0; width: var(--sidebar-width); height: 100vh; background: #1c1c1e; color: #fff; overflow-y: auto; transition: 0.4s; z-index: 2000; }
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.3); backdrop-filter: blur(4px); display: none; z-index: 1500; }
+
+        /* Responsive Logic */
+        @media(min-width:769px) { 
+            body:not(.collapsed) { padding-left: var(--sidebar-width); } 
+            body:not(.collapsed) .top-header { left: var(--sidebar-width); } 
+            body.collapsed .sidebar { transform: translateX(-100%); }
         }
-        .top-toggle:hover { transform: scale(1.05); background: var(--primary-blue); color: #fff; }
-        
-        .sidebar { position: fixed; top: 0; left: 0; width: var(--sidebar-width); height: 100vh; background: var(--sidebar-color); color: #fff; overflow-y: auto; transition: transform 0.4s var(--smooth-ease); z-index: 2000; }
-        @media(min-width:769px) { body:not(.collapsed) { padding-left: var(--sidebar-width); } body:not(.collapsed) .top-header { left: var(--sidebar-width); } body.collapsed .sidebar { transform: translate3d(-100%, 0, 0); } body.collapsed .top-header { left: 0; } }
-        @media(max-width:768px) { .sidebar { transform: translate3d(-100%, 0, 0); } .sidebar.show { transform: translate3d(0,0,0); } body { padding-left: 0 !important; } .top-header { left: 0 !important; } }
+        @media(max-width:768px) { 
+            .sidebar { transform: translateX(-100%); } 
+            .sidebar.show { transform: translateX(0); }
+            .overlay.show { display: block; }
+            .main-wrapper { padding: 80px 10px 40px !important; }
+            .toolbar { flex-direction: column; align-items: stretch !important; gap: 10px !important; }
+            .stat-box .val { font-size: 24px !important; }
+        }
 
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.3); backdrop-filter: blur(4px); display: none; z-index: 1500; opacity: 0; transition: opacity 0.3s; }
-        .overlay.show { display: block; opacity: 1; }
-
-        .main-wrapper { padding: 85px 20px 40px; display: flex; justify-content: center; }
+        /* Components */
+        .main-wrapper { padding: 90px 20px 40px; display: flex; justify-content: center; }
         .content-container { width: 100%; max-width: 1200px; }
-
-        /* Toolbar Apple Style */
         .toolbar { 
-            background: var(--glass-white); backdrop-filter: blur(15px); padding: 15px 25px; 
-            border-radius: 20px; border: 1px solid var(--glass-border); box-shadow: var(--card-shadow); 
-            display: flex; justify-content: flex-end; align-items: center; margin-bottom: 30px; gap: 15px; flex-wrap: wrap;
+            background: var(--glass); backdrop-filter: blur(15px); padding: 15px; border-radius: 20px; 
+            border: 1px solid var(--glass-border); box-shadow: var(--shadow); display: flex; justify-content: flex-end; gap: 15px; margin-bottom: 25px;
         }
         .modern-select, .modern-date { 
-            border: 1px solid #d2d2d7; border-radius: 12px; padding: 10px 16px; font-size: 14px; 
-            background: #fff; color: var(--text-main); outline: none; transition: 0.2s; cursor: pointer; 
+            border: 1px solid #d2d2d7; border-radius: 12px; padding: 10px; font-size: 14px; background: #fff; flex: 1;
         }
-        .modern-select:focus, .modern-date:focus { border-color: var(--primary-blue); box-shadow: 0 0 0 4px rgba(0,113,227,0.1); }
-        .btn-fetch { 
-            background: var(--primary-blue); color: #fff; border: none; padding: 10px 24px; border-radius: 12px; 
-            cursor: pointer; font-weight: 500; transition: 0.3s var(--smooth-ease); 
-            box-shadow: 0 4px 15px rgba(0, 113, 227, 0.15);
-        }
-        .btn-fetch:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0, 113, 227, 0.25); }
+        .btn-fetch { background: var(--primary); color: #fff; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 500; cursor: pointer; transition: 0.3s; }
+        .btn-fetch:hover { opacity: 0.8; transform: translateY(-1px); }
 
-        /* Card Apple Style */
         .card { 
-            background: var(--glass-white); backdrop-filter: blur(15px); border-radius: 24px; 
-            border: 1px solid var(--glass-border); margin-bottom: 25px; box-shadow: var(--card-shadow); 
-            overflow: hidden; transition: transform 0.4s var(--smooth-ease), box-shadow 0.4s var(--smooth-ease);
+            background: var(--glass); backdrop-filter: blur(15px); border-radius: 24px; border: 1px solid var(--glass-border); 
+            margin-bottom: 25px; box-shadow: var(--shadow); overflow: hidden; transition: 0.3s;
         }
-        .card:hover { transform: translateY(-4px); box-shadow: 0 20px 50px rgba(0,0,0,0.1); }
-        .card-header-bar { padding: 16px 25px; font-weight: 600; font-size: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(0,0,0,0.05); }
+        .card:hover { transform: translateY(-3px); box-shadow: 0 15px 40px rgba(0,0,0,0.08); }
+        .card-header-bar { padding: 15px 20px; font-weight: 600; font-size: 14px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(0,0,0,0.05); }
 
-        /* Table Style */
-        .table-luxury { width: 100%; border-collapse: collapse; }
-        .table-luxury th { padding: 15px 20px; text-align: left; font-size: 11px; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.8px; border-bottom: 1px solid rgba(0,0,0,0.05); }
-        .table-luxury td { padding: 14px 20px; font-size: 14px; border-bottom: 1px solid rgba(0,0,0,0.03); transition: background 0.2s; }
-        .table-luxury tr:hover td { background: rgba(0,113,227,0.04); color: var(--primary-blue); }
+        /* Tables Responsive */
+        .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .table-luxury { width: 100%; border-collapse: collapse; min-width: 600px; }
+        .table-luxury th { padding: 12px 20px; text-align: left; font-size: 10px; color: var(--text-light); text-transform: uppercase; border-bottom: 1px solid rgba(0,0,0,0.05); }
+        .table-luxury td { padding: 12px 20px; font-size: 14px; border-bottom: 1px solid rgba(0,0,0,0.03); }
+        .table-luxury tr:hover td { background: rgba(0,113,227,0.04); }
 
-        .grid-container { display: grid; grid-template-columns: 1.6fr 1fr; gap: 25px; }
+        .grid-container { display: grid; grid-template-columns: 1.6fr 1fr; gap: 20px; }
         @media (max-width: 1000px) { .grid-container { grid-template-columns: 1fr; } }
         
-        .mtd-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 25px; }
+        .mtd-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; padding: 20px; }
         .stat-box { 
-            padding: 20px; border-radius: 20px; background: rgba(255,255,255,0.4); border: 1px solid var(--glass-border); 
-            transition: 0.3s var(--smooth-ease);
+            padding: 15px; border-radius: 18px; background: rgba(255,255,255,0.4); border: 1px solid var(--glass-border); transition: 0.3s;
         }
-        .stat-box:hover { background: #fff; transform: scale(1.03); border-color: var(--primary-blue); }
-        .stat-box .val { font-size: 30px; font-weight: 700; color: #1d1d1f; margin: 4px 0; letter-spacing: -1.2px; }
+        .stat-box:hover { background: #fff; border-color: var(--primary); }
+        .stat-box .val { font-size: 28px; font-weight: 700; letter-spacing: -1px; margin: 2px 0; }
 
-        .target-list { padding: 5px 25px 25px; }
-        .target-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(0,0,0,0.04); font-size: 14.5px; transition: 0.2s; }
-        .target-row:hover { padding-left: 8px; color: var(--primary-blue); }
-        .tag-title-row { padding: 12px 18px; color: #fff; border-radius: 12px; margin: 18px 0 10px; font-weight: 600; font-size: 13px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .target-list { padding: 10px 20px 20px; }
+        .target-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(0,0,0,0.04); font-size: 14px; }
+        .tag-title-row { padding: 10px 15px; color: #fff; border-radius: 10px; margin: 15px 0 8px; font-weight: 600; font-size: 12px; }
 
-        .up { color: var(--success) !important; font-weight: 600; } .down { color: var(--danger) !important; font-weight: 600; } 
-        .badge-white { background: rgba(0,0,0,0.05); color: var(--text-main); padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 500; }
-        
+        .up { color: #34c759 !important; font-weight: 600; } .down { color: #ff3b30 !important; font-weight: 600; } 
+        .badge { background: rgba(0,0,0,0.05); padding: 3px 10px; border-radius: 15px; font-size: 11px; }
+
         #loader { display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.8); z-index: 9999; backdrop-filter: blur(15px); flex-direction: column; align-items: center; justify-content: center; }
-        .spinner { width: 35px; height: 35px; border: 3px solid #f2f2f7; border-top: 3px solid var(--primary-blue); border-radius: 50%; animation: spin 0.8s linear infinite; }
+        .spinner { width: 30px; height: 30px; border: 3px solid #f2f2f7; border-top: 3px solid var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
-
-        .pagination { display: flex; gap: 6px; padding: 15px; justify-content: center; }
-        .page-btn { min-width: 32px; height: 32px; border: none; background: #e5e5ea; border-radius: 10px; cursor: pointer; transition: 0.2s; font-size: 12px; font-weight: 500; }
-        .page-btn.active { background: var(--primary-blue); color: #fff; }
-
-        #welcome-card { background: var(--glass-white); padding: 90px 20px; border-radius: 30px; text-align: center; border: 1px solid var(--glass-border); box-shadow: var(--card-shadow); }
-        footer { padding: 40px; text-align: center; color: var(--text-light); font-size: 11px; letter-spacing: 0.5px; }
+        .pagination { display: flex; gap: 5px; padding: 15px; justify-content: center; }
+        .page-btn { min-width: 30px; height: 30px; border: none; background: #e5e5ea; border-radius: 8px; font-size: 12px; cursor: pointer; }
+        .page-btn.active { background: var(--primary); color: #fff; }
+        #welcome-card { background: var(--glass); padding: 60px 20px; border-radius: 24px; text-align: center; border: 1px solid var(--glass-border); box-shadow: var(--shadow); }
+        footer { padding: 30px; text-align: center; color: var(--text-light); font-size: 10px; }
     </style>
 </head>
 <body>
 <header class="top-header">
     <button class="top-toggle" onclick="toggleSidebar()">☰</button>
-    <div style="font-weight: 600; font-size: 1.1rem; color: var(--text-main); margin-left: 15px;">ยอดขาย By Indy</div>
+    <div style="font-weight: 600; font-size: 1rem; margin-left: 12px;">ยอดขาย By Indy</div>
 </header>
 <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 <aside class="sidebar" id="sidebar"></aside>
 
-<div id="loader"><div class="spinner"></div><p style="margin-top:20px; font-weight: 500; color: var(--text-main);">กำลังโหลดข้อมูล...</p></div>
+<div id="loader"><div class="spinner"></div><p style="margin-top:15px; font-size:13px;">กำลังโหลด...</p></div>
 
 <div class="main-wrapper">
   <div class="content-container">
     <div class="toolbar">
-        <div style="display: flex; align-items: center; gap: 12px;">
-          <span style="color:var(--text-light); font-size: 13px;">พนักงาน</span>
+        <div style="display: flex; align-items: center; gap: 10px; flex:1;">
+          <span style="color:var(--text-light); font-size: 12px; white-space:nowrap;">พนักงาน</span>
           <select id="name" class="modern-select"><option>นวพล</option><option>ปิยะพร</option><option>กรทักษ์</option></select>
         </div>
-        <div style="display: flex; align-items: center; gap: 12px;">
-          <span style="color:var(--text-light); font-size: 13px;">ระบุวันที่</span>
+        <div style="display: flex; align-items: center; gap: 10px; flex:1;">
+          <span style="color:var(--text-light); font-size: 12px; white-space:nowrap;">วันที่</span>
           <input type="date" id="day" class="modern-date">
         </div>
       <button class="btn-fetch" onclick="pullData()">🚀 ดึงข้อมูล</button>
     </div>
 
     <div id="welcome-card">
-        <div style="font-size: 60px; margin-bottom: 20px; opacity: 0.8;">📈</div>
-        <p id="welcome-text" style="font-size: 1.1rem; font-weight: 300; color: #1d1d1f;">เลือกวันที่และชื่อพนักงาน เพื่อดึงข้อมูล<b>รายบุคคล</b></p>
+        <div style="font-size: 50px; margin-bottom: 15px;">📊</div>
+        <p id="welcome-text" style="font-weight: 300; color: var(--text);">เลือกวันที่และพนักงานเพื่อดูรายงาน</p>
     </div>
         
     <div id="dashboard" style="display:none;">
       <div class="card">
-        <div class="card-header-bar" style="background: #1d1d1f; color:#fff;"><span>📈 ยอดขายประจำวัน</span> <span id="out-date" class="badge-white" style="background:rgba(255,255,255,0.1); color:#fff;"></span></div>
-        <div style="overflow-x: auto;"><table class="table-luxury"><thead><tr><th>วันที่</th><th>New Post</th><th>Diff</th><th>BDBC</th><th>Diff</th><th>Apple</th><th>Diff</th><th>Smart</th><th>Diff</th><th>Σ Post</th><th>Σ Dev</th></tr></thead><tbody id="body-daily"></tbody></table></div>
+        <div class="card-header-bar" style="background: #1d1d1f; color:#fff;"><span>📈 สรุปรายวัน</span> <span id="out-date" class="badge" style="color:#fff; background:rgba(255,255,255,0.1)"></span></div>
+        <div class="table-container"><table class="table-luxury"><thead><tr><th>วันที่</th><th>New</th><th>+/-</th><th>BDBC</th><th>+/-</th><th>Apple</th><th>+/-</th><th>Smart</th><th>+/-</th><th>Σ Post</th><th>Σ Dev</th></tr></thead><tbody id="body-daily"></tbody></table></div>
       </div>
 
       <div class="card">
-        <div class="card-header-bar"><span>🛒 รายละเอียดยอดขาย</span></div>
-        <div style="overflow-x: auto;"><table class="table-luxury"><thead><tr><th>วันที่</th><th>พนักงาน</th><th>ลูกค้า</th><th>Postpay</th><th>ยอดขาย</th><th>Device</th><th>ยอดขาย</th><th>เวลา</th><th>สินเชื่อ</th></tr></thead><tbody id="body-web"></tbody></table></div>
+        <div class="card-header-bar"><span>🛒 รายการขายล่าสุด</span></div>
+        <div class="table-container"><table class="table-luxury"><thead><tr><th>วันที่</th><th>พนักงาน</th><th>ลูกค้า</th><th>Postpay</th><th>ยอด</th><th>Device</th><th>ยอด</th><th>เวลา</th><th>สินเชื่อ</th></tr></thead><tbody id="body-web"></tbody></table></div>
         <div id="web-pagination" class="pagination"></div>
       </div>
 
       <div class="grid-container">
         <div class="col-left">
           <div class="card">
-            <div class="card-header-bar" style="background: var(--primary-blue); color: #fff;"><span>📑 รายละเอียดการขาย Postpay <span class="out-name"></span></span></div>
-            <div style="overflow-x: auto;"><table class="table-luxury" id="tbl-sum"><thead><tr><th>หมวดหมู่</th><th>มูลค่ายอดขาย</th><th>จำนวน</th></tr></thead><tbody></tbody></table></div>
+            <div class="card-header-bar" style="background: var(--primary); color: #fff;"><span>📑 รายละเอียด Postpay</span></div>
+            <div class="table-container"><table class="table-luxury" id="tbl-sum"><thead><tr><th>หมวดหมู่</th><th>ยอดขาย</th><th>จำนวน</th></tr></thead><tbody></tbody></table></div>
           </div>
           <div class="card">
-            <div class="card-header-bar"><span>🚀 รายละเอียดยอดรวมการขาย</span></div>
+            <div class="card-header-bar"><span>🚀 สรุปยอดสะสม (MTD)</span></div>
             <div class="mtd-grid" id="out-actual"></div>
-          </div>
-          <div class="card">
-            <div class="card-header-bar" style="background: #af52de; color: #fff;"><span>📋 ยอดขาย Device By Brand</span></div>
-            <div style="overflow-x: auto;"><table class="table-luxury"><thead><tr><th>แบรนด์</th><th>ยอดขายรวม</th><th>หน่วย</th></tr></thead><tbody id="body-extra"></tbody></table></div>
           </div>
         </div>
         <div class="col-right">
           <div class="card">
-            <div class="card-header-bar" style="background: #48484a; color: #fff;"><span>🎯 KPI Focus Point</span></div>
-            <div style="overflow-x: auto;"><table class="table-luxury" id="tbl-focus"><thead><tr><th>KPI Metrics</th><th style="text-align:right">Actual</th></tr></thead><tbody></tbody></table></div>
+            <div class="card-header-bar" style="background: #48484a; color: #fff;"><span>🎯 KPI Focus</span></div>
+            <div class="table-container"><table class="table-luxury" id="tbl-focus"><thead><tr><th>รายการ</th><th style="text-align:right">ผลงาน</th></tr></thead><tbody></tbody></table></div>
           </div>
           <div class="card">
             <div class="card-header-bar" style="background: #1c1c1e; color: #fff;"><span>🏁 Target</span></div>
@@ -200,7 +177,7 @@
         fetch('sidebar.html').then(r => r.text()).then(data => {
             document.getElementById('sidebar').innerHTML = data;
             localStorage.setItem('sidebar_cache', data); restoreMenuState();
-        }).catch(() => console.warn("Sidebar Load Error"));
+        }).catch(() => console.warn("Sidebar Error"));
     }
 
     function toggleSidebar() {
@@ -218,8 +195,7 @@
     function restoreMenuState() {
         ['credit', 'branch', 'sales'].forEach(id => {
             if (localStorage.getItem('menu-' + id) === 'true') {
-                const el = document.getElementById('menu-' + id);
-                if (el) el.classList.add('open');
+                const el = document.getElementById('menu-' + id); if (el) el.classList.add('open');
             }
         });
     }
@@ -229,7 +205,7 @@
         loader.style.display = 'flex';
         try {
             const name = document.getElementById('name').value, dateVal = document.getElementById('day').value;
-            if (!dateVal) throw new Error("กรุณาเลือกวันที่");
+            if (!dateVal) throw new Error("ระบุวันที่");
             const dayNum = new Date(dateVal).getDate();
             const [res, webRes] = await Promise.all([
                 fetch(`${WEB_APP_URL}?action=getSales&name=${name}&day=${dayNum}`).then(r => r.json()),
@@ -237,14 +213,13 @@
             ]);
             if(!res.success || !res.daily || (res.daily.totalP === 0 && res.daily.totalD === 0 && (!webRes.rows || webRes.rows.length === 0))) {
                 dash.style.display = 'none'; welcome.style.display = 'block';
-                document.getElementById('welcome-text').innerHTML = `<b style="color:var(--danger);">‼️ ไม่พบข้อมูลการขายในวันที่เลือก</b>`;
+                document.getElementById('welcome-text').innerHTML = `<b style="color:#ff3b30;">ไม่พบข้อมูลในวันที่เลือก</b>`;
                 return;
             }
             welcome.style.display = 'none'; dash.style.display = 'block';
             render(res); webData = (webRes.rows || []).filter(r => r[1] === name); renderWebTable(1);
         } catch (err) {
-            dash.style.display = 'none'; welcome.style.display = 'block';
-            document.getElementById('welcome-text').innerHTML = `<b style="color:var(--danger);">Error: ${err.message}</b>`;
+            document.getElementById('welcome-text').innerHTML = `<b style="color:#ff3b30;">Error: ${err.message}</b>`;
         } finally { loader.style.display = 'none'; }
     }
 
@@ -252,7 +227,7 @@
         const tbody = document.getElementById('body-web'), pagin = document.getElementById('web-pagination');
         tbody.innerHTML = ''; pagin.innerHTML = '';
         if (webData.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding: 40px; color: var(--text-light);">No transactions found.</td></tr>`; return;
+            tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding: 30px;">ไม่มีข้อมูล</td></tr>`; return;
         }
         const start = (page - 1) * rowsPerPage;
         webData.slice(start, start + rowsPerPage).forEach(row => {
@@ -275,16 +250,15 @@
     }
 
     function render(data) {
-        document.querySelectorAll('.out-name').forEach(el => el.innerText = data.name);
         document.getElementById('out-date').innerText = data.daily.date;
         const getCls = (v) => v.toString().includes('-') ? `class="up"` : `class="down"`, d = data.daily;
-        document.getElementById('body-daily').innerHTML = `<tr><td style="font-weight:600;">${d.date}</td><td>${d.np}</td><td><span ${getCls(d.npD)}>${d.npD}</span></td><td>${d.bd}</td><td><span ${getCls(d.bdD)}>${d.bdD}</span></td><td>${d.ap}</td><td><span ${getCls(d.apD)}>${d.apD}</span></td><td>${d.sm}</td><td><span ${getCls(d.smD)}>${d.smD}</span></td><td style="font-weight:700;">${d.totalP}</td><td style="font-weight:700;">${d.totalD}</td></tr>`;
+        document.getElementById('body-daily').innerHTML = `<tr><td>${d.date}</td><td>${d.np}</td><td><span ${getCls(d.npD)}>${d.npD}</span></td><td>${d.bd}</td><td><span ${getCls(d.bdD)}>${d.bdD}</span></td><td>${d.ap}</td><td><span ${getCls(d.apD)}>${d.apD}</span></td><td>${d.sm}</td><td><span ${getCls(d.smD)}>${d.smD}</span></td><td style="font-weight:700;">${d.totalP}</td><td style="font-weight:700;">${d.totalD}</td></tr>`;
         document.querySelector('#tbl-sum tbody').innerHTML = data.summary.map(r => {
             if(!r[0]) return '';
             const isTotal = r[0].includes('รวมยอด');
-            return `<tr style="${isTotal ? 'background:rgba(0,113,227,0.05); font-weight:600;' : ''}"><td>${r[0]}</td><td>${r[1]}</td><td style="font-weight:600">${r[2]}</td></tr>`;
+            return `<tr style="${isTotal ? 'background:rgba(0,113,227,0.05); font-weight:600;' : ''}"><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`;
         }).join('');
-        document.querySelector('#tbl-focus tbody').innerHTML = data.focus.map(r => r[0] ? `<tr><td>${r[0]}</td><td style="text-align:right; font-weight:700; color:var(--primary-blue);">${r[1]}</td></tr>` : '').join('');
+        document.querySelector('#tbl-focus tbody').innerHTML = data.focus.map(r => r[0] ? `<tr><td>${r[0]}</td><td style="text-align:right; font-weight:700; color:var(--primary);">${r[1]}</td></tr>` : '').join('');
         document.getElementById('target-list-container').innerHTML = data.targetList.map(r => {
             if(!r[0]) return '';
             let bg = ""; const lbl = r[0].toUpperCase();
@@ -295,8 +269,7 @@
             return bg ? `<div class="tag-title-row" style="background:${bg}"><span>${r[0]}</span></div>` : `<div class="target-row"><span>${r[0]}</span><span style="font-weight:600;">${r[1] || '0'}</span></div>`;
         }).join('');
         const config = [{l:'New Post', v:data.actuals.np, b:'#0071e3'}, {l:'BDBC', v:data.actuals.bd, b:'#34c759'}, {l:'Apple', v:data.actuals.ap, b:'#ff9500'}, {l:'Smart', v:data.actuals.sm, b:'#ff3b30'}];
-        document.getElementById('out-actual').innerHTML = config.map(i => `<div class="stat-box" style="border-top:4px solid ${i.b}"><div style="display:flex;justify-content:space-between;align-items:flex-start;"><div><div style="font-size:12px;color:var(--text-light);font-weight:500;">${i.l}</div><div class="val">${i.v.val}</div></div><div style="text-align:right;"><div style="font-size:11px;"><span ${getCls(i.v.diff)}>Diff ${i.v.diff}</span></div></div></div><div style="font-size:14px;color:var(--primary-blue);font-weight:700;margin-top:10px;">Ach: ${i.v.ach}%</div></div>`).join('');
-        if(data.extraStats) document.getElementById('body-extra').innerHTML = data.extraStats.map(r => `<tr><td style="font-weight:600;">${r[0]}</td><td>${r[1]}</td><td style="font-weight:600;">${r[2]}</td></tr>`).join('');
+        document.getElementById('out-actual').innerHTML = config.map(i => `<div class="stat-box" style="border-top:4px solid ${i.b}"><div style="font-size:11px;color:var(--text-light);">${i.l}</div><div class="val">${i.v.val}</div><div style="font-size:10px;"><span ${getCls(i.v.diff)}>Diff ${i.v.diff}</span></div><div style="font-size:13px;color:var(--primary);font-weight:700;margin-top:5px;">${i.v.ach}%</div></div>`).join('');
     }
     window.addEventListener('DOMContentLoaded', includeSidebar);
 </script>
