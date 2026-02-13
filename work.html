@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Log งานที่ต้องเคลียร์</title>
+    <title>Log งานที่ต้องเคลียร์ - iOS Glass Design</title>
     <style>
         :root {
             --glass: rgba(255, 255, 255, 0.2);
@@ -12,34 +12,35 @@
         }
 
         body {
+            background: linear-gradient(135deg, #8BC6EC 0%, #9599E2 100%);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
-            background-attachment: fixed;
+            min-height: 100vh;
             margin: 0;
-            padding: 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
+            padding: 20px;
+            color: #1d1d1f;
         }
 
         .container {
-            width: 100%;
-            max-width: 800px;
             background: var(--glass);
             backdrop-filter: blur(15px);
             -webkit-backdrop-filter: blur(15px);
-            border: 1px solid var(--glass-border);
             border-radius: 20px;
+            border: 1px solid var(--glass-border);
             padding: 30px;
+            width: 100%;
+            max-width: 500px;
             box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
-            margin-bottom: 20px;
+            margin-bottom: 30px;
         }
 
-        h2 { color: #1d1d1f; text-align: center; margin-top: 0; }
+        h2 { text-align: center; font-weight: 600; margin-top: 0; }
 
         .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: 500; font-size: 14px; }
-
+        label { display: block; margin-bottom: 5px; font-size: 0.9em; font-weight: 500; }
+        
         input, select {
             width: 100%;
             padding: 12px;
@@ -47,57 +48,76 @@
             border: 1px solid var(--glass-border);
             background: rgba(255, 255, 255, 0.5);
             box-sizing: border-box;
-            outline: none;
             font-size: 16px;
         }
 
         button {
             width: 100%;
             padding: 15px;
-            border-radius: 12px;
             border: none;
+            border-radius: 12px;
             background: var(--ios-blue);
             color: white;
-            font-weight: bold;
             font-size: 16px;
+            font-weight: 600;
             cursor: pointer;
-            transition: 0.3s;
+            transition: opacity 0.2s;
         }
 
-        button:active { transform: scale(0.98); opacity: 0.8; }
+        button:active { opacity: 0.7; }
 
-        /* Table Style */
-        .table-container { overflow-x: auto; margin-top: 20px; }
-        table { width: 100%; border-collapse: collapse; background: rgba(255, 255, 255, 0.3); border-radius: 15px; overflow: hidden; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--glass-border); font-size: 14px; }
-        th { background: rgba(255, 255, 255, 0.4); }
+        .list-container {
+            width: 100%;
+            max-width: 900px;
+        }
 
-        .btn-delete { background: #FF3B30; width: auto; padding: 5px 10px; font-size: 12px; border-radius: 8px; }
-        .img-preview { width: 50px; height: 50px; object-fit: cover; border-radius: 5px; cursor: pointer; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            overflow: hidden;
+        }
 
-        .loading { text-align: center; display: none; margin-top: 10px; }
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        th { background: rgba(255, 255, 255, 0.3); }
+
+        .btn-delete {
+            background: #FF3B30;
+            padding: 5px 10px;
+            font-size: 12px;
+            width: auto;
+        }
+
+        .link-file { color: var(--ios-blue); text-decoration: none; font-weight: 500; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>บันทึกงานที่ต้องทำ</h2>
-    <form id="logForm">
+    <h2>บันทึกงานใหม่</h2>
+    <form id="jobForm">
         <div class="form-group">
             <label>วันที่</label>
             <input type="date" id="date" required>
         </div>
         <div class="form-group">
             <label>หมายเลขสมาชิก</label>
-            <input type="text" id="memberId" placeholder="ระบุเลขสมาชิก" required>
+            <input type="text" id="memberId" placeholder="ระบุ ID" required>
         </div>
         <div class="form-group">
             <label>ชื่อ-นามสกุล ลูกค้า</label>
-            <input type="text" id="customerName" placeholder="ระบุชื่อลูกค้า" required>
+            <input type="text" id="name" placeholder="ชื่อลูกค้า" required>
         </div>
         <div class="form-group">
-            <label>เบอร์ติดต่อ ลูกค้า</label>
-            <input type="tel" id="contact" placeholder="08x-xxx-xxxx" required>
+            <label>เบอร์ติดต่อ</label>
+            <input type="tel" id="phone" placeholder="08x-xxxxxxx" required>
         </div>
         <div class="form-group">
             <label>พนักงานที่รับลูกค้า</label>
@@ -110,103 +130,106 @@
         </div>
         <div class="form-group">
             <label>แนบเอกสาร (รูปภาพ)</label>
-            <input type="file" id="fileInput" accept="image/*">
+            <input type="file" id="file" accept="image/*">
         </div>
         <button type="submit" id="submitBtn">บันทึกข้อมูล</button>
-        <div class="loading" id="loading">กำลังประมวลผล...</div>
     </form>
 </div>
 
-<div class="container" style="max-width: 1000px;">
-    <h2>รายการที่บันทึกไว้</h2>
-    <div class="table-container">
-        <table id="logTable">
-            <thead>
-                <tr>
-                    <th>วันที่</th>
-                    <th>สมาชิก</th>
-                    <th>ลูกค้า</th>
-                    <th>เบอร์ติดต่อ</th>
-                    <th>พนักงาน</th>
-                    <th>เอกสาร</th>
-                    <th>จัดการ</th>
-                </tr>
-            </thead>
-            <tbody id="tableBody">
-                </tbody>
-        </table>
-    </div>
+<div class="list-container">
+    <table>
+        <thead>
+            <tr>
+                <th>วันที่</th>
+                <th>สมาชิก</th>
+                <th>ชื่อลูกค้า</th>
+                <th>เบอร์ติดต่อ</th>
+                <th>พนักงาน</th>
+                <th>เอกสาร</th>
+                <th>จัดการ</th>
+            </tr>
+        </thead>
+        <tbody id="dataTable">
+            </tbody>
+    </table>
 </div>
 
 <script>
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxBV2tojU0Du7gB0u9qOsY_231-1i8sXfjc4csZCx9AUaNo1Cpr6vcYOZwauWV0yqN_bw/exec';
+    // ** สำคัญ: วาง URL ที่ได้จาก Google Apps Script ที่นี่ **
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyB6RVkW06_kOyN2IwocFGi5yeJQpKWIyh0XM7gFBCRr2z7873IDnBFoZ6f_gm1Ja1TVQ/exec';
 
-    // Set Default Date
+    // Set Default Date to Today
     document.getElementById('date').valueAsDate = new Date();
 
-    const form = document.getElementById('logForm');
-    const tableBody = document.getElementById('tableBody');
+    const form = document.getElementById('jobForm');
+    
+    // Load Data on Start
+    window.onload = loadData;
 
-    // Load Data
-    async function loadData() {
-        try {
-            const response = await fetch(WEB_APP_URL);
-            const data = await response.json();
-            tableBody.innerHTML = '';
-            data.forEach(item => {
-                const row = `<tr>
-                    <td>${item.วันที่ || ''}</td>
-                    <td>${item.หมายเลขสมาชิก || ''}</td>
-                    <td>${item.ชื่อนามสกุล || ''}</td>
-                    <td>${item.เบอร์ติดต่อ || ''}</td>
-                    <td>${item.พนักงานที่รับลูกค้า || ''}</td>
-                    <td>${item.เอกสารแนบ ? `<img src="${item.เอกสารแนบ}" class="img-preview" onclick="window.open(this.src)">` : 'ไม่มี'}</td>
-                    <td><button class="btn-delete" onclick="deleteRow(${item.rowId})">ลบ</button></td>
-                </tr>`;
-                tableBody.insertAdjacentHTML('beforeend', row);
-            });
-        } catch (e) { console.error("Load error", e); }
-    }
-
-    // Submit Form
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        document.getElementById('submitBtn').disabled = true;
-        document.getElementById('loading').style.display = 'block';
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true;
+        btn.innerText = "กำลังบันทึก...";
 
-        const fileInput = document.getElementById('fileInput');
-        let fileBase64 = '';
-        
+        const fileInput = document.getElementById('file');
+        let fileData = null;
+
         if (fileInput.files.length > 0) {
-            fileBase64 = await toBase64(fileInput.files[0]);
+            fileData = await toBase64(fileInput.files[0]);
         }
 
         const payload = {
+            action: "insert",
             date: document.getElementById('date').value,
             memberId: document.getElementById('memberId').value,
-            customerName: document.getElementById('customerName').value,
-            contact: document.getElementById('contact').value,
+            name: document.getElementById('name').value,
+            phone: document.getElementById('phone').value,
             staff: document.getElementById('staff').value,
-            fileUrl: fileBase64
+            fileData: fileData
         };
 
-        await fetch(WEB_APP_URL, {
+        await fetch(SCRIPT_URL, {
             method: 'POST',
             body: JSON.stringify(payload)
         });
 
         form.reset();
         document.getElementById('date').valueAsDate = new Date();
-        document.getElementById('submitBtn').disabled = false;
-        document.getElementById('loading').style.display = 'none';
+        btn.disabled = false;
+        btn.innerText = "บันทึกข้อมูล";
         loadData();
     });
 
-    async function deleteRow(rowId) {
-        if(!confirm('ยืนยันการลบข้อมูล?')) return;
-        await fetch(WEB_APP_URL, {
+    async function loadData() {
+        const response = await fetch(SCRIPT_URL, {
             method: 'POST',
-            body: JSON.stringify({ action: 'delete', rowId: rowId })
+            body: JSON.stringify({action: "read"})
+        });
+        const data = await response.json();
+        const tableBody = document.getElementById('dataTable');
+        tableBody.innerHTML = '';
+
+        data.forEach(row => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${row[0]}</td>
+                <td>${row[1]}</td>
+                <td>${row[2]}</td>
+                <td>${row[3]}</td>
+                <td>${row[4]}</td>
+                <td>${row[5] ? `<a href="${row[5]}" target="_blank" class="link-file">กดที่นี่เพื่อดูเอกสาร</a>` : '-'}</td>
+                <td><button class="btn-delete" onclick="deleteData('${row[0]}', '${row[1]}')">ลบ</button></td>
+            `;
+            tableBody.appendChild(tr);
+        });
+    }
+
+    async function deleteData(date, memberId) {
+        if(!confirm("ยืนยันการลบข้อมูล?")) return;
+        await fetch(SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({action: "delete", date: date, memberId: memberId})
         });
         loadData();
     }
@@ -217,8 +240,6 @@
         reader.onload = () => resolve(reader.result);
         reader.onerror = error => reject(error);
     });
-
-    loadData(); // Initial load
 </script>
 
 </body>
