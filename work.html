@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log งานที่ต้องเคลียร์</title>
+    <style>
+        :root {
+            --glass: rgba(255, 255, 255, 0.2);
+            --glass-border: rgba(255, 255, 255, 0.3);
+            --ios-blue: #007AFF;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
+            background-attachment: fixed;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: var(--glass);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+            margin-bottom: 20px;
+        }
+
+        h2 { color: #1d1d1f; text-align: center; margin-top: 0; }
+
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: 500; font-size: 14px; }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid var(--glass-border);
+            background: rgba(255, 255, 255, 0.5);
+            box-sizing: border-box;
+            outline: none;
+            font-size: 16px;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            border-radius: 12px;
+            border: none;
+            background: var(--ios-blue);
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:active { transform: scale(0.98); opacity: 0.8; }
+
+        /* Table Style */
+        .table-container { overflow-x: auto; margin-top: 20px; }
+        table { width: 100%; border-collapse: collapse; background: rgba(255, 255, 255, 0.3); border-radius: 15px; overflow: hidden; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--glass-border); font-size: 14px; }
+        th { background: rgba(255, 255, 255, 0.4); }
+
+        .btn-delete { background: #FF3B30; width: auto; padding: 5px 10px; font-size: 12px; border-radius: 8px; }
+        .img-preview { width: 50px; height: 50px; object-fit: cover; border-radius: 5px; cursor: pointer; }
+
+        .loading { text-align: center; display: none; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>บันทึกงานที่ต้องทำ</h2>
+    <form id="logForm">
+        <div class="form-group">
+            <label>วันที่</label>
+            <input type="date" id="date" required>
+        </div>
+        <div class="form-group">
+            <label>หมายเลขสมาชิก</label>
+            <input type="text" id="memberId" placeholder="ระบุเลขสมาชิก" required>
+        </div>
+        <div class="form-group">
+            <label>ชื่อ-นามสกุล ลูกค้า</label>
+            <input type="text" id="customerName" placeholder="ระบุชื่อลูกค้า" required>
+        </div>
+        <div class="form-group">
+            <label>เบอร์ติดต่อ ลูกค้า</label>
+            <input type="tel" id="contact" placeholder="08x-xxx-xxxx" required>
+        </div>
+        <div class="form-group">
+            <label>พนักงานที่รับลูกค้า</label>
+            <select id="staff">
+                <option value="ศุภกฤต">ศุภกฤต</option>
+                <option value="นวพล">นวพล</option>
+                <option value="ปิยะพร">ปิยะพร</option>
+                <option value="กรทักษ์">กรทักษ์</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>แนบเอกสาร (รูปภาพ)</label>
+            <input type="file" id="fileInput" accept="image/*">
+        </div>
+        <button type="submit" id="submitBtn">บันทึกข้อมูล</button>
+        <div class="loading" id="loading">กำลังประมวลผล...</div>
+    </form>
+</div>
+
+<div class="container" style="max-width: 1000px;">
+    <h2>รายการที่บันทึกไว้</h2>
+    <div class="table-container">
+        <table id="logTable">
+            <thead>
+                <tr>
+                    <th>วันที่</th>
+                    <th>สมาชิก</th>
+                    <th>ลูกค้า</th>
+                    <th>เบอร์ติดต่อ</th>
+                    <th>พนักงาน</th>
+                    <th>เอกสาร</th>
+                    <th>จัดการ</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxBV2tojU0Du7gB0u9qOsY_231-1i8sXfjc4csZCx9AUaNo1Cpr6vcYOZwauWV0yqN_bw/exec';
+
+    // Set Default Date
+    document.getElementById('date').valueAsDate = new Date();
+
+    const form = document.getElementById('logForm');
+    const tableBody = document.getElementById('tableBody');
+
+    // Load Data
+    async function loadData() {
+        try {
+            const response = await fetch(WEB_APP_URL);
+            const data = await response.json();
+            tableBody.innerHTML = '';
+            data.forEach(item => {
+                const row = `<tr>
+                    <td>${item.วันที่ || ''}</td>
+                    <td>${item.หมายเลขสมาชิก || ''}</td>
+                    <td>${item.ชื่อนามสกุล || ''}</td>
+                    <td>${item.เบอร์ติดต่อ || ''}</td>
+                    <td>${item.พนักงานที่รับลูกค้า || ''}</td>
+                    <td>${item.เอกสารแนบ ? `<img src="${item.เอกสารแนบ}" class="img-preview" onclick="window.open(this.src)">` : 'ไม่มี'}</td>
+                    <td><button class="btn-delete" onclick="deleteRow(${item.rowId})">ลบ</button></td>
+                </tr>`;
+                tableBody.insertAdjacentHTML('beforeend', row);
+            });
+        } catch (e) { console.error("Load error", e); }
+    }
+
+    // Submit Form
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        document.getElementById('submitBtn').disabled = true;
+        document.getElementById('loading').style.display = 'block';
+
+        const fileInput = document.getElementById('fileInput');
+        let fileBase64 = '';
+        
+        if (fileInput.files.length > 0) {
+            fileBase64 = await toBase64(fileInput.files[0]);
+        }
+
+        const payload = {
+            date: document.getElementById('date').value,
+            memberId: document.getElementById('memberId').value,
+            customerName: document.getElementById('customerName').value,
+            contact: document.getElementById('contact').value,
+            staff: document.getElementById('staff').value,
+            fileUrl: fileBase64
+        };
+
+        await fetch(WEB_APP_URL, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        });
+
+        form.reset();
+        document.getElementById('date').valueAsDate = new Date();
+        document.getElementById('submitBtn').disabled = false;
+        document.getElementById('loading').style.display = 'none';
+        loadData();
+    });
+
+    async function deleteRow(rowId) {
+        if(!confirm('ยืนยันการลบข้อมูล?')) return;
+        await fetch(WEB_APP_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'delete', rowId: rowId })
+        });
+        loadData();
+    }
+
+    const toBase64 = file => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+    });
+
+    loadData(); // Initial load
+</script>
+
+</body>
+</html>
