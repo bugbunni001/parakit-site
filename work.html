@@ -54,6 +54,33 @@
         }
         .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,122,255,0.3); }
         .btn-submit:disabled { background: #a1a1a6; cursor: not-allowed; }
+
+        /* Search Section */
+        .search-container {
+            width: 100%;
+            max-width: 1100px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: flex-end;
+        }
+        .search-box {
+            position: relative;
+            width: 100%;
+            max-width: 350px;
+        }
+        .search-box input {
+            padding-left: 45px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.5);
+        }
+        .search-box i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+        }
+
         .list-container { width: 100%; max-width: 1100px; margin-bottom: 50px; }
         .table-wrapper { overflow-x: auto; border-radius: 20px; }
         table { width: 100%; border-collapse: collapse; background: rgba(255, 255, 255, 0.2); }
@@ -71,6 +98,8 @@
             tr { margin-bottom: 15px; background: rgba(255, 255, 255, 0.3); border-radius: 15px; padding: 10px; }
             td { border: none; position: relative; padding-left: 50%; text-align: right; }
             td:before { content: attr(data-label); position: absolute; left: 15px; font-weight: 600; text-align: left; }
+            .search-container { justify-content: center; }
+            .search-box { max-width: 100%; }
         }
     </style>
 </head>
@@ -98,7 +127,6 @@
         <div class="form-group">
             <label>พนักงานที่รับลูกค้า</label>
             <select id="staff">
-                <option value="">-- เลือกพนักงาน --</option>
                 <option value="ศุภกฤต">ศุภกฤต</option>
                 <option value="นวพล">นวพล</option>
                 <option value="ปิยะพร">ปิยะพร</option>
@@ -113,6 +141,13 @@
             <span id="btnText">บันทึกข้อมูล</span>
         </button>
     </form>
+</div>
+
+<div class="search-container">
+    <div class="search-box">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" id="searchInput" placeholder="ค้นหา ชื่อ, เบอร์, พนักงาน..." onkeyup="filterData()">
+    </div>
 </div>
 
 <div class="list-container">
@@ -135,7 +170,6 @@
 </div>
 
 <script>
-    // *** แก้ไข SCRIPT_URL ให้เป็นของคุณ ***
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxQ6oHl9McfWiPCEzIZXOlqJlyqrrv_jzultnBcpOhdfe-jnqCGZ3mBST6-uSP-icA/exec';
 
     document.getElementById('date').valueAsDate = new Date();
@@ -145,7 +179,6 @@
 
     window.onload = loadData;
 
-    // ฟังก์ชันแสดงผลวันที่ในตาราง (DD-MM-YYYY)
     function formatDateForDisplay(dateStr) {
         if (!dateStr) return "-";
         const date = new Date(dateStr);
@@ -156,7 +189,6 @@
         return `${day}-${month}-${year}`;
     }
 
-    // ฟังก์ชันเตรียมวันที่สำหรับส่งไปลบ (YYYY-MM-DD)
     function formatDateForDelete(dateStr) {
         const date = new Date(dateStr);
         if (isNaN(date)) return dateStr;
@@ -236,6 +268,37 @@
         }
     }
 
+    // ฟังก์ชันค้นหาข้อมูลในตาราง
+    function filterData() {
+        const input = document.getElementById('searchInput');
+        const filter = input.value.toLowerCase();
+        const table = document.getElementById('dataTable');
+        const tr = table.getElementsByTagName('tr');
+
+        for (let i = 0; i < tr.length; i++) {
+            // ค้นหาในคอลัมน์ ชื่อลูกค้า (2), เบอร์ (3), และ พนักงาน (4)
+            const nameCol = tr[i].getElementsByTagName('td')[2];
+            const phoneCol = tr[i].getElementsByTagName('td')[3];
+            const staffCol = tr[i].getElementsByTagName('td')[4];
+
+            if (nameCol || phoneCol || staffCol) {
+                const nameText = nameCol.textContent || nameCol.innerText;
+                const phoneText = phoneCol.textContent || phoneCol.innerText;
+                const staffText = staffCol.textContent || staffCol.innerText;
+
+                if (
+                    nameText.toLowerCase().indexOf(filter) > -1 || 
+                    phoneText.toLowerCase().indexOf(filter) > -1 ||
+                    staffText.toLowerCase().indexOf(filter) > -1
+                ) {
+                    tr[i].style.display = "";
+                } else {
+                    tr[i].style.display = "none";
+                }
+            }
+        }
+    }
+
     async function deleteData(delDate, rawId) {
         const result = await Swal.fire({
             title: 'ยืนยันการลบ?',
@@ -250,7 +313,7 @@
         if (result.isConfirmed) {
             Swal.fire({ title: 'กำลังลบ...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
             try {
-                const response = await fetch(SCRIPT_URL, {
+                await fetch(SCRIPT_URL, {
                     method: 'POST',
                     body: JSON.stringify({action: "delete", date: delDate, memberId: rawId})
                 });
