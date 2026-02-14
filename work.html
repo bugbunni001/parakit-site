@@ -212,9 +212,8 @@
 </div>
 
 <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwWkxqF354ktYRVnk6CBn82IvX7XvTa3Ba4GXOjESCsaA7YS0VGTPpE9YC-AN0jbqUY/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwKfwM3NHx-sNp5Nmz7vfYOSvvj-K9umr3SLEFeTjslFSJgfbsHQw7Sjaq504NFYcII/exec';
 
-    // Set Default Date to Today
     document.getElementById('date').valueAsDate = new Date();
 
     const form = document.getElementById('jobForm');
@@ -223,7 +222,6 @@
 
     window.onload = loadData;
 
-    // Function to format Date to DD-MM-YYYY
     function formatDate(dateStr) {
         if (!dateStr) return "-";
         const date = new Date(dateStr);
@@ -281,11 +279,10 @@
             data.reverse().forEach(row => {
                 const tr = document.createElement('tr');
                 
-                // เก็บค่าดั้งเดิมไว้ใช้ในการลบ (Raw Data)
-                const rawDate = row[0];
-                const rawMemberId = row[1];
+                // ใช้ค่า String ตรงๆ จากแถวใน Google Sheet เพื่อใช้ลบ
+                const rawDate = String(row[0]);
+                const rawMemberId = String(row[1]);
 
-                // เตรียมค่าสำหรับแสดงผล
                 const displayId = String(row[1]).replace(/^'/, '');
                 const displayPhone = String(row[3]).replace(/^'/, '');
                 
@@ -296,7 +293,11 @@
                     <td data-label="เบอร์ติดต่อ">${displayPhone}</td>
                     <td data-label="พนักงาน">${row[4]}</td>
                     <td data-label="เอกสาร">${row[5] ? `<a href="${row[5]}" target="_blank" class="link-file"><i class="fa-solid fa-image"></i> กดที่นี่เพื่อดูเอกสาร</a>` : '-'}</td>
-                    <td data-label="จัดการ"><button class="btn-delete" onclick="deleteData('${rawDate}', '${rawMemberId}')"><i class="fa-solid fa-trash-can"></i> ลบ</button></td>
+                    <td data-label="จัดการ">
+                        <button class="btn-delete" onclick="deleteData(\`${rawDate}\`, \`${rawMemberId}\`)">
+                            <i class="fa-solid fa-trash-can"></i> ลบ
+                        </button>
+                    </td>
                 `;
                 tableBody.appendChild(tr);
             });
@@ -326,7 +327,6 @@
             });
 
             try {
-                // ส่งค่าดิบที่ได้จาก Sheet (rawDate, rawMemberId) เพื่อให้ Script หาข้อมูลเจอ
                 await fetch(SCRIPT_URL, {
                     method: 'POST',
                     body: JSON.stringify({action: "delete", date: rawDate, memberId: rawMemberId})
