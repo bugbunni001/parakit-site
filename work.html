@@ -312,9 +312,23 @@
         return `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`;
     }
 
+    // ฟังก์ชันดูรูปภาพแบบ Pop-up ภายในเว็บ
+    function previewImage(url) {
+        Swal.fire({
+            imageUrl: url,
+            imageAlt: 'Job Image',
+            showConfirmButton: false,
+            showCloseButton: true,
+            width: 'auto',
+            padding: '10px',
+            background: 'rgba(255,255,255,0.9)',
+            backdrop: `rgba(0,0,0,0.8)`
+        });
+    }
+
     function showFullDetail(rowJson) {
         const item = JSON.parse(decodeURIComponent(rowJson));
-        const imgUrl = item[5]; // ลิงก์รูปภาพอยู่ที่ index 5
+        const hasImage = item[5] && item[5] !== "";
         
         const html = `
             <div style="text-align: left;">
@@ -324,10 +338,12 @@
                 <div class="detail-row"><div class="detail-label">เบอร์ติดต่อ:</div><div>${String(item[3]).replace(/^'/, '')}</div></div>
                 <div class="detail-row"><div class="detail-label">พนักงาน:</div><div>${item[4]}</div></div>
                 <div class="detail-row"><div class="detail-label">รายละเอียด:</div><div style="white-space:pre-wrap;">${item[6] || '-'}</div></div>
-                <div class="detail-row">
-                    <div class="detail-label">รูปภาพแนบ:</div>
-                    <div>${imgUrl ? `<a href="${imgUrl}" target="_blank" style="display:inline-block; background:var(--ios-blue); color:white; padding:5px 12px; border-radius:8px; text-decoration:none; font-size:13px;"><i class="fa-solid fa-image"></i> คลิกเพื่อดูรูปภาพ</a>` : '<span style="color:#999">ไม่มีรูปภาพ</span>'}</div>
-                </div>
+                ${hasImage ? `
+                <div class="detail-row" style="border:none; margin-top:15px; justify-content:center;">
+                    <button onclick="previewImage('${item[5]}')" style="background:var(--ios-blue); color:white; border:none; padding:10px 20px; border-radius:10px; cursor:pointer; font-weight:500;">
+                        <i class="fa-solid fa-image"></i> กดดูรูปภาพงาน
+                    </button>
+                </div>` : ''}
             </div>
         `;
         Swal.fire({ title: 'รายละเอียดข้อมูลงาน', html: html, confirmButtonText: 'ปิด', confirmButtonColor: '#007aff', width: '500px' });
@@ -354,7 +370,7 @@
                     <td class="clickable" onclick="showFullDetail('${rowJson}')">${row[2]}<br><small style="color:#8e8e93">${displayPhone}</small></td>
                     <td class="clickable" onclick="showFullDetail('${rowJson}')"><div class="text-truncate">${row[6] || "-"}</div></td>
                     <td>${row[4]}</td>
-                    <td>${row[5] ? `<a href="${row[5]}" target="_blank" style="color:#007aff;"><i class="fa-solid fa-image"></i> ดูรูป</a>` : '-'}</td>
+                    <td>${row[5] ? `<a href="javascript:void(0)" onclick="previewImage('${row[5]}')" style="color:#007aff;"><i class="fa-solid fa-image"></i> ดูรูป</a>` : '-'}</td>
                     <td><button class="btn-delete" onclick="deleteData('${row[0]}', '${row[1]}')"><i class="fa-solid fa-trash"></i></button></td>
                 `;
                 tableBody.appendChild(tr);
@@ -415,6 +431,7 @@
         }
     }
 
+    // --- On Load ---
     window.onload = () => {
         includeSidebar();
         document.getElementById('date').valueAsDate = new Date();
