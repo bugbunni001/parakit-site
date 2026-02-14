@@ -9,8 +9,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
-    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <style>
@@ -19,158 +19,185 @@
             --ios-bg: #f2f2f7;
             --glass-white: rgba(255, 255, 255, 0.75);
             --glass-border: rgba(255, 255, 255, 0.5);
+            --sidebar-dark: rgba(28, 28, 30, 0.94);
             --text-main: #1c1c1e;
             --text-light: #8e8e93;
+            --sidebar-width: 280px;
             --ios-red: #FF3B30;
+            --transition-swift: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* ===== GLOBAL RESET & FONT FIX ===== */
+        /* ===== แก้ไขจุดนี้: บังคับ Font ให้ครอบคลุมทุกองค์ประกอบเพื่อป้องกันฟอนต์สี่เหลี่ยม ===== */
         * { 
             box-sizing: border-box; 
-            /* บังคับใช้ Kanit และสำรองด้วย sans-serif ป้องกันฟอนต์สี่เหลี่ยม */
-            font-family: 'Kanit', Helvetica, Arial, sans-serif !important; 
+            font-family: 'Kanit', sans-serif !important; 
         }
         
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            font-family: 'Kanit', sans-serif;
+        }
+
         body { 
-            margin: 0; 
             background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
             background-attachment: fixed;
             color: var(--text-main); 
             -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
             padding-bottom: 60px;
-            min-height: 100vh;
+            transition: padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* สำหรับ Input และ Select บาง Browser ที่ไม่ยอมรับฟอนต์จาก Body */
+        input, select, textarea, button {
+            font-family: 'Kanit', sans-serif !important;
         }
 
         /* ===== Header Navbar ===== */
         .top-header {
             position: fixed;
             top: 0; left: 0; right: 0;
-            height: 65px;
+            height: 60px;
             background: rgba(255, 255, 255, 0.7);
             backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
             z-index: 1200;
             display: flex;
             align-items: center;
-            padding: 0 25px;
+            padding: 0 20px;
             border-bottom: 0.5px solid rgba(0,0,0,0.1);
+            transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .header-title {
-            font-weight: 700; 
-            font-size: 1.3rem; 
-            color: var(--text-main); 
-            letter-spacing: -0.5px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+        .top-toggle {
+            width: 36px; height: 36px;
+            border-radius: 10px;
+            border: none;
+            background: transparent;
+            color: var(--ios-blue);
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px;
+            transition: background 0.2s;
+        }
+        .top-toggle:hover { background: rgba(0, 122, 255, 0.1); }
+
+        /* ===== Sidebar System ===== */
+        .sidebar { 
+            position: fixed; top: 0; left: 0; 
+            width: var(--sidebar-width); height: 100vh; 
+            background: var(--sidebar-dark); 
+            backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+            color: #fff; overflow-y: auto; 
+            transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 2000;
+            box-shadow: 10px 0 30px rgba(0,0,0,0.1);
+        }
+        
+        @media(min-width:769px) { 
+            body:not(.collapsed) { padding-left: var(--sidebar-width); }
+            body:not(.collapsed) .top-header { left: var(--sidebar-width); }
+            body.collapsed .sidebar { transform: translateX(-100%); }
+            body.collapsed .top-header { left: 0; }
         }
 
-        /* ===== Main Content Area (Full Width) ===== */
-        .main-content { 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            padding: 100px 20px 40px; 
-            animation: fadeIn 0.6s ease-out; 
-            width: 100%;
+        @media(max-width:768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.show { transform: translateX(0); }
+            body { padding-left: 0 !important; }
+            .top-header { left: 0 !important; }
         }
 
-        .glass-card { 
-            background: rgba(255, 255, 255, 0.4); 
-            backdrop-filter: blur(20px); 
-            -webkit-backdrop-filter: blur(20px);
-            border-radius: 24px; 
-            border: 1px solid var(--glass-border); 
-            box-shadow: 0 10px 40px rgba(0,0,0,0.08); 
+        .overlay { 
+            position: fixed; inset: 0; 
+            background: rgba(0, 0, 0, 0.3); 
+            backdrop-filter: blur(4px); 
+            display: none; z-index: 1500; 
         }
+        .overlay.show { display: block; }
 
-        .container { 
-            padding: 30px; 
-            width: 100%; 
-            max-width: 650px; 
-            margin-bottom: 40px; 
+        .sidebar-header { padding: 30px 20px; font-size: 20px; font-weight: 600; border-bottom: 0.5px solid rgba(255,255,255,0.1); }
+        .menu { padding: 10px 0; }
+        .menu a, .menu .drop-btn { 
+            width: 100%; min-height: 50px; padding: 12px 20px; background: none; border: none; 
+            color: #ebebf5; text-align: left; font-size: 15px; cursor: pointer; 
+            display: flex; align-items: center; text-decoration: none; transition: 0.3s;
         }
+        .menu a:hover, .menu .drop-btn:hover { background: rgba(255,255,255,0.1); padding-left: 30px; }
+        .sub { display: none; background: rgba(0,0,0,0.2); }
+        .item.open .sub { display: block; }
+        .sub a { padding-left: 45px; font-size: 14px; color: #8e8e93; }
+
+        /* ===== Main Content Area ===== */
+        .main-content { display: flex; flex-direction: column; align-items: center; padding: 100px 20px 40px; animation: fadeIn 0.6s ease-out; }
+        .glass-card { background: rgba(255, 255, 255, 0.4); backdrop-filter: blur(20px); border-radius: 24px; border: 1px solid var(--glass-border); box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
+        .container { padding: 30px; width: 100%; max-width: 650px; margin-bottom: 40px; }
         
         h2 { text-align: center; margin-bottom: 25px; font-size: 24px; color: #1c1c1e; }
-        
         .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 6px; font-size: 14px; font-weight: 500; color: #444; }
-        
+        label { display: block; margin-bottom: 6px; font-size: 14px; font-weight: 500; }
         input, select, textarea {
             width: 100%; padding: 12px 15px; border-radius: 12px; border: 1px solid var(--glass-border);
             background: rgba(255, 255, 255, 0.6); font-size: 15px; outline: none; transition: 0.3s;
-            color: var(--text-main);
         }
-
-        input:focus, select:focus, textarea:focus { 
-            background: white; 
-            border-color: var(--ios-blue); 
-            box-shadow: 0 0 0 4px rgba(0,122,255,0.1); 
-        }
-
+        input:focus, select:focus, textarea:focus { background: white; border-color: var(--ios-blue); box-shadow: 0 0 0 4px rgba(0,122,255,0.1); }
         .btn-submit {
             width: 100%; padding: 15px; border: none; border-radius: 12px;
             background: var(--ios-blue); color: white; font-size: 16px; font-weight: 600;
             cursor: pointer; transition: 0.3s; margin-top: 10px;
         }
         .btn-submit:hover { opacity: 0.9; transform: scale(1.01); }
-        .btn-submit:disabled { background: #ccc; cursor: not-allowed; }
 
         /* ===== Table Styling ===== */
-        .list-container { width: 100%; max-width: 1100px; }
+        .list-container { width: 100%; max-width: 1200px; }
         .table-wrapper { overflow-x: auto; border-radius: 20px; background: rgba(255,255,255,0.4); }
-        
         table { width: 100%; border-collapse: collapse; min-width: 800px; }
-        th { 
-            background: rgba(255, 255, 255, 0.5); 
-            padding: 16px; 
-            text-align: left; 
-            font-size: 14px; 
-            color: #555; 
-            border-bottom: 1px solid rgba(0,0,0,0.05); 
-        }
-        td { padding: 14px 16px; border-bottom: 1px solid rgba(255,255,255,0.3); font-size: 14px; vertical-align: middle; }
+        th { background: rgba(255, 255, 255, 0.5); padding: 15px; text-align: left; font-size: 14px; color: #444; border-bottom: 1px solid rgba(0,0,0,0.05); }
+        td { padding: 14px 15px; border-bottom: 1px solid rgba(255,255,255,0.3); font-size: 14px; }
 
-        .clickable { cursor: pointer; transition: 0.2s; }
-        .clickable:hover { color: var(--ios-blue); }
+        .clickable { cursor: pointer; }
+        .clickable:hover { color: var(--ios-blue); text-decoration: underline; }
         
         .text-truncate { 
             max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
-            font-size: 13px; color: #666;
+            font-size: 13px; color: #555;
         }
 
         .btn-delete {
             background: #fff0f0; color: var(--ios-red); border: 1px solid #ffdada;
-            padding: 8px 12px; border-radius: 10px; cursor: pointer; transition: 0.2s;
+            padding: 6px 10px; border-radius: 8px; cursor: pointer; transition: 0.2s;
         }
         .btn-delete:hover { background: var(--ios-red); color: white; }
 
-        .detail-row { display: flex; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 8px; }
-        .detail-label { font-weight: 600; width: 120px; color: #8e8e93; flex-shrink: 0; }
+        .detail-row { display: flex; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        .detail-label { font-weight: 600; width: 120px; color: #666; flex-shrink: 0; }
         
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         @media (max-width: 768px) {
             .container { padding: 20px; }
-            .text-truncate { max-width: 150px; }
-            .header-title { font-size: 1.1rem; }
+            .text-truncate { max-width: 100%; white-space: normal; }
         }
     </style>
 </head>
 <body>
 
 <header class="top-header">
-    <div class="header-title">
-        <i class="fa-solid fa-clipboard-check" style="color: var(--ios-blue);"></i>
-        <span>ระบบเคลียร์งาน</span>
-    </div>
+    <button class="top-toggle" onclick="toggleSidebar()">☰</button>
+    <div style="font-weight: 700; font-size: 1.25rem; color: var(--text-main); letter-spacing: -0.8px; margin-left: 15px;">ระบบเคลียร์งาน</div>
 </header>
+
+<div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+<aside class="sidebar" id="sidebar"></aside>
 
 <div class="main-content">
     <div class="container glass-card">
-        <h2><i class="fa-solid fa-pen-to-square"></i> บันทึกงานกันลืม</h2>
+        <h2><i class="fa-solid fa-edit"></i> บันทึกงานกันลืม</h2>
         <form id="jobForm">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <div class="form-group">
                     <label>วันที่ดำเนินการ</label>
                     <input type="date" id="date" required>
@@ -182,17 +209,17 @@
             </div>
             <div class="form-group">
                 <label>ชื่อลูกค้า</label>
-                <input type="text" id="name" placeholder="ระบุชื่อ-นามสกุล" required>
+                <input type="text" id="name" placeholder="ชื่อ-นามสกุล" required>
             </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <div class="form-group">
                     <label>เบอร์ติดต่อ</label>
                     <input type="text" id="phone" placeholder="0XXXXXXXXX" required>
                 </div>
                 <div class="form-group">
-                    <label>พนักงานผู้รับผิดชอบ</label>
+                    <label>พนักงาน</label>
                     <select id="staff" required>
-                        <option value="">-- เลือกพนักงาน --</option>
+                        <option value="">-- เลือก --</option>
                         <option value="ศุภกฤต">ศุภกฤต</option>
                         <option value="นวพล">นวพล</option>
                         <option value="ปิยะพร">ปิยะพร</option>
@@ -202,15 +229,13 @@
             </div>
             <div class="form-group">
                 <label>รายละเอียดงาน</label>
-                <textarea id="jobDetail" rows="3" placeholder="ระบุรายละเอียดงานที่ดำเนินการ..."></textarea>
+                <textarea id="jobDetail" rows="3" placeholder="ระบุรายละเอียดงาน..."></textarea>
             </div>
             <div class="form-group">
-                <label>แนบรูปภาพหลักฐาน (ถ้ามี)</label>
+                <label>แนบรูป (ถ้ามี)</label>
                 <input type="file" id="file" accept="image/*">
             </div>
-            <button type="submit" id="submitBtn" class="btn-submit">
-                <i class="fa-solid fa-save"></i> บันทึกข้อมูล
-            </button>
+            <button type="submit" id="submitBtn" class="btn-submit">บันทึกข้อมูล</button>
         </form>
     </div>
 
@@ -221,75 +246,103 @@
                     <tr>
                         <th>วันที่</th>
                         <th>รหัสสมาชิก</th>
-                        <th>ลูกค้า / เบอร์</th>
+                        <th>ชื่อลูกค้า / เบอร์</th>
                         <th>รายละเอียด</th>
                         <th>พนักงาน</th>
-                        <th>รูปภาพ</th>
+                        <th>เอกสาร</th>
                         <th>จัดการ</th>
                     </tr>
                 </thead>
-                <tbody id="dataTable">
-                    </tbody>
+                <tbody id="dataTable"></tbody>
             </table>
         </div>
     </div>
-    
-    <p style="margin-top:30px; font-size:12px; color:#666; letter-spacing: 0.5px;">
-        © 2026 COPY RIGHT BY <strong>ANGERINA FROG</strong>
-    </p>
+    <p style="margin-top:20px; font-size:12px; color:#888;">© 2026 Copy Right By Angerina Frog</p>
 </div>
 
 <script>
-    // URL ของ Google Apps Script
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxQ6oHl9McfWiPCEzIZXOlqJlyqrrv_jzultnBcpOhdfe-jnqCGZ3mBST6-uSP-icA/exec';
 
-    // --- ระบบจัดการข้อมูล ---
-    
-    // แปลงวันที่ให้แสดงผลสวยงาม
+    // --- 1. ระบบ Sidebar System ---
+    function includeSidebar() {
+        const cached = localStorage.getItem('sidebar_cache');
+        if (cached) {
+            document.getElementById('sidebar').innerHTML = cached;
+            restoreMenuState();
+        }
+
+        fetch('sidebar.html')
+            .then(response => response.text())
+            .then(data => {
+                if (data !== cached) {
+                    document.getElementById('sidebar').innerHTML = data;
+                    localStorage.setItem('sidebar_cache', data);
+                    restoreMenuState();
+                }
+            })
+            .catch(err => console.warn("Sidebar Load Error"));
+            
+        if(localStorage.getItem('sidebar_collapsed') === 'true' && window.innerWidth > 768) {
+            document.body.classList.add('collapsed');
+        }
+    }
+
+    function toggleSidebar() {
+        if (window.innerWidth <= 768) {
+            document.getElementById("sidebar").classList.toggle("show");
+            document.getElementById("overlay").classList.toggle("show");
+        } else {
+            const isCollapsed = document.body.classList.toggle("collapsed");
+            localStorage.setItem('sidebar_collapsed', isCollapsed);
+        }
+    }
+
+    window.toggleDrop = function(btn, id) {
+        const item = btn.parentElement;
+        const isOpen = item.classList.toggle("open");
+        if (id) localStorage.setItem('menu-' + id, isOpen);
+    }
+
+    function restoreMenuState() {
+        ['credit', 'branch', 'sales'].forEach(id => {
+            if (localStorage.getItem('menu-' + id) === 'true') {
+                const el = document.getElementById('menu-' + id);
+                if (el) el.classList.add('open');
+            }
+        });
+    }
+
+    // --- 2. ระบบจัดการข้อมูล ---
     function fixDate(dateVal) {
         if (!dateVal) return "-";
         const d = new Date(dateVal);
         if (isNaN(d)) return dateVal;
-        return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+        return `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`;
     }
 
-    // แสดง Modal รายละเอียดฉบับเต็ม
     function showFullDetail(rowJson) {
         const item = JSON.parse(decodeURIComponent(rowJson));
         const html = `
-            <div style="text-align: left; padding: 10px;">
+            <div style="font-family:'Kanit', sans-serif; text-align: left;">
                 <div class="detail-row"><div class="detail-label">วันที่:</div><div>${fixDate(item[0])}</div></div>
                 <div class="detail-row"><div class="detail-label">รหัสสมาชิก:</div><div>${String(item[1]).replace(/^'/, '')}</div></div>
                 <div class="detail-row"><div class="detail-label">ลูกค้า:</div><div>${item[2]}</div></div>
                 <div class="detail-row"><div class="detail-label">เบอร์ติดต่อ:</div><div>${String(item[3]).replace(/^'/, '')}</div></div>
                 <div class="detail-row"><div class="detail-label">พนักงาน:</div><div>${item[4]}</div></div>
-                <div class="detail-row"><div class="detail-label">รายละเอียด:</div><div style="white-space:pre-wrap; color:#333;">${item[6] || '-'}</div></div>
+                <div class="detail-row"><div class="detail-label">รายละเอียด:</div><div style="white-space:pre-wrap;">${item[6] || '-'}</div></div>
             </div>
         `;
-        Swal.fire({ 
-            title: 'รายละเอียดงาน', 
-            html: html, 
-            confirmButtonText: 'รับทราบ', 
-            confirmButtonColor: '#007aff', 
-            width: '500px',
-            customClass: { popup: 'glass-card' }
-        });
+        Swal.fire({ title: 'รายละเอียดข้อมูลงาน', html: html, confirmButtonText: 'ปิด', confirmButtonColor: '#007aff', width: '500px' });
     }
 
-    // โหลดข้อมูลจาก Google Sheets
     async function loadData() {
         const tableBody = document.getElementById('dataTable');
-        tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:40px; color:#8e8e93;"><i class="fa-solid fa-spinner fa-spin"></i> กำลังดึงข้อมูลล่าสุด...</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px;">กำลังดึงข้อมูล...</td></tr>';
         
         try {
             const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: "read"}) });
             const data = await res.json();
             tableBody.innerHTML = '';
-
-            if (data.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px;">ไม่พบข้อมูลในระบบ</td></tr>';
-                return;
-            }
 
             data.reverse().forEach(row => {
                 const tr = document.createElement('tr');
@@ -300,34 +353,21 @@
                 tr.innerHTML = `
                     <td>${fixDate(row[0])}</td>
                     <td class="clickable" onclick="showFullDetail('${rowJson}')"><strong>${displayId}</strong></td>
-                    <td class="clickable" onclick="showFullDetail('${rowJson}')">
-                        <span style="font-weight:500;">${row[2]}</span><br>
-                        <small style="color:#8e8e93">${displayPhone}</small>
-                    </td>
-                    <td class="clickable" onclick="showFullDetail('${rowJson}')">
-                        <div class="text-truncate">${row[6] || "-"}</div>
-                    </td>
-                    <td><span style="background:#e1f0ff; color:#007aff; padding:4px 8px; border-radius:6px; font-size:12px;">${row[4]}</span></td>
-                    <td>${row[5] ? `<a href="${row[5]}" target="_blank" style="color:#007aff; text-decoration:none;"><i class="fa-solid fa-image"></i> ดูรูป</a>` : '-'}</td>
-                    <td>
-                        <button class="btn-delete" onclick="deleteData('${row[0]}', '${row[1]}')">
-                            <i class="fa-solid fa-trash-can"></i>
-                        </button>
-                    </td>
+                    <td class="clickable" onclick="showFullDetail('${rowJson}')">${row[2]}<br><small style="color:#8e8e93">${displayPhone}</small></td>
+                    <td class="clickable" onclick="showFullDetail('${rowJson}')"><div class="text-truncate">${row[6] || "-"}</div></td>
+                    <td>${row[4]}</td>
+                    <td>${row[5] ? `<a href="${row[5]}" target="_blank" style="color:#007aff;"><i class="fa-solid fa-image"></i> ดูรูป</a>` : '-'}</td>
+                    <td><button class="btn-delete" onclick="deleteData('${row[0]}', '${row[1]}')"><i class="fa-solid fa-trash"></i></button></td>
                 `;
                 tableBody.appendChild(tr);
             });
-        } catch (e) { 
-            tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:red; padding:30px;">เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์</td></tr>'; 
-        }
+        } catch (e) { tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:red;">โหลดข้อมูลไม่สำเร็จ</td></tr>'; }
     }
 
-    // บันทึกข้อมูลใหม่
     document.getElementById('jobForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const btn = document.getElementById('submitBtn');
-        btn.disabled = true; 
-        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> กำลังบันทึก...';
+        btn.disabled = true; btn.innerText = 'กำลังบันทึก...';
 
         const fileInput = document.getElementById('file');
         let fileData = null;
@@ -351,51 +391,35 @@
         };
 
         try {
-            const response = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
-            if(response.ok) {
-                Swal.fire({ icon: 'success', title: 'สำเร็จ', text: 'บันทึกข้อมูลเรียบร้อยแล้ว', timer: 2000, showConfirmButton: false });
-                document.getElementById('jobForm').reset();
-                document.getElementById('date').valueAsDate = new Date();
-                loadData();
-            }
-        } catch (err) { 
-            Swal.fire({ icon: 'error', title: 'ไม่สำเร็จ', text: 'ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่' }); 
-        } finally {
-            btn.disabled = false; 
-            btn.innerHTML = '<i class="fa-solid fa-save"></i> บันทึกข้อมูล';
-        }
+            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+            Swal.fire('สำเร็จ', 'บันทึกข้อมูลเรียบร้อยแล้ว', 'success');
+            document.getElementById('jobForm').reset();
+            document.getElementById('date').valueAsDate = new Date();
+            loadData();
+        } catch (err) { Swal.fire('Error', 'บันทึกไม่สำเร็จ', 'error'); }
+        btn.disabled = false; btn.innerText = 'บันทึกข้อมูล';
     });
 
-    // ลบข้อมูล
     async function deleteData(d, id) {
         const confirm = await Swal.fire({
-            title: 'ยืนยันการลบ?',
-            text: "ข้อมูลนี้จะถูกลบออกจากระบบถาวร",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#FF3B30',
-            cancelButtonColor: '#8e8e93',
-            confirmButtonText: 'ลบข้อมูล',
-            cancelButtonText: 'ยกเลิก'
+            title: 'ลบข้อมูล?', text: "ยืนยันการลบรายการนี้", icon: 'warning',
+            showCancelButton: true, confirmButtonColor: '#FF3B30', confirmButtonText: 'ลบ'
         });
-
         if (confirm.isConfirmed) {
-            Swal.fire({ title: 'กำลังลบ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            Swal.fire({title: 'กำลังลบ...', didOpen: () => Swal.showLoading()});
             try {
                 const dateObj = new Date(d);
                 const dateStr = dateObj.getFullYear() + '-' + String(dateObj.getMonth()+1).padStart(2,'0') + '-' + String(dateObj.getDate()).padStart(2,'0');
                 await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: "delete", date: dateStr, memberId: id}) });
-                Swal.fire({ icon: 'success', title: 'ลบข้อมูลสำเร็จ', timer: 1500, showConfirmButton: false });
+                Swal.fire('ลบแล้ว!', '', 'success');
                 loadData();
-            } catch (e) { 
-                Swal.fire({ icon: 'error', title: 'ผิดพลาด', text: 'ลบข้อมูลไม่สำเร็จ' }); 
-            }
+            } catch (e) { Swal.fire('Error', 'ลบไม่สำเร็จ', 'error'); }
         }
     }
 
-    // เมื่อโหลดหน้าเว็บ
+    // --- On Load ---
     window.onload = () => {
-        // ตั้งค่าวันที่ปัจจุบันใน Input
+        includeSidebar();
         document.getElementById('date').valueAsDate = new Date();
         loadData();
     };
