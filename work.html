@@ -163,7 +163,7 @@
         </div>
         <div class="form-group">
             <label>หมายเลขสมาชิก</label>
-            <input type="text" id="memberId" placeholder="ระบุเลขสมาชิก (ใส่เลข 0 นำหน้าได้)" required>
+            <input type="text" id="memberId" placeholder="ระบุเลขสมาชิก" required>
         </div>
         <div class="form-group">
             <label>ชื่อ-นามสกุล ลูกค้า</label>
@@ -171,7 +171,7 @@
         </div>
         <div class="form-group">
             <label>เบอร์ติดต่อ</label>
-            <input type="text" id="phone" placeholder="ระบุเบอร์โทร (ใส่เลข 0 นำหน้าได้)" required>
+            <input type="text" id="phone" placeholder="ระบุเบอร์โทร" required>
         </div>
         <div class="form-group">
             <label>พนักงานที่รับลูกค้า</label>
@@ -212,7 +212,7 @@
 </div>
 
 <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw5ifnqVVMEEN6zn0k8HeuH440tOszi6kO2qm2JSbXpjOdqZEzlAXSV2f0oC7N9i7jI/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxKvdomITf6AzLp3VWP6DRKKc7osukeBd6u9d788occu7kMIAzIa4xTJ9j9buv7urs/exec';
 
     document.getElementById('date').valueAsDate = new Date();
 
@@ -222,7 +222,7 @@
 
     window.onload = loadData;
 
-    function formatDate(dateStr) {
+    function formatDateForDisplay(dateStr) {
         if (!dateStr) return "-";
         const date = new Date(dateStr);
         if (isNaN(date)) return dateStr; 
@@ -230,6 +230,13 @@
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const year = date.getFullYear();
         return `${day}-${month}-${year}`;
+    }
+
+    // ฟังก์ชันช่วยจัด Format วันที่ส่งไปลบให้เป็น yyyy-mm-dd
+    function formatDateForDelete(dateStr) {
+        const date = new Date(dateStr);
+        if (isNaN(date)) return dateStr;
+        return date.toISOString().split('T')[0];
     }
 
     form.addEventListener('submit', async (e) => {
@@ -255,12 +262,12 @@
 
         try {
             await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
-            Swal.fire({ icon: 'success', title: 'สำเร็จ!', text: 'บันทึกข้อมูลเรียบร้อยแล้วค่ะ', timer: 2000, showConfirmButton: false });
+            Swal.fire({ icon: 'success', title: 'สำเร็จ!', text: 'บันทึกเรียบร้อย', timer: 2000, showConfirmButton: false });
             form.reset();
             document.getElementById('date').valueAsDate = new Date();
             loadData();
         } catch (error) {
-            Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: 'กรุณาลองใหม่อีกครั้ง' });
+            Swal.fire({ icon: 'error', title: 'ผิดพลาด', text: 'ลองใหม่อีกครั้ง' });
         } finally {
             btn.disabled = false;
             btnText.innerText = "บันทึกข้อมูล";
@@ -269,7 +276,7 @@
 
     async function loadData() {
         const tableBody = document.getElementById('dataTable');
-        tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center;">กำลังโหลดข้อมูล...</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center;">กำลังโหลด...</td></tr>';
 
         try {
             const response = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: "read"}) });
@@ -279,22 +286,22 @@
             data.reverse().forEach(row => {
                 const tr = document.createElement('tr');
                 
-                // ใช้ค่า String ตรงๆ จากแถวใน Google Sheet เพื่อใช้ลบ
-                const rawDate = String(row[0]);
+                // เก็บค่าวันที่แบบมาตรฐานเพื่อใช้ลบ
+                const deleteDate = formatDateForDelete(row[0]);
                 const rawMemberId = String(row[1]);
 
                 const displayId = String(row[1]).replace(/^'/, '');
                 const displayPhone = String(row[3]).replace(/^'/, '');
                 
                 tr.innerHTML = `
-                    <td data-label="วันที่">${formatDate(row[0])}</td>
+                    <td data-label="วันที่">${formatDateForDisplay(row[0])}</td>
                     <td data-label="สมาชิก">${displayId}</td>
                     <td data-label="ชื่อลูกค้า">${row[2]}</td>
                     <td data-label="เบอร์ติดต่อ">${displayPhone}</td>
                     <td data-label="พนักงาน">${row[4]}</td>
-                    <td data-label="เอกสาร">${row[5] ? `<a href="${row[5]}" target="_blank" class="link-file"><i class="fa-solid fa-image"></i> กดที่นี่เพื่อดูเอกสาร</a>` : '-'}</td>
+                    <td data-label="เอกสาร">${row[5] ? `<a href="${row[5]}" target="_blank" class="link-file"><i class="fa-solid fa-image"></i> ดูเอกสาร</a>` : '-'}</td>
                     <td data-label="จัดการ">
-                        <button class="btn-delete" onclick="deleteData(\`${rawDate}\`, \`${rawMemberId}\`)">
+                        <button class="btn-delete" onclick="deleteData('${deleteDate}', '${rawMemberId}')">
                             <i class="fa-solid fa-trash-can"></i> ลบ
                         </button>
                     </td>
@@ -306,35 +313,28 @@
         }
     }
 
-    async function deleteData(rawDate, rawMemberId) {
+    async function deleteData(delDate, rawId) {
         const result = await Swal.fire({
             title: 'ยืนยันการลบ?',
-            text: "ข้อมูลนี้จะถูกลบออกจากระบบถาวร",
+            text: "ข้อมูลจะถูกลบถาวร",
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#FF3B30',
-            confirmButtonText: 'ลบข้อมูล',
-            cancelButtonText: 'ยกเลิก',
-            background: 'rgba(255,255,255,0.9)',
-            backdrop: `blur(10px)`
+            confirmButtonText: 'ลบข้อมูล'
         });
 
         if (result.isConfirmed) {
-            Swal.fire({
-                title: 'กำลังลบ...',
-                allowOutsideClick: false,
-                didOpen: () => { Swal.showLoading(); }
-            });
+            Swal.fire({ title: 'กำลังลบ...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
 
             try {
                 await fetch(SCRIPT_URL, {
                     method: 'POST',
-                    body: JSON.stringify({action: "delete", date: rawDate, memberId: rawMemberId})
+                    body: JSON.stringify({action: "delete", date: delDate, memberId: rawId})
                 });
-                Swal.fire('ลบแล้ว!', 'ลบข้อมูลเรียบร้อยแล้ว', 'success');
+                Swal.fire('สำเร็จ!', 'ลบข้อมูลแล้ว', 'success');
                 loadData();
             } catch (error) {
-                Swal.fire('เกิดข้อผิดพลาด', 'ไม่สามารถลบข้อมูลได้', 'error');
+                Swal.fire('ผิดพลาด', 'ไม่สามารถลบได้', 'error');
             }
         }
     }
