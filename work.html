@@ -227,7 +227,7 @@
     function formatDate(dateStr) {
         if (!dateStr) return "-";
         const date = new Date(dateStr);
-        if (isNaN(date)) return dateStr; // ถ้าไม่ใช่รูปแบบวันที่ให้ส่งคืนค่าเดิม
+        if (isNaN(date)) return dateStr; 
         const day = String(date.getDate()).padStart(2, '0');
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const year = date.getFullYear();
@@ -247,10 +247,10 @@
 
         const payload = {
             action: "insert",
-            date: document.getElementById('date').value, // YYYY-MM-DD
-            memberId: "'" + document.getElementById('memberId').value, // ใส่ ' นำหน้าเพื่อบังคับเป็น Text ใน Google Sheet
+            date: document.getElementById('date').value,
+            memberId: "'" + document.getElementById('memberId').value,
             name: document.getElementById('name').value,
-            phone: "'" + document.getElementById('phone').value, // ใส่ ' นำหน้าเพื่อบังคับเป็น Text
+            phone: "'" + document.getElementById('phone').value,
             staff: document.getElementById('staff').value,
             fileData: fileData
         };
@@ -280,7 +280,12 @@
 
             data.reverse().forEach(row => {
                 const tr = document.createElement('tr');
-                // จัดการเบอร์และ ID ให้แสดงเลข 0 (ลบเครื่องหมาย ' ออกถ้ามี)
+                
+                // เก็บค่าดั้งเดิมไว้ใช้ในการลบ (Raw Data)
+                const rawDate = row[0];
+                const rawMemberId = row[1];
+
+                // เตรียมค่าสำหรับแสดงผล
                 const displayId = String(row[1]).replace(/^'/, '');
                 const displayPhone = String(row[3]).replace(/^'/, '');
                 
@@ -291,7 +296,7 @@
                     <td data-label="เบอร์ติดต่อ">${displayPhone}</td>
                     <td data-label="พนักงาน">${row[4]}</td>
                     <td data-label="เอกสาร">${row[5] ? `<a href="${row[5]}" target="_blank" class="link-file"><i class="fa-solid fa-image"></i> กดที่นี่เพื่อดูเอกสาร</a>` : '-'}</td>
-                    <td data-label="จัดการ"><button class="btn-delete" onclick="deleteData('${row[0]}', '${row[1]}')"><i class="fa-solid fa-trash-can"></i> ลบ</button></td>
+                    <td data-label="จัดการ"><button class="btn-delete" onclick="deleteData('${rawDate}', '${rawMemberId}')"><i class="fa-solid fa-trash-can"></i> ลบ</button></td>
                 `;
                 tableBody.appendChild(tr);
             });
@@ -300,7 +305,7 @@
         }
     }
 
-    async function deleteData(date, memberId) {
+    async function deleteData(rawDate, rawMemberId) {
         const result = await Swal.fire({
             title: 'ยืนยันการลบ?',
             text: "ข้อมูลนี้จะถูกลบออกจากระบบถาวร",
@@ -308,17 +313,29 @@
             showCancelButton: true,
             confirmButtonColor: '#FF3B30',
             confirmButtonText: 'ลบข้อมูล',
-            cancelButtonText: 'ยกเลิก'
+            cancelButtonText: 'ยกเลิก',
+            background: 'rgba(255,255,255,0.9)',
+            backdrop: `blur(10px)`
         });
 
         if (result.isConfirmed) {
-            Swal.showLoading();
-            await fetch(SCRIPT_URL, {
-                method: 'POST',
-                body: JSON.stringify({action: "delete", date: date, memberId: memberId})
+            Swal.fire({
+                title: 'กำลังลบ...',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
             });
-            Swal.fire('ลบแล้ว!', 'ลบข้อมูลเรียบร้อยแล้ว', 'success');
-            loadData();
+
+            try {
+                // ส่งค่าดิบที่ได้จาก Sheet (rawDate, rawMemberId) เพื่อให้ Script หาข้อมูลเจอ
+                await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({action: "delete", date: rawDate, memberId: rawMemberId})
+                });
+                Swal.fire('ลบแล้ว!', 'ลบข้อมูลเรียบร้อยแล้ว', 'success');
+                loadData();
+            } catch (error) {
+                Swal.fire('เกิดข้อผิดพลาด', 'ไม่สามารถลบข้อมูลได้', 'error');
+            }
         }
     }
 
