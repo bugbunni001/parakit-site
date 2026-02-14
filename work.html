@@ -274,44 +274,52 @@
         }
     });
 
-    async function loadData() {
-        const tableBody = document.getElementById('dataTable');
-        tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center;">กำลังโหลด...</td></tr>';
+   async function loadData() {
+    const tableBody = document.getElementById('dataTable');
+    tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center;">กำลังโหลดข้อมูล...</td></tr>';
 
-        try {
-            const response = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: "read"}) });
-            const data = await response.json();
-            tableBody.innerHTML = '';
+    try {
+        const response = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: "read"}) });
+        const data = await response.json();
+        tableBody.innerHTML = '';
 
-            data.reverse().forEach(row => {
-                const tr = document.createElement('tr');
-                
-                // เก็บค่าวันที่แบบมาตรฐานเพื่อใช้ลบ
-                const deleteDate = formatDateForDelete(row[0]);
-                const rawMemberId = String(row[1]);
+        data.reverse().forEach(row => {
+            const tr = document.createElement('tr');
+            
+            // แปลงวันที่ให้เป็น yyyy-MM-dd สำหรับส่งไปลบ
+            let deleteDate = row[0];
+            const dateObj = new Date(row[0]);
+            if (!isNaN(dateObj)) {
+                const y = dateObj.getFullYear();
+                const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+                const d = String(dateObj.getDate()).padStart(2, '0');
+                deleteDate = `${y}-${m}-${d}`;
+            }
 
-                const displayId = String(row[1]).replace(/^'/, '');
-                const displayPhone = String(row[3]).replace(/^'/, '');
-                
-                tr.innerHTML = `
-                    <td data-label="วันที่">${formatDateForDisplay(row[0])}</td>
-                    <td data-label="สมาชิก">${displayId}</td>
-                    <td data-label="ชื่อลูกค้า">${row[2]}</td>
-                    <td data-label="เบอร์ติดต่อ">${displayPhone}</td>
-                    <td data-label="พนักงาน">${row[4]}</td>
-                    <td data-label="เอกสาร">${row[5] ? `<a href="${row[5]}" target="_blank" class="link-file"><i class="fa-solid fa-image"></i> ดูเอกสาร</a>` : '-'}</td>
-                    <td data-label="จัดการ">
-                        <button class="btn-delete" onclick="deleteData('${deleteDate}', '${rawMemberId}')">
-                            <i class="fa-solid fa-trash-can"></i> ลบ
-                        </button>
-                    </td>
-                `;
-                tableBody.appendChild(tr);
-            });
-        } catch (error) {
-            tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center;">โหลดข้อมูลไม่สำเร็จ</td></tr>';
-        }
+            const rawMemberId = String(row[1]);
+
+            const displayId = String(row[1]).replace(/^'/, '');
+            const displayPhone = String(row[3]).replace(/^'/, '');
+            
+            tr.innerHTML = `
+                <td data-label="วันที่">${formatDate(row[0])}</td>
+                <td data-label="สมาชิก">${displayId}</td>
+                <td data-label="ชื่อลูกค้า">${row[2]}</td>
+                <td data-label="เบอร์ติดต่อ">${displayPhone}</td>
+                <td data-label="พนักงาน">${row[4]}</td>
+                <td data-label="เอกสาร">${row[5] ? `<a href="${row[5]}" target="_blank" class="link-file"><i class="fa-solid fa-image"></i> กดที่นี่เพื่อดูเอกสาร</a>` : '-'}</td>
+                <td data-label="จัดการ">
+                    <button class="btn-delete" onclick="deleteData('${deleteDate}', '${rawMemberId}')">
+                        <i class="fa-solid fa-trash-can"></i> ลบ
+                    </button>
+                </td>
+            `;
+            tableBody.appendChild(tr);
+        });
+    } catch (error) {
+        tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center;">โหลดข้อมูลไม่สำเร็จ</td></tr>';
     }
+}
 
     async function deleteData(delDate, rawId) {
         const result = await Swal.fire({
