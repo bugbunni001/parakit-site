@@ -137,6 +137,23 @@
         }
         .btn-submit:hover { opacity: 0.9; transform: scale(1.01); }
 
+        /* --- Search Styles (จุดที่แก้ไข) --- */
+        .search-container { 
+            width: 100%; 
+            max-width: 1200px; 
+            display: flex; 
+            justify-content: flex-end; 
+            margin-bottom: 15px; 
+        }
+        .search-wrapper { 
+            width: 100%; 
+            max-width: 320px; /* ปรับความกว้างให้สั้นลง */
+            position: relative; 
+        }
+        .search-wrapper i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--text-light); }
+        .search-input { padding-left: 40px !important; border-radius: 15px !important; background: rgba(255, 255, 255, 0.5); }
+        /* -------------------------------- */
+
         .list-container { width: 100%; max-width: 1200px; }
         .table-wrapper { overflow-x: auto; border-radius: 20px; background: rgba(255,255,255,0.4); }
         table { width: 100%; border-collapse: collapse; min-width: 800px; }
@@ -164,6 +181,8 @@
         @media (max-width: 768px) {
             .container { padding: 20px; }
             .text-truncate { max-width: 100%; white-space: normal; }
+            .search-container { justify-content: center; }
+            .search-wrapper { max-width: 100%; }
         }
     </style>
 </head>
@@ -222,6 +241,13 @@
             </div>
             <button type="submit" id="submitBtn" class="btn-submit">บันทึกข้อมูล</button>
         </form>
+    </div>
+
+    <div class="search-container">
+        <div class="search-wrapper">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="searchInput" class="search-input" placeholder="ค้นหาข้อมูล..." onkeyup="filterData()">
+        </div>
     </div>
 
     <div class="list-container">
@@ -305,10 +331,25 @@
         return `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`;
     }
 
-    // แปลง Format วันที่จาก Sheet ให้เป็น YYYY-MM-DD สำหรับ input[type="date"]
     function formatForInputDate(dateVal) {
         const d = new Date(dateVal);
         return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
+
+    function filterData() {
+        const input = document.getElementById('searchInput');
+        const filter = input.value.toLowerCase();
+        const tbody = document.getElementById('dataTable');
+        const rows = tbody.getElementsByTagName('tr');
+
+        for (let i = 0; i < rows.length; i++) {
+            const text = rows[i].textContent || rows[i].innerText;
+            if (text.toLowerCase().indexOf(filter) > -1) {
+                rows[i].style.display = "";
+            } else {
+                rows[i].style.display = "none";
+            }
+        }
     }
 
     function showFullDetail(rowJson) {
@@ -339,9 +380,16 @@
         Swal.fire({ 
             title: 'รายละเอียดข้อมูลงาน', 
             html: html, 
-            confirmButtonText: 'ปิดหน้าต่าง', 
-            confirmButtonColor: '#8e8e93', 
+            showCancelButton: true,
+            confirmButtonText: '<i class="fa-solid fa-pen-to-square"></i> แก้ไขข้อมูลนี้', 
+            cancelButtonText: 'ปิดหน้าต่าง',
+            confirmButtonColor: '#34C759', 
+            cancelButtonColor: '#8e8e93',
             width: '500px' 
+        }).then((result) => {
+            if (result.isConfirmed) {
+                editData(rowJson);
+            }
         });
     }
 
@@ -374,10 +422,10 @@
                 `;
                 tableBody.appendChild(tr);
             });
+            filterData();
         } catch (e) { tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:red;">โหลดข้อมูลไม่สำเร็จ</td></tr>'; }
     }
 
-    // --- ส่วนแก้ไขข้อมูล (Edit Function) ---
     window.editData = function(rowJson) {
         const item = JSON.parse(decodeURIComponent(rowJson));
         const oldDate = formatForInputDate(item[0]);
