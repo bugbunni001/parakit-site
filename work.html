@@ -3,117 +3,230 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Log งานที่ต้องเคลียร์ - iOS Glass Design</title>
+    <title>Log งานที่ต้องเคลียร์ - Premium iOS Design</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
     <style>
         :root {
-            --glass: rgba(255, 255, 255, 0.2);
-            --glass-border: rgba(255, 255, 255, 0.3);
+            --glass: rgba(255, 255, 255, 0.25);
+            --glass-border: rgba(255, 255, 255, 0.4);
             --ios-blue: #007AFF;
+            --ios-red: #FF3B30;
+            --ios-green: #34C759;
+            --text-main: #1d1d1f;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Kanit', sans-serif;
         }
 
         body {
-            background: linear-gradient(135deg, #8BC6EC 0%, #9599E2 100%);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
+            background-attachment: fixed;
             min-height: 100vh;
             margin: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
             padding: 20px;
-            color: #1d1d1f;
+            color: var(--text-main);
+        }
+
+        /* Glassmorphism Container */
+        .glass-card {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 24px;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
         }
 
         .container {
-            background: var(--glass);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border-radius: 20px;
-            border: 1px solid var(--glass-border);
-            padding: 30px;
+            padding: 40px;
             width: 100%;
-            max-width: 500px;
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
-            margin-bottom: 30px;
+            max-width: 600px;
+            margin-bottom: 40px;
         }
 
-        h2 { text-align: center; font-weight: 600; margin-top: 0; }
+        h2 { 
+            text-align: center; 
+            font-weight: 600; 
+            margin-bottom: 30px; 
+            font-size: 28px;
+            letter-spacing: 0.5px;
+        }
 
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-size: 0.9em; font-weight: 500; }
+        /* Form Styling */
+        .form-group { margin-bottom: 20px; }
+        label { 
+            display: block; 
+            margin-bottom: 8px; 
+            font-size: 0.95em; 
+            font-weight: 500; 
+            padding-left: 5px;
+        }
         
         input, select {
             width: 100%;
-            padding: 12px;
-            border-radius: 10px;
+            padding: 14px 18px;
+            border-radius: 15px;
             border: 1px solid var(--glass-border);
-            background: rgba(255, 255, 255, 0.5);
-            box-sizing: border-box;
+            background: rgba(255, 255, 255, 0.6);
             font-size: 16px;
+            outline: none;
+            transition: all 0.3s ease;
         }
 
-        button {
+        input:focus, select:focus {
+            background: rgba(255, 255, 255, 0.9);
+            border-color: var(--ios-blue);
+            box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1);
+        }
+
+        /* Button Effects */
+        .btn-submit {
             width: 100%;
-            padding: 15px;
+            padding: 16px;
             border: none;
-            border-radius: 12px;
+            border-radius: 16px;
             background: var(--ios-blue);
             color: white;
-            font-size: 16px;
+            font-size: 18px;
             font-weight: 600;
             cursor: pointer;
-            transition: opacity 0.2s;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            margin-top: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
         }
 
-        button:active { opacity: 0.7; }
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 122, 255, 0.3);
+            filter: brightness(1.1);
+        }
 
+        .btn-submit:active { transform: translateY(0); }
+
+        .btn-submit:disabled {
+            background: #a1a1a6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Table Area */
         .list-container {
             width: 100%;
-            max-width: 900px;
+            max-width: 1100px;
+            margin-bottom: 50px;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 20px;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            background: var(--glass);
-            backdrop-filter: blur(10px);
-            border-radius: 15px;
-            overflow: hidden;
+            background: rgba(255, 255, 255, 0.2);
         }
 
-        th, td {
-            padding: 15px;
+        th {
+            background: rgba(255, 255, 255, 0.4);
+            padding: 18px 15px;
             text-align: left;
-            border-bottom: 1px solid var(--glass-border);
+            font-weight: 600;
+            font-size: 0.9em;
+            text-transform: uppercase;
         }
 
-        th { background: rgba(255, 255, 255, 0.3); }
+        td {
+            padding: 16px 15px;
+            border-bottom: 1px solid var(--glass-border);
+            font-size: 15px;
+        }
+
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Status Colors */
+        .link-file { 
+            color: var(--ios-blue); 
+            text-decoration: none; 
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .link-file:hover { text-decoration: underline; }
 
         .btn-delete {
-            background: #FF3B30;
-            padding: 5px 10px;
-            font-size: 12px;
-            width: auto;
+            background: rgba(255, 59, 48, 0.1);
+            color: var(--ios-red);
+            padding: 8px 12px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 59, 48, 0.2);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
         }
 
-        .link-file { color: var(--ios-blue); text-decoration: none; font-weight: 500; }
+        .btn-delete:hover {
+            background: var(--ios-red);
+            color: white;
+        }
+
+        /* Mobile Responsive Card Layout */
+        @media (max-width: 768px) {
+            table, thead, tbody, th, td, tr { display: block; }
+            thead tr { position: absolute; top: -9999px; left: -9999px; }
+            tr { 
+                margin-bottom: 15px; 
+                background: rgba(255, 255, 255, 0.3);
+                border-radius: 15px;
+                padding: 10px;
+            }
+            td { 
+                border: none;
+                position: relative;
+                padding-left: 50%; 
+                text-align: right;
+            }
+            td:before { 
+                content: attr(data-label);
+                position: absolute;
+                left: 15px;
+                font-weight: 600;
+                text-align: left;
+            }
+        }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>บันทึกงานใหม่</h2>
+<div class="container glass-card">
+    <h2><i class="fa-solid fa-clipboard-list"></i> บันทึกงานใหม่</h2>
     <form id="jobForm">
         <div class="form-group">
-            <label>วันที่</label>
+            <label>วันที่ดำเนินการ</label>
             <input type="date" id="date" required>
         </div>
         <div class="form-group">
             <label>หมายเลขสมาชิก</label>
-            <input type="text" id="memberId" placeholder="ระบุ ID" required>
+            <input type="text" id="memberId" placeholder="เช่น MEM-001" required>
         </div>
         <div class="form-group">
             <label>ชื่อ-นามสกุล ลูกค้า</label>
-            <input type="text" id="name" placeholder="ชื่อลูกค้า" required>
+            <input type="text" id="name" placeholder="ระบุชื่อลูกค้า" required>
         </div>
         <div class="form-group">
             <label>เบอร์ติดต่อ</label>
@@ -129,48 +242,53 @@
             </select>
         </div>
         <div class="form-group">
-            <label>แนบเอกสาร (รูปภาพ)</label>
+            <label>แนบรูปภาพเอกสาร</label>
             <input type="file" id="file" accept="image/*">
         </div>
-        <button type="submit" id="submitBtn">บันทึกข้อมูล</button>
+        <button type="submit" id="submitBtn" class="btn-submit">
+            <span id="btnText">บันทึกข้อมูล</span>
+        </button>
     </form>
 </div>
 
 <div class="list-container">
-    <table>
-        <thead>
-            <tr>
-                <th>วันที่</th>
-                <th>สมาชิก</th>
-                <th>ชื่อลูกค้า</th>
-                <th>เบอร์ติดต่อ</th>
-                <th>พนักงาน</th>
-                <th>เอกสาร</th>
-                <th>จัดการ</th>
-            </tr>
-        </thead>
-        <tbody id="dataTable">
-            </tbody>
-    </table>
+    <div class="table-wrapper glass-card">
+        <table>
+            <thead>
+                <tr>
+                    <th>วันที่</th>
+                    <th>สมาชิก</th>
+                    <th>ชื่อลูกค้า</th>
+                    <th>เบอร์ติดต่อ</th>
+                    <th>พนักงาน</th>
+                    <th>เอกสาร</th>
+                    <th>จัดการ</th>
+                </tr>
+            </thead>
+            <tbody id="dataTable">
+                </tbody>
+        </table>
+    </div>
 </div>
 
 <script>
-    // ** สำคัญ: วาง URL ที่ได้จาก Google Apps Script ที่นี่ **
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwWkxqF354ktYRVnk6CBn82IvX7XvTa3Ba4GXOjESCsaA7YS0VGTPpE9YC-AN0jbqUY/exec';
 
-    // Set Default Date to Today
+    // Set Initial Date
     document.getElementById('date').valueAsDate = new Date();
 
     const form = document.getElementById('jobForm');
-    
-    // Load Data on Start
+    const btn = document.getElementById('submitBtn');
+    const btnText = document.getElementById('btnText');
+
     window.onload = loadData;
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const btn = document.getElementById('submitBtn');
+        
+        // UI Loading state
         btn.disabled = true;
-        btn.innerText = "กำลังบันทึก...";
+        btnText.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> กำลังบันทึก...';
 
         const fileInput = document.getElementById('file');
         let fileData = null;
@@ -189,49 +307,88 @@
             fileData: fileData
         };
 
-        await fetch(SCRIPT_URL, {
-            method: 'POST',
-            body: JSON.stringify(payload)
-        });
+        try {
+            await fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            });
 
-        form.reset();
-        document.getElementById('date').valueAsDate = new Date();
-        btn.disabled = false;
-        btn.innerText = "บันทึกข้อมูล";
-        loadData();
+            // Success Pop-up
+            Swal.fire({
+                icon: 'success',
+                title: 'สำเร็จ!',
+                text: 'บันทึกข้อมูลเรียบร้อยแล้วค่ะ',
+                timer: 2000,
+                showConfirmButton: false,
+                background: 'rgba(255,255,255,0.9)',
+                backdrop: `blur(10px)`
+            });
+
+            form.reset();
+            document.getElementById('date').valueAsDate = new Date();
+            loadData();
+        } catch (error) {
+            Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: 'ไม่สามารถบันทึกได้ กรุณาลองใหม่' });
+        } finally {
+            btn.disabled = false;
+            btnText.innerText = "บันทึกข้อมูล";
+        }
     });
 
     async function loadData() {
-        const response = await fetch(SCRIPT_URL, {
-            method: 'POST',
-            body: JSON.stringify({action: "read"})
-        });
-        const data = await response.json();
         const tableBody = document.getElementById('dataTable');
-        tableBody.innerHTML = '';
+        // Show subtle loading in table
+        tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center;">กำลังโหลดข้อมูล...</td></tr>';
 
-        data.forEach(row => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${row[0]}</td>
-                <td>${row[1]}</td>
-                <td>${row[2]}</td>
-                <td>${row[3]}</td>
-                <td>${row[4]}</td>
-                <td>${row[5] ? `<a href="${row[5]}" target="_blank" class="link-file">กดที่นี่เพื่อดูเอกสาร</a>` : '-'}</td>
-                <td><button class="btn-delete" onclick="deleteData('${row[0]}', '${row[1]}')">ลบ</button></td>
-            `;
-            tableBody.appendChild(tr);
-        });
+        try {
+            const response = await fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify({action: "read"})
+            });
+            const data = await response.json();
+            tableBody.innerHTML = '';
+
+            data.reverse().forEach(row => { // ล่าสุดขึ้นก่อน
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td data-label="วันที่">${row[0]}</td>
+                    <td data-label="สมาชิก">${row[1]}</td>
+                    <td data-label="ชื่อลูกค้า">${row[2]}</td>
+                    <td data-label="เบอร์ติดต่อ">${row[3]}</td>
+                    <td data-label="พนักงาน">${row[4]}</td>
+                    <td data-label="เอกสาร">${row[5] ? `<a href="${row[5]}" target="_blank" class="link-file"><i class="fa-solid fa-image"></i> ดูเอกสาร</a>` : '-'}</td>
+                    <td data-label="จัดการ"><button class="btn-delete" onclick="deleteData('${row[0]}', '${row[1]}')"><i class="fa-solid fa-trash-can"></i> ลบ</button></td>
+                `;
+                tableBody.appendChild(tr);
+            });
+        } catch (error) {
+            tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center;">โหลดข้อมูลไม่สำเร็จ</td></tr>';
+        }
     }
 
     async function deleteData(date, memberId) {
-        if(!confirm("ยืนยันการลบข้อมูล?")) return;
-        await fetch(SCRIPT_URL, {
-            method: 'POST',
-            body: JSON.stringify({action: "delete", date: date, memberId: memberId})
+        const result = await Swal.fire({
+            title: 'ยืนยันการลบ?',
+            text: "ข้อมูลนี้จะถูกลบออกจากระบบถาวร",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#FF3B30',
+            cancelButtonColor: '#a1a1a6',
+            confirmButtonText: 'ลบข้อมูล',
+            cancelButtonText: 'ยกเลิก',
+            background: 'rgba(255,255,255,0.9)',
+            backdrop: `blur(10px)`
         });
-        loadData();
+
+        if (result.isConfirmed) {
+            Swal.showLoading();
+            await fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify({action: "delete", date: date, memberId: memberId})
+            });
+            Swal.fire('ลบแล้ว!', 'ลบข้อมูลเรียบร้อยแล้วค่ะ', 'success');
+            loadData();
+        }
     }
 
     const toBase64 = file => new Promise((resolve, reject) => {
