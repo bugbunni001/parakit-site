@@ -10,6 +10,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
     
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
     <style>
         :root {
             --ios-blue: #007aff;
@@ -20,6 +23,8 @@
             --text-main: #1c1c1e;
             --text-light: #8e8e93;
             --sidebar-width: 280px;
+            --ios-red: #FF3B30;
+            --ios-green: #34C759;
             --transition-swift: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             --transition-bounce: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
@@ -249,7 +254,7 @@
         .service-name { 
             font-size: 12px; font-weight: 500; line-height: 1.3; color: #3a3a3c;
             display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-            overflow: hidden; height: 32px; /* ล็อคความสูงชื่อเมนู */
+            overflow: hidden; height: 32px;
         }
 
         /* ===== Promotion Cards (Fixed Height) ===== */
@@ -296,6 +301,13 @@
         }
 
         footer { text-align: center; padding: 60px 20px 40px; color: var(--text-light); font-size: 12px; font-weight: 300; }
+
+        /* --- SweetAlert Pop-up Table Styles --- */
+        .swal-table-container { overflow-x: auto; margin-top: 15px; border-radius: 15px; border: 0.5px solid #eee; }
+        .swal-job-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
+        .swal-job-table th { background: #f8f8f8; padding: 12px; border-bottom: 2px solid #eee; color: #666; }
+        .swal-job-table td { padding: 12px; border-bottom: 1px solid #eee; color: #333; }
+        .swal2-popup.job-popup { width: 95% !important; max-width: 1000px !important; border-radius: 24px !important; }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -458,6 +470,9 @@
 </div>
 
 <script>
+    // URL สำหรับดึงข้อมูลงาน (ใช้จากหน้าที่แล้ว)
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby0SPBWiQUbLa_-GfB08M4G_i3i2E_GBJqas9eJUe7W0h1hh4wKDKKtyms3ToJWCJ_5/exec';
+
     // --- Sidebar System (UNCHANGED) ---
     function includeSidebar() {
         const cached = localStorage.getItem('sidebar_cache');
@@ -540,12 +555,79 @@
         autoPlayTimer = setInterval(nextSlide, 6000);
     }
 
+    // --- 🚨 ระบบ Pop-up ดึงข้อมูลงานค้าง 🚨 ---
+    function fixDate(dateVal) {
+        if (!dateVal) return "-";
+        const d = new Date(dateVal);
+        if (isNaN(d)) return dateVal;
+        return `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`;
+    }
+
+    async function showPendingJobs() {
+        try {
+            // ดึงข้อมูลจาก Sheets
+            const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: "read"}) });
+            const data = await res.json();
+            
+            if (!data || data.length === 0) return; // ถ้าไม่มีงานไม่ต้องขึ้น Pop-up
+
+            // สร้างตารางข้อมูล
+            let tableHtml = `
+                <div class="swal-table-container">
+                    <table class="swal-job-table">
+                        <thead>
+                            <tr>
+                                <th>วันที่</th>
+                                <th>รหัสสมาชิก</th>
+                                <th>ลูกค้า</th>
+                                <th>พนักงาน</th>
+                                <th>รายละเอียด</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            data.reverse().forEach(row => {
+                const displayId = String(row[1]).replace(/^'/, '');
+                tableHtml += `
+                    <tr>
+                        <td>${fixDate(row[0])}</td>
+                        <td><b>${displayId}</b></td>
+                        <td>${row[2]}<br><small style="color:#8e8e93">${String(row[3]).replace(/^'/, '')}</small></td>
+                        <td>${row[4]}</td>
+                        <td style="max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${row[6] || '-'}</td>
+                    </tr>
+                `;
+            });
+
+            tableHtml += `</tbody></table></div>`;
+
+            // แสดง Pop-up
+            Swal.fire({
+                title: '📌 รบกวนเช็คงานที่ค้าง\nหากเคลียร์เรียบร้อยให้ลบออกด้วยค่ะ',
+                html: tableHtml,
+                icon: 'warning',
+                confirmButtonText: 'รับทราบ (ปิดหน้าต่างนี้)',
+                confirmButtonColor: '#007aff',
+                customClass: {
+                    popup: 'job-popup',
+                    title: 'swal2-title-custom'
+                },
+                allowOutsideClick: false // บังคับให้กดปุ่มปิดเท่านั้น
+            });
+
+        } catch (e) {
+            console.warn("ไม่สามารถดึงข้อมูลงานค้างมาแสดงได้");
+        }
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
         includeSidebar();
         resetTimer();
+        // เรียกใช้ระบบแจ้งเตือนงานค้างหลังจากหน้าเว็บโหลดเสร็จ
+        setTimeout(showPendingJobs, 1500); // หน่วงเวลาเล็กน้อยเพื่อให้หน้าเว็บหลักขึ้นก่อน
     });
 </script>
 
 </body>
 </html>
-
