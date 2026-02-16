@@ -39,6 +39,30 @@
             min-height: 100vh; overflow-x: hidden;
         }
 
+        /* ===== POP UP WARNING STYLE ===== */
+        .warning-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.4); 
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            z-index: 5000; display: flex; align-items: center; justify-content: center;
+            opacity: 0; visibility: hidden; transition: all 0.5s var(--ease);
+        }
+        .warning-overlay.active { opacity: 1; visibility: visible; }
+        .warning-modal {
+            background: var(--glass-bg); padding: 40px 30px; border-radius: 30px;
+            width: 90%; max-width: 400px; text-align: center;
+            border: 1px solid var(--glass-border); box-shadow: 0 30px 60px rgba(0,0,0,0.15);
+            transform: scale(0.8) translateY(20px); transition: all 0.5s var(--ease);
+        }
+        .warning-overlay.active .warning-modal { transform: scale(1) translateY(0); }
+        .warning-icon { font-size: 50px; margin-bottom: 20px; display: block; }
+        .warning-text { font-size: 1.2rem; line-height: 1.6; font-weight: 500; color: var(--text-main); margin-bottom: 30px; }
+        .btn-close-warning {
+            background: var(--primary-blue); color: #fff; border: none; padding: 12px 40px;
+            border-radius: 15px; font-weight: 500; cursor: pointer; font-size: 16px;
+            transition: all 0.3s ease; width: 100%; box-shadow: 0 8px 20px rgba(0,113,227,0.3);
+        }
+        .btn-close-warning:hover { transform: translateY(-2px); filter: brightness(1.1); }
+
         .top-header { 
             position: fixed; top: 0; left: 0; right: 0; height: 60px; 
             background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); 
@@ -152,7 +176,6 @@
         .modern-select, .modern-date { border: 1px solid #d2d2d7; border-radius: 12px; padding: 10px 16px; font-size: 14px; background: #fff; outline: none; transition: 0.2s ease; cursor: pointer; }
         .modern-select:focus, .modern-date:focus { border-color: var(--primary-blue); }
 
-        /* Custom Pagination Design */
         .pagination { 
             display: flex; 
             justify-content: center; 
@@ -194,6 +217,15 @@
     </style>
 </head>
 <body>
+
+<div class="warning-overlay" id="warningOverlay">
+    <div class="warning-modal">
+        <span class="warning-icon">📢</span>
+        <div class="warning-text">ขายราหูครบ 10 เบอร์แล้ว ไปขายเบอร์พลังดาวเพิ่มให้ครบคนละ 5 เบอร์ด้วยค่ะ</div>
+        <button class="btn-close-warning" onclick="closeWarning()">ตกลง</button>
+    </div>
+</div>
+
 <header class="top-header">
     <button class="top-toggle" onclick="toggleSidebar()">☰</button>
     <div style="font-weight: 600; font-size: 1.1rem; color: var(--text-main); margin-left: 15px;">รายงานยอดขาย By Indy</div>
@@ -268,6 +300,14 @@
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwwbBnkd1Xazn4nnM9cAPgI7fPpFDVdXlYg8zaFOcu2BzMlcP3MQ4JJCahQk4uRTGxa4g/exec";
     let webData = []; const rowsPerPage = 5;
     document.getElementById('day').value = new Date().toISOString().split('T')[0];
+
+    // Warning Pop up functions
+    function showWarning() {
+        document.getElementById('warningOverlay').classList.add('active');
+    }
+    function closeWarning() {
+        document.getElementById('warningOverlay').classList.remove('active');
+    }
 
     function includeSidebar() {
         const cached = localStorage.getItem('sidebar_cache');
@@ -378,7 +418,13 @@
         document.getElementById('out-actual').innerHTML = config.map(i => `<div class="stat-box" style="border-top:4px solid ${i.b}"><div style="display:flex;justify-content:space-between;align-items:flex-start;"><div><div style="font-size:12px;color:var(--text-light);font-weight:500;">${i.l}</div><div class="val">${i.v.val}</div></div><div style="text-align:right;"><div style="font-size:11px;"><span ${getCls(i.v.diff)}>Diff ${i.v.diff}</span></div></div></div><div style="font-size:14px;color:var(--primary-blue);font-weight:700;margin-top:10px;">Ach: ${i.v.ach}%</div></div>`).join('');
         if(data.extraStats) document.getElementById('body-extra').innerHTML = data.extraStats.map(r => `<tr><td style="font-weight:600;">${r[0]}</td><td>${r[1]}</td><td style="font-weight:600;">${r[2]}</td></tr>`).join('');
     }
-    window.addEventListener('DOMContentLoaded', includeSidebar);
+
+    // Initialize page
+    window.onload = () => {
+        includeSidebar();
+        // Show Warning Pop up on entrance
+        setTimeout(showWarning, 800);
+    };
 </script>
 <footer>© 2026 Copyright by Angerina Frog</footer>
 </body>
