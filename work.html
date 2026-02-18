@@ -20,10 +20,10 @@
             --ios-bg: #f2f2f7;
             --glass-white: rgba(255, 255, 255, 0.75);
             --glass-border: rgba(255, 255, 255, 0.5);
-            --sidebar-dark: rgba(28, 28, 30, 0.94);
+            --sidebar-dark: rgba(28, 28, 30, 0.94); /* Added from sidebar info */
+            --sidebar-width: 280px; /* Added from sidebar info */
             --text-main: #1c1c1e;
             --text-light: #8e8e93;
-            --sidebar-width: 280px;
             --ios-red: #FF3B30;
             --ios-green: #34C759;
             --transition-swift: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -43,9 +43,11 @@
             background-attachment: fixed;
             color: var(--text-main); 
             padding-bottom: 60px;
+            /* Sidebar responsive support */
             transition: padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
+        /* ===== Header Navbar (Modified for Toggle) ===== */
         .top-header {
             position: fixed;
             top: 0; left: 0; right: 0;
@@ -60,6 +62,7 @@
             transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
+        /* Toggle Button Style from Sidebar Info */
         .top-toggle {
             width: 36px; height: 36px;
             border-radius: 10px;
@@ -70,9 +73,11 @@
             display: flex; align-items: center; justify-content: center;
             font-size: 22px;
             transition: background 0.2s;
+            margin-right: 15px;
         }
         .top-toggle:hover { background: rgba(0, 122, 255, 0.1); }
 
+        /* ===== Sidebar Style (From Saved Info) ===== */
         .sidebar { 
             position: fixed; top: 0; left: 0; 
             width: var(--sidebar-width); height: 100vh; 
@@ -106,6 +111,7 @@
         }
         .overlay.show { display: block; }
 
+        /* Sidebar Internals */
         .sidebar-header { padding: 30px 20px; font-size: 20px; font-weight: 600; border-bottom: 0.5px solid rgba(255,255,255,0.1); }
         .menu { padding: 10px 0; }
         .menu a, .menu .drop-btn { 
@@ -118,7 +124,17 @@
         .item.open .sub { display: block; }
         .sub a { padding-left: 45px; font-size: 14px; color: #8e8e93; }
 
-        .main-content { display: flex; flex-direction: column; align-items: center; padding: 100px 20px 40px; animation: fadeIn 0.6s ease-out; }
+        /* ===== Main Content Area ===== */
+        .main-content { 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            padding: 100px 20px 40px; 
+            animation: fadeIn 0.6s ease-out; 
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
         .glass-card { background: rgba(255, 255, 255, 0.4); backdrop-filter: blur(20px); border-radius: 24px; border: 1px solid var(--glass-border); box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
         
         .action-bar {
@@ -148,7 +164,6 @@
         }
         .btn-add-job:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0, 122, 255, 0.4); }
 
-        /* --- Search Styles --- */
         .search-wrapper { 
             width: 100%; 
             max-width: 320px; 
@@ -179,7 +194,6 @@
         .btn-delete { background: #fff0f0; color: var(--ios-red); border: 1px solid #ffdada; padding: 6px 10px; border-radius: 8px; cursor: pointer; transition: 0.2s; }
         .btn-delete:hover { background: var(--ios-red); color: white; }
 
-        /* --- SweetAlert Custom Styles --- */
         .swal2-container { z-index: 9999 !important; }
         .swal2-popup { 
             border-radius: 24px !important; 
@@ -213,11 +227,10 @@
 
 <header class="top-header">
     <button class="top-toggle" onclick="toggleSidebar()">☰</button>
-    <div style="font-weight: 700; font-size: 1.25rem; color: var(--text-main); letter-spacing: -0.8px; margin-left: 15px;">ระบบเคลียร์งาน</div>
+    <div style="font-weight: 700; font-size: 1.25rem; color: var(--text-main); letter-spacing: -0.8px;">ระบบเคลียร์งาน</div>
 </header>
 
 <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
-
 <aside class="sidebar" id="sidebar"></aside>
 
 <div class="main-content">
@@ -254,9 +267,7 @@
 </div>
 
 <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby0SPBWiQUbLa_-GfB08M4G_i3i2E_GBJqas9eJUe7W0h1hh4wKDKKtyms3ToJWCJ_5/exec';
-
-    // --- 1. ระบบ Sidebar System (คงเดิม 100%) ---
+    // --- Sidebar System (UNCHANGED) ---
     function includeSidebar() {
         const cached = localStorage.getItem('sidebar_cache');
         if (cached) {
@@ -305,7 +316,9 @@
         });
     }
 
-    // --- 2. ระบบจัดการข้อมูล ---
+    // --- ระบบจัดการข้อมูลเคลียร์งาน (UNCHANGED) ---
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby0SPBWiQUbLa_-GfB08M4G_i3i2E_GBJqas9eJUe7W0h1hh4wKDKKtyms3ToJWCJ_5/exec';
+
     function fixDate(dateVal) {
         if (!dateVal) return "-";
         const d = new Date(dateVal);
@@ -334,7 +347,6 @@
         }
     }
 
-    // --- ระบบเพิ่มงานผ่าน Pop-up ---
     function openAddJobModal() {
         const today = new Date().toISOString().split('T')[0];
         
@@ -589,7 +601,7 @@
     }
 
     window.onload = () => {
-        includeSidebar();
+        includeSidebar(); // Initialize sidebar
         loadData();
     };
 </script>
