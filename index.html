@@ -477,6 +477,20 @@
         document.getElementById('workModal').classList.add('active');
         document.body.style.overflow = 'hidden'; // ป้องกันการเลื่อนหน้าหลัก
         
+        // ส่งคำสั่งให้ iframe ซ่อน Sidebar ของตัวเอง (ถ้าไฟล์ work.html มีการเรียก includeSidebar)
+        const frame = document.getElementById('workFrame');
+        frame.onload = function() {
+            const frameDoc = frame.contentDocument || frame.contentWindow.document;
+            const style = frameDoc.createElement('style');
+            style.innerHTML = `
+                .sidebar, .top-header, .overlay { display: none !important; }
+                body { padding-left: 0 !important; padding-top: 20px !important; background: #fff !important; }
+                .main-content { padding-top: 20px !important; }
+            `;
+            frameDoc.head.appendChild(style);
+        };
+    }
+
     function closeWorkModal() {
         document.getElementById('workModal').classList.remove('active');
         document.body.style.overflow = '';
