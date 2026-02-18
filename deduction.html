@@ -96,36 +96,48 @@
         .item.open .sub { display: block; }
         .sub a { padding-left: 45px; font-size: 14px; color: #8e8e93; }
 
-        /* ===== CONTENT LAYOUT (UPDATED FOR NARROW FORM) ===== */
-        .content { padding: 84px 16px 40px; max-width: 1100px; margin: 0 auto; animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+        /* ===== NEW HORIZONTAL SUMMARY ===== */
+        .content { padding: 84px 16px 40px; max-width: 1200px; margin: 0 auto; animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
         @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-        .main-layout {
+        .summary-grid {
             display: grid;
-            grid-template-columns: 1fr;
-            gap: 24px;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 30px;
         }
 
-        @media(min-width: 850px) {
-            .main-layout {
-                /* ปรับ grid ให้ฝั่งซ้าย (ฟอร์ม) มีขนาดจำกัด (Auto-fit) */
-                grid-template-columns: minmax(auto, 500px) 320px; 
-                justify-content: center; /* วางกึ่งกลางในพื้นที่เนื้อหา */
-                align-items: start;
-            }
-        }
-        
-        .section-title { font-size: 14px; font-weight: 600; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 12px 5px; }
-        
-        /* Form Section */
-        .form-container { 
-            background: #fff; padding: 28px; border-radius: 24px; 
+        .summary-card { 
+            background: #fff; padding: 20px; border-radius: 20px; 
             border: 1px solid rgba(0,0,0,0.03); box-shadow: var(--card-shadow);
+            display: flex; flex-direction: column; gap: 5px;
         }
-        
-        .form-grid { display: grid; grid-template-columns: 1fr; gap: 18px; }
+        .summary-name { font-size: 13px; color: var(--text-light); font-weight: 600; text-transform: uppercase; }
+        .summary-val { font-size: 24px; font-weight: 700; color: var(--text-main); letter-spacing: -0.5px; }
 
-        .form-row { margin-bottom: 0; }
+        /* ===== MODAL FORM SYSTEM ===== */
+        .modal-form {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.4); 
+            display: none; align-items: center; justify-content: center; 
+            z-index: 3000; padding: 20px; backdrop-filter: blur(10px);
+        }
+        .modal-form.show { display: flex; }
+        .form-container { 
+            background: #fff; padding: 35px; border-radius: 30px; 
+            width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.2);
+            position: relative;
+            animation: modalSlide 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes modalSlide { from { opacity: 0; transform: translateY(50px); } to { opacity: 1; transform: translateY(0); } }
+
+        .close-modal {
+            position: absolute; top: 20px; right: 20px; width: 35px; height: 35px;
+            border-radius: 50%; border: none; background: #f2f2f7; color: #8e8e93;
+            cursor: pointer; font-size: 20px; display: flex; align-items: center; justify-content: center;
+        }
+
+        .form-grid { display: grid; grid-template-columns: 1fr; gap: 18px; }
         label { display: block; margin-bottom: 8px; font-size: 14px; font-weight: 600; color: #48484a; margin-left: 4px; }
         input, select { 
             width: 100%; padding: 14px; border: 1.5px solid #f2f2f7; border-radius: 14px; 
@@ -138,32 +150,19 @@
             background: var(--ios-blue); color: white; font-size: 17px; font-weight: 600; 
             cursor: pointer; transition: var(--transition); margin-top: 15px;
         }
-        .btn-submit:hover:not(:disabled) { filter: brightness(1.1); transform: scale(1.01); }
-
-        /* Summary Section */
-        .summary-column {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
+        .btn-add-new {
+            background: var(--ios-blue); color: white; border: none; padding: 12px 24px;
+            border-radius: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;
+            box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3); transition: 0.3s;
         }
-        
-        .summary-card { 
-            background: #fff; padding: 16px 20px; border-radius: 20px; 
-            border: 1px solid rgba(0,0,0,0.03); box-shadow: var(--card-shadow);
-            transition: var(--transition);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .summary-name { font-size: 14px; color: var(--text-light); font-weight: 500; }
-        .summary-val { font-size: 20px; font-weight: 700; color: var(--text-main); letter-spacing: -0.5px; }
+        .btn-add-new:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0, 122, 255, 0.4); }
 
         /* Table Box */
         .table-box { 
-            margin-top: 30px; background: #fff; padding: 24px; border-radius: 24px; 
+            background: #fff; padding: 24px; border-radius: 24px; 
             border: 1px solid rgba(0,0,0,0.03); box-shadow: var(--card-shadow); overflow: hidden;
         }
-        .table-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .table-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; }
         .table-container { width: 100%; overflow-x: auto; border-radius: 16px; border: 1px solid #f2f2f7; }
         table { width: 100%; border-collapse: collapse; min-width: 700px; }
         th { padding: 14px 16px; text-align: left; color: var(--text-light); font-size: 13px; background: #f9f9fb; font-weight: 500; }
@@ -201,67 +200,24 @@
 <aside class="sidebar" id="sidebar"></aside>
 
 <div class="content">
-    <div class="main-layout">
-        <div class="form-section">
-            <div class="section-title">ฟอร์มบันทึกข้อมูล</div>
-            <div class="form-container">
-                <h3 style="margin: 0 0 5px 0; font-size: 20px;">ลงข้อมูลการหักเงิน</h3>
-                <p style="color: var(--text-light); font-size: 14px; margin-bottom: 25px;">หักเงินแม่งเลยอีดอกทอง</p>
-                
-                <form id="deductionForm" onsubmit="return false;">
-                    <div class="form-grid">
-                        <div class="form-row"><label>วันที่ดำเนินการ</label><input type="date" id="date" required></div>
-                        <div class="form-row">
-                            <label>พนักงาน</label>
-                            <select id="employee" required>
-                                <option value="" disabled selected>-- เลือกรายชื่อ --</option>
-                                <option value="ศุภกฤต">ศุภกฤต</option><option value="นวพล">นวพล</option>
-                                <option value="ปิยะพร">ปิยะพร</option><option value="กรทักษ์">กรทักษ์</option>
-                            </select>
-                        </div>
-                        <div class="form-row">
-                            <label>เหตุผลหลัก</label>
-                            <select id="reason" onchange="checkReason(this)" required>
-                                <option value="" disabled selected>-- ระบุเหตุผล --</option>
-                                <option value="มาสาย">มาสาย</option><option value="ไม่ลงเวลาเข้า-ออกงาน">ไม่ลงเวลาเข้า-ออกงาน</option>
-                                <option value="ยอดขายไม่เป็นไปตามตกลง">ยอดขายไม่เป็นไปตามตกลง</option><option value="มี Score 1">มี Score 1</option>
-                                <option value="Retention %ต่ำกว่า 88%">Retention %ต่ำกว่า 88%</option><option value="TVS NOW ไม่มียอด">TVS NOW ไม่มียอด</option>
-                                <option value="อื่นๆ">อื่นๆ</option>
-                            </select>
-                        </div>
-                        <div class="form-row" id="otherReasonContainer" style="display:none;">
-                            <label>ระบุเหตุผลเพิ่มเติม</label>
-                            <input type="text" id="otherReason" placeholder="พิมพ์เหตุผลอื่นๆ...">
-                        </div>
-                        <div class="form-row">
-                            <label>จำนวนเงิน (THB)</label>
-                            <select id="amount" required>
-                                <option value="" disabled selected>-- เลือกยอดเงิน --</option>
-                                <option value="10">10 ฿</option><option value="20">20 ฿</option>
-                                <option value="30">30 ฿</option><option value="50">50 ฿</option>
-                            </select>
-                        </div>
-                    </div>
-                    <button type="button" id="btnMainSubmit" class="btn-submit" onclick="openAuthPopup('submit')">ยืนยันการบันทึกข้อมูล</button>
-                </form>
-            </div>
-        </div>
-
-        <div class="summary-section">
-            <div class="section-title">สรุปยอดหักเงินสะสม</div>
-            <div class="summary-column">
-                <div class="summary-card"><div class="summary-name">ศุภกฤต</div><div class="summary-val" id="sum-ศุภกฤต">0 ฿</div></div>
-                <div class="summary-card"><div class="summary-name">นวพล</div><div class="summary-val" id="sum-นวพล">0 ฿</div></div>
-                <div class="summary-card"><div class="summary-name">ปิยะพร</div><div class="summary-val" id="sum-ปิยะพร">0 ฿</div></div>
-                <div class="summary-card"><div class="summary-name">กรทักษ์</div><div class="summary-val" id="sum-กรทักษ์">0 ฿</div></div>
-            </div>
-        </div>
+    <div class="section-title">สรุปยอดหักเงินสะสม</div>
+    <div class="summary-grid">
+        <div class="summary-card"><div class="summary-name">ศุภกฤต</div><div class="summary-val" id="sum-ศุภกฤต">0 ฿</div></div>
+        <div class="summary-card"><div class="summary-name">นวพล</div><div class="summary-val" id="sum-นวพล">0 ฿</div></div>
+        <div class="summary-card"><div class="summary-name">ปิยะพร</div><div class="summary-val" id="sum-ปิยะพร">0 ฿</div></div>
+        <div class="summary-card"><div class="summary-name">กรทักษ์</div><div class="summary-val" id="sum-กรทักษ์">0 ฿</div></div>
     </div>
 
     <div class="table-box">
         <div class="table-header">
-            <h3 style="margin:0; font-size: 18px;">รายการบันทึกล่าสุด</h3>
+            <div>
+                <h3 style="margin:0; font-size: 18px;">รายการบันทึกล่าสุด</h3>
+                <p style="margin: 5px 0 0 0; font-size: 13px; color: var(--text-light);">จัดการข้อมูลการหักเงินทั้งหมดในระบบ</p>
+            </div>
             <div style="display:flex; gap:12px; align-items:center;">
+                <button class="btn-add-new" onclick="toggleFormModal(true)">
+                    <span style="font-size: 20px;">+</span> เพิ่มข้อมูลใหม่
+                </button>
                 <button id="bulkDeleteBtn" class="btn-bulk-delete" onclick="openAuthPopup('bulkDelete')">ลบที่เลือก (<span id="selectedCount">0</span>)</button>
                 <button onclick="fetchData(true)" style="background:none; border:none; color:var(--ios-blue); font-weight:600; cursor:pointer; font-size:14px;">รีเฟรชข้อมูล</button>
             </div>
@@ -281,6 +237,51 @@
             </table>
         </div>
         <div class="pagination" id="paginationContainer" style="display:flex; justify-content:center; gap:5px; margin-top:25px;"></div>
+    </div>
+</div>
+
+<div class="modal-form" id="modalForm">
+    <div class="form-container">
+        <button class="close-modal" onclick="toggleFormModal(false)">✕</button>
+        <h3 style="margin: 0 0 5px 0; font-size: 24px;">ลงข้อมูลการหักเงิน</h3>
+        <p style="color: var(--text-light); font-size: 14px; margin-bottom: 25px;">ระบุรายละเอียดเพื่อบันทึกลงในระบบ</p>
+        
+        <form id="deductionForm" onsubmit="return false;">
+            <div class="form-grid">
+                <div class="form-row"><label>วันที่ดำเนินการ</label><input type="date" id="date" required></div>
+                <div class="form-row">
+                    <label>พนักงาน</label>
+                    <select id="employee" required>
+                        <option value="" disabled selected>-- เลือกรายชื่อ --</option>
+                        <option value="ศุภกฤต">ศุภกฤต</option><option value="นวพล">นวพล</option>
+                        <option value="ปิยะพร">ปิยะพร</option><option value="กรทักษ์">กรทักษ์</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <label>เหตุผลหลัก</label>
+                    <select id="reason" onchange="checkReason(this)" required>
+                        <option value="" disabled selected>-- ระบุเหตุผล --</option>
+                        <option value="มาสาย">มาสาย</option><option value="ไม่ลงเวลาเข้า-ออกงาน">ไม่ลงเวลาเข้า-ออกงาน</option>
+                        <option value="ยอดขายไม่เป็นไปตามตกลง">ยอดขายไม่เป็นไปตามตกลง</option><option value="มี Score 1">มี Score 1</option>
+                        <option value="Retention %ต่ำกว่า 88%">Retention %ต่ำกว่า 88%</option><option value="TVS NOW ไม่มียอด">TVS NOW ไม่มียอด</option>
+                        <option value="อื่นๆ">อื่นๆ</option>
+                    </select>
+                </div>
+                <div class="form-row" id="otherReasonContainer" style="display:none;">
+                    <label>ระบุเหตุผลเพิ่มเติม</label>
+                    <input type="text" id="otherReason" placeholder="พิมพ์เหตุผลอื่นๆ...">
+                </div>
+                <div class="form-row">
+                    <label>จำนวนเงิน (THB)</label>
+                    <select id="amount" required>
+                        <option value="" disabled selected>-- เลือกยอดเงิน --</option>
+                        <option value="10">10 ฿</option><option value="20">20 ฿</option>
+                        <option value="30">30 ฿</option><option value="50">50 ฿</option>
+                    </select>
+                </div>
+            </div>
+            <button type="button" id="btnMainSubmit" class="btn-submit" onclick="openAuthPopup('submit')">ยืนยันการบันทึกข้อมูล</button>
+        </form>
     </div>
 </div>
 
@@ -347,6 +348,12 @@
         setupEventListeners();
     };
 
+    function toggleFormModal(show) {
+        const modal = document.getElementById('modalForm');
+        modal.classList.toggle('show', show);
+    }
+
+    /* ===== SIDEBAR SYSTEM (DO NOT EDIT) ===== */
     function includeSidebar() {
         const cached = localStorage.getItem('sidebar_cache');
         if (cached) { document.getElementById('sidebar').innerHTML = cached; restoreMenuState(); }
@@ -464,7 +471,13 @@
     async function submitData() {
         setProcessing(true);
         const data = { date: document.getElementById('date').value, employee: document.getElementById('employee').value, reason: document.getElementById('reason').value, otherReason: document.getElementById('otherReason').value, amount: document.getElementById('amount').value, action: "insert" };
-        try { await fetch(APPS_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) }); showStatusPopup("บันทึกข้อมูลเรียบร้อยแล้ว", true); document.getElementById('deductionForm').reset(); document.getElementById('date').value = new Date().toISOString().split("T")[0]; fetchData(true);
+        try { 
+            await fetch(APPS_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) }); 
+            showStatusPopup("บันทึกข้อมูลเรียบร้อยแล้ว", true); 
+            document.getElementById('deductionForm').reset(); 
+            document.getElementById('date').value = new Date().toISOString().split("T")[0]; 
+            toggleFormModal(false); // Close form after submit
+            fetchData(true);
         } catch (e) { showStatusPopup("เกิดข้อผิดพลาด", false); } finally { setProcessing(false); }
     }
 
