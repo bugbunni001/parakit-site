@@ -221,12 +221,12 @@
             right: 20px;
             background: var(--ios-blue);
             color: white;
-            padding: 10px 20px;
-            border-radius: 12px 12px 0 0;
+            padding: 12px 24px;
+            border-radius: 16px 16px 0 0;
             font-weight: 500;
-            font-size: 15px;
+            font-size: 16px;
             cursor: pointer;
-            box-shadow: 0 -4px 15px rgba(0, 122, 255, 0.2);
+            box-shadow: 0 -4px 20px rgba(0, 122, 255, 0.3);
             z-index: 1300;
             transition: var(--transition-swift);
             border: none;
@@ -235,62 +235,73 @@
             gap: 8px;
         }
         .floating-work-btn:hover {
-            padding-bottom: 15px;
-            background: #0066d6;
+            padding-bottom: 20px;
+            background: #005ec3;
+            transform: translateY(-2px);
         }
 
         /* ===== [NEW] Pop-up Modal Style ===== */
         .work-modal-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.5);
-            backdrop-filter: blur(8px);
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             z-index: 3000;
             display: none;
             align-items: center;
             justify-content: center;
             padding: 20px;
+            animation: fadeIn 0.3s ease-out;
         }
         .work-modal-overlay.active { display: flex; }
         
         .work-modal-container {
             width: 95%;
             max-width: 1300px;
-            height: 90vh;
-            background: white;
-            border-radius: 24px;
+            height: 92vh;
+            background: #f2f2f7;
+            border-radius: 28px;
             overflow: hidden;
             position: relative;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.4);
             display: flex;
             flex-direction: column;
+            border: 1px solid rgba(255,255,255,0.3);
         }
         .modal-header {
-            padding: 15px 25px;
-            background: #fff;
+            padding: 18px 25px;
+            background: rgba(255,255,255,0.8);
+            backdrop-filter: blur(10px);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid #eee;
+            border-bottom: 0.5px solid rgba(0,0,0,0.1);
         }
         .close-modal {
-            background: #f2f2f7;
+            background: rgba(0,0,0,0.05);
             border: none;
-            width: 32px;
-            height: 32px;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
             cursor: pointer;
-            font-size: 18px;
-            color: #8e8e93;
+            font-size: 20px;
+            color: #1c1c1e;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
         }
-        .modal-body { flex: 1; border: none; width: 100%; height: 100%; }
+        .close-modal:hover { background: rgba(255, 59, 48, 0.1); color: #ff3b30; }
+        .modal-body { flex: 1; border: none; width: 100%; height: 100%; background: transparent; }
 
         /* Responsive Mobile */
         @media (max-width: 768px) {
             .content { padding-top: 75px; }
             .service-grid { grid-template-columns: repeat(4, 1fr); gap: 15px 10px; }
             .icon-box { width: 60px; height: 60px; font-size: 24px; }
-            .work-modal-container { height: 95vh; width: 100%; border-radius: 15px; }
+            .work-modal-container { height: 98vh; width: 100%; border-radius: 20px; }
+            .floating-work-btn { right: 10px; padding: 10px 16px; font-size: 14px; }
         }
     </style>
 </head>
@@ -412,10 +423,12 @@
 
 <button class="floating-work-btn" onclick="openWorkModal()">📒 ระบบเคลียร์งาน</button>
 
-<div class="work-modal-overlay" id="workModal">
+<div class="work-modal-overlay" id="workModal" onclick="if(event.target === this) closeWorkModal()">
     <div class="work-modal-container">
         <div class="modal-header">
-            <div style="font-weight: 600; color: #1c1c1e;">ระบบเคลียร์งาน</div>
+            <div style="font-weight: 600; font-size: 1.1rem; color: #1c1c1e; display: flex; align-items: center; gap: 8px;">
+                <span>📒</span> ระบบเคลียร์งาน
+            </div>
             <button class="close-modal" onclick="closeWorkModal()">✕</button>
         </div>
         <iframe src="work.html" class="modal-body" id="workFrame"></iframe>
@@ -472,22 +485,41 @@
         });
     }
 
-    // --- [NEW] Pop-up Functions ---
+    // --- Pop-up Functions (ฉีดโค้ดเพื่อตัด Sidebar ออกใน Pop-up) ---
     function openWorkModal() {
-        document.getElementById('workModal').classList.add('active');
-        document.body.style.overflow = 'hidden'; // ป้องกันการเลื่อนหน้าหลัก
-        
-        // ส่งคำสั่งให้ iframe ซ่อน Sidebar ของตัวเอง (ถ้าไฟล์ work.html มีการเรียก includeSidebar)
+        const modal = document.getElementById('workModal');
         const frame = document.getElementById('workFrame');
+        
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+
+        // เมื่อ iframe โหลดเสร็จ จะสั่งให้ซ่อน Sidebar ภายในตัวมันเอง
         frame.onload = function() {
-            const frameDoc = frame.contentDocument || frame.contentWindow.document;
-            const style = frameDoc.createElement('style');
-            style.innerHTML = `
-                .sidebar, .top-header, .overlay { display: none !important; }
-                body { padding-left: 0 !important; padding-top: 20px !important; background: #fff !important; }
-                .main-content { padding-top: 20px !important; }
-            `;
-            frameDoc.head.appendChild(style);
+            try {
+                const frameDoc = frame.contentDocument || frame.contentWindow.document;
+                const style = frameDoc.createElement('style');
+                style.innerHTML = `
+                    /* ซ่อน Sidebar และ Header เดิม */
+                    .sidebar, .top-header, .overlay, .top-toggle, .floating-work-btn { 
+                        display: none !important; 
+                    }
+                    /* ปรับระยะห่างเนื้อหาให้เต็มจอ */
+                    body { 
+                        padding-left: 0 !important; 
+                        padding-top: 0 !important; 
+                        background: #f2f2f7 !important; 
+                    }
+                    .content { 
+                        padding-top: 20px !important; 
+                        max-width: 100% !important; 
+                    }
+                    /* ซ่อน footer ใน popup เพื่อความกระชับ */
+                    footer { padding: 20px !important; }
+                `;
+                frameDoc.head.appendChild(style);
+            } catch (e) {
+                console.warn("Cross-origin restriction: ไม่สามารถซ่อน Sidebar ใน iframe ได้ถ้าอยู่คนละ Domain");
+            }
         };
     }
 
