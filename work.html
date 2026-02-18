@@ -211,36 +211,10 @@
 
 <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 
-<aside class="sidebar" id="sidebar">
-    <div class="sidebar-header">Parakit-site</div>
-    <div class="menu">
-        <a href="index.html"><i class="fa-solid fa-house" style="width: 25px;"></i> หน้าหลัก</a>
-        
-        <div class="item" id="menu-sales">
-            <button class="drop-btn" onclick="toggleDrop(this, 'sales')">
-                <i class="fa-solid fa-chart-line" style="width: 25px;"></i> งานขาย <i class="fa-solid fa-chevron-right arrow"></i>
-            </button>
-            <div class="sub">
-                <a href="sales-report.html">รายงานยอดขาย</a>
-                <a href="customer-list.html">รายชื่อลูกค้า</a>
-            </div>
-        </div>
-
-        <div class="item" id="menu-branch">
-            <button class="drop-btn" onclick="toggleDrop(this, 'branch')">
-                <i class="fa-solid fa-store" style="width: 25px;"></i> สาขา <i class="fa-solid fa-chevron-right arrow"></i>
-            </button>
-            <div class="sub">
-                <a href="prachauthit.html">ประชาอุทิศ</a>
-                <a href="sukhumvit.html">สุขุมวิท</a>
-            </div>
-        </div>
-
-        <a href="settings.html"><i class="fa-solid fa-gear" style="width: 25px;"></i> ตั้งค่า</a>
-    </div>
-</aside>
+<aside class="sidebar" id="sidebar"></aside>
 
 <div class="main-content">
+    
     <div class="action-bar">
         <button class="btn-add-job" onclick="openAddJobModal()">
             <i class="fa-solid fa-circle-plus"></i> เพิ่มรายการงานใหม่
@@ -275,11 +249,25 @@
 <script>
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby0SPBWiQUbLa_-GfB08M4G_i3i2E_GBJqas9eJUe7W0h1hh4wKDKKtyms3ToJWCJ_5/exec';
 
-    // --- Sidebar Logic ---
+    // --- 1. Sidebar Logic (เหมือนเดิม 100% ตามไฟล์ต้นฉบับที่คุณส่งมา) ---
     function includeSidebar() {
-        // ในกรณีนี้เนื้อหา Sidebar ถูกฝังไว้ใน HTML โดยตรงแล้ว (ลบ SVG ตามสั่ง)
-        // แต่ยังคงฟังก์ชัน Toggle และสถานะไว้เหมือนเดิม
-        restoreMenuState();
+        const cached = localStorage.getItem('sidebar_cache');
+        if (cached) {
+            document.getElementById('sidebar').innerHTML = cached;
+            restoreMenuState();
+        }
+        fetch('sidebar.html')
+            .then(response => response.text())
+            .then(data => {
+                // ลบ SVG ออกจากข้อมูลที่ดึงมา
+                const cleanData = data.replace(/<svg[\s\S]*?<\/svg>/, '');
+                if (cleanData !== cached) {
+                    document.getElementById('sidebar').innerHTML = cleanData;
+                    localStorage.setItem('sidebar_cache', cleanData);
+                    restoreMenuState();
+                }
+            })
+            .catch(err => console.warn("Sidebar Load Error"));
             
         if(localStorage.getItem('sidebar_collapsed') === 'true' && window.innerWidth > 768) {
             document.body.classList.add('collapsed');
@@ -311,7 +299,7 @@
         });
     }
 
-    // --- Data Management Logic ---
+    // --- 2. Data Management Logic (เหมือนเดิมทุกตัวอักษร) ---
     function fixDate(dateVal) {
         if (!dateVal) return "-";
         const d = new Date(dateVal);
