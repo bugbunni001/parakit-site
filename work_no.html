@@ -24,6 +24,7 @@
             --text-light: #8e8e93;
             --ios-red: #FF3B30;
             --ios-green: #34C759;
+            --ios-orange: #FF9500;
             --transition-swift: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
@@ -43,30 +44,22 @@
             padding-bottom: 60px;
         }
 
-        .top-header {
-            position: fixed;
-            top: 0; left: 0; right: 0;
-            height: 60px;
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
-            z-index: 1200;
-            display: flex;
-            align-items: center;
-            padding: 0 20px;
-            border-bottom: 0.5px solid rgba(0,0,0,0.1);
-        }
-
+        /* ปรับ Main Content ให้ชิดขอบบนเพราะไม่มี Header แล้ว */
         .main-content { 
             display: flex; 
             flex-direction: column; 
             align-items: center; 
-            padding: 100px 20px 40px; 
+            padding: 40px 20px; 
             animation: fadeIn 0.6s ease-out; 
-            max-width: 1400px;
-            margin: 0 auto;
         }
 
-        .glass-card { background: rgba(255, 255, 255, 0.4); backdrop-filter: blur(20px); border-radius: 24px; border: 1px solid var(--glass-border); box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
+        .glass-card { 
+            background: rgba(255, 255, 255, 0.4); 
+            backdrop-filter: blur(20px); 
+            border-radius: 24px; 
+            border: 1px solid var(--glass-border); 
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1); 
+        }
         
         .action-bar {
             width: 100%;
@@ -112,6 +105,9 @@
         th { background: rgba(255, 255, 255, 0.5); padding: 15px; text-align: left; font-size: 14px; color: #444; border-bottom: 1px solid rgba(0,0,0,0.05); font-weight: 600; }
         td { padding: 14px 15px; border-bottom: 1px solid rgba(255,255,255,0.3); font-size: 14px; }
 
+        .pinned-row { background: rgba(255, 149, 0, 0.08) !important; }
+        .pinned-row td { border-bottom-color: rgba(255, 149, 0, 0.2); }
+
         .clickable { cursor: pointer; }
         .clickable:hover { color: var(--ios-blue); text-decoration: underline; }
         
@@ -119,6 +115,10 @@
             max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
             font-size: 13px; color: #555;
         }
+
+        .btn-pin { background: #fff8ed; color: var(--ios-orange); border: 1px solid #ffe8cc; padding: 6px 10px; border-radius: 8px; cursor: pointer; transition: 0.2s; margin-right: 5px; }
+        .btn-pin.active { background: var(--ios-orange); color: white; }
+        .btn-pin:hover { transform: scale(1.1); }
 
         .btn-edit { background: #eef7ed; color: var(--ios-green); border: 1px solid #dcf0db; padding: 6px 10px; border-radius: 8px; cursor: pointer; transition: 0.2s; margin-right: 5px; }
         .btn-edit:hover { background: var(--ios-green); color: white; }
@@ -190,7 +190,8 @@
 </div>
 
 <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby0SPBWiQUbLa_-GfB08M4G_i3i2E_GBJqas9eJUe7W0h1hh4wKDKKtyms3ToJWCJ_5/exec';
+    // SCRIPT_URL เดิมจากโค้ดที่คุณให้มาล่าสุด
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxa3iwVULlQqhTdps9ZrkLGx49hhYnFVY-mU0sTIv3bDvvtAkKC2LGfujdWlaJ7JtrW/exec';
 
     // --- ระบบจัดการข้อมูล ---
     function fixDate(dateVal) {
@@ -218,6 +219,29 @@
             } else {
                 rows[i].style.display = "none";
             }
+        }
+    }
+
+    // --- ระบบ Pin ใหม่ (Global Pin ผ่าน Google Sheets) ---
+    async function togglePin(date, memberId) {
+        const d = new Date(date);
+        const dateStr = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+        
+        Swal.fire({title: 'กำลังดำเนินการ...', didOpen: () => Swal.showLoading(), allowOutsideClick: false});
+        
+        try {
+            await fetch(SCRIPT_URL, { 
+                method: 'POST', 
+                body: JSON.stringify({
+                    action: "togglePin", 
+                    date: dateStr, 
+                    memberId: memberId
+                }) 
+            });
+            Swal.close();
+            loadData();
+        } catch (err) { 
+            Swal.fire('Error', 'ไม่สามารถปักหมุดได้', 'error'); 
         }
     }
 
@@ -362,8 +386,19 @@
             const data = await res.json();
             tableBody.innerHTML = '';
 
-            data.reverse().forEach(row => {
+            const sortedData = data.sort((a, b) => {
+                const pinA = (a[7] === "true" || a[7] === true);
+                const pinB = (b[7] === "true" || b[7] === true);
+                if (pinA && !pinB) return -1;
+                if (!pinA && pinB) return 1;
+                return new Date(b[0]) - new Date(a[0]);
+            });
+
+            sortedData.forEach(row => {
                 const tr = document.createElement('tr');
+                const isPinned = (row[7] === "true" || row[7] === true);
+                if (isPinned) tr.classList.add('pinned-row');
+
                 const rowJson = encodeURIComponent(JSON.stringify(row));
                 const displayId = String(row[1]).replace(/^'/, '');
                 const displayPhone = String(row[3]).replace(/^'/, '');
@@ -376,6 +411,7 @@
                     <td>${row[4]}</td>
                     <td>${row[5] ? `<a href="${row[5]}" target="_blank" style="color:#007aff;"><i class="fa-solid fa-image"></i> ดูรูป</a>` : '-'}</td>
                     <td>
+                        <button class="btn-pin ${isPinned ? 'active' : ''}" onclick="togglePin('${row[0]}', '${row[1]}')" title="ปักหมุด"><i class="fa-solid fa-thumbtack"></i></button>
                         <button class="btn-edit" onclick="editData('${rowJson}')"><i class="fa-solid fa-pen-to-square"></i></button>
                         <button class="btn-delete" onclick="deleteData('${row[0]}', '${row[1]}')"><i class="fa-solid fa-trash"></i></button>
                     </td>
