@@ -260,7 +260,7 @@
 </div>
 
 <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby0SPBWiQUbLa_-GfB08M4G_i3i2E_GBJqas9eJUe7W0h1hh4wKDKKtyms3ToJWCJ_5/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxa3iwVULlQqhTdps9ZrkLGx49hhYnFVY-mU0sTIv3bDvvtAkKC2LGfujdWlaJ7JtrW/exec';
 
     // --- 1. ระบบ Sidebar System (คงเดิม 100%) ---
     function includeSidebar() {
@@ -340,17 +340,28 @@
         }
     }
 
-    // --- ระบบ Pin (New) ---
-    function togglePin(uniqueKey) {
-        let pins = JSON.parse(localStorage.getItem('pinned_jobs') || '[]');
-        if (pins.includes(uniqueKey)) {
-            pins = pins.filter(k => k !== uniqueKey);
-        } else {
-            pins.push(uniqueKey);
+    // --- ระบบ Pin ใหม่ (Global Pin ผ่าน Google Sheets) ---
+    async function togglePin(date, memberId) {
+        // จัดการส่งวันที่แบบ String ให้ตรงกับ Sheet
+        const d = new Date(date);
+        const dateStr = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+        
+        Swal.fire({title: 'กำลังดำเนินการ...', didOpen: () => Swal.showLoading(), allowOutsideClick: false});
+        
+        try {
+            await fetch(SCRIPT_URL, { 
+                method: 'POST', 
+                body: JSON.stringify({
+                    action: "togglePin", 
+                    date: dateStr, 
+                    memberId: memberId
+                }) 
+            });
+            Swal.close();
+            loadData();
+        } catch (err) { 
+            Swal.fire('Error', 'ไม่สามารถปักหมุดได้', 'error'); 
         }
-        localStorage.setItem('pinned_jobs', JSON.stringify(pins));
-        // บังคับดึงข้อมูลใหม่ตามสั่ง
-        loadData();
     }
 
     // --- ระบบเพิ่มงานผ่าน Pop-up ---
@@ -494,23 +505,21 @@
             const data = await res.json();
             tableBody.innerHTML = '';
 
-            const pinnedKeys = JSON.parse(localStorage.getItem('pinned_jobs') || '[]');
-
-            // จัดเรียงข้อมูล: ปักหมุดไว้บนสุด แล้วตามด้วยข้อมูลปกติ (ใหม่ไปเก่า)
-            const sortedData = data.reverse().sort((a, b) => {
-                const keyA = a[0] + a[1];
-                const keyB = b[0] + b[1];
-                const isAPinned = pinnedKeys.includes(keyA);
-                const isBPinned = pinnedKeys.includes(keyB);
-                if (isAPinned && !isBPinned) return -1;
-                if (!isAPinned && isBPinned) return 1;
-                return 0;
+            // จัดเรียง: ปักหมุดไว้บนสุด แล้วตามด้วยข้อมูลปกติ (ใหม่ไปเก่า)
+            const sortedData = data.sort((a, b) => {
+                const pinA = (a[7] === "true" || a[7] === true);
+                const pinB = (b[7] === "true" || b[7] === true);
+                
+                if (pinA && !pinB) return -1;
+                if (!pinA && pinB) return 1;
+                
+                // ถ้าหมุดเหมือนกัน ให้เรียงตามวันที่ใหม่ไปเก่า
+                return new Date(b[0]) - new Date(a[0]);
             });
 
             sortedData.forEach(row => {
                 const tr = document.createElement('tr');
-                const uniqueKey = row[0] + row[1];
-                const isPinned = pinnedKeys.includes(uniqueKey);
+                const isPinned = (row[7] === "true" || row[7] === true);
                 
                 if (isPinned) tr.classList.add('pinned-row');
 
@@ -526,7 +535,7 @@
                     <td>${row[4]}</td>
                     <td>${row[5] ? `<a href="${row[5]}" target="_blank" style="color:#007aff;"><i class="fa-solid fa-image"></i> ดูรูป</a>` : '-'}</td>
                     <td>
-                        <button class="btn-pin ${isPinned ? 'active' : ''}" onclick="togglePin('${uniqueKey}')" title="ปักหมุด"><i class="fa-solid fa-thumbtack"></i></button>
+                        <button class="btn-pin ${isPinned ? 'active' : ''}" onclick="togglePin('${row[0]}', '${row[1]}')" title="ปักหมุด"><i class="fa-solid fa-thumbtack"></i></button>
                         <button class="btn-edit" onclick="editData('${rowJson}')"><i class="fa-solid fa-pen-to-square"></i></button>
                         <button class="btn-delete" onclick="deleteData('${row[0]}', '${row[1]}')"><i class="fa-solid fa-trash"></i></button>
                     </td>
