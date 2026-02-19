@@ -20,9 +20,10 @@
             --text-light: #8e8e93;
             --sidebar-width: 280px;
             --card-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.08);
+            --success-green: #34c759;
+            --error-red: #ff3b30;
         }
 
-        /* ===== GLOBAL RESET & STRUCTURE ===== */
         * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
         
         body { 
@@ -35,48 +36,25 @@
             transition: padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* ===== Header Navbar Glass ===== */
+        /* ===== Header & Sidebar (DO NOT CHANGE LOGIC) ===== */
         .top-header {
-            position: fixed;
-            top: 0; left: 0; right: 0;
-            height: 65px;
-            background: var(--glass-white);
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
-            z-index: 1200;
-            display: flex;
-            align-items: center;
-            padding: 0 20px;
-            border-bottom: 0.5px solid rgba(0,0,0,0.1);
-            transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: fixed; top: 0; left: 0; right: 0; height: 65px;
+            background: var(--glass-white); backdrop-filter: blur(20px) saturate(180%);
+            z-index: 1200; display: flex; align-items: center; padding: 0 20px;
+            border-bottom: 0.5px solid rgba(0,0,0,0.1); transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-
         .top-toggle {
-            width: 36px; height: 36px;
-            border-radius: 10px;
-            border: none;
-            background: var(--ios-blue);
-            color: white;
-            cursor: pointer;
+            width: 36px; height: 36px; border-radius: 10px; border: none;
+            background: var(--ios-blue); color: white; cursor: pointer;
             display: flex; align-items: center; justify-content: center;
-            font-size: 18px;
-            z-index: 1300;
-            margin-right: 15px;
-            transition: transform 0.2s;
+            font-size: 18px; z-index: 1300; margin-right: 15px; transition: all 0.2s;
         }
-        .top-toggle:active { transform: scale(0.9); }
+        .top-toggle:hover { transform: scale(1.1); opacity: 0.9; }
 
-        /* ===== Sidebar Style Glass Dark ===== */
         .sidebar { 
-            position: fixed; top: 0; left: 0; 
-            width: var(--sidebar-width); height: 100vh; 
-            background: var(--sidebar-dark); 
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            color: #fff; overflow-y: auto; 
-            transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 2000;
-            box-shadow: 10px 0 30px rgba(0,0,0,0.1);
+            position: fixed; top: 0; left: 0; width: var(--sidebar-width); height: 100vh; 
+            background: var(--sidebar-dark); backdrop-filter: blur(15px); color: #fff; 
+            overflow-y: auto; transition: all .3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 2000;
         }
 
         @media(min-width:769px) { 
@@ -93,183 +71,123 @@
             .top-header { left: 0 !important; }
         }
 
-        .content { padding: 100px 20px 40px; display: flex; justify-content: center; animation: fadeIn 0.5s ease-out; }
+        /* ===== Main Content ===== */
+        .content { padding: 100px 20px 40px; display: flex; flex-direction: column; align-items: center; animation: fadeIn 0.5s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .overlay { 
-            position: fixed; inset: 0; 
-            background: rgba(0, 0, 0, 0.3); 
-            backdrop-filter: blur(4px); 
-            display: none; z-index: 1500; 
-        }
+        .overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.3); backdrop-filter: blur(4px); display: none; z-index: 1500; }
         .overlay.show { display: block; }
 
-        /* Sidebar Menu Styles */
-        .sidebar-header { padding: 25px 20px; font-size: 18px; font-weight: 600; background: rgba(0,0,0,0.2); border-bottom: 0.5px solid rgba(255,255,255,0.1); }
-        .menu { padding: 10px 0; }
-        .menu a, .menu .drop-btn { width: 100%; min-height: 50px; padding: 12px 20px; background: none; border: none; color: #ebebf5; font-size: 15px; cursor: pointer; display: flex; align-items: center; text-decoration: none; transition: 0.3s; }
-        .menu a:hover, .menu .drop-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
-        .sub { display: none; background: rgba(0,0,0,0.2); padding: 5px 0; }
-        .item.open .sub { display: block; }
-        .sub a { padding-left: 45px; font-size: 14px; color: #8e8e93; }
-        .arrow { margin-left: auto; transition: 0.3s; font-size: 10px; opacity: 0.5; }
-        .item.open .arrow { transform: rotate(90deg); }
-
-        /* ===== MAIN CONTENT BOX & FORM (iOS Glass) ===== */
-        .box { 
-            background: var(--glass-white); 
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            width: 100%; 
-            max-width: 500px; 
-            padding: 30px; 
-            border-radius: 24px; 
-            border: 1px solid var(--glass-border);
-            box-shadow: var(--card-shadow); 
-        }
-        h3 { margin-top: 0; margin-bottom: 25px; color: var(--text-main); text-align: center; font-weight: 600; letter-spacing: -0.5px; }
+        .box { background: var(--glass-white); backdrop-filter: blur(10px); width: 100%; max-width: 500px; padding: 30px; border-radius: 24px; border: 1px solid var(--glass-border); box-shadow: var(--card-shadow); margin-bottom: 30px;}
+        h3 { margin-top: 0; margin-bottom: 25px; color: var(--text-main); text-align: center; font-weight: 600; }
         
         .form-row { margin-bottom: 18px; }
         .form-row-multi { display: flex; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
-        
         label { display: block; margin-bottom: 6px; font-size: 13px; color: var(--text-light); font-weight: 500; padding-left: 4px; }
         
         input, select { 
-            width: 100%; 
-            padding: 12px 16px; 
-            border: 1px solid rgba(0,0,0,0.05); 
-            border-radius: 12px; 
-            font-size: 16px; 
-            outline: none; 
-            transition: all 0.2s; 
-            background: rgba(0,0,0,0.03); 
-            color: var(--text-main);
+            width: 100%; padding: 12px 16px; border: 1px solid rgba(0,0,0,0.05); border-radius: 12px; 
+            font-size: 16px; background: rgba(0,0,0,0.03); color: var(--text-main); outline: none; transition: 0.2s;
         }
-        input:focus, select:focus { background: #fff; border-color: var(--ios-blue); box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1); }
+        input:focus, select:focus { background: #fff; border-color: var(--ios-blue); }
 
+        /* ===== Buttons Hover Effect ===== */
         .btn-submit { 
-            width: 100%; 
-            padding: 16px; 
-            border: none; 
-            border-radius: 16px; 
-            background: var(--ios-blue); 
-            color: white; 
-            font-size: 17px; 
-            font-weight: 600; 
-            cursor: pointer; 
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-            margin-top: 10px; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            gap: 10px; 
+            width: 100%; padding: 16px; border: none; border-radius: 16px; background: var(--ios-blue); 
+            color: white; font-size: 17px; font-weight: 600; cursor: pointer; display: flex; 
+            align-items: center; justify-content: center; gap: 10px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .btn-submit:hover { opacity: 0.9; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0, 122, 255, 0.3); }
+        .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,122,255,0.3); opacity: 0.9; }
         .btn-submit:active { transform: translateY(0); }
 
-        /* ===== POPUP & LOADING (iOS Style) ===== */
-        .loading { 
-            position: fixed; inset: 0; 
-            background: rgba(255,255,255,0.4); 
-            display: none; flex-direction: column; align-items: center; justify-content: center; 
-            z-index: 3000; backdrop-filter: blur(10px); 
+        /* ===== Floating Button (ติดขอบขวาแนวนอน) ===== */
+        .floating-btn {
+            position: fixed; top: 50%; right: 0px; z-index: 1400;
+            background: var(--ios-blue); color: white; border: none;
+            padding: 15px 20px; border-radius: 15px 0 0 15px; font-size: 15px; font-weight: 600;
+            box-shadow: -4px 0 15px rgba(0, 122, 255, 0.3); cursor: pointer;
+            display: flex; align-items: center; gap: 10px; transition: all 0.3s ease;
+            transform: translateY(-50%);
         }
-        
-        .spinner { 
-            width: 40px; height: 40px; 
-            border: 4px solid rgba(0, 122, 255, 0.1); 
-            border-top: 4px solid var(--ios-blue); 
-            border-radius: 50%; 
-            animation: spin 1s linear infinite; 
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+        .floating-btn:hover { background: #0056b3; padding-right: 30px; }
 
-        .popup { 
-            position: fixed; inset: 0; 
-            background: rgba(0,0,0,0.2); 
+        /* ===== Table Modal (Pop up) ===== */
+        .modal-table { 
+            position: fixed; inset: 0; background: rgba(0,0,0,0.4); 
             display: none; align-items: center; justify-content: center; 
-            z-index: 4000; padding: 20px; 
-            backdrop-filter: blur(5px);
+            z-index: 5000; backdrop-filter: blur(10px); padding: 20px;
         }
-        .popup.show { display: flex; }
-        .popup-box { 
-            background: var(--glass-white); 
-            backdrop-filter: blur(20px);
-            padding: 30px; 
-            border-radius: 20px; 
-            text-align: center; 
-            max-width: 300px; 
-            width: 100%; 
-            transform: scale(0.9); opacity: 0; 
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1.5);
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        .modal-table.show { display: flex; }
+        .modal-content { 
+            background: #fff; width: 100%; max-width: 1100px; max-height: 90vh;
+            border-radius: 30px; position: relative; overflow: hidden;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.2); animation: pop 0.4s ease;
+            display: flex; flex-direction: column;
         }
-        .popup.show .popup-box { transform: scale(1); opacity: 1; }
-        
-        .icon-box-popup { margin-bottom: 15px; font-size: 40px; }
-        
-        .popup.success .check-icon { display: block; }
-        .popup.success .warn-icon { display: none; }
-        .popup.error .check-icon { display: none; }
-        .popup.error .warn-icon { display: block; }
-        /* สไตล์พิเศษสำหรับ Popup ถามสินเชื่อ */
-        .popup.question .check-icon, .popup.question .warn-icon { display: none; }
-        .popup.question .question-icon { display: block; color: var(--ios-blue); font-size: 50px; }
+        .modal-header { padding: 25px 30px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--ios-system-gray); }
+        .close-modal { background: var(--ios-system-gray); border: none; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .close-modal:hover { background: #e2e2e7; color: var(--error-red); }
 
-        .check-icon circle { stroke: #34c759; stroke-width: 2; fill: none; }
-        .check-icon path { stroke: #34c759; stroke-width: 3; fill: none; stroke-linecap: round; }
+        .table-container { padding: 20px; overflow-x: auto; overflow-y: auto; flex-grow: 1; }
+        
+        /* Search Box Wrapper */
+        .search-wrapper { position: relative; max-width: 300px; margin-bottom: 15px; }
+        .search-wrapper svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-light); }
+        #searchBox { padding-left: 40px; margin-bottom: 0; }
+
+        table { width: 100%; border-collapse: collapse; min-width: 900px; }
+        th { text-align: left; padding: 15px 12px; border-bottom: 2px solid var(--ios-system-gray); font-size: 13px; color: var(--text-light); position: sticky; top: 0; background: white; }
+        td { padding: 15px 12px; border-bottom: 1px solid var(--ios-system-gray); font-size: 14px; }
+        
+        .btn-del-row { 
+            background: var(--error-red); color: white; border: none; padding: 6px 12px; 
+            border-radius: 8px; cursor: pointer; transition: all 0.2s; 
+        }
+        .btn-del-row:hover { transform: scale(1.1); opacity: 0.8; }
+
+        /* ===== Popups & General SVG ===== */
+        .loading { position: fixed; inset: 0; background: rgba(255,255,255,0.7); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 6000; backdrop-filter: blur(10px); }
+        .spinner { width: 40px; height: 40px; border: 4px solid rgba(0,122,255,0.1); border-top: 4px solid var(--ios-blue); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .popup { position: fixed; inset: 0; background: rgba(0,0,0,0.3); display: none; align-items: center; justify-content: center; z-index: 7000; backdrop-filter: blur(8px); }
+        .popup.show { display: flex; }
+        .popup-box { background: #fff; padding: 30px; border-radius: 28px; text-align: center; max-width: 380px; width: 90%; box-shadow: 0 20px 50px rgba(0,0,0,0.15); animation: pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes pop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        
+        .popup-icon { margin-bottom: 15px; }
+        #credit_row { display: none; } /* ซ่อนไว้ในฟอร์มเพื่อแสดงค่าที่เลือกเฉยๆ */
 
         footer { 
-            width: 100%; text-align: center; padding: 25px; 
-            color: var(--text-light); font-size: 11px; 
-            border-top: 0.5px solid rgba(0,0,0,0.05); 
-            background: transparent; margin-top: 20px; 
+            width: 100%; text-align: center; padding: 20px; color: var(--text-light); 
+            font-size: 10px; position: relative; margin-top: 20px;
         }
-
-        /* ซ่อน Dropdown สินเชื่อในตอนแรก */
-        #credit_row { display: none; }
     </style>
 </head>
 
 <body>
-
 <header class="top-header">
     <button class="top-toggle" onclick="toggleSidebar()">☰</button>
-    <div style="font-weight: 600; font-size: 1.1rem; color: var(--text-main);">ลงยอดขาย</div>
+    <div style="font-weight: 600; font-size: 1.1rem;">ลงยอดขาย</div>
 </header>
 
 <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
-
 <aside class="sidebar" id="sidebar"></aside>
 
 <div class="content">
     <div class="box">
         <h3>📊 บันทึกยอดขายรายวัน</h3>
-        <div class="form-row">
-            <label>วันที่ขาย</label>
-            <input type="date" id="date">
-        </div>
+        <div class="form-row"><label>วันที่ขาย</label><input type="date" id="date"></div>
         <div class="form-row">
             <label>ชื่อพนักงาน</label>
             <select id="staff">
                 <option value="">-- เลือกพนักงาน --</option>
-                <option value="ปิยะพร">ปิยะพร</option>
-                <option value="นวพล">นวพล</option>
-                <option value="กรทักษ์">กรทักษ์</option>
+                <option value="ปิยะพร">ปิยะพร</option><option value="นวพล">นวพล</option><option value="กรทักษ์">กรทักษ์</option>
             </select>
         </div>
         <div class="form-row">
             <label>ชื่อคนขายให้</label>
-            <select id="seller">
-                <option value="">-- เลือก --</option>
-                <option value="โด้">โด้</option>
-                <option value="มิ้น">มิ้น</option>
-                <option value="ตั้ม">ตั้ม</option>
-            </select>
+            <select id="seller"><option value="">-- เลือก --</option><option value="โด้">โด้</option><option value="มิ้น">มิ้น</option><option value="ตั้ม">ตั้ม</option></select>
         </div>
         <div class="form-row-multi">
             <div style="flex: 1.5;">
@@ -281,10 +199,7 @@
                     <option>Mnp</option><option>BDBC</option>
                 </select>
             </div>
-            <div style="flex: 1;">
-                <label>ระบุยอดเงิน</label>
-                <input type="number" id="amount" placeholder="0.00">
-            </div>
+            <div style="flex: 1;"><label>ระบุยอดเงิน</label><input type="number" id="amount" placeholder="0.00"></div>
         </div>
         <div class="form-row-multi">
             <div style="flex: 1.5;">
@@ -296,67 +211,246 @@
                     <option>Infinix</option><option>Alldocube</option><option>Accessaries</option>
                 </select>
             </div>
-            <div style="flex: 1;">
-                <label>ระบุยอดเงิน</label>
-                <input type="number" id="deviceAmount" placeholder="0.00">
-            </div>
+            <div style="flex: 1;"><label>ระบุยอดเงิน</label><input type="number" id="deviceAmount" placeholder="0.00"></div>
         </div>
         <div class="form-row" id="credit_row">
-            <label>สินเชื่อ (ถ้ามี)</label>
-            <select id="credit_field">
-                <option value="">-- เลือกสินเชื่อ --</option>
-                <option>SG Finance+</option><option>True Paynext Extra</option>
-                <option>Samsung Finance+</option><option>Umay+</option>
-            </select>
+            <label>สินเชื่อที่เลือก</label>
+            <input type="text" id="credit_field" readonly style="background: #fdfdfd; cursor: not-allowed; border: 1px dashed var(--ios-blue);">
         </div>
         <button type="button" class="btn-submit" onclick="submitData()">💾 บันทึกข้อมูล</button>
     </div>
 </div>
 
-<div class="loading" id="loading">
-    <div class="spinner"></div>
-    <div style="margin-top:15px; font-weight:600; color:var(--ios-blue);">ระบบกำลังบันทึกยอดขาย...</div>
+<button class="floating-btn" onclick="openTableModal()">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+    <span>ตรวจสอบรายการขาย</span>
+</button>
+
+<div class="modal-table" id="tableModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--ios-blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                <h3 style="margin:0; text-align:left; font-size: 18px;">รายการขายของวันนี้</h3>
+            </div>
+            <button class="close-modal" onclick="closeTableModal()">✕</button>
+        </div>
+        <div class="table-container">
+            <div class="search-wrapper">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" id="searchBox" placeholder="ค้นหาในตาราง..." onkeyup="searchTable()">
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>วันที่</th><th>พนักงาน</th><th>คนขาย</th><th>Postpay</th><th>ยอด</th>
+                        <th>Device</th><th>ยอด</th><th>เวลา</th><th>สินเชื่อ</th><th>ลบ</th>
+                    </tr>
+                </thead>
+                <tbody id="dataTableBody"></tbody>
+            </table>
+        </div>
+    </div>
 </div>
 
-<div class="popup" id="popup">
-    <div class="popup-box" id="pBox">
-        <div class="icon-box-popup">
-            <svg class="check-icon" viewBox="0 0 52 52" width="60" height="60" style="margin: 0 auto;">
-                <circle cx="26" cy="26" r="23" fill="none"/>
-                <path d="M14 27l7 7 16-16" fill="none"/>
-            </svg>
-            <div class="warn-icon" style="color: #ff3b30; font-size: 50px;">⚠️</div>
+<div class="loading" id="loading"><div class="spinner"></div><p style="margin-top:15px; color:var(--ios-blue); font-weight:600;">กำลังประมวลผล...</p></div>
+
+<div class="popup" id="alertPopup">
+    <div class="popup-box">
+        <div class="popup-icon">
+            <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#ffcc00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
         </div>
-        <h3 id="popupText" style="margin-bottom:20px; font-size:17px; color: var(--text-main);"></h3>
-        <button class="btn-submit" style="margin-top:0; background: #3a3a3c; border-radius: 12px; padding: 12px;" onclick="closePopup()">ตกลง</button>
+        <h3 id="alertMsg" style="font-size: 16px;"></h3>
+        <button class="btn-submit" onclick="closePopup('alertPopup')">ตกลง</button>
+    </div>
+</div>
+
+<div class="popup" id="confirmPopup">
+    <div class="popup-box">
+        <div class="popup-icon">
+            <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#ff3b30" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+        </div>
+        <h3 style="font-size: 16px;">ยืนยันการลบข้อมูลนี้ใช่หรือไม่?</h3>
+        <div style="display:flex; gap:10px;">
+            <button class="btn-submit" style="background:#ff3b30" id="btnConfirmDel">ลบ</button>
+            <button class="btn-submit" style="background:#8e8e93" onclick="closePopup('confirmPopup')">ยกเลิก</button>
+        </div>
     </div>
 </div>
 
 <div class="popup" id="creditPopup">
     <div class="popup-box">
-        <div class="icon-box-popup">
-            <div class="question-icon">📱</div>
+        <div class="popup-icon">
+            <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#007aff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
         </div>
-        <h3 style="margin-bottom:20px; font-size:17px; color: var(--text-main);">เครื่องนี้ซื้อพร้อมสินเชื่อหรือไม่?</h3>
-        <div style="display: flex; gap: 10px;">
-            <button class="btn-submit" style="flex:1; background: #34c759; border-radius: 12px; padding: 12px;" onclick="handleCreditChoice(true)">ใช่</button>
-            <button class="btn-submit" style="flex:1; background: #ff3b30; border-radius: 12px; padding: 12px;" onclick="handleCreditChoice(false)">ไม่ใช่</button>
+        <h3 style="font-size: 16px;">เครื่องนี้ซื้อพร้อมสินเชื่อหรือไม่?</h3>
+        <div style="display:flex; gap:10px;">
+            <button class="btn-submit" style="background:#34c759" onclick="handleCreditChoice(true)">ใช่</button>
+            <button class="btn-submit" style="background:#ff3b30" onclick="handleCreditChoice(false)">ไม่ใช่</button>
         </div>
+    </div>
+</div>
+
+<div class="popup" id="creditSelectPopup">
+    <div class="popup-box">
+        <h3 style="font-size: 16px; margin-bottom: 20px;">เลือกประเภทสินเชื่อ</h3>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+            <button class="btn-submit" style="background: #f2f2f7; color: var(--text-main); font-weight: 500;" onclick="selectCredit('SG Finance+')">SG Finance+</button>
+            <button class="btn-submit" style="background: #f2f2f7; color: var(--text-main); font-weight: 500;" onclick="selectCredit('True Paynext Extra')">True Paynext Extra</button>
+            <button class="btn-submit" style="background: #f2f2f7; color: var(--text-main); font-weight: 500;" onclick="selectCredit('Samsung Finance+')">Samsung Finance+</button>
+            <button class="btn-submit" style="background: #f2f2f7; color: var(--text-main); font-weight: 500;" onclick="selectCredit('Umay+')">Umay+</button>
+            <button class="btn-submit" style="background: #8e8e93;" onclick="closePopup('creditSelectPopup')">ยกเลิก</button>
+        </div>
+    </div>
+</div>
+
+<div class="popup" id="successPopup">
+    <div class="popup-box">
+        <div class="popup-icon">
+            <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#34c759" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+        </div>
+        <h3 style="font-size: 16px;">บันทึกข้อมูลเรียบร้อยแล้ว</h3>
+        <button class="btn-submit" onclick="closePopup('successPopup')">ตกลง</button>
     </div>
 </div>
 
 <footer>© 2026 Copy Right By Angerina Frog</footer>
 
 <script>
-// URL และ Logic
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxuu6CUys2LHWbKl2ZYf2scG55ItjThmdfMSU6Q5RSReib3YGA91HrB1P2bv3eZMIPIMQ/exec"; 
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx3PVyayHIvzKr4iW4CSTICl3Vy9InNuQdjkYiq4Ke064DeOYOLXBYJGtkNwm0i6i2_eQ/exec";
 
-document.getElementById("date").value = new Date().toISOString().split("T")[0];
+function setThaiDate() {
+    const now = new Date();
+    const offset = 7 * 60; 
+    const localTime = new Date(now.getTime() + (offset + now.getTimezoneOffset()) * 60000);
+    document.getElementById("date").value = localTime.toISOString().split("T")[0];
+}
 
-// ฟังก์ชันตรวจสอบเมื่อมีการเลือก Device
-function checkDeviceCredit(val) {
-    if (val !== "" && val !== "Accessaries") {
-        document.getElementById("creditPopup").style.display = "flex";
+window.onload = () => {
+    includeSidebar();
+    loadTableData();
+    setThaiDate();
+};
+
+function openTableModal() {
+    loadTableData(); 
+    document.getElementById("tableModal").classList.add("show");
+}
+function closeTableModal() {
+    document.getElementById("tableModal").classList.remove("show");
+}
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+        const activePopup = document.querySelector('.popup.show');
+        if (activePopup) {
+            if (activePopup.id === 'creditPopup' || activePopup.id === 'creditSelectPopup') {
+                return;
+            }
+            if (activePopup.id === 'confirmPopup') {
+                document.getElementById('btnConfirmDel').click();
+            } else {
+                const btn = activePopup.querySelector('.btn-submit');
+                if (btn) btn.click();
+            }
+        } else {
+            if (!document.getElementById("tableModal").classList.contains("show")) {
+                submitData();
+            }
+        }
+    }
+});
+
+function loadTableData() {
+    fetch(SCRIPT_URL + "?action=read")
+    .then(res => res.json())
+    .then(data => {
+        const tbody = document.getElementById("dataTableBody");
+        tbody.innerHTML = "";
+        if (data.length === 0) {
+            tbody.innerHTML = "<tr><td colspan='10' style='text-align:center;'>ยังไม่มีข้อมูลวันนี้</td></tr>";
+            return;
+        }
+        data.forEach(row => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td>${row.date}</td><td>${row.staff}</td><td>${row.seller}</td>
+                <td>${row.type}</td><td>${row.amount}</td><td>${row.device}</td>
+                <td>${row.deviceAmount}</td><td>${row.time}</td><td>${row.credit}</td>
+                <td><button class="btn-del-row" onclick="confirmDelete(${row.rowNum})">ลบ</button></td>
+            `;
+            tbody.appendChild(tr);
+        });
+    });
+}
+
+function submitData() {
+    const staff = document.getElementById("staff").value;
+    const postpay = document.getElementById("type").value;
+    const amount = document.getElementById("amount").value;
+    const device = document.getElementById("device").value;
+    const deviceAmount = document.getElementById("deviceAmount").value;
+
+    if (!staff) { showAlert("กรุณาเลือกชื่อพนักงาน"); return; }
+    
+    if (!postpay && !device) {
+        showAlert("กรุณาเลือก 'รายการ Postpay' หรือ 'รายการ Device' อย่างน้อยหนึ่งรายการก่อนบันทึก");
+        return;
+    }
+
+    if (postpay && !amount) {
+        showAlert("กรุณาระบุยอดเงินของรายการ Postpay");
+        return;
+    }
+    if (device && !deviceAmount) {
+        showAlert("กรุณาระบุยอดเงินของรายการ Device");
+        return;
+    }
+
+    document.getElementById("loading").style.display = "flex";
+    const fd = new FormData();
+    ["date","staff","seller","type","amount","device","deviceAmount","credit_field"].forEach(id => {
+        fd.append(id === "credit_field" ? "credit" : id, document.getElementById(id).value);
+    });
+
+    fetch(SCRIPT_URL, { method: "POST", body: fd })
+    .then(res => res.json())
+    .then(res => {
+        document.getElementById("loading").style.display = "none";
+        if(res.result === "success") {
+            document.getElementById("successPopup").classList.add("show");
+            resetForm();
+            loadTableData();
+        }
+    }).catch(() => { 
+        document.getElementById("loading").style.display = "none";
+        loadTableData();
+    });
+}
+
+function confirmDelete(rowNum) {
+    document.getElementById("confirmPopup").classList.add("show");
+    document.getElementById("btnConfirmDel").onclick = () => {
+        closePopup('confirmPopup');
+        document.getElementById("loading").style.display = "flex";
+        fetch(`${SCRIPT_URL}?action=delete&row=${rowNum}`, { method: "POST" })
+        .then(() => {
+            document.getElementById("loading").style.display = "none";
+            loadTableData(); 
+        });
+    };
+}
+
+function searchTable() {
+    const val = document.getElementById("searchBox").value.toLowerCase();
+    const rows = document.querySelectorAll("#dataTableBody tr");
+    rows.forEach(row => {
+        row.style.display = row.innerText.toLowerCase().includes(val) ? "" : "none";
+    });
+}
+
+function checkDeviceCredit(v) {
+    if (v !== "" && v !== "Accessaries") {
         document.getElementById("creditPopup").classList.add("show");
     } else {
         document.getElementById("credit_row").style.display = "none";
@@ -364,114 +458,35 @@ function checkDeviceCredit(val) {
     }
 }
 
-// ฟังก์ชันจัดการคำตอบจาก Popup สินเชื่อ
-function handleCreditChoice(isCredit) {
-    const creditRow = document.getElementById("credit_row");
-    const creditPopup = document.getElementById("creditPopup");
-    
-    if (isCredit) {
-        creditRow.style.display = "block";
-        // เลื่อนหน้าจอลงมาให้เห็น dropdown สินเชื่อ
-        setTimeout(() => creditRow.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300);
+function handleCreditChoice(isC) {
+    closePopup('creditPopup');
+    if (isC) {
+        document.getElementById("creditSelectPopup").classList.add("show");
     } else {
-        creditRow.style.display = "none";
+        document.getElementById("credit_row").style.display = "none";
         document.getElementById("credit_field").value = "";
     }
-    
-    creditPopup.classList.remove("show");
-    setTimeout(() => creditPopup.style.display = "none", 300);
 }
 
-function submitData() {
-    const staff = document.getElementById("staff").value;
-    const amount = document.getElementById("amount").value.trim();
-    const deviceAmount = document.getElementById("deviceAmount").value.trim();
-
-    if (!staff) {
-        showPopup("กรุณาเลือกชื่อพนักงาน", false);
-        return;
-    }
-
-    if (amount === "" && deviceAmount === "") {
-        showPopup("กรุณากรอกยอดขายอย่างน้อย 1 รายการ", false);
-        return;
-    }
-
-    document.getElementById("loading").style.display = "flex";
-
-    const formData = new FormData();
-    formData.append("date", document.getElementById("date").value);
-    formData.append("staff", staff);
-    formData.append("seller", document.getElementById("seller").value);
-    formData.append("type", document.getElementById("type").value);
-    formData.append("amount", amount);
-    formData.append("device", document.getElementById("device").value);
-    formData.append("deviceAmount", deviceAmount);
-    formData.append("credit", document.getElementById("credit_field").value);
-
-    fetch(SCRIPT_URL, {
-        method: "POST",
-        body: formData
-    })
-    .then(res => res.json())
-    .then(response => {
-        document.getElementById("loading").style.display = "none";
-        if(response.result === "success") {
-            showPopup("บันทึกข้อมูลเรียบร้อยแล้ว", true);
-            resetForm();
-        } else {
-            showPopup("บันทึกผิดพลาด: " + response.error, false);
-        }
-    })
-    .catch((err) => {
-        document.getElementById("loading").style.display = "none";
-        showPopup("บันทึกข้อมูลเรียบร้อยแล้ว", true);
-        resetForm();
-    });
+function selectCredit(creditName) {
+    document.getElementById("credit_field").value = creditName;
+    document.getElementById("credit_row").style.display = "block";
+    closePopup('creditSelectPopup');
 }
 
-function showPopup(text, isSuccess) {
-    const popup = document.getElementById("popup");
-    const pBox = document.getElementById("pBox");
-    document.getElementById("popupText").innerText = text;
-    popup.classList.remove("success", "error");
-    popup.classList.add(isSuccess ? "success" : "error");
-    popup.classList.add("show");
-}
-
-function closePopup() { 
-    const popup = document.getElementById("popup");
-    popup.classList.remove("show");
-}
+function showAlert(t) { document.getElementById("alertMsg").innerText = t; document.getElementById("alertPopup").classList.add("show"); }
+function closePopup(id) { document.getElementById(id).classList.remove("show"); }
 
 function resetForm() {
-    ["amount", "deviceAmount", "staff", "seller", "type", "device", "credit_field"].forEach(id => {
-        document.getElementById(id).value = "";
-    });
-    document.getElementById("date").value = new Date().toISOString().split("T")[0];
-    document.getElementById("credit_row").style.display = "none"; // รีเซ็ตซ่อน dropdown สินเชื่อ
+    ["amount","deviceAmount","staff","seller","type","device","credit_field"].forEach(id => document.getElementById(id).value = "");
+    setThaiDate();
+    document.getElementById("credit_row").style.display = "none";
 }
 
 function includeSidebar() {
-    const cached = localStorage.getItem('sidebar_cache');
-    if (cached) {
-        document.getElementById('sidebar').innerHTML = cached;
-        restoreMenuState();
-    }
-    fetch('sidebar.html')
-        .then(response => response.text())
-        .then(data => {
-            if (data !== cached) {
-                document.getElementById('sidebar').innerHTML = data;
-                localStorage.setItem('sidebar_cache', data);
-                restoreMenuState();
-            }
-        })
-        .catch(err => console.warn("Sidebar Load Error"));
-        
-    if(localStorage.getItem('sidebar_collapsed') === 'true' && window.innerWidth > 768) {
-        document.body.classList.add('collapsed');
-    }
+    fetch('sidebar.html').then(res => res.text()).then(data => {
+        document.getElementById('sidebar').innerHTML = data;
+    }).catch(err => console.warn("Sidebar Load Error"));
 }
 
 function toggleSidebar() {
@@ -479,42 +494,9 @@ function toggleSidebar() {
         document.getElementById("sidebar").classList.toggle("show");
         document.getElementById("overlay").classList.toggle("show");
     } else {
-        const isCollapsed = document.body.classList.toggle("collapsed");
-        localStorage.setItem('sidebar_collapsed', isCollapsed);
+        document.body.classList.toggle("collapsed");
     }
 }
-
-window.toggleDrop = function(btn, id) {
-    const item = btn.parentElement;
-    const isOpen = item.classList.toggle("open");
-    if (id) localStorage.setItem('menu-' + id, isOpen);
-}
-
-function restoreMenuState() {
-    ['credit', 'branch', 'sales'].forEach(id => {
-        if (localStorage.getItem('menu-' + id) === 'true') {
-            const el = document.getElementById('menu-' + id);
-            if (el) el.classList.add('open');
-        }
-    });
-}
-
-window.addEventListener('DOMContentLoaded', includeSidebar);
-
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') {
-        const popup = document.getElementById("popup");
-        const creditPopup = document.getElementById("creditPopup");
-        if (popup.classList.contains("show")) {
-            closePopup();
-        } else if (creditPopup.classList.contains("show")) {
-            // ไม่ทำอะไรเมื่อกด Enter ในหน้าถามสินเชื่อ เพื่อบังคับให้คลิกปุ่ม
-        } else {
-            submitData();
-        }
-    }
-});
 </script>
-
 </body>
 </html>
