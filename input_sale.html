@@ -175,7 +175,6 @@
             z-index: 3000; backdrop-filter: blur(10px); 
         }
         
-        /* แก้ไข Spinner ให้หมุนติ้ว */
         .spinner { 
             width: 40px; height: 40px; 
             border: 4px solid rgba(0, 122, 255, 0.1); 
@@ -203,7 +202,7 @@
             padding: 30px; 
             border-radius: 20px; 
             text-align: center; 
-            max-width: 300px; 
+            max-width: 320px; 
             width: 100%; 
             transform: scale(0.9); opacity: 0; 
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1.5);
@@ -215,8 +214,15 @@
         
         .popup.success .check-icon { display: block; }
         .popup.success .warn-icon { display: none; }
+        .popup.success .confirm-ui { display: none; }
+        
         .popup.error .check-icon { display: none; }
         .popup.error .warn-icon { display: block; }
+        .popup.error .confirm-ui { display: none; }
+
+        .popup.confirm .check-icon, .popup.confirm .warn-icon { display: none; }
+        .popup.confirm .confirm-ui { display: block; }
+        .confirm-btn-group { display: flex; gap: 10px; margin-top: 20px; }
 
         .check-icon circle { stroke: #34c759; stroke-width: 2; fill: none; }
         .check-icon path { stroke: #34c759; stroke-width: 3; fill: none; stroke-linecap: round; }
@@ -227,6 +233,9 @@
             border-top: 0.5px solid rgba(0,0,0,0.05); 
             background: transparent; margin-top: 20px; 
         }
+
+        /* ซ่อน Dropdown สินเชื่อเริ่มต้น */
+        #credit_container { display: none; animation: fadeIn 0.4s ease; }
     </style>
 </head>
 
@@ -284,7 +293,7 @@
         <div class="form-row-multi">
             <div style="flex: 1.5;">
                 <label>รายการ Device</label>
-                <select id="device">
+                <select id="device" onchange="checkDeviceSelection(this)">
                     <option value="">-- ยี่ห้อ --</option>
                     <option>iPhone</option><option>iPad</option><option>Samsung</option><option>Xiaomi</option>
                     <option>Realme</option><option>Oppo</option><option>Vivo</option><option>Honor</option>
@@ -296,8 +305,8 @@
                 <input type="number" id="deviceAmount" placeholder="0.00">
             </div>
         </div>
-        <div class="form-row">
-            <label>สินเชื่อ (ถ้ามี)</label>
+        <div class="form-row" id="credit_container">
+            <label>สินเชื่อ (ระบุ)</label>
             <select id="credit_field">
                 <option value="">-- เลือกสินเชื่อ --</option>
                 <option>SG Finance+</option><option>True Paynext Extra</option>
@@ -321,9 +330,18 @@
                 <path d="M14 27l7 7 16-16" fill="none"/>
             </svg>
             <div class="warn-icon" style="color: #ff3b30; font-size: 50px;">⚠️</div>
+            <div class="confirm-ui" style="color: var(--ios-blue); font-size: 50px;">💳</div>
         </div>
         <h3 id="popupText" style="margin-bottom:20px; font-size:17px; color: var(--text-main);"></h3>
-        <button class="btn-submit" style="margin-top:0; background: #3a3a3c; border-radius: 12px; padding: 12px;" onclick="closePopup()">ตกลง</button>
+        
+        <div id="standardBtn">
+            <button class="btn-submit" style="margin-top:0; background: #3a3a3c; border-radius: 12px; padding: 12px;" onclick="closePopup()">ตกลง</button>
+        </div>
+
+        <div id="confirmBtnGroup" class="confirm-btn-group" style="display:none;">
+            <button class="btn-submit" style="margin-top:0; background: #34c759; border-radius: 12px; flex:1;" onclick="handleConfirm(true)">ใช่</button>
+            <button class="btn-submit" style="margin-top:0; background: #ff3b30; border-radius: 12px; flex:1;" onclick="handleConfirm(false)">ไม่ใช่</button>
+        </div>
     </div>
 </div>
 
@@ -335,10 +353,44 @@ const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxuu6CUys2LHWbKl2ZYf
 
 document.getElementById("date").value = new Date().toISOString().split("T")[0];
 
+// ตรวจสอบการเลือก Device
+function checkDeviceSelection(select) {
+    if (select.value !== "" && select.value !== "Accessaries") {
+        showConfirmPopup("เครื่องนี้ซื้อพร้อมสินเชื่อหรือไม่?");
+    } else {
+        document.getElementById("credit_container").style.display = "none";
+        document.getElementById("credit_field").value = "";
+    }
+}
+
+function showConfirmPopup(text) {
+    const popup = document.getElementById("popup");
+    document.getElementById("popupText").innerText = text;
+    document.getElementById("standardBtn").style.display = "none";
+    document.getElementById("confirmBtnGroup").style.display = "flex";
+    popup.classList.remove("success", "error");
+    popup.classList.add("confirm");
+    popup.classList.add("show");
+}
+
+function handleConfirm(isCredit) {
+    if (isCredit) {
+        document.getElementById("credit_container").style.display = "block";
+        document.getElementById("credit_field").focus();
+    } else {
+        document.getElementById("credit_container").style.display = "none";
+        document.getElementById("credit_field").value = "";
+    }
+    closePopup();
+}
+
 function submitData() {
     const staff = document.getElementById("staff").value;
     const amount = document.getElementById("amount").value.trim();
     const deviceAmount = document.getElementById("deviceAmount").value.trim();
+    const device = document.getElementById("device").value;
+    const credit = document.getElementById("credit_field").value;
+    const creditContainer = document.getElementById("credit_container");
 
     if (!staff) {
         showPopup("กรุณาเลือกชื่อพนักงาน", false);
@@ -350,6 +402,12 @@ function submitData() {
         return;
     }
 
+    // ถ้าเปิดช่องสินเชื่อไว้ แต่ไม่เลือกสินเชื่อ
+    if (creditContainer.style.display === "block" && !credit) {
+        showPopup("กรุณาเลือกประเภทสินเชื่อ", false);
+        return;
+    }
+
     document.getElementById("loading").style.display = "flex";
 
     const formData = new FormData();
@@ -358,9 +416,9 @@ function submitData() {
     formData.append("seller", document.getElementById("seller").value);
     formData.append("type", document.getElementById("type").value);
     formData.append("amount", amount);
-    formData.append("device", document.getElementById("device").value);
+    formData.append("device", device);
     formData.append("deviceAmount", deviceAmount);
-    formData.append("credit", document.getElementById("credit_field").value);
+    formData.append("credit", credit);
 
     fetch(SCRIPT_URL, {
         method: "POST",
@@ -378,7 +436,6 @@ function submitData() {
     })
     .catch((err) => {
         document.getElementById("loading").style.display = "none";
-        // ปกติ Apps Script มักติด CORS แต่ส่งผ่าน ลูกสาวเลยใส่เป็น Success ไว้เป็นทางเลือก
         showPopup("บันทึกข้อมูลเรียบร้อยแล้ว", true);
         resetForm();
     });
@@ -386,9 +443,10 @@ function submitData() {
 
 function showPopup(text, isSuccess) {
     const popup = document.getElementById("popup");
-    const pBox = document.getElementById("pBox");
     document.getElementById("popupText").innerText = text;
-    popup.classList.remove("success", "error");
+    document.getElementById("standardBtn").style.display = "block";
+    document.getElementById("confirmBtnGroup").style.display = "none";
+    popup.classList.remove("success", "error", "confirm");
     popup.classList.add(isSuccess ? "success" : "error");
     popup.classList.add("show");
 }
@@ -403,6 +461,7 @@ function resetForm() {
         document.getElementById(id).value = "";
     });
     document.getElementById("date").value = new Date().toISOString().split("T")[0];
+    document.getElementById("credit_container").style.display = "none";
 }
 
 function includeSidebar() {
@@ -458,7 +517,8 @@ document.addEventListener('keydown', function(e) {
     if (e.key === 'Enter') {
         const popup = document.getElementById("popup");
         if (popup.classList.contains("show")) {
-            closePopup();
+            // ถ้าเป็นหน้าจอ Confirm Enter จะไม่ทำงานเพื่อป้องกันการเลือกผิด
+            if(!popup.classList.contains("confirm")) closePopup();
         } else {
             submitData();
         }
@@ -468,6 +528,3 @@ document.addEventListener('keydown', function(e) {
 
 </body>
 </html>
-
-
-
