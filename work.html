@@ -26,6 +26,7 @@
             --sidebar-width: 280px;
             --ios-red: #FF3B30;
             --ios-green: #34C759;
+            --ios-orange: #FF9500;
             --transition-swift: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
@@ -148,7 +149,6 @@
         }
         .btn-add-job:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0, 122, 255, 0.4); }
 
-        /* --- Search Styles --- */
         .search-wrapper { 
             width: 100%; 
             max-width: 320px; 
@@ -166,6 +166,9 @@
         th { background: rgba(255, 255, 255, 0.5); padding: 15px; text-align: left; font-size: 14px; color: #444; border-bottom: 1px solid rgba(0,0,0,0.05); font-weight: 600; }
         td { padding: 14px 15px; border-bottom: 1px solid rgba(255,255,255,0.3); font-size: 14px; }
 
+        .pinned-row { background: rgba(255, 149, 0, 0.08) !important; }
+        .pinned-row td { border-bottom-color: rgba(255, 149, 0, 0.2); }
+
         .clickable { cursor: pointer; }
         .clickable:hover { color: var(--ios-blue); text-decoration: underline; }
         
@@ -174,12 +177,15 @@
             font-size: 13px; color: #555;
         }
 
+        .btn-pin { background: #fff8ed; color: var(--ios-orange); border: 1px solid #ffe8cc; padding: 6px 10px; border-radius: 8px; cursor: pointer; transition: 0.2s; margin-right: 5px; }
+        .btn-pin.active { background: var(--ios-orange); color: white; }
+        .btn-pin:hover { transform: scale(1.1); }
+
         .btn-edit { background: #eef7ed; color: var(--ios-green); border: 1px solid #dcf0db; padding: 6px 10px; border-radius: 8px; cursor: pointer; transition: 0.2s; margin-right: 5px; }
         .btn-edit:hover { background: var(--ios-green); color: white; }
         .btn-delete { background: #fff0f0; color: var(--ios-red); border: 1px solid #ffdada; padding: 6px 10px; border-radius: 8px; cursor: pointer; transition: 0.2s; }
         .btn-delete:hover { background: var(--ios-red); color: white; }
 
-        /* --- SweetAlert Custom Styles --- */
         .swal2-container { z-index: 9999 !important; }
         .swal2-popup { 
             border-radius: 24px !important; 
@@ -334,6 +340,19 @@
         }
     }
 
+    // --- ระบบ Pin (New) ---
+    function togglePin(uniqueKey) {
+        let pins = JSON.parse(localStorage.getItem('pinned_jobs') || '[]');
+        if (pins.includes(uniqueKey)) {
+            pins = pins.filter(k => k !== uniqueKey);
+        } else {
+            pins.push(uniqueKey);
+        }
+        localStorage.setItem('pinned_jobs', JSON.stringify(pins));
+        // บังคับดึงข้อมูลใหม่ตามสั่ง
+        loadData();
+    }
+
     // --- ระบบเพิ่มงานผ่าน Pop-up ---
     function openAddJobModal() {
         const today = new Date().toISOString().split('T')[0];
@@ -475,8 +494,26 @@
             const data = await res.json();
             tableBody.innerHTML = '';
 
-            data.reverse().forEach(row => {
+            const pinnedKeys = JSON.parse(localStorage.getItem('pinned_jobs') || '[]');
+
+            // จัดเรียงข้อมูล: ปักหมุดไว้บนสุด แล้วตามด้วยข้อมูลปกติ (ใหม่ไปเก่า)
+            const sortedData = data.reverse().sort((a, b) => {
+                const keyA = a[0] + a[1];
+                const keyB = b[0] + b[1];
+                const isAPinned = pinnedKeys.includes(keyA);
+                const isBPinned = pinnedKeys.includes(keyB);
+                if (isAPinned && !isBPinned) return -1;
+                if (!isAPinned && isBPinned) return 1;
+                return 0;
+            });
+
+            sortedData.forEach(row => {
                 const tr = document.createElement('tr');
+                const uniqueKey = row[0] + row[1];
+                const isPinned = pinnedKeys.includes(uniqueKey);
+                
+                if (isPinned) tr.classList.add('pinned-row');
+
                 const rowJson = encodeURIComponent(JSON.stringify(row));
                 const displayId = String(row[1]).replace(/^'/, '');
                 const displayPhone = String(row[3]).replace(/^'/, '');
@@ -489,6 +526,7 @@
                     <td>${row[4]}</td>
                     <td>${row[5] ? `<a href="${row[5]}" target="_blank" style="color:#007aff;"><i class="fa-solid fa-image"></i> ดูรูป</a>` : '-'}</td>
                     <td>
+                        <button class="btn-pin ${isPinned ? 'active' : ''}" onclick="togglePin('${uniqueKey}')" title="ปักหมุด"><i class="fa-solid fa-thumbtack"></i></button>
                         <button class="btn-edit" onclick="editData('${rowJson}')"><i class="fa-solid fa-pen-to-square"></i></button>
                         <button class="btn-delete" onclick="deleteData('${row[0]}', '${row[1]}')"><i class="fa-solid fa-trash"></i></button>
                     </td>
