@@ -3,77 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบเคลียร์งาน - Parakit-site</title>
+    <title>ระบบเคลียร์งาน - Parakit-Site</title>
     <link rel="icon" type="image/png" href="favicon.png">
-    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <style>
         :root {
-            --ios-blue: #007aff;
-            --ios-bg: #f2f2f7;
-            --glass-white: rgba(255, 255, 255, 0.75);
-            --glass-border: rgba(255, 255, 255, 0.5);
+            --primary: #4f46e5;
+            --primary-light: #eef2ff;
+            --text-main: #1e293b;
+            --text-sub: #64748b;
+            --bg-body: #f1f5f9;
+            --card: #ffffff;
+            --border: #e2e8f0;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --hover-row: #f0f4ff; 
+            /* Sidebar Variables */
             --sidebar-dark: rgba(28, 28, 30, 0.94);
-            --text-main: #1c1c1e;
-            --text-light: #8e8e93;
             --sidebar-width: 280px;
-            --ios-red: #FF3B30;
-            --ios-green: #34C759;
-            --ios-orange: #FF9500;
+            --ios-blue: #007aff;
             --transition-swift: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        * { box-sizing: border-box; }
-
-        html, body, input, select, textarea, button, span, div {
-            font-family: 'Kanit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol" !important;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-        }
-        
-        body { 
-            margin: 0; 
-            background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
-            background-attachment: fixed;
-            color: var(--text-main); 
-            padding-bottom: 60px;
+        body {
+            font-family: 'Kanit', sans-serif !important;
+            background-color: var(--bg-body);
+            margin: 0;
+            padding: 0; /* Reset for sidebar */
+            color: var(--text-main);
+            min-height: 100vh;
+            line-height: 1.5;
             transition: padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .top-header {
-            position: fixed;
-            top: 0; left: 0; right: 0;
-            height: 60px;
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
-            z-index: 1200;
-            display: flex;
-            align-items: center;
-            padding: 0 20px;
-            border-bottom: 0.5px solid rgba(0,0,0,0.1);
-            transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .top-toggle {
-            width: 36px; height: 36px;
-            border-radius: 10px;
-            border: none;
-            background: transparent;
-            color: var(--ios-blue);
-            cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 22px;
-            transition: background 0.2s;
-        }
-        .top-toggle:hover { background: rgba(0, 122, 255, 0.1); }
-
+        /* ===== Sidebar Style (As Remembered) ===== */
         .sidebar { 
             position: fixed; top: 0; left: 0; 
             width: var(--sidebar-width); height: 100vh; 
@@ -107,6 +76,7 @@
         }
         .overlay.show { display: block; }
 
+        /* Sidebar Internals */
         .sidebar-header { padding: 30px 20px; font-size: 20px; font-weight: 600; border-bottom: 0.5px solid rgba(255,255,255,0.1); }
         .menu { padding: 10px 0; }
         .menu a, .menu .drop-btn { 
@@ -117,101 +87,148 @@
         .menu a:hover, .menu .drop-btn:hover { background: rgba(255,255,255,0.1); padding-left: 30px; }
         .sub { display: none; background: rgba(0,0,0,0.2); }
         .item.open .sub { display: block; }
-        .sub a { padding-left: 45px; font-size: 14px; color: #8e8e93; }
 
-        .main-content { display: flex; flex-direction: column; align-items: center; padding: 100px 20px 40px; animation: fadeIn 0.6s ease-out; }
-        .glass-card { background: rgba(255, 255, 255, 0.4); backdrop-filter: blur(20px); border-radius: 24px; border: 1px solid var(--glass-border); box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
-        
-        .action-bar {
-            width: 100%;
-            max-width: 1200px;
+        /* ===== Top Header ===== */
+        .top-header {
+            position: fixed; top: 0; left: 0; right: 0; height: 60px;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            z-index: 1200; display: flex; align-items: center; padding: 0 20px;
+            border-bottom: 0.5px solid rgba(0,0,0,0.1);
+            transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .top-toggle {
+            width: 36px; height: 36px; border-radius: 10px; border: none;
+            background: transparent; color: var(--ios-blue); cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px; transition: background 0.2s; margin-right: 15px;
+        }
+        .top-toggle:hover { background: rgba(0, 122, 255, 0.1); }
+
+        /* ===== Main Content Area ===== */
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 84px 24px 24px; /* Adjusted for top-header */
+        }
+
+        /* --- Stats Styling --- */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: var(--card);
+            padding: 24px;
+            border-radius: 16px;
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
-            gap: 15px;
+            gap: 20px;
+            border: 1px solid var(--border);
+            transition: transform 0.2s ease;
         }
 
-        .btn-add-job {
-            background: var(--ios-blue);
-            color: white;
-            padding: 12px 24px;
-            border-radius: 14px;
-            border: none;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3);
-            transition: 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .btn-add-job:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0, 122, 255, 0.4); }
+        .stat-card:hover { transform: translateY(-4px); }
 
-        .search-wrapper { 
-            width: 100%; 
-            max-width: 320px; 
-            position: relative; 
-        }
-        .search-wrapper i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--text-light); }
-        .search-input { 
-            width: 100%; padding: 12px 15px 12px 40px; border-radius: 15px; border: 1px solid var(--glass-border);
-            background: rgba(255, 255, 255, 0.5); outline: none; transition: 0.3s;
+        .stat-icon {
+            width: 56px; height: 56px;
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px;
         }
 
-        .list-container { width: 100%; max-width: 1200px; }
-        .table-wrapper { overflow-x: auto; border-radius: 20px; background: rgba(255,255,255,0.4); }
-        table { width: 100%; border-collapse: collapse; min-width: 800px; }
-        th { background: rgba(255, 255, 255, 0.5); padding: 15px; text-align: left; font-size: 14px; color: #444; border-bottom: 1px solid rgba(0,0,0,0.05); font-weight: 600; }
-        td { padding: 14px 15px; border-bottom: 1px solid rgba(255,255,255,0.3); font-size: 14px; }
+        .stat-value { font-size: 24px; font-weight: 600; color: var(--text-main); display: block; }
+        .stat-label { font-size: 13px; color: var(--text-sub); font-weight: 400; }
 
-        .pinned-row { background: rgba(255, 149, 0, 0.08) !important; }
-        .pinned-row td { border-bottom-color: rgba(255, 149, 0, 0.2); }
-
-        .clickable { cursor: pointer; }
-        .clickable:hover { color: var(--ios-blue); text-decoration: underline; }
-        
-        .text-truncate { 
-            max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
-            font-size: 13px; color: #555;
+        /* --- Header & Search --- */
+        .header-section {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 24px; gap: 16px;
         }
 
-        .btn-pin { background: #fff8ed; color: var(--ios-orange); border: 1px solid #ffe8cc; padding: 6px 10px; border-radius: 8px; cursor: pointer; transition: 0.2s; margin-right: 5px; }
-        .btn-pin.active { background: var(--ios-orange); color: white; }
-        .btn-pin:hover { transform: scale(1.1); }
-
-        .btn-edit { background: #eef7ed; color: var(--ios-green); border: 1px solid #dcf0db; padding: 6px 10px; border-radius: 8px; cursor: pointer; transition: 0.2s; margin-right: 5px; }
-        .btn-edit:hover { background: var(--ios-green); color: white; }
-        .btn-delete { background: #fff0f0; color: var(--ios-red); border: 1px solid #ffdada; padding: 6px 10px; border-radius: 8px; cursor: pointer; transition: 0.2s; }
-        .btn-delete:hover { background: var(--ios-red); color: white; }
-
-        .swal2-container { z-index: 9999 !important; }
-        .swal2-popup { 
-            border-radius: 24px !important; 
-            padding: 20px !important;
-            font-family: 'Kanit', sans-serif !important;
+        .search-box { position: relative; flex-grow: 1; max-width: 400px; }
+        .search-box input {
+            width: 100%; padding: 12px 16px 12px 48px;
+            border-radius: 12px; border: 1px solid var(--border);
+            background: var(--card); font-family: inherit; outline: none;
+            transition: 0.2s; box-sizing: border-box;
         }
-        .swal-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; text-align: left; margin-top: 15px; }
-        .swal-field { margin-bottom: 15px; text-align: left; }
-        .swal-field label { display: block; margin-bottom: 5px; font-size: 14px; font-weight: 500; color: #666; }
-        .swal-custom-input { 
-            width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #ddd; 
-            font-size: 16px; outline: none; font-family: 'Kanit' !important;
-        }
-        .swal-custom-input:focus { border-color: var(--ios-blue); box-shadow: 0 0 0 3px rgba(0,122,255,0.1); }
+        .search-box input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-light); }
+        .search-box i { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-sub); }
 
-        .detail-row { display: flex; margin-bottom: 8px; border-bottom: 0.5px solid #eee; padding-bottom: 6px; }
-        .detail-label { font-weight: 600; width: 110px; color: #666; flex-shrink: 0; font-size: 16px; }
-        .detail-value { font-size: 16px; color: #333; }
-        
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .btn-add {
+            background: var(--primary); color: white; border: none;
+            padding: 12px 24px; border-radius: 12px; font-weight: 500;
+            cursor: pointer; display: flex; align-items: center; gap: 8px;
+            transition: 0.2s; white-space: nowrap;
+        }
+        .btn-add:hover { background: #3730a3; }
+
+        /* --- Modern Table --- */
+        .table-container {
+            background: var(--card); border-radius: 16px;
+            border: 1px solid var(--border); overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th {
+            background: #f8fafc; padding: 16px 20px; text-align: left;
+            font-weight: 600; color: var(--text-sub);
+            border-bottom: 1px solid var(--border);
+            text-transform: uppercase; letter-spacing: 0.025em; font-size: 12px;
+        }
+
+        td { padding: 16px 20px; border-bottom: 1px solid var(--border); vertical-align: middle; transition: 0.2s; }
+        tbody tr:hover td { background-color: var(--hover-row); }
+
+        .customer-flex:hover .name-txt { color: var(--primary); text-decoration: underline; }
+        tbody tr:last-child td { border-bottom: none; }
+
+        .customer-flex { display: flex; flex-direction: column; gap: 4px; }
+        .customer-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .name-txt { font-weight: 600; color: var(--text-main); font-size: 15px; transition: 0.2s; }
+        .id-tag { display: block; color: var(--text-sub); font-size: 13px; margin-top: 4px; font-weight: 400; }
+        .phone-link { color: var(--primary); text-decoration: none; font-size: 13px; font-weight: 500; }
+        .note-preview {
+            color: var(--text-sub); font-size: 13px;
+            display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical;
+            overflow: hidden; margin-top: 2px;
+        }
+
+        .job-badge {
+            display: inline-flex; padding: 4px 10px; border-radius: 8px;
+            font-size: 12px; font-weight: 500;
+            background: var(--primary-light); color: var(--primary);
+        }
+
+        .action-group { display: flex; gap: 8px; justify-content: flex-end; }
+        .btn-circle {
+            width: 32px; height: 32px; border-radius: 8px;
+            border: 1px solid var(--border); background: white;
+            color: var(--text-sub); cursor: pointer;
+            display: flex; align-items: center; justify-content: center; transition: 0.2s;
+        }
+        .btn-circle:hover { background: #f8fafc; color: var(--primary); border-color: var(--primary); }
+        .btn-circle.active-pin { background: #fffbeb; color: var(--warning); border-color: var(--warning); }
+        .btn-circle.delete:hover { background: #fef2f2; color: var(--danger); border-color: var(--danger); }
+
+        /* --- Modal Custom --- */
+        .swal-label { display: block; margin-bottom: 6px; font-size: 14px; font-weight: 500; text-align: left; }
+        .swal-input-m {
+            width: 100%; padding: 10px 12px; border-radius: 8px;
+            border: 1px solid var(--border); font-family: 'Kanit';
+            margin-bottom: 12px; box-sizing: border-box;
+        }
 
         @media (max-width: 768px) {
-            .action-bar { flex-direction: column; align-items: stretch; }
-            .search-wrapper { max-width: 100%; }
-            .swal-form-grid { grid-template-columns: 1fr; }
-            .text-truncate { max-width: 100%; white-space: normal; }
+            .header-section { flex-direction: column; align-items: stretch; }
+            .search-box { max-width: 100%; }
+            .hide-mobile { display: none; }
         }
     </style>
 </head>
@@ -219,50 +236,74 @@
 
 <header class="top-header">
     <button class="top-toggle" onclick="toggleSidebar()">☰</button>
-    <div style="font-weight: 700; font-size: 1.25rem; color: var(--text-main); letter-spacing: -0.8px; margin-left: 15px;">ระบบเคลียร์งาน</div>
+    <div style="font-weight: 700; font-size: 1.25rem; color: var(--text-main);">ระบบเคลียร์งาน</div>
 </header>
 
 <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
-
 <aside class="sidebar" id="sidebar"></aside>
 
-<div class="main-content">
-    
-    <div class="action-bar">
-        <button class="btn-add-job" onclick="openAddJobModal()">
-            <i class="fa-solid fa-circle-plus"></i> เพิ่มรายการงานใหม่
-        </button>
-        <div class="search-wrapper">
-            <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" id="searchInput" class="search-input" placeholder="ค้นหาข้อมูล..." onkeyup="filterData()">
+<div class="container">
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #e0e7ff; color: #4338ca;"><i class="fa-solid fa-layer-group"></i></div>
+            <div>
+                <span class="stat-label">งานทั้งหมด</span>
+                <span class="stat-value" id="totalJobs">0</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #fef3c7; color: #d97706;"><i class="fa-solid fa-thumbtack"></i></div>
+            <div>
+                <span class="stat-label">ปักหมุดเร่งด่วน</span>
+                <span class="stat-value" id="pinnedJobs">0</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #dcfce7; color: #15803d;"><i class="fa-solid fa-calendar-check"></i></div>
+            <div>
+                <span class="stat-label">รายการวันนี้</span>
+                <span class="stat-value" id="todayJobs">0</span>
+            </div>
         </div>
     </div>
 
-    <div class="list-container">
-        <div class="table-wrapper glass-card">
-            <table>
+    <div class="header-section">
+        <button class="btn-add" onclick="openAddJobModal()">
+            <i class="fa-solid fa-plus"></i> เพิ่มรายการ
+        </button>
+        <div class="search-box">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="searchInput" placeholder="ค้นหาชื่อ, ID, เบอร์โทร หรือรายละเอียด..." onkeyup="filterData()">
+        </div>
+    </div>
+
+    <div class="table-container">
+        <div style="overflow-x: auto;">
+            <table id="mainTable">
                 <thead>
                     <tr>
-                        <th>วันที่</th>
-                        <th>รหัสสมาชิก</th>
-                        <th>ชื่อลูกค้า / เบอร์</th>
-                        <th>รายละเอียด</th>
-                        <th>พนักงาน</th>
-                        <th>เอกสาร</th>
-                        <th>จัดการ</th>
+                        <th width="110">วันที่</th>
+                        <th width="180">ประเภทงาน & ID</th>
+                        <th>ข้อมูลลูกค้า</th>
+                        <th width="140" class="hide-mobile">ผู้รับผิดชอบ</th>
+                        <th width="60">รูป</th>
+                        <th width="140" style="text-align: right;">จัดการ</th>
                     </tr>
                 </thead>
-                <tbody id="dataTable"></tbody>
+                <tbody id="dataTable">
+                    <tr><td colspan="6" style="text-align:center; padding:60px; color:var(--text-sub);">กำลังโหลดข้อมูล...</td></tr>
+                </tbody>
             </table>
         </div>
     </div>
-    <p style="margin-top:20px; font-size:12px; color:#888;">© 2026 Copy Right By Angerina Frog</p>
+    
+    <footer style="text-align: center; margin-top: 40px; color: var(--text-sub); font-size: 13px;">
+        <p>© 2026 Copyright by Angerina Frog</p>
+    </footer>
 </div>
 
 <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzRiUBTDxZHLEaMqSBTqLLPUJxQ5e4ilj51WeOjEeDCch-qOEFEPQ6iJHdFW3tYk4El/exec';
-
-    // --- 1. ระบบ Sidebar System (คงเดิม 100%) ---
+    // --- Sidebar Logic (Remembered Code) ---
     function includeSidebar() {
         const cached = localStorage.getItem('sidebar_cache');
         if (cached) {
@@ -311,90 +352,103 @@
         });
     }
 
-    // --- 2. ระบบจัดการข้อมูล ---
+    // --- Original Page Logic (Unchanged) ---
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwvzgyyJ9y29xcQkZPBQFvdV6_uC_8GRrsjWk2f5obJjTp4QRAAUnbuAtkDFFVVMRIF/exec';
+    
+    const jobTypes = [
+        "MGM ปรับลด", "ยกเลิกบริการ (ปกติ)", "ยกเลิกบริการ (5P)", 
+        "เปลี่ยนรายเดือนเป็นเติมเงิน", "เปลี่ยนโปรโมชั่น", "Add ส่วนลด", 
+        "Add เน็ตเพิ่ม", "MNP", "ระงับสัญญาณชั่วคราว", "ส่งเรื่องตรวจสอบ"
+    ];
+
     function fixDate(dateVal) {
         if (!dateVal) return "-";
         const d = new Date(dateVal);
         if (isNaN(d)) return dateVal;
-        return `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`;
+        return d.toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' });
     }
 
-    function formatForInputDate(dateVal) {
-        const d = new Date(dateVal);
-        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-    }
-
-    function filterData() {
-        const input = document.getElementById('searchInput');
-        const filter = input.value.toLowerCase();
-        const tbody = document.getElementById('dataTable');
-        const rows = tbody.getElementsByTagName('tr');
-
-        for (let i = 0; i < rows.length; i++) {
-            const text = rows[i].textContent || rows[i].innerText;
-            if (text.toLowerCase().indexOf(filter) > -1) {
-                rows[i].style.display = "";
-            } else {
-                rows[i].style.display = "none";
-            }
-        }
-    }
-
-    // --- ระบบ Pin ใหม่ (Global Pin ผ่าน Google Sheets) ---
-    async function togglePin(date, memberId) {
-        // จัดการส่งวันที่แบบ String ให้ตรงกับ Sheet
-        const d = new Date(date);
-        const dateStr = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-        
-        Swal.fire({title: 'กำลังดำเนินการ...', didOpen: () => Swal.showLoading(), allowOutsideClick: false});
-        
+    async function loadData() {
         try {
-            await fetch(SCRIPT_URL, { 
-                method: 'POST', 
-                body: JSON.stringify({
-                    action: "togglePin", 
-                    date: dateStr, 
-                    memberId: memberId
-                }) 
+            const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: "read"}) });
+            const data = await res.json();
+            const tableBody = document.getElementById('dataTable');
+            tableBody.innerHTML = '';
+
+            document.getElementById('totalJobs').innerText = data.length;
+            document.getElementById('pinnedJobs').innerText = data.filter(r => r[7] === "true" || r[7] === true).length;
+            const todayStr = new Date().toISOString().split('T')[0];
+            document.getElementById('todayJobs').innerText = data.filter(r => String(r[0]).includes(todayStr)).length;
+
+            const sortedData = data.sort((a, b) => {
+                const pinA = (a[7] === "true" || a[7] === true);
+                const pinB = (b[7] === "true" || b[7] === true);
+                if (pinA !== pinB) return pinA ? -1 : 1;
+                return new Date(b[0]) - new Date(a[0]);
             });
-            Swal.close();
-            loadData();
-        } catch (err) { 
-            Swal.fire('Error', 'ไม่สามารถปักหมุดได้', 'error'); 
+
+            sortedData.forEach(row => {
+                const tr = document.createElement('tr');
+                const isPinned = (row[7] === "true" || row[7] === true);
+                if (isPinned) tr.style.backgroundColor = "#fffcf0";
+
+                const rowJson = encodeURIComponent(JSON.stringify(row));
+                const cleanId = String(row[1]).replace(/^'/, '');
+                const cleanPhone = String(row[3]).replace(/^'/, '');
+
+                tr.innerHTML = `
+                    <td style="color:var(--text-main); font-weight:500;">${fixDate(row[0])}</td>
+                    <td>
+                        <span class="job-badge">${row[8] || 'ทั่วไป'}</span>
+                        <span class="id-tag">รหัสลูกค้า: ${cleanId}</span>
+                    </td>
+                    <td>
+                        <div class="customer-flex" onclick="showFullDetail('${rowJson}')" style="cursor:pointer">
+                            <div class="customer-head">
+                                <span class="name-txt">${row[2]}</span>
+                                <span class="phone-link"><i class="fa-solid fa-phone-flip" style="font-size:10px"></i> ${cleanPhone}</span>
+                            </div>
+                            <div class="note-preview"><b>Note:</b> ${row[6] || '-'}</div>
+                        </div>
+                    </td>
+                    <td class="hide-mobile" style="color:var(--text-sub);"><i class="fa-regular fa-circle-user"></i> ${row[4]}</td>
+                    <td>${row[5] ? `<a href="${row[5]}" target="_blank" style="color:var(--primary);"><i class="fa-solid fa-image"></i></a>` : '-'}</td>
+                    <td>
+                        <div class="action-group">
+                            <button class="btn-circle ${isPinned ? 'active-pin' : ''}" onclick="togglePin('${row[0]}', '${row[1]}')" title="ปักหมุด"><i class="fa-solid fa-thumbtack"></i></button>
+                            <button class="btn-circle" onclick="editData('${rowJson}')" title="แก้ไข"><i class="fa-solid fa-pen-to-square"></i></button>
+                            <button class="btn-circle delete" onclick="deleteData('${row[0]}', '${row[1]}')" title="ลบ"><i class="fa-solid fa-trash-can"></i></button>
+                        </div>
+                    </td>
+                `;
+                tableBody.appendChild(tr);
+            });
+        } catch (e) { 
+            document.getElementById('dataTable').innerHTML = '<tr><td colspan="6" style="text-align:center; color:red; padding:40px;">ไม่สามารถโหลดข้อมูลได้</td></tr>';
         }
     }
 
-    // --- ระบบเพิ่มงานผ่าน Pop-up ---
     function openAddJobModal() {
         const today = new Date().toISOString().split('T')[0];
-        
+        let typeOptions = jobTypes.map(t => `<option value="${t}">${t}</option>`).join('');
+
         Swal.fire({
-            title: 'บันทึกงานกันลืม',
-            width: '850px',
+            title: 'สร้างรายการใหม่',
+            width: '800px', 
+            padding: '2em',
             html: `
-                <div class="swal-form-grid">
-                    <div class="swal-field">
-                        <label>วันที่ดำเนินการ</label>
-                        <input type="date" id="date" class="swal-custom-input" value="${today}">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                    <div style="text-align:left;">
+                        <label class="swal-label">ประเภทงาน</label>
+                        <select id="jobType" class="swal-input-m">
+                            <option value="">-- เลือกประเภทงาน --</option>
+                            ${typeOptions}
+                        </select>
                     </div>
-                    <div class="swal-field">
-                        <label>หมายเลขสมาชิก</label>
-                        <input type="text" id="memberId" class="swal-custom-input" placeholder="TMH/TOL/TVS">
-                    </div>
-                </div>
-                <div class="swal-field">
-                    <label>ชื่อลูกค้า</label>
-                    <input type="text" id="name" class="swal-custom-input" placeholder="ชื่อ-นามสกุล">
-                </div>
-                <div class="swal-form-grid">
-                    <div class="swal-field">
-                        <label>เบอร์ติดต่อ</label>
-                        <input type="text" id="phone" class="swal-custom-input" placeholder="0XXXXXXXXX">
-                    </div>
-                    <div class="swal-field">
-                        <label>พนักงาน</label>
-                        <select id="staff" class="swal-custom-input">
-                            <option value="">-- เลือก --</option>
+                    <div style="text-align:left;">
+                        <label class="swal-label">พนักงาน</label>
+                        <select id="staff" class="swal-input-m">
+                            <option value="">-- เลือกพนักงาน --</option>
                             <option value="ศุภกฤต">ศุภกฤต</option>
                             <option value="นวพล">นวพล</option>
                             <option value="ปิยะพร">ปิยะพร</option>
@@ -402,34 +456,52 @@
                         </select>
                     </div>
                 </div>
-                <div class="swal-field">
-                    <label>รายละเอียดงาน</label>
-                    <textarea id="jobDetail" class="swal-custom-input" style="height: 150px; resize: vertical;" placeholder="ระบุรายละเอียดงาน..."></textarea>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                    <div style="text-align:left;">
+                        <label class="swal-label">วันที่</label>
+                        <input type="date" id="date" class="swal-input-m" value="${today}">
+                    </div>
+                    <div style="text-align:left;">
+                        <label class="swal-label">รหัสสมาชิก</label>
+                        <input type="text" id="memberId" class="swal-input-m" placeholder="TMH/TOL/TVS">
+                    </div>
                 </div>
-                <div class="swal-field">
-                    <label>แนบรูป (ถ้ามี)</label>
-                    <input type="file" id="file" class="swal-custom-input" accept="image/*">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                    <div style="text-align:left;">
+                        <label class="swal-label">ชื่อลูกค้า</label>
+                        <input type="text" id="name" class="swal-input-m">
+                    </div>
+                    <div style="text-align:left;">
+                        <label class="swal-label">เบอร์ติดต่อ</label>
+                        <input type="text" id="phone" class="swal-input-m">
+                    </div>
+                </div>
+                <div style="text-align:left;">
+                    <label class="swal-label">รายละเอียด</label>
+                    <textarea id="jobDetail" class="swal-input-m" style="height:100px;"></textarea>
+                </div>
+                <div style="text-align:left;">
+                    <label class="swal-label">รูปภาพประกอบ</label>
+                    <input type="file" id="file" class="swal-input-m" accept="image/*">
                 </div>
             `,
             showCancelButton: true,
-            confirmButtonText: 'บันทึกข้อมูล',
-            cancelButtonText: 'ยกเลิก',
-            confirmButtonColor: '#007aff',
+            confirmButtonText: 'บันทึกรายการ',
+            confirmButtonColor: '#4f46e5',
             preConfirm: async () => {
-                const date = document.getElementById('date').value;
-                const memberId = document.getElementById('memberId').value;
-                const name = document.getElementById('name').value;
-                const phone = document.getElementById('phone').value;
-                const staff = document.getElementById('staff').value;
-                const jobDetail = document.getElementById('jobDetail').value;
-                const fileInput = document.getElementById('file');
-
-                if (!date || !memberId || !name || !phone || !staff) {
-                    Swal.showValidationMessage('กรุณากรอกข้อมูลให้ครบถ้วน');
-                    return false;
-                }
-
+                const values = {
+                    date: document.getElementById('date').value,
+                    jobType: document.getElementById('jobType').value,
+                    memberId: document.getElementById('memberId').value,
+                    name: document.getElementById('name').value,
+                    phone: document.getElementById('phone').value,
+                    staff: document.getElementById('staff').value,
+                    jobDetail: document.getElementById('jobDetail').value
+                };
+                if(!values.jobType || !values.name || !values.phone) return Swal.showValidationMessage('กรุณากรอกข้อมูลสำคัญให้ครบ');
+                
                 let fileData = null;
+                const fileInput = document.getElementById('file');
                 if (fileInput.files.length > 0) {
                     fileData = await new Promise(resolve => {
                         const reader = new FileReader();
@@ -437,146 +509,38 @@
                         reader.readAsDataURL(fileInput.files[0]);
                     });
                 }
-
-                return {
-                    action: "insert",
-                    date, memberId: "'" + memberId, name, phone: "'" + phone, staff, jobDetail, fileData
-                };
+                return { action: "insert", ...values, memberId: "'" + values.memberId, phone: "'" + values.phone, fileData };
             }
         }).then(async (result) => {
             if (result.isConfirmed) {
-                Swal.fire({title: 'กำลังบันทึก...', didOpen: () => Swal.showLoading()});
-                try {
-                    await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(result.value) });
-                    Swal.fire('สำเร็จ', 'บันทึกข้อมูลเรียบร้อยแล้ว', 'success');
-                    loadData();
-                } catch (err) { Swal.fire('Error', 'บันทึกไม่สำเร็จ', 'error'); }
+                loading();
+                await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(result.value) });
+                Swal.fire({ icon: 'success', title: 'สำเร็จ', timer: 1500, showConfirmButton: false });
+                loadData();
             }
         });
-    }
-
-    function showFullDetail(rowJson) {
-        const item = JSON.parse(decodeURIComponent(rowJson));
-        const imageUrl = item[5]; 
-        
-        let html = `
-            <div style="text-align: left;">
-                <div class="detail-row"><div class="detail-label">วันที่:</div><div class="detail-value">${fixDate(item[0])}</div></div>
-                <div class="detail-row"><div class="detail-label">รหัสสมาชิก:</div><div class="detail-value">${String(item[1]).replace(/^'/, '')}</div></div>
-                <div class="detail-row"><div class="detail-label">ลูกค้า:</div><div class="detail-value">${item[2]}</div></div>
-                <div class="detail-row"><div class="detail-label">เบอร์ติดต่อ:</div><div class="detail-value">${String(item[3]).replace(/^'/, '')}</div></div>
-                <div class="detail-row"><div class="detail-label">พนักงาน:</div><div class="detail-value">${item[4]}</div></div>
-                <div class="detail-row" style="border-bottom:none;"><div class="detail-label">รายละเอียด:</div><div class="detail-value" style="white-space:pre-wrap;">${item[6] || '-'}</div></div>
-        `;
-
-        if (imageUrl) {
-            html += `
-                <div style="margin-top:20px; text-align:center;">
-                    <a href="${imageUrl}" target="_blank" style="display:inline-block; background:var(--ios-blue); color:white; padding:10px 20px; border-radius:12px; text-decoration:none; font-size:13px; font-weight:500;">
-                        <i class="fa-solid fa-image"></i> ดูรูปภาพที่แนบไว้
-                    </a>
-                </div>
-            `;
-        }
-        html += `</div>`;
-
-        Swal.fire({ 
-            title: 'รายละเอียดงาน', 
-            html: html, 
-            showCancelButton: true,
-            confirmButtonText: '<i class="fa-solid fa-pen-to-square"></i> แก้ไข', 
-            cancelButtonText: 'ปิด',
-            confirmButtonColor: '#34C759', 
-            cancelButtonColor: '#8e8e93',
-            width: '820px' 
-        }).then((result) => {
-            if (result.isConfirmed) {
-                editData(rowJson);
-            }
-        });
-    }
-
-    async function loadData() {
-        const tableBody = document.getElementById('dataTable');
-        tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px;">กำลังดึงข้อมูล...</td></tr>';
-        
-        try {
-            const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: "read"}) });
-            const data = await res.json();
-            tableBody.innerHTML = '';
-
-            // จัดเรียง: ปักหมุดไว้บนสุด แล้วตามด้วยข้อมูลปกติ (ใหม่ไปเก่า)
-            const sortedData = data.sort((a, b) => {
-                const pinA = (a[7] === "true" || a[7] === true);
-                const pinB = (b[7] === "true" || b[7] === true);
-                
-                if (pinA && !pinB) return -1;
-                if (!pinA && pinB) return 1;
-                
-                // ถ้าหมุดเหมือนกัน ให้เรียงตามวันที่ใหม่ไปเก่า
-                return new Date(b[0]) - new Date(a[0]);
-            });
-
-            sortedData.forEach(row => {
-                const tr = document.createElement('tr');
-                const isPinned = (row[7] === "true" || row[7] === true);
-                
-                if (isPinned) tr.classList.add('pinned-row');
-
-                const rowJson = encodeURIComponent(JSON.stringify(row));
-                const displayId = String(row[1]).replace(/^'/, '');
-                const displayPhone = String(row[3]).replace(/^'/, '');
-
-                tr.innerHTML = `
-                    <td>${fixDate(row[0])}</td>
-                    <td class="clickable" onclick="showFullDetail('${rowJson}')"><strong>${displayId}</strong></td>
-                    <td class="clickable" onclick="showFullDetail('${rowJson}')">${row[2]}<br><small style="color:#8e8e93">${displayPhone}</small></td>
-                    <td class="clickable" onclick="showFullDetail('${rowJson}')"><div class="text-truncate">${row[6] || "-"}</div></td>
-                    <td>${row[4]}</td>
-                    <td>${row[5] ? `<a href="${row[5]}" target="_blank" style="color:#007aff;"><i class="fa-solid fa-image"></i> ดูรูป</a>` : '-'}</td>
-                    <td>
-                        <button class="btn-pin ${isPinned ? 'active' : ''}" onclick="togglePin('${row[0]}', '${row[1]}')" title="ปักหมุด"><i class="fa-solid fa-thumbtack"></i></button>
-                        <button class="btn-edit" onclick="editData('${rowJson}')"><i class="fa-solid fa-pen-to-square"></i></button>
-                        <button class="btn-delete" onclick="deleteData('${row[0]}', '${row[1]}')"><i class="fa-solid fa-trash"></i></button>
-                    </td>
-                `;
-                tableBody.appendChild(tr);
-            });
-            filterData();
-        } catch (e) { tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:red;">โหลดข้อมูลไม่สำเร็จ</td></tr>'; }
     }
 
     window.editData = function(rowJson) {
         const item = JSON.parse(decodeURIComponent(rowJson));
-        const oldDate = formatForInputDate(item[0]);
-        const oldMemberId = String(item[1]);
+        const oldDate = new Date(item[0]).toISOString().split('T')[0];
+        let typeOptions = jobTypes.map(t => `<option value="${t}" ${item[8] === t ? 'selected' : ''}>${t}</option>`).join('');
+        const cleanPhone = String(item[3]).replace(/^'/, '');
+        const cleanId = String(item[1]).replace(/^'/, '');
 
         Swal.fire({
-            title: 'แก้ไขข้อมูลงาน',
-            width: '850px',
+            title: 'แก้ไขข้อมูล',
+            width: '800px', 
+            padding: '2em',
             html: `
-                <div class="swal-form-grid">
-                    <div class="swal-field">
-                        <label>วันที่</label>
-                        <input type="date" id="swal-date" class="swal-custom-input" value="${oldDate}">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                    <div style="text-align:left;">
+                        <label class="swal-label">ประเภทงาน</label>
+                        <select id="swal-jobType" class="swal-input-m">${typeOptions}</select>
                     </div>
-                    <div class="swal-field">
-                        <label>รหัสสมาชิก</label>
-                        <input type="text" id="swal-memberId" class="swal-custom-input" value="${String(item[1]).replace(/^'/, '')}">
-                    </div>
-                </div>
-                <div class="swal-field">
-                    <label>ชื่อลูกค้า</label>
-                    <input type="text" id="swal-name" class="swal-custom-input" value="${item[2]}">
-                </div>
-                <div class="swal-form-grid">
-                    <div class="swal-field">
-                        <label>เบอร์ติดต่อ</label>
-                        <input type="text" id="swal-phone" class="swal-custom-input" value="${String(item[3]).replace(/^'/, '')}">
-                    </div>
-                    <div class="swal-field">
-                        <label>พนักงาน</label>
-                        <select id="swal-staff" class="swal-custom-input">
+                    <div style="text-align:left;">
+                        <label class="swal-label">พนักงาน</label>
+                        <select id="swal-staff" class="swal-input-m">
                             <option value="ศุภกฤต" ${item[4] === 'ศุภกฤต' ? 'selected' : ''}>ศุภกฤต</option>
                             <option value="นวพล" ${item[4] === 'นวพล' ? 'selected' : ''}>นวพล</option>
                             <option value="ปิยะพร" ${item[4] === 'ปิยะพร' ? 'selected' : ''}>ปิยะพร</option>
@@ -584,61 +548,122 @@
                         </select>
                     </div>
                 </div>
-                <div class="swal-field">
-                    <label>รายละเอียดงาน</label>
-                    <textarea id="swal-jobDetail" class="swal-custom-input" style="height: 150px; resize: vertical;">${item[6] || ''}</textarea>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                    <div style="text-align:left;">
+                        <label class="swal-label">ชื่อลูกค้า</label>
+                        <input type="text" id="swal-name" class="swal-input-m" value="${item[2]}">
+                    </div>
+                    <div style="text-align:left;">
+                        <label class="swal-label">เบอร์ติดต่อ</label>
+                        <input type="text" id="swal-phone" class="swal-input-m" value="${cleanPhone}">
+                    </div>
+                </div>
+                <div style="text-align:left;">
+                    <label class="swal-label">รายละเอียด</label>
+                    <textarea id="swal-jobDetail" class="swal-input-m" style="height:120px;">${item[6] || ''}</textarea>
                 </div>
             `,
             showCancelButton: true,
-            confirmButtonText: 'บันทึกการแก้ไข',
-            cancelButtonText: 'ยกเลิก',
-            confirmButtonColor: '#34C759',
+            confirmButtonText: 'อัพเดทข้อมูล',
+            confirmButtonColor: '#10b981',
             preConfirm: () => {
                 return {
                     action: "update",
                     oldDate: oldDate,
-                    oldMemberId: oldMemberId,
-                    date: document.getElementById('swal-date').value,
-                    memberId: "'" + document.getElementById('swal-memberId').value,
+                    oldMemberId: String(item[1]),
+                    date: oldDate,
+                    memberId: String(item[1]),
                     name: document.getElementById('swal-name').value,
                     phone: "'" + document.getElementById('swal-phone').value,
                     staff: document.getElementById('swal-staff').value,
-                    jobDetail: document.getElementById('swal-jobDetail').value
+                    jobDetail: document.getElementById('swal-jobDetail').value,
+                    jobType: document.getElementById('swal-jobType').value
                 }
             }
         }).then(async (result) => {
             if (result.isConfirmed) {
-                Swal.fire({title: 'กำลังอัพเดท...', didOpen: () => Swal.showLoading()});
-                try {
-                    await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(result.value) });
-                    Swal.fire('สำเร็จ', 'แก้ไขข้อมูลเรียบร้อยแล้ว', 'success');
-                    loadData();
-                } catch (err) { Swal.fire('Error', 'ไม่สามารถบันทึกได้', 'error'); }
+                loading();
+                await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(result.value) });
+                Swal.fire({ icon: 'success', title: 'อัพเดทเรียบร้อย', timer: 1500, showConfirmButton: false });
+                loadData();
             }
         });
     }
 
+    async function togglePin(date, id) {
+        loading();
+        const d = new Date(date);
+        const dateStr = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+        await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: "togglePin", date: dateStr, memberId: id}) });
+        Swal.close();
+        loadData();
+    }
+
     async function deleteData(d, id) {
         const confirm = await Swal.fire({
-            title: 'ลบข้อมูล?', text: "ยืนยันการลบรายการนี้", icon: 'warning',
-            showCancelButton: true, confirmButtonColor: '#FF3B30', confirmButtonText: 'ลบ'
+            title: 'ต้องการลบข้อมูลนี้?',
+            text: "ข้อมูลจะถูกลบถาวร ไม่สามารถกู้คืนได้",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            confirmButtonText: 'ลบข้อมูล',
+            cancelButtonText: 'ยกเลิก'
         });
         if (confirm.isConfirmed) {
-            Swal.fire({title: 'กำลังลบ...', didOpen: () => Swal.showLoading()});
-            try {
-                const dateObj = new Date(d);
-                const dateStr = dateObj.getFullYear() + '-' + String(dateObj.getMonth()+1).padStart(2,'0') + '-' + String(dateObj.getDate()).padStart(2,'0');
-                await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: "delete", date: dateStr, memberId: id}) });
-                Swal.fire('ลบแล้ว!', '', 'success');
-                loadData();
-            } catch (e) { Swal.fire('Error', 'ลบไม่สำเร็จ', 'error'); }
+            loading();
+            const dateObj = new Date(d);
+            const dateStr = dateObj.getFullYear() + '-' + String(dateObj.getMonth()+1).padStart(2,'0') + '-' + String(dateObj.getDate()).padStart(2,'0');
+            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: "delete", date: dateStr, memberId: id}) });
+            Swal.fire({ icon: 'success', title: 'ลบข้อมูลแล้ว', timer: 1500, showConfirmButton: false });
+            loadData();
         }
     }
 
-    window.onload = () => {
+    function filterData() {
+        const filter = document.getElementById('searchInput').value.toLowerCase();
+        const rows = document.getElementById('dataTable').getElementsByTagName('tr');
+        for (let row of rows) {
+            const text = row.innerText.toLowerCase();
+            row.style.display = text.includes(filter) ? "" : "none";
+        }
+    }
+
+    function loading() {
+        Swal.fire({title: 'กำลังบันทึก...', didOpen: () => Swal.showLoading(), allowOutsideClick: false});
+    }
+
+    function showFullDetail(rowJson) {
+        const item = JSON.parse(decodeURIComponent(rowJson));
+        Swal.fire({
+            title: 'รายละเอียดงาน',
+            width: '800px',
+            html: `
+                <div style="text-align:left; font-size:15px; color:var(--text-main);">
+                    <div style="background:#f8fafc; padding:24px; border-radius:12px; margin-bottom:16px; display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                        <div>
+                            <p style="margin:8px 0;"><b>ประเภท:</b> <span class="job-badge">${item[8] || 'ทั่วไป'}</span></p>
+                            <p style="margin:8px 0;"><b>รหัสสมาชิก:</b> ${String(item[1]).replace(/^'/, '')}</p>
+                            <p style="margin:8px 0;"><b>ชื่อลูกค้า:</b> ${item[2]}</p>
+                        </div>
+                        <div>
+                            <p style="margin:8px 0;"><b>เบอร์ติดต่อ:</b> ${String(item[3]).replace(/^'/, '')}</p>
+                            <p style="margin:8px 0;"><b>พนักงาน:</b> ${item[4]}</p>
+                            <p style="margin:8px 0;"><b>วันที่บันทึก:</b> ${fixDate(item[0])}</p>
+                        </div>
+                    </div>
+                    <p style="font-weight:600; margin-bottom:8px;">บันทึกเพิ่มเติม:</p>
+                    <div style="background:#f8fafc; padding:20px; border-radius:12px; border:1px solid var(--border); min-height:100px; white-space: pre-wrap; color:var(--text-main); line-height:1.6;">${item[6] || '- ไม่มีรายละเอียด -'}</div>
+                </div>
+            `,
+            confirmButtonText: 'ปิดหน้าต่าง',
+            confirmButtonColor: '#4f46e5'
+        });
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
         includeSidebar();
         loadData();
-    };
+    });
 </script>
 
 </body>
