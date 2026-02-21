@@ -86,7 +86,6 @@
             transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 2000;
             box-shadow: 10px 0 30px rgba(0,0,0,0.1);
-            /* Ensure Sidebar uses Kanit */
             font-family: 'Kanit', sans-serif;
         }
 
@@ -112,7 +111,6 @@
         }
         .overlay.show { display: block; }
 
-        /* Sidebar Menu Items Styling */
         .sidebar-header { padding: 30px 20px; font-size: 20px; font-weight: 600; border-bottom: 0.5px solid rgba(255,255,255,0.1); }
         .menu { padding: 10px 0; }
         .menu a, .menu .drop-btn { 
@@ -130,7 +128,7 @@
         .container {
             max-width: 1280px;
             margin: 0 auto;
-            padding: 84px 24px 24px 24px; /* Padding top for fixed header */
+            padding: 84px 24px 24px 24px;
         }
 
         .stats-grid {
@@ -203,7 +201,6 @@
         td { padding: 16px 20px; border-bottom: 1px solid var(--border); vertical-align: middle; transition: 0.2s; }
         tbody tr:hover td { background-color: var(--hover-row); }
         
-        /* แก้ไขส่วนชื่อลูกค้า: เปลี่ยนสีและขีดเส้นใต้เมื่อ Hover */
         .name-txt { 
             font-weight: 600; 
             color: var(--text-main); 
@@ -258,8 +255,7 @@
 
 <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 
-<aside class="sidebar" id="sidebar">
-</aside>
+<aside class="sidebar" id="sidebar"></aside>
 
 <div class="container">
     <div class="stats-grid">
@@ -322,7 +318,8 @@
 </div>
 
 <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw22xNqAExa5JZK7nNtO-Rrra7NpnTZc418jhDxVATcrrrHigrYFaGCwlrJhahExuqx/exec';
+    // URL SCRIPT ของคุณ
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw0oELg0J0flosN0u-3Bz5yTJ30hj7I6Z46Iw6cwW0vuA-5AOS7KtO70XgJUOfx9IWB/exec';
     
     // --- SIDEBAR LOGIC (Original) ---
     function includeSidebar() {
@@ -540,10 +537,10 @@
         });
     }
 
-    // Edit, Delete, TogglePin Functions (Keeping original logic)
     window.editData = function(rowJson) {
         const item = JSON.parse(decodeURIComponent(rowJson));
         const oldDate = new Date(item[0]).toISOString().split('T')[0];
+        const oldMemberId = String(item[1]).replace(/^'/, ''); // แก้ไขตรงนี้ให้ล้าง ' ออกก่อนส่ง
         let typeOptions = jobTypes.map(t => `<option value="${t}" ${item[8] === t ? 'selected' : ''}>${t}</option>`).join('');
         const cleanPhone = String(item[3]).replace(/^'/, '');
 
@@ -589,9 +586,9 @@
                 return {
                     action: "update",
                     oldDate: oldDate,
-                    oldMemberId: String(item[1]),
+                    oldMemberId: oldMemberId, // ส่งค่าเดิมที่สะอาดไปค้นหา
                     date: oldDate,
-                    memberId: String(item[1]),
+                    memberId: "'" + oldMemberId, // ส่งกลับไปบันทึกแบบมี ' เหมือนเดิม
                     name: document.getElementById('swal-name').value,
                     phone: "'" + document.getElementById('swal-phone').value,
                     staff: document.getElementById('swal-staff').value,
@@ -602,8 +599,13 @@
         }).then(async (result) => {
             if (result.isConfirmed) {
                 loading();
-                await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(result.value) });
-                Swal.fire({ icon: 'success', title: 'อัพเดทเรียบร้อย', timer: 1500, showConfirmButton: false });
+                const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(result.value) });
+                const status = await res.text();
+                if(status === "Updated") {
+                    Swal.fire({ icon: 'success', title: 'อัพเดทเรียบร้อย', timer: 1500, showConfirmButton: false });
+                } else {
+                    Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: 'หาข้อมูลไม่เจอหรืออัปเดตไม่ได้' });
+                }
                 loadData();
             }
         });
