@@ -1,13 +1,25 @@
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+
 <style>
+    :root {
+        --sidebar-bg: #0f172a;
+        --sidebar-hover: #1e293b;
+        --accent-color: #38bdf8;
+        --text-dim: #94a3b8;
+        --glass-bg: rgba(30, 41, 59, 0.7);
+        --transition-speed: 0.3s;
+    }
+
     /* 1. โครงสร้างหลักของ Sidebar */
     .sidebar {
         position: fixed;
         top: 0;
         left: 0;
-        width: 260px;
+        width: 280px;
         height: 100vh;
         height: 100dvh;
-        background: #1e293b;
+        background: var(--sidebar-bg);
         color: #fff;
         z-index: 2000;
         display: flex;
@@ -15,167 +27,244 @@
         overflow-y: auto;
         overflow-x: hidden;
         -webkit-overflow-scrolling: touch;
-        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        transition: transform var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
+        font-family: 'Kanit', sans-serif;
     }
 
     /* 2. การตั้งค่าแยก Desktop และ Mobile */
-    
-    /* สำหรับมือถือ (หน้าจอเล็กกว่า 992px) */
     @media (max-width: 991.98px) {
-        .sidebar {
-            transform: translateX(-260px); /* ซ่อนไว้ */
-        }
-        .sidebar.show {
-            transform: translateX(0); /* แสดงเมื่อกดปุ่ม toggle */
-        }
+        .sidebar { transform: translateX(-280px); }
+        .sidebar.show { transform: translateX(0); box-shadow: 20px 0 50px rgba(0,0,0,0.5); }
     }
 
-    /* สำหรับคอมพิวเตอร์ (หน้าจอใหญ่กว่า 992px) */
     @media (min-width: 992px) {
-        .sidebar {
-            transform: translateX(0); /* แสดงค้างไว้ตลอด */
-            border-right: 1px solid rgba(255,255,255,0.05);
-        }
+        .sidebar { transform: translateX(0); border-right: 1px solid rgba(255,255,255,0.05); }
     }
 
-    /* 3. ส่วนหัว Sidebar */
+    /* 3. ส่วนหัว Sidebar - สไตล์หรูหรา */
     .sidebar-header {
-        padding: 25px 20px;
-        font-size: 18px;
-        font-weight: 600;
-        background: #0f172a;
-        color: #fff;
+        padding: 30px 24px;
+        background: linear-gradient(to bottom, #1e293b, #0f172a);
         border-bottom: 1px solid rgba(255,255,255,0.05);
         position: sticky;
         top: 0;
         z-index: 10;
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 15px;
+    }
+
+    .brand-logo {
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, #38bdf8, #818cf8);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3);
+    }
+
+    .brand-name {
+        font-size: 18px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        background: linear-gradient(to right, #fff, #94a3b8);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
     }
 
     /* 4. รายการเมนู */
     .menu {
         display: flex;
         flex-direction: column;
-        padding: 10px 0 100px 0;
+        padding: 20px 15px 100px 15px;
+        gap: 4px;
     }
 
-    .item {
-        border-bottom: 1px solid rgba(255,255,255,0.03);
+    .menu-label {
+        padding: 10px 15px;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        color: #475569;
+        font-weight: 700;
     }
+
+    .item { margin-bottom: 2px; border-radius: 12px; overflow: hidden; }
 
     .menu a, .menu .drop-btn {
         width: 100%;
-        min-height: 50px;
-        padding: 12px 20px;
+        min-height: 48px;
+        padding: 12px 16px;
         background: none;
         border: none;
-        color: #cbd5e1;
+        color: var(--text-dim);
         text-align: left;
-        font-size: 15px;
+        font-size: 14.5px;
         cursor: pointer;
         display: flex;
         align-items: center;
         text-decoration: none;
         transition: all 0.2s ease;
+        border-radius: 12px;
+        gap: 12px;
     }
 
+    .menu a i, .menu .drop-btn i {
+        width: 20px;
+        font-size: 18px;
+        transition: transform 0.3s;
+    }
+
+    /* Hover & Active Styles */
     .menu a:hover, .menu .drop-btn:hover {
-        background: #334155;
+        background: var(--sidebar-hover);
         color: #fff;
-        padding-left: 25px;
+    }
+
+    .menu a.active {
+        background: rgba(56, 189, 248, 0.1);
+        color: var(--accent-color);
+        font-weight: 500;
     }
 
     /* เมนูย่อย */
     .sub {
-        display: none;
-        background: #0f172a;
-        padding: 5px 0;
+        max-height: 0;
+        overflow: hidden;
+        background: rgba(15, 23, 42, 0.5);
+        transition: max-height 0.3s ease-out;
+        border-radius: 0 0 12px 12px;
     }
 
     .item.open .sub {
-        display: block;
+        max-height: 500px; /* ค่าเผื่อ */
+        transition: max-height 0.5s ease-in;
+        padding-bottom: 8px;
+    }
+
+    .item.open .drop-btn {
+        background: var(--sidebar-hover);
+        color: #fff;
+        border-radius: 12px 12px 0 0;
     }
 
     .sub a {
-        padding-left: 45px;
-        font-size: 14px;
-        color: #94a3b8;
-        min-height: 40px;
+        padding-left: 48px;
+        font-size: 13.5px;
+        color: #64748b;
+        min-height: 38px;
     }
 
     .sub a:hover {
-        color: #5bbf8a;
-        padding-left: 50px;
+        color: var(--accent-color);
+        background: none;
     }
 
     /* ลูกศร */
     .arrow {
         margin-left: auto;
-        transition: 0.3s;
-        font-size: 10px;
+        transition: transform 0.3s;
+        font-size: 11px;
         opacity: 0.5;
     }
 
-    .item.open .arrow {
-        transform: rotate(90deg);
-    }
+    .item.open .arrow { transform: rotate(90deg); }
 
-    /* สกロールบาร์ */
-    .sidebar::-webkit-scrollbar {
-        width: 4px;
-    }
-    .sidebar::-webkit-scrollbar-thumb {
-        background: rgba(255,255,255,0.1);
-        border-radius: 10px;
-    }
+    /* ตกแต่งสี Icon แยกตามกลุ่ม */
+    .icon-home { color: #38bdf8; }
+    .icon-credit { color: #fbbf24; }
+    .icon-bl { color: #f87171; }
+    .icon-download { color: #34d399; }
+    .icon-number { color: #a78bfa; }
+    .icon-id { color: #f472b6; }
+    .icon-branch { color: #2dd4bf; }
+    .icon-mat { color: #94a3b8; }
+
+    /* Custom Scrollbar */
+    .sidebar::-webkit-scrollbar { width: 4px; }
+    .sidebar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
 </style>
 
-<div class="sidebar-header">
-    <i class="fa-solid fa-store"></i>
-    <span>BigC Prachauthit</span>
-</div>
-
-<div class="menu">
-    <a href="index.html">🏠 หน้าหลัก</a>
-
-    <div class="item" id="menu-credit">
-        <button type="button" class="drop-btn" onclick="toggleDrop(this, 'credit')">
-            📊 บันทึกสินเชื่อ <span class="arrow">▶</span>
-        </button>
-        <div class="sub">
-            <a href="https://forms.gle/437LFB9T6n2uwNVY6" target="_blank">✏️ ลงยอดสินเชื่อส่วนกลาง</a>
-            <a href="finance.html">✏️ ลงยอดสินเชื่อ</a>
-            <a href="finance_report.html">📑 Report สินเชื่อ</a>
+<aside class="sidebar" id="main-sidebar">
+    <div class="sidebar-header">
+        <div class="brand-logo">
+            <i class="fa-solid fa-store"></i>
         </div>
+        <div class="brand-name">BigC Prachauthit</div>
     </div>
 
-    <a href="https://forms.gle/EmKLspkBQXHUo8SH7" target="_blank">✏️ ลงยอด BL</a>
+    <div class="menu">
+        <a href="index.html" class="active">
+            <i class="fa-solid fa-house icon-home"></i> 
+            <span>หน้าหลัก</span>
+        </a>
 
-    <a href="download.html">⬇️ ดาวน์โหลด</a>
+        <div class="menu-label">ธุรกรรมและยอดขาย</div>
 
-    <a href="number.html">🔮 จองเบอร์</a>
-
-    <a href="liveness.html">🪪 เอกสารยืนยันตัวตน</a>
-
-    <div class="item" id="menu-branch">
-        <button type="button" class="drop-btn" onclick="toggleDrop(this, 'branch')">
-            📍 เฉพาะประชาอุทิศ <span class="arrow">▶</span>
-        </button>
-        <div class="sub">
-            <a href="schedule_feb26.html">📆 ตารางงาน ก.พ. 26</a>
-            <a href="input_sale.html">✏️ ลงยอดขาย</a>
-            <a href="report_sale.html">📑 รายงานยอดขาย Indy</a>
-            <a href="reportsale_shop.html">📑 รายงานยอดขาย Shop</a>
-            <a href="work.html">📒 ระบบเคลียร์งาน</a>
-            <a href="commission.html">💰 คำนวณค่าคอม</a>
-            <a href="">🆚 Target รายบุคคล</a>
-            <a href="deduction.html">✏️ ลงบันทึกหักเงิน</a>
+        <div class="item" id="menu-credit">
+            <button type="button" class="drop-btn" onclick="toggleDrop(this, 'credit')">
+                <i class="fa-solid fa-chart-pie icon-credit"></i>
+                <span>บันทึกสินเชื่อ</span>
+                <i class="fa-solid fa-chevron-right arrow"></i>
+            </button>
+            <div class="sub">
+                <a href="https://forms.gle/437LFB9T6n2uwNVY6" target="_blank">ลงยอดส่วนกลาง</a>
+                <a href="finance.html">ลงยอดสินเชื่อ</a>
+                <a href="finance_report.html">Report สินเชื่อ</a>
+            </div>
         </div>
+
+        <a href="https://forms.gle/EmKLspkBQXHUo8SH7" target="_blank">
+            <i class="fa-solid fa-file-invoice-dollar icon-bl"></i>
+            <span>ลงยอด BL</span>
+        </a>
+
+        <div class="menu-label">บริการและคลังข้อมูล</div>
+
+        <a href="download.html">
+            <i class="fa-solid fa-circle-down icon-download"></i>
+            <span>ดาวน์โหลด</span>
+        </a>
+
+        <a href="number.html">
+            <i class="fa-solid fa-hashtag icon-number"></i>
+            <span>จองเบอร์</span>
+        </a>
+
+        <a href="liveness.html">
+            <i class="fa-solid fa-id-card icon-id"></i>
+            <span>เอกสารยืนยันตัวตน</span>
+        </a>
+
+        <div class="menu-label">บริหารจัดการภายใน</div>
+
+        <div class="item" id="menu-branch">
+            <button type="button" class="drop-btn" onclick="toggleDrop(this, 'branch')">
+                <i class="fa-solid fa-location-dot icon-branch"></i>
+                <span>เฉพาะประชาอุทิศ</span>
+                <i class="fa-solid fa-chevron-right arrow"></i>
+            </button>
+            <div class="sub">
+                <a href="schedule_feb26.html">📆 ตารางงาน ก.พ. 26</a>
+                <a href="input_sale.html">✏️ ลงยอดขาย</a>
+                <a href="report_sale.html">📑 รายงานยอดขาย Indy</a>
+                <a href="reportsale_shop.html">📑 รายงานยอดขาย Shop</a>
+                <a href="work.html">📒 ระบบเคลียร์งาน</a>
+                <a href="commission.html">💰 คำนวณค่าคอม</a>
+                <a href="">🆚 Target รายบุคคล</a>
+                <a href="deduction.html">✏️ ลงบันทึกหักเงิน</a>
+            </div>
+        </div>
+
+        <a href="mat.html">
+            <i class="fa-solid fa-mobile-screen icon-mat"></i>
+            <span>เช็ค Mat เครื่อง</span>
+        </a>
     </div>
-            <a href="mat.html">📱 เช็ค Mat เครื่อง</a>
-</div>
+</aside>
 
 <script>
     // ฟังก์ชัน กาง-หุบ เมนูย่อย
@@ -202,9 +291,5 @@
     }
 
     // รันฟังก์ชันคืนค่าสถานะ
-    restoreMenuState();
+    document.addEventListener('DOMContentLoaded', restoreMenuState);
 </script>
-
-
-
-
