@@ -162,7 +162,7 @@
 
         .list-container { width: 100%; max-width: 1200px; }
         .table-wrapper { overflow-x: auto; border-radius: 20px; background: rgba(255,255,255,0.4); }
-        table { width: 100%; border-collapse: collapse; min-width: 800px; }
+        table { width: 100%; border-collapse: collapse; min-width: 900px; }
         th { background: rgba(255, 255, 255, 0.5); padding: 15px; text-align: left; font-size: 14px; color: #444; border-bottom: 1px solid rgba(0,0,0,0.05); font-weight: 600; }
         td { padding: 14px 15px; border-bottom: 1px solid rgba(255,255,255,0.3); font-size: 14px; }
 
@@ -175,6 +175,16 @@
         .text-truncate { 
             max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
             font-size: 13px; color: #555;
+        }
+
+        .job-type-badge {
+            background: rgba(0, 122, 255, 0.1);
+            color: var(--ios-blue);
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 500;
+            white-space: nowrap;
         }
 
         .btn-pin { background: #fff8ed; color: var(--ios-orange); border: 1px solid #ffe8cc; padding: 6px 10px; border-radius: 8px; cursor: pointer; transition: 0.2s; margin-right: 5px; }
@@ -243,13 +253,14 @@
             <table>
                 <thead>
                     <tr>
-                        <th>วันที่</th>
+                        <th width="100">วันที่</th>
+                        <th width="140">ประเภทงาน</th>
                         <th>รหัสสมาชิก</th>
                         <th>ชื่อลูกค้า / เบอร์</th>
                         <th>รายละเอียด</th>
                         <th>พนักงาน</th>
                         <th>เอกสาร</th>
-                        <th>จัดการ</th>
+                        <th width="150">จัดการ</th>
                     </tr>
                 </thead>
                 <tbody id="dataTable"></tbody>
@@ -260,7 +271,21 @@
 </div>
 
 <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx-Ex6cqrzacAhQcDtGGuVFGSAgIJYqCoCA0nUJFuAmFSZyqniCldw5JDPojqNr3LuD/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyhHbjBTWqnxjS_rUVk7jKE7aOyk6SLCxudOp-AA0bZSlRXXK6WyCjl-nwnu7qi8s8/exec';
+
+    // --- รายการประเภทงาน ---
+    const jobTypes = [
+        "MGM ปรับลด",
+        "ยกเลิกบริการ (ปกติ)",
+        "ยกเลิกบริการ (5P)",
+        "MNP",
+        "เปลี่ยนรายเดือนเป็นเติมเงิน",
+        "เปลี่ยนโปรโมชั่น",
+        "Add ส่วนลด",
+        "Add เน็ตเพิ่ม",
+        "ระงับสัญญาณชั่วคราว",
+        "ส่งเรื่องตรวจสอบ"
+    ];
 
     // --- 1. ระบบ Sidebar System (คงเดิม 100%) ---
     function includeSidebar() {
@@ -340,9 +365,7 @@
         }
     }
 
-    // --- ระบบ Pin ใหม่ (Global Pin ผ่าน Google Sheets) ---
     async function togglePin(date, memberId) {
-        // จัดการส่งวันที่แบบ String ให้ตรงกับ Sheet
         const d = new Date(date);
         const dateStr = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
         
@@ -368,10 +391,20 @@
     function openAddJobModal() {
         const today = new Date().toISOString().split('T')[0];
         
+        // สร้าง Options ของประเภทงาน
+        let typeOptions = `<option value="">-- เลือกประเภทงาน --</option>`;
+        jobTypes.forEach(t => { typeOptions += `<option value="${t}">${t}</option>`; });
+
         Swal.fire({
             title: 'บันทึกงานกันลืม',
             width: '850px',
             html: `
+                <div class="swal-field">
+                    <label>ประเภทงาน</label>
+                    <select id="jobType" class="swal-custom-input">
+                        ${typeOptions}
+                    </select>
+                </div>
                 <div class="swal-form-grid">
                     <div class="swal-field">
                         <label>วันที่ดำเนินการ</label>
@@ -394,7 +427,7 @@
                     <div class="swal-field">
                         <label>พนักงาน</label>
                         <select id="staff" class="swal-custom-input">
-                            <option value="">-- เลือก --</option>
+                            <option value="">-- เลือกพนักงาน --</option>
                             <option value="ศุภกฤต">ศุภกฤต</option>
                             <option value="นวพล">นวพล</option>
                             <option value="ปิยะพร">ปิยะพร</option>
@@ -404,7 +437,7 @@
                 </div>
                 <div class="swal-field">
                     <label>รายละเอียดงาน</label>
-                    <textarea id="jobDetail" class="swal-custom-input" style="height: 150px; resize: vertical;" placeholder="ระบุรายละเอียดงาน..."></textarea>
+                    <textarea id="jobDetail" class="swal-custom-input" style="height: 120px; resize: vertical;" placeholder="ระบุรายละเอียดงาน..."></textarea>
                 </div>
                 <div class="swal-field">
                     <label>แนบรูป (ถ้ามี)</label>
@@ -416,6 +449,7 @@
             cancelButtonText: 'ยกเลิก',
             confirmButtonColor: '#007aff',
             preConfirm: async () => {
+                const jobType = document.getElementById('jobType').value;
                 const date = document.getElementById('date').value;
                 const memberId = document.getElementById('memberId').value;
                 const name = document.getElementById('name').value;
@@ -424,8 +458,8 @@
                 const jobDetail = document.getElementById('jobDetail').value;
                 const fileInput = document.getElementById('file');
 
-                if (!date || !memberId || !name || !phone || !staff) {
-                    Swal.showValidationMessage('กรุณากรอกข้อมูลให้ครบถ้วน');
+                if (!jobType || !date || !memberId || !name || !phone || !staff) {
+                    Swal.showValidationMessage('กรุณากรอกข้อมูลสำคัญให้ครบถ้วน');
                     return false;
                 }
 
@@ -440,7 +474,7 @@
 
                 return {
                     action: "insert",
-                    date, memberId: "'" + memberId, name, phone: "'" + phone, staff, jobDetail, fileData
+                    date, memberId: "'" + memberId, name, phone: "'" + phone, staff, jobDetail, fileData, jobType
                 };
             }
         }).then(async (result) => {
@@ -461,6 +495,7 @@
         
         let html = `
             <div style="text-align: left;">
+                <div class="detail-row"><div class="detail-label">ประเภทงาน:</div><div class="detail-value"><span class="job-type-badge">${item[8] || 'ทั่วไป'}</span></div></div>
                 <div class="detail-row"><div class="detail-label">วันที่:</div><div class="detail-value">${fixDate(item[0])}</div></div>
                 <div class="detail-row"><div class="detail-label">รหัสสมาชิก:</div><div class="detail-value">${String(item[1]).replace(/^'/, '')}</div></div>
                 <div class="detail-row"><div class="detail-label">ลูกค้า:</div><div class="detail-value">${item[2]}</div></div>
@@ -498,37 +533,34 @@
 
     async function loadData() {
         const tableBody = document.getElementById('dataTable');
-        tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px;">กำลังดึงข้อมูล...</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:30px;">กำลังดึงข้อมูล...</td></tr>';
         
         try {
             const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: "read"}) });
             const data = await res.json();
             tableBody.innerHTML = '';
 
-            // จัดเรียง: ปักหมุดไว้บนสุด แล้วตามด้วยข้อมูลปกติ (ใหม่ไปเก่า)
             const sortedData = data.sort((a, b) => {
                 const pinA = (a[7] === "true" || a[7] === true);
                 const pinB = (b[7] === "true" || b[7] === true);
-                
                 if (pinA && !pinB) return -1;
                 if (!pinA && pinB) return 1;
-                
-                // ถ้าหมุดเหมือนกัน ให้เรียงตามวันที่ใหม่ไปเก่า
                 return new Date(b[0]) - new Date(a[0]);
             });
 
             sortedData.forEach(row => {
                 const tr = document.createElement('tr');
                 const isPinned = (row[7] === "true" || row[7] === true);
-                
                 if (isPinned) tr.classList.add('pinned-row');
 
                 const rowJson = encodeURIComponent(JSON.stringify(row));
                 const displayId = String(row[1]).replace(/^'/, '');
                 const displayPhone = String(row[3]).replace(/^'/, '');
+                const jobType = row[8] || "-";
 
                 tr.innerHTML = `
                     <td>${fixDate(row[0])}</td>
+                    <td><span class="job-type-badge">${jobType}</span></td>
                     <td class="clickable" onclick="showFullDetail('${rowJson}')"><strong>${displayId}</strong></td>
                     <td class="clickable" onclick="showFullDetail('${rowJson}')">${row[2]}<br><small style="color:#8e8e93">${displayPhone}</small></td>
                     <td class="clickable" onclick="showFullDetail('${rowJson}')"><div class="text-truncate">${row[6] || "-"}</div></td>
@@ -543,18 +575,30 @@
                 tableBody.appendChild(tr);
             });
             filterData();
-        } catch (e) { tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:red;">โหลดข้อมูลไม่สำเร็จ</td></tr>'; }
+        } catch (e) { tableBody.innerHTML = '<tr><td colspan="8" style="text-align:center; color:red;">โหลดข้อมูลไม่สำเร็จ</td></tr>'; }
     }
 
     window.editData = function(rowJson) {
         const item = JSON.parse(decodeURIComponent(rowJson));
         const oldDate = formatForInputDate(item[0]);
         const oldMemberId = String(item[1]);
+        const currentJobType = item[8] || "";
+
+        let typeOptions = `<option value="">-- เลือกประเภทงาน --</option>`;
+        jobTypes.forEach(t => { 
+            typeOptions += `<option value="${t}" ${currentJobType === t ? 'selected' : ''}>${t}</option>`; 
+        });
 
         Swal.fire({
             title: 'แก้ไขข้อมูลงาน',
             width: '850px',
             html: `
+                <div class="swal-field">
+                    <label>ประเภทงาน</label>
+                    <select id="swal-jobType" class="swal-custom-input">
+                        ${typeOptions}
+                    </select>
+                </div>
                 <div class="swal-form-grid">
                     <div class="swal-field">
                         <label>วันที่</label>
@@ -586,7 +630,7 @@
                 </div>
                 <div class="swal-field">
                     <label>รายละเอียดงาน</label>
-                    <textarea id="swal-jobDetail" class="swal-custom-input" style="height: 150px; resize: vertical;">${item[6] || ''}</textarea>
+                    <textarea id="swal-jobDetail" class="swal-custom-input" style="height: 120px; resize: vertical;">${item[6] || ''}</textarea>
                 </div>
             `,
             showCancelButton: true,
@@ -603,7 +647,8 @@
                     name: document.getElementById('swal-name').value,
                     phone: "'" + document.getElementById('swal-phone').value,
                     staff: document.getElementById('swal-staff').value,
-                    jobDetail: document.getElementById('swal-jobDetail').value
+                    jobDetail: document.getElementById('swal-jobDetail').value,
+                    jobType: document.getElementById('swal-jobType').value
                 }
             }
         }).then(async (result) => {
