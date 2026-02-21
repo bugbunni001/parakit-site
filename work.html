@@ -322,7 +322,7 @@
 </div>
 
 <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwMcLhXYmz4ETZya7qaE0iSFVBJhE8zPHBnmFRBFl0ZvicqEwmPqnnxMO5LRYxHe5-k/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzqB2-E0guV-0NRO8PLPmNRaqlpQqG5nwaOEHWLT26IHke69S1SBRxPGNx9cEDJUwzq/exec';
     
     // --- SIDEBAR LOGIC (Original) ---
     function includeSidebar() {
@@ -542,72 +542,61 @@
 
     // Edit, Delete, TogglePin Functions (Keeping original logic)
     window.editData = function(rowJson) {
-        const item = JSON.parse(decodeURIComponent(rowJson));
-        const oldDate = new Date(item[0]).toISOString().split('T')[0];
-        let typeOptions = jobTypes.map(t => `<option value="${t}" ${item[8] === t ? 'selected' : ''}>${t}</option>`).join('');
-        const cleanPhone = String(item[3]).replace(/^'/, '');
-
-        Swal.fire({
-            title: 'แก้ไขข้อมูล',
-            width: '800px', 
-            padding: '2em',
-            html: `
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
-                    <div style="text-align:left;">
-                        <label class="swal-label">ประเภทงาน</label>
-                        <select id="swal-jobType" class="swal-input-m">${typeOptions}</select>
-                    </div>
-                    <div style="text-align:left;">
-                        <label class="swal-label">พนักงาน</label>
-                        <select id="swal-staff" class="swal-input-m">
-                            <option value="ศุภกฤต" ${item[4] === 'ศุภกฤต' ? 'selected' : ''}>ศุภกฤต</option>
-                            <option value="นวพล" ${item[4] === 'นวพล' ? 'selected' : ''}>นวพล</option>
-                            <option value="ปิยะพร" ${item[4] === 'ปิยะพร' ? 'selected' : ''}>ปิยะพร</option>
-                            <option value="กรทักษ์" ${item[4] === 'กรทักษ์' ? 'selected' : ''}>กรทักษ์</option>
-                        </select>
-                    </div>
-                </div>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
-                    <div style="text-align:left;">
-                        <label class="swal-label">ชื่อลูกค้า</label>
-                        <input type="text" id="swal-name" class="swal-input-m" value="${item[2]}">
-                    </div>
-                    <div style="text-align:left;">
-                        <label class="swal-label">เบอร์ติดต่อ</label>
-                        <input type="text" id="swal-phone" class="swal-input-m" value="${cleanPhone}">
-                    </div>
-                </div>
-                <div style="text-align:left;">
-                    <label class="swal-label">รายละเอียด</label>
-                    <textarea id="swal-jobDetail" class="swal-input-m" style="height:120px;">${item[6] || ''}</textarea>
-                </div>
-            `,
-            showCancelButton: true,
-            confirmButtonText: 'อัพเดทข้อมูล',
-            confirmButtonColor: '#10b981',
-            preConfirm: () => {
-                return {
-                    action: "update",
-                    oldDate: oldDate,
-                    oldMemberId: String(item[1]),
-                    date: oldDate,
-                    memberId: String(item[1]),
-                    name: document.getElementById('swal-name').value,
-                    phone: "'" + document.getElementById('swal-phone').value,
-                    staff: document.getElementById('swal-staff').value,
-                    jobDetail: document.getElementById('swal-jobDetail').value,
-                    jobType: document.getElementById('swal-jobType').value
-                }
-            }
-        }).then(async (result) => {
-            if (result.isConfirmed) {
-                loading();
-                await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(result.value) });
-                Swal.fire({ icon: 'success', title: 'อัพเดทเรียบร้อย', timer: 1500, showConfirmButton: false });
-                loadData();
-            }
-        });
+    const item = JSON.parse(decodeURIComponent(rowJson));
+    
+    // --- จุดที่แก้ไข: ปรับการดึงวันที่ให้ชัวร์ว่าเป็น yyyy-MM-dd ---
+    let oldDate = "";
+    try {
+        const d = new Date(item[0]);
+        // ป้องกันเรื่อง Timezone shift โดยการดึงตรงๆ
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        oldDate = `${year}-${month}-${day}`;
+    } catch(e) {
+        oldDate = String(item[0]).split('T')[0]; 
     }
+    // --------------------------------------------------
+
+    let typeOptions = jobTypes.map(t => `<option value="${t}" ${item[8] === t ? 'selected' : ''}>${t}</option>`).join('');
+    const cleanPhone = String(item[3]).replace(/^'/, '');
+
+    Swal.fire({
+        title: 'แก้ไขข้อมูล',
+        // ... (ส่วนที่เหลือเหมือนเดิมจนถึง preConfirm) ...
+        preConfirm: () => {
+            return {
+                action: "update",
+                oldDate: oldDate, // ส่งค่าวันที่เดิมที่ format แล้วไปหาแถว
+                oldMemberId: String(item[1]).replace(/^'/, "").trim(), // ล้างเครื่องหมาย ' ออกก่อนส่ง
+                date: oldDate, 
+                memberId: String(item[1]),
+                name: document.getElementById('swal-name').value,
+                phone: "'" + document.getElementById('swal-phone').value,
+                staff: document.getElementById('swal-staff').value,
+                jobDetail: document.getElementById('swal-jobDetail').value,
+                jobType: document.getElementById('swal-jobType').value
+            }
+        }
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            loading();
+            try {
+                const response = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(result.value) });
+                const resText = await response.text();
+                
+                if (resText.includes("Error")) {
+                    Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: 'หาข้อมูลที่จะแก้ไขไม่พบ' });
+                } else {
+                    Swal.fire({ icon: 'success', title: 'อัพเดทเรียบร้อย', timer: 1500, showConfirmButton: false });
+                }
+            } catch (err) {
+                Swal.fire({ icon: 'error', title: 'การเชื่อมต่อล้มเหลว' });
+            }
+            loadData();
+        }
+    });
+}
 
     async function togglePin(date, id) {
         loading();
