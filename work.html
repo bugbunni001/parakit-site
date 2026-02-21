@@ -23,97 +23,159 @@
             --success: #10b981;
             --danger: #ef4444;
             --warning: #f59e0b;
-            --hover-row: #f0f4ff; 
+            --hover-row: #f0f4ff;
             /* Sidebar Variables */
-            --sidebar-dark: rgba(28, 28, 30, 0.94);
-            --sidebar-width: 280px;
-            --ios-blue: #007aff;
-            --transition-swift: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --sidebar-width: 260px;
+            --sidebar-closed-width: 78px;
         }
 
         body {
-            font-family: 'Kanit', sans-serif !important;
+            font-family: 'Kanit', sans-serif;
             background-color: var(--bg-body);
             margin: 0;
-            padding: 0; /* Reset for sidebar */
+            padding: 0;
             color: var(--text-main);
             min-height: 100vh;
-            line-height: 1.5;
-            transition: padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex; /* รองรับ Sidebar */
         }
 
-        /* ===== Sidebar Style (As Remembered) ===== */
-        .sidebar { 
-            position: fixed; top: 0; left: 0; 
-            width: var(--sidebar-width); height: 100vh; 
-            background: var(--sidebar-dark); 
-            backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
-            color: #fff; overflow-y: auto; 
-            transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 2000;
-            box-shadow: 10px 0 30px rgba(0,0,0,0.1);
-        }
-        
-        @media(min-width:769px) { 
-            body:not(.collapsed) { padding-left: var(--sidebar-width); }
-            body:not(.collapsed) .top-header { left: var(--sidebar-width); }
-            body.collapsed .sidebar { transform: translateX(-100%); }
-            body.collapsed .top-header { left: 0; }
+        /* --- Sidebar Styles (จากความจำ) --- */
+        .sidebar {
+            height: 100vh;
+            width: var(--sidebar-width);
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid var(--border);
+            position: fixed;
+            left: 0;
+            top: 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
 
-        @media(max-width:768px) {
-            .sidebar { transform: translateX(-100%); }
-            .sidebar.show { transform: translateX(0); }
-            body { padding-left: 0 !important; }
-            .top-header { left: 0 !important; }
+        .sidebar.closed {
+            width: var(--sidebar-closed-width);
         }
 
-        .overlay { 
-            position: fixed; inset: 0; 
-            background: rgba(0, 0, 0, 0.3); 
-            backdrop-filter: blur(4px); 
-            display: none; z-index: 1500; 
-        }
-        .overlay.show { display: block; }
-
-        /* Sidebar Internals */
-        .sidebar-header { padding: 30px 20px; font-size: 20px; font-weight: 600; border-bottom: 0.5px solid rgba(255,255,255,0.1); }
-        .menu { padding: 10px 0; }
-        .menu a, .menu .drop-btn { 
-            width: 100%; min-height: 50px; padding: 12px 20px; background: none; border: none; 
-            color: #ebebf5; text-align: left; font-size: 15px; cursor: pointer; 
-            display: flex; align-items: center; text-decoration: none; transition: 0.3s;
-        }
-        .menu a:hover, .menu .drop-btn:hover { background: rgba(255,255,255,0.1); padding-left: 30px; }
-        .sub { display: none; background: rgba(0,0,0,0.2); }
-        .item.open .sub { display: block; }
-
-        /* ===== Top Header ===== */
-        .top-header {
-            position: fixed; top: 0; left: 0; right: 0; height: 60px;
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
-            z-index: 1200; display: flex; align-items: center; padding: 0 20px;
-            border-bottom: 0.5px solid rgba(0,0,0,0.1);
-            transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        .sidebar-header {
+            padding: 24px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            min-height: 80px;
+            box-sizing: border-box;
         }
 
-        .top-toggle {
-            width: 36px; height: 36px; border-radius: 10px; border: none;
-            background: transparent; color: var(--ios-blue); cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 22px; transition: background 0.2s; margin-right: 15px;
+        .logo-box {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            overflow: hidden;
+            white-space: nowrap;
         }
-        .top-toggle:hover { background: rgba(0, 122, 255, 0.1); }
 
-        /* ===== Main Content Area ===== */
+        .logo-icon {
+            width: 38px;
+            height: 38px;
+            background: var(--primary);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .logo-text {
+            font-weight: 600;
+            font-size: 18px;
+            color: var(--text-main);
+            transition: 0.3s;
+        }
+
+        .sidebar.closed .logo-text {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .toggle-btn {
+            background: var(--primary-light);
+            color: var(--primary);
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.3s;
+        }
+
+        .sidebar.closed .toggle-btn {
+            transform: rotate(180deg);
+        }
+
+        .menu-list {
+            padding: 10px 14px;
+            list-style: none;
+            margin: 0;
+            flex-grow: 1;
+        }
+
+        .menu-item {
+            margin-bottom: 8px;
+        }
+
+        .menu-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 14px;
+            color: var(--text-sub);
+            text-decoration: none;
+            border-radius: 12px;
+            transition: 0.3s;
+            white-space: nowrap;
+            gap: 16px;
+        }
+
+        .menu-link i {
+            font-size: 20px;
+            width: 24px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .menu-link:hover, .menu-link.active {
+            background: var(--primary-light);
+            color: var(--primary);
+        }
+
+        /* --- Main Content Adjustment --- */
+        .main-content {
+            flex-grow: 1;
+            margin-left: var(--sidebar-width);
+            padding: 32px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            width: calc(100% - var(--sidebar-width));
+            box-sizing: border-box;
+        }
+
+        .sidebar.closed ~ .main-content {
+            margin-left: var(--sidebar-closed-width);
+            width: calc(100% - var(--sidebar-closed-width));
+        }
+
+        /* --- Existing UI Styling --- */
         .container {
-            max-width: 1280px;
+            max-width: 1200px;
             margin: 0 auto;
-            padding: 84px 24px 24px; /* Adjusted for top-header */
         }
 
-        /* --- Stats Styling --- */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -144,7 +206,6 @@
         .stat-value { font-size: 24px; font-weight: 600; color: var(--text-main); display: block; }
         .stat-label { font-size: 13px; color: var(--text-sub); font-weight: 400; }
 
-        /* --- Header & Search --- */
         .header-section {
             display: flex; justify-content: space-between; align-items: center;
             margin-bottom: 24px; gap: 16px;
@@ -168,7 +229,6 @@
         }
         .btn-add:hover { background: #3730a3; }
 
-        /* --- Modern Table --- */
         .table-container {
             background: var(--card); border-radius: 16px;
             border: 1px solid var(--border); overflow: hidden;
@@ -186,20 +246,12 @@
         td { padding: 16px 20px; border-bottom: 1px solid var(--border); vertical-align: middle; transition: 0.2s; }
         tbody tr:hover td { background-color: var(--hover-row); }
 
-        .customer-flex:hover .name-txt { color: var(--primary); text-decoration: underline; }
-        tbody tr:last-child td { border-bottom: none; }
-
         .customer-flex { display: flex; flex-direction: column; gap: 4px; }
         .customer-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-        .name-txt { font-weight: 600; color: var(--text-main); font-size: 15px; transition: 0.2s; }
-        .id-tag { display: block; color: var(--text-sub); font-size: 13px; margin-top: 4px; font-weight: 400; }
+        .name-txt { font-weight: 600; color: var(--text-main); font-size: 15px; }
+        .id-tag { display: block; color: var(--text-sub); font-size: 13px; margin-top: 4px; }
         .phone-link { color: var(--primary); text-decoration: none; font-size: 13px; font-weight: 500; }
-        .note-preview {
-            color: var(--text-sub); font-size: 13px;
-            display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical;
-            overflow: hidden; margin-top: 2px;
-        }
-
+        
         .job-badge {
             display: inline-flex; padding: 4px 10px; border-radius: 8px;
             font-size: 12px; font-weight: 500;
@@ -217,7 +269,6 @@
         .btn-circle.active-pin { background: #fffbeb; color: var(--warning); border-color: var(--warning); }
         .btn-circle.delete:hover { background: #fef2f2; color: var(--danger); border-color: var(--danger); }
 
-        /* --- Modal Custom --- */
         .swal-label { display: block; margin-bottom: 6px; font-size: 14px; font-weight: 500; text-align: left; }
         .swal-input-m {
             width: 100%; padding: 10px 12px; border-radius: 8px;
@@ -226,6 +277,9 @@
         }
 
         @media (max-width: 768px) {
+            .sidebar { left: -100%; }
+            .sidebar.mobile-open { left: 0; width: 260px; }
+            .main-content { margin-left: 0 !important; width: 100% !important; padding: 16px; }
             .header-section { flex-direction: column; align-items: stretch; }
             .search-box { max-width: 100%; }
             .hide-mobile { display: none; }
@@ -234,125 +288,118 @@
 </head>
 <body>
 
-<header class="top-header">
-    <button class="top-toggle" onclick="toggleSidebar()">☰</button>
-    <div style="font-weight: 700; font-size: 1.25rem; color: var(--text-main);">ระบบเคลียร์งาน</div>
-</header>
-
-<div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
-<aside class="sidebar" id="sidebar"></aside>
-
-<div class="container">
-    <div class="stats-grid">
-        <div class="stat-card">
-            <div class="stat-icon" style="background: #e0e7ff; color: #4338ca;"><i class="fa-solid fa-layer-group"></i></div>
-            <div>
-                <span class="stat-label">งานทั้งหมด</span>
-                <span class="stat-value" id="totalJobs">0</span>
-            </div>
+<nav class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <div class="logo-box">
+            <div class="logo-icon"><i class="fa-solid fa-bolt"></i></div>
+            <span class="logo-text">Parakit-Site</span>
         </div>
-        <div class="stat-card">
-            <div class="stat-icon" style="background: #fef3c7; color: #d97706;"><i class="fa-solid fa-thumbtack"></i></div>
-            <div>
-                <span class="stat-label">ปักหมุดเร่งด่วน</span>
-                <span class="stat-value" id="pinnedJobs">0</span>
-            </div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-icon" style="background: #dcfce7; color: #15803d;"><i class="fa-solid fa-calendar-check"></i></div>
-            <div>
-                <span class="stat-label">รายการวันนี้</span>
-                <span class="stat-value" id="todayJobs">0</span>
-            </div>
-        </div>
-    </div>
-
-    <div class="header-section">
-        <button class="btn-add" onclick="openAddJobModal()">
-            <i class="fa-solid fa-plus"></i> เพิ่มรายการ
+        <button class="toggle-btn" onclick="toggleSidebar()">
+            <i class="fa-solid fa-chevron-left"></i>
         </button>
-        <div class="search-box">
-            <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" id="searchInput" placeholder="ค้นหาชื่อ, ID, เบอร์โทร หรือรายละเอียด..." onkeyup="filterData()">
-        </div>
     </div>
+    <ul class="menu-list">
+        <li class="menu-item">
+            <a href="#" class="menu-link active">
+                <i class="fa-solid fa-house"></i>
+                <span>หน้าหลัก</span>
+            </a>
+        </li>
+        <li class="menu-item">
+            <a href="#" class="menu-link">
+                <i class="fa-solid fa-list-check"></i>
+                <span>ระบบเคลียร์งาน</span>
+            </a>
+        </li>
+        <li class="menu-item">
+            <a href="#" class="menu-link">
+                <i class="fa-solid fa-chart-pie"></i>
+                <span>รายงานสรุป</span>
+            </a>
+        </li>
+        <li class="menu-item">
+            <a href="#" class="menu-link">
+                <i class="fa-solid fa-gear"></i>
+                <span>ตั้งค่า</span>
+            </a>
+        </li>
+    </ul>
+</nav>
 
-    <div class="table-container">
-        <div style="overflow-x: auto;">
-            <table id="mainTable">
-                <thead>
-                    <tr>
-                        <th width="110">วันที่</th>
-                        <th width="180">ประเภทงาน & ID</th>
-                        <th>ข้อมูลลูกค้า</th>
-                        <th width="140" class="hide-mobile">ผู้รับผิดชอบ</th>
-                        <th width="60">รูป</th>
-                        <th width="140" style="text-align: right;">จัดการ</th>
-                    </tr>
-                </thead>
-                <tbody id="dataTable">
-                    <tr><td colspan="6" style="text-align:center; padding:60px; color:var(--text-sub);">กำลังโหลดข้อมูล...</td></tr>
-                </tbody>
-            </table>
+<main class="main-content">
+    <div class="container">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon" style="background: #e0e7ff; color: #4338ca;"><i class="fa-solid fa-layer-group"></i></div>
+                <div>
+                    <span class="stat-label">งานทั้งหมด</span>
+                    <span class="stat-value" id="totalJobs">0</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background: #fef3c7; color: #d97706;"><i class="fa-solid fa-thumbtack"></i></div>
+                <div>
+                    <span class="stat-label">ปักหมุดเร่งด่วน</span>
+                    <span class="stat-value" id="pinnedJobs">0</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background: #dcfce7; color: #15803d;"><i class="fa-solid fa-calendar-check"></i></div>
+                <div>
+                    <span class="stat-label">รายการวันนี้</span>
+                    <span class="stat-value" id="todayJobs">0</span>
+                </div>
+            </div>
         </div>
+
+        <div class="header-section">
+            <button class="btn-add" onclick="openAddJobModal()">
+                <i class="fa-solid fa-plus"></i> เพิ่มรายการ
+            </button>
+            <div class="search-box">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="searchInput" placeholder="ค้นหาชื่อ, ID, เบอร์โทร หรือรายละเอียด..." onkeyup="filterData()">
+            </div>
+        </div>
+
+        <div class="table-container">
+            <div style="overflow-x: auto;">
+                <table id="mainTable">
+                    <thead>
+                        <tr>
+                            <th width="110">วันที่</th>
+                            <th width="180">ประเภทงาน & ID</th>
+                            <th>ข้อมูลลูกค้า</th>
+                            <th width="140" class="hide-mobile">ผู้รับผิดชอบ</th>
+                            <th width="60">รูป</th>
+                            <th width="140" style="text-align: right;">จัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dataTable">
+                        <tr><td colspan="6" style="text-align:center; padding:60px; color:var(--text-sub);">กำลังโหลดข้อมูล...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <footer style="text-align: center; margin-top: 40px; color: var(--text-sub); font-size: 13px;">
+            <p>© 2026 Copyright by Angerina Frog</p>
+        </footer>
     </div>
-    
-    <footer style="text-align: center; margin-top: 40px; color: var(--text-sub); font-size: 13px;">
-        <p>© 2026 Copyright by Angerina Frog</p>
-    </footer>
-</div>
+</main>
 
 <script>
-    // --- Sidebar Logic (Remembered Code) ---
-    function includeSidebar() {
-        const cached = localStorage.getItem('sidebar_cache');
-        if (cached) {
-            document.getElementById('sidebar').innerHTML = cached;
-            restoreMenuState();
-        }
-
-        fetch('sidebar.html')
-            .then(response => response.text())
-            .then(data => {
-                if (data !== cached) {
-                    document.getElementById('sidebar').innerHTML = data;
-                    localStorage.setItem('sidebar_cache', data);
-                    restoreMenuState();
-                }
-            })
-            .catch(err => console.warn("Sidebar Load Error"));
-            
-        if(localStorage.getItem('sidebar_collapsed') === 'true' && window.innerWidth > 768) {
-            document.body.classList.add('collapsed');
-        }
-    }
-
+    // --- Sidebar Script ---
     function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
         if (window.innerWidth <= 768) {
-            document.getElementById("sidebar").classList.toggle("show");
-            document.getElementById("overlay").classList.toggle("show");
+            sidebar.classList.toggle('mobile-open');
         } else {
-            const isCollapsed = document.body.classList.toggle("collapsed");
-            localStorage.setItem('sidebar_collapsed', isCollapsed);
+            sidebar.classList.toggle('closed');
         }
     }
 
-    window.toggleDrop = function(btn, id) {
-        const item = btn.parentElement;
-        const isOpen = item.classList.toggle("open");
-        if (id) localStorage.setItem('menu-' + id, isOpen);
-    }
-
-    function restoreMenuState() {
-        ['credit', 'branch', 'sales'].forEach(id => {
-            if (localStorage.getItem('menu-' + id) === 'true') {
-                const el = document.getElementById('menu-' + id);
-                if (el) el.classList.add('open');
-            }
-        });
-    }
-
-    // --- Original Page Logic (Unchanged) ---
+    // --- Core System Script ---
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwvzgyyJ9y29xcQkZPBQFvdV6_uC_8GRrsjWk2f5obJjTp4QRAAUnbuAtkDFFVVMRIF/exec';
     
     const jobTypes = [
@@ -526,7 +573,6 @@
         const oldDate = new Date(item[0]).toISOString().split('T')[0];
         let typeOptions = jobTypes.map(t => `<option value="${t}" ${item[8] === t ? 'selected' : ''}>${t}</option>`).join('');
         const cleanPhone = String(item[3]).replace(/^'/, '');
-        const cleanId = String(item[1]).replace(/^'/, '');
 
         Swal.fire({
             title: 'แก้ไขข้อมูล',
@@ -660,10 +706,7 @@
         });
     }
 
-    window.addEventListener('DOMContentLoaded', () => {
-        includeSidebar();
-        loadData();
-    });
+    window.onload = loadData;
 </script>
 
 </body>
