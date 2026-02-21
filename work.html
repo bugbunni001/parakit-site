@@ -13,16 +13,15 @@
     
     <style>
         :root {
-            /* iOS 26 Sidebar Variables */
+            /* Sidebar Variables */
             --ios-blue: #007aff;
-            --ios-red: #ff3b30;
-            --glass-white: rgba(255, 255, 255, 0.75);
-            --glass-border: rgba(255, 255, 255, 0.5);
-            --sidebar-dark: rgba(28, 28, 30, 0.94);
+            --ios-green: #34c759;
+            --ios-bg: #f2f2f7;
+            --sidebar-dark: rgba(28, 28, 30, 0.95);
             --sidebar-width: 280px;
-            --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-
-            /* เดิมของระบบเคลียร์งาน */
+            --transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            
+            /* Original Variables */
             --primary: #4f46e5;
             --primary-light: #eef2ff;
             --text-main: #1e293b;
@@ -36,82 +35,76 @@
             --hover-row: #f0f4ff; 
         }
 
-        /* ===== GLOBAL RESET & SIDEBAR ADAPTATION ===== */
-        * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
-        
-        body { 
-            margin: 0; 
-            background-color: var(--bg-body);
-            color: var(--text-main); 
-            -webkit-font-smoothing: antialiased;
-            transition: padding-left 0.3s ease;
-        }
-
-        /* Sidebar Glass Design */
+        /* ===== SIDEBAR STYLES (MATCHED) ===== */
         .sidebar { 
             position: fixed; top: 0; left: 0; width: var(--sidebar-width); height: 100vh; 
             background: var(--sidebar-dark); 
-            backdrop-filter: blur(40px) saturate(180%); -webkit-backdrop-filter: blur(40px) saturate(180%);
+            backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
             color: #fff; overflow-y: auto; 
-            transform: translateX(-100%); transition: var(--transition); 
+            transform: translateX(-100%); 
+            transition: var(--transition);
             z-index: 2000; 
-            box-shadow: 15px 0 50px rgba(0,0,0,0.1);
-            border-right: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 10px 0 30px rgba(0,0,0,0.1);
         }
         .sidebar.show { transform: translateX(0); }
-        
-        .overlay { 
-            position: fixed; inset: 0; background: rgba(0, 0, 0, 0.3); 
-            display: none; backdrop-filter: blur(8px); z-index: 1500; 
+        .sidebar-header { padding: 25px 20px; font-weight: 600; font-size: 18px; background: rgba(0,0,0,0.2); border-bottom: 0.5px solid rgba(255,255,255,0.1); }
+        .menu { padding: 10px 0; }
+        .menu a, .menu .drop-btn { 
+            width: 100%; min-height: 55px; padding: 0 20px; background: none; 
+            border: none; color: #ebebf5; font-size: 15px; 
+            cursor: pointer; display: flex; align-items: center; text-decoration: none; 
+            transition: all 0.3s ease;
         }
+        .menu a:hover, .menu .drop-btn:hover { background: rgba(255,255,255,0.1); padding-left: 30px; color: #fff; }
+        .sub { display: none; background: rgba(0,0,0,0.2); }
+        .item.open .sub { display: block; }
+        .sub a { padding-left: 45px; font-size: 14px; color: #8e8e93; }
+        .sub a:hover { padding-left: 55px; color: var(--ios-green); }
+        .arrow { margin-left: auto; transition: .3s; font-size: 10px; opacity: 0.5; }
+        .item.open .arrow { transform: rotate(90deg); }
+
+        /* Mobile Toggle */
+        .top-toggle { 
+            position: fixed; top: 15px; left: 15px; z-index: 1400; width: 44px; height: 44px; 
+            border-radius: 12px; border: none; background: var(--ios-blue); color: #fff; 
+            cursor: pointer; display: flex; align-items: center; justify-content: center; 
+            box-shadow: 0 4px 12px rgba(0,122,255,0.3); 
+        }
+        .overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.3); display: none; z-index: 1500; backdrop-filter: blur(5px); }
         .overlay.show { display: block; }
 
-        /* ปุ่ม Toggle สำหรับมือถือ */
-        .top-toggle { 
-            position: fixed; top: 20px; left: 20px; z-index: 1400; 
-            width: 44px; height: 44px; border-radius: 14px; border: none; 
-            background: var(--glass-white); 
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            color: var(--ios-blue); font-size: 20px; cursor: pointer; 
-            box-shadow: 0 8px 32px rgba(0,0,0,0.08); 
-            display: flex; align-items: center; justify-content: center;
-            border: 1px solid var(--glass-border);
+        /* ===== MAIN ADJUSTMENTS ===== */
+        body {
+            font-family: 'Kanit', sans-serif;
+            background-color: var(--bg-body);
+            margin: 0;
+            padding: 0; /* Reset for sidebar spacing */
+            color: var(--text-main);
+            min-height: 100vh;
             transition: var(--transition);
         }
-        @media(min-width:769px) { .top-toggle { display: none; } }
 
-        /* Main Content Adaptation */
         .container {
             max-width: 1280px;
             margin: 0 auto;
-            padding: 90px 20px 40px; 
-            transition: margin-left 0.4s ease;
-            animation: fadeIn 0.8s ease-out;
+            padding: 80px 24px 24px; /* Space for top-toggle */
+            transition: var(--transition);
         }
 
         @media(min-width:769px) { 
             .sidebar { transform: translateX(0); } 
-            .container { margin-left: var(--sidebar-width); padding: 50px 40px 40px; } 
+            body:not(.collapsed) .container { padding-left: calc(var(--sidebar-width) + 40px); } 
+            .top-toggle { display: none; } 
         }
 
-        /* --- Sidebar Item Styles --- */
-        .item { margin-bottom: 5px; }
-        .drop-btn, .menu a { 
-            display: flex; align-items: center; width: 100%; padding: 14px 20px; 
-            color: #fff; text-decoration: none; border: none; background: none; 
-            cursor: pointer; border-radius: 12px; transition: 0.3s;
-        }
-        .drop-btn:hover, .menu a:hover { background: rgba(255,255,255,0.1); }
-        .sub { padding-left: 20px; display: none; }
-        .sub a { font-size: 14px; opacity: 0.8; }
-
-        /* --- ส่วนเนื้อหาเดิมของระบบเคลียร์งาน --- */
+        /* --- Stats Styling --- */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
             gap: 20px;
             margin-bottom: 32px;
         }
+
         .stat-card {
             background: var(--card);
             padding: 24px;
@@ -122,20 +115,25 @@
             border: 1px solid var(--border);
             transition: transform 0.2s ease;
         }
+
         .stat-card:hover { transform: translateY(-4px); }
+
         .stat-icon {
             width: 56px; height: 56px;
             border-radius: 12px;
             display: flex; align-items: center; justify-content: center;
             font-size: 24px;
         }
+
         .stat-value { font-size: 24px; font-weight: 600; color: var(--text-main); display: block; }
         .stat-label { font-size: 13px; color: var(--text-sub); font-weight: 400; }
 
+        /* --- Header & Search --- */
         .header-section {
             display: flex; justify-content: space-between; align-items: center;
             margin-bottom: 24px; gap: 16px;
         }
+
         .search-box { position: relative; flex-grow: 1; max-width: 400px; }
         .search-box input {
             width: 100%; padding: 12px 16px 12px 48px;
@@ -154,11 +152,13 @@
         }
         .btn-add:hover { background: #3730a3; }
 
+        /* --- Modern Table --- */
         .table-container {
             background: var(--card); border-radius: 16px;
             border: 1px solid var(--border); overflow: hidden;
             box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
+
         table { width: 100%; border-collapse: collapse; font-size: 14px; }
         th {
             background: #f8fafc; padding: 16px 20px; text-align: left;
@@ -166,11 +166,23 @@
             border-bottom: 1px solid var(--border);
             text-transform: uppercase; letter-spacing: 0.025em; font-size: 12px;
         }
+
         td { padding: 16px 20px; border-bottom: 1px solid var(--border); vertical-align: middle; transition: 0.2s; }
         tbody tr:hover td { background-color: var(--hover-row); }
+        .customer-flex:hover .name-txt { color: var(--primary); text-decoration: underline; }
+        tbody tr:last-child td { border-bottom: none; }
 
+        .customer-flex { display: flex; flex-direction: column; gap: 4px; }
+        .customer-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
         .name-txt { font-weight: 600; color: var(--text-main); font-size: 15px; transition: 0.2s; }
         .id-tag { display: block; color: var(--text-sub); font-size: 13px; margin-top: 4px; font-weight: 400; }
+        .phone-link { color: var(--primary); text-decoration: none; font-size: 13px; font-weight: 500; }
+        .note-preview {
+            color: var(--text-sub); font-size: 13px;
+            display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical;
+            overflow: hidden; margin-top: 2px;
+        }
+
         .job-badge {
             display: inline-flex; padding: 4px 10px; border-radius: 8px;
             font-size: 12px; font-weight: 500;
@@ -195,7 +207,6 @@
             margin-bottom: 12px; box-sizing: border-box;
         }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         @media (max-width: 768px) {
             .header-section { flex-direction: column; align-items: stretch; }
             .search-box { max-width: 100%; }
@@ -270,24 +281,7 @@
 </div>
 
 <script>
-    // URL สำหรับ Google Apps Script
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwvzgyyJ9y29xcQkZPBQFvdV6_uC_8GRrsjWk2f5obJjTp4QRAAUnbuAtkDFFVVMRIF/exec';
-    
-    // ===== SIDEBAR LOGIC (บันทึกไว้ตามคำสั่ง) =====
-    function includeSidebar() {
-        const version = new Date().getTime(); 
-        fetch('sidebar.html?v=' + version)
-            .then(response => {
-                if (!response.ok) throw new Error('ไม่พบไฟล์ sidebar.html');
-                return response.text();
-            })
-            .then(data => {
-                document.getElementById('sidebar').innerHTML = data;
-                restoreMenuState();
-            })
-            .catch(err => console.warn("Sidebar Error:", err));
-    }
-
+    /* ===== SIDEBAR SCRIPTS ===== */
     function toggleSidebar() {
         document.getElementById("sidebar").classList.toggle("show");
         document.getElementById("overlay").classList.toggle("show");
@@ -296,30 +290,36 @@
     window.toggleDrop = function(btn, id) {
         const item = btn.parentElement;
         const isOpen = item.classList.toggle("open");
-        const sub = item.querySelector('.sub');
-        if (sub) {
-            sub.style.display = isOpen ? 'block' : 'none';
-        }
-        if (id) {
-            localStorage.setItem('menu-' + id, isOpen);
-        }
+        if (id) { localStorage.setItem('menu-' + id, isOpen); }
     }
 
     function restoreMenuState() {
-        const menus = ['credit', 'branch', 'sales', 'device']; 
-        menus.forEach(id => {
-            const state = localStorage.getItem('menu-' + id);
-            const menuEl = document.getElementById('menu-' + id);
-            if (state === 'true' && menuEl) {
-                menuEl.classList.add('open');
-                const sub = menuEl.querySelector('.sub');
-                if (sub) sub.style.display = 'block';
+        ['credit', 'branch', 'sales'].forEach(m => {
+            if (localStorage.getItem('menu-' + m) === 'true') {
+                const el = document.getElementById('menu-' + m);
+                if (el) el.classList.add('open');
             }
         });
     }
 
-    // ===== DATA SYSTEM LOGIC (ของเดิม 100%) =====
-    const jobTypes = ["MGM ปรับลด", "ยกเลิกบริการ (ปกติ)", "ยกเลิกบริการ (5P)", "เปลี่ยนรายเดือนเป็นเติมเงิน", "เปลี่ยนโปรโมชั่น", "Add ส่วนลด", "Add เน็ตเพิ่ม", "MNP", "ระงับสัญญาณชั่วคราว", "ส่งเรื่องตรวจสอบ"];
+    function includeSidebar() {
+        const timestamp = new Date().getTime();
+        fetch('sidebar.html?v=' + timestamp)
+            .then(res => res.text())
+            .then(data => { 
+                document.getElementById('sidebar').innerHTML = data; 
+                restoreMenuState(); 
+            }).catch(err => console.warn("Sidebar fail"));
+    }
+
+    /* ===== ORIGINAL LOGIC ===== */
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwvzgyyJ9y29xcQkZPBQFvdV6_uC_8GRrsjWk2f5obJjTp4QRAAUnbuAtkDFFVVMRIF/exec';
+    
+    const jobTypes = [
+        "MGM ปรับลด", "ยกเลิกบริการ (ปกติ)", "ยกเลิกบริการ (5P)", 
+        "เปลี่ยนรายเดือนเป็นเติมเงิน", "เปลี่ยนโปรโมชั่น", "Add ส่วนลด", 
+        "Add เน็ตเพิ่ม", "MNP", "ระงับสัญญาณชั่วคราว", "ส่งเรื่องตรวจสอบ"
+    ];
 
     function fixDate(dateVal) {
         if (!dateVal) return "-";
@@ -366,9 +366,9 @@
                         <div class="customer-flex" onclick="showFullDetail('${rowJson}')" style="cursor:pointer">
                             <div class="customer-head">
                                 <span class="name-txt">${row[2]}</span>
-                                <span class="phone-link" style="color:var(--primary); font-size:13px;"><i class="fa-solid fa-phone-flip" style="font-size:10px"></i> ${cleanPhone}</span>
+                                <span class="phone-link"><i class="fa-solid fa-phone-flip" style="font-size:10px"></i> ${cleanPhone}</span>
                             </div>
-                            <div style="color:var(--text-sub); font-size:13px; display:-webkit-box; -webkit-line-clamp:1; -webkit-box-orient:vertical; overflow:hidden;"><b>Note:</b> ${row[6] || '-'}</div>
+                            <div class="note-preview"><b>Note:</b> ${row[6] || '-'}</div>
                         </div>
                     </td>
                     <td class="hide-mobile" style="color:var(--text-sub);"><i class="fa-regular fa-circle-user"></i> ${row[4]}</td>
@@ -388,19 +388,206 @@
         }
     }
 
-    // ฟังก์ชันอื่นๆ ของระบบเคลียร์งานคงเดิมทั้งหมด
-    function openAddJobModal() { /* ... ตามโค้ดเดิมของคุณ ... */ }
-    window.editData = function(rowJson) { /* ... ตามโค้ดเดิมของคุณ ... */ }
-    async function togglePin(date, id) { /* ... ตามโค้ดเดิมของคุณ ... */ }
-    async function deleteData(d, id) { /* ... ตามโค้ดเดิมของคุณ ... */ }
-    function filterData() { /* ... ตามโค้ดเดิมของคุณ ... */ }
-    function loading() { Swal.fire({title: 'กำลังบันทึก...', didOpen: () => Swal.showLoading(), allowOutsideClick: false}); }
-    function showFullDetail(rowJson) { /* ... ตามโค้ดเดิมของคุณ ... */ }
+    // [Remaining functions: openAddJobModal, editData, togglePin, deleteData, filterData, loading, showFullDetail stay exactly the same]
+    // ... (ฟังก์ชันเดิมของคุณคงเดิม 100%)
 
-    // เรียกใช้งานเมื่อโหลดหน้า
-    window.onload = function() {
-        includeSidebar();
+    function openAddJobModal() {
+        const today = new Date().toISOString().split('T')[0];
+        let typeOptions = jobTypes.map(t => `<option value="${t}">${t}</option>`).join('');
+        Swal.fire({
+            title: 'สร้างรายการใหม่',
+            width: '800px', 
+            padding: '2em',
+            html: `
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                    <div style="text-align:left;">
+                        <label class="swal-label">ประเภทงาน</label>
+                        <select id="jobType" class="swal-input-m">
+                            <option value="">-- เลือกประเภทงาน --</option>
+                            ${typeOptions}
+                        </select>
+                    </div>
+                    <div style="text-align:left;">
+                        <label class="swal-label">พนักงาน</label>
+                        <select id="staff" class="swal-input-m">
+                            <option value="">-- เลือกพนักงาน --</option>
+                            <option value="ศุภกฤต">ศุภกฤต</option>
+                            <option value="นวพล">นวพล</option>
+                            <option value="ปิยะพร">ปิยะพร</option>
+                            <option value="กรทักษ์">กรทักษ์</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                    <div style="text-align:left;">
+                        <label class="swal-label">วันที่</label>
+                        <input type="date" id="date" class="swal-input-m" value="${today}">
+                    </div>
+                    <div style="text-align:left;">
+                        <label class="swal-label">รหัสสมาชิก</label>
+                        <input type="text" id="memberId" class="swal-input-m" placeholder="TMH/TOL/TVS">
+                    </div>
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                    <div style="text-align:left;">
+                        <label class="swal-label">ชื่อลูกค้า</label>
+                        <input type="text" id="name" class="swal-input-m">
+                    </div>
+                    <div style="text-align:left;">
+                        <label class="swal-label">เบอร์ติดต่อ</label>
+                        <input type="text" id="phone" class="swal-input-m">
+                    </div>
+                </div>
+                <div style="text-align:left;">
+                    <label class="swal-label">รายละเอียด</label>
+                    <textarea id="jobDetail" class="swal-input-m" style="height:100px;"></textarea>
+                </div>
+                <div style="text-align:left;">
+                    <label class="swal-label">รูปภาพประกอบ</label>
+                    <input type="file" id="file" class="swal-input-m" accept="image/*">
+                </div>
+            `,
+            showCancelButton: true,
+            confirmButtonText: 'บันทึกรายการ',
+            confirmButtonColor: '#4f46e5',
+            preConfirm: async () => {
+                const values = {
+                    date: document.getElementById('date').value,
+                    jobType: document.getElementById('jobType').value,
+                    memberId: document.getElementById('memberId').value,
+                    name: document.getElementById('name').value,
+                    phone: document.getElementById('phone').value,
+                    staff: document.getElementById('staff').value,
+                    jobDetail: document.getElementById('jobDetail').value
+                };
+                if(!values.jobType || !values.name || !values.phone) return Swal.showValidationMessage('กรุณากรอกข้อมูลสำคัญให้ครบ');
+                let fileData = null;
+                const fileInput = document.getElementById('file');
+                if (fileInput.files.length > 0) {
+                    fileData = await new Promise(resolve => {
+                        const reader = new FileReader();
+                        reader.onload = () => resolve(reader.result);
+                        reader.readAsDataURL(fileInput.files[0]);
+                    });
+                }
+                return { action: "insert", ...values, memberId: "'" + values.memberId, phone: "'" + values.phone, fileData };
+            }
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                loading();
+                await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(result.value) });
+                Swal.fire({ icon: 'success', title: 'สำเร็จ', timer: 1500, showConfirmButton: false });
+                loadData();
+            }
+        });
+    }
+
+    window.editData = function(rowJson) {
+        const item = JSON.parse(decodeURIComponent(rowJson));
+        const oldDate = new Date(item[0]).toISOString().split('T')[0];
+        let typeOptions = jobTypes.map(t => `<option value="${t}" ${item[8] === t ? 'selected' : ''}>${t}</option>`).join('');
+        const cleanPhone = String(item[3]).replace(/^'/, '');
+        Swal.fire({
+            title: 'แก้ไขข้อมูล',
+            width: '800px', padding: '2em',
+            html: `
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                    <div style="text-align:left;"><label class="swal-label">ประเภทงาน</label><select id="swal-jobType" class="swal-input-m">${typeOptions}</select></div>
+                    <div style="text-align:left;"><label class="swal-label">พนักงาน</label><select id="swal-staff" class="swal-input-m">
+                        <option value="ศุภกฤต" ${item[4] === 'ศุภกฤต' ? 'selected' : ''}>ศุภกฤต</option>
+                        <option value="นวพล" ${item[4] === 'นวพล' ? 'selected' : ''}>นวพล</option>
+                        <option value="ปิยะพร" ${item[4] === 'ปิยะพร' ? 'selected' : ''}>ปิยะพร</option>
+                        <option value="กรทักษ์" ${item[4] === 'กรทักษ์' ? 'selected' : ''}>กรทักษ์</option>
+                    </select></div>
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                    <div style="text-align:left;"><label class="swal-label">ชื่อลูกค้า</label><input type="text" id="swal-name" class="swal-input-m" value="${item[2]}"></div>
+                    <div style="text-align:left;"><label class="swal-label">เบอร์ติดต่อ</label><input type="text" id="swal-phone" class="swal-input-m" value="${cleanPhone}"></div>
+                </div>
+                <div style="text-align:left;"><label class="swal-label">รายละเอียด</label><textarea id="swal-jobDetail" class="swal-input-m" style="height:120px;">${item[6] || ''}</textarea></div>
+            `,
+            showCancelButton: true, confirmButtonText: 'อัพเดทข้อมูล', confirmButtonColor: '#10b981',
+            preConfirm: () => {
+                return {
+                    action: "update", oldDate: oldDate, oldMemberId: String(item[1]),
+                    date: oldDate, memberId: String(item[1]), name: document.getElementById('swal-name').value,
+                    phone: "'" + document.getElementById('swal-phone').value, staff: document.getElementById('swal-staff').value,
+                    jobDetail: document.getElementById('swal-jobDetail').value, jobType: document.getElementById('swal-jobType').value
+                }
+            }
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                loading();
+                await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(result.value) });
+                Swal.fire({ icon: 'success', title: 'อัพเดทเรียบร้อย', timer: 1500, showConfirmButton: false });
+                loadData();
+            }
+        });
+    }
+
+    async function togglePin(date, id) {
+        loading();
+        const d = new Date(date);
+        const dateStr = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+        await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: "togglePin", date: dateStr, memberId: id}) });
+        Swal.close(); loadData();
+    }
+
+    async function deleteData(d, id) {
+        const confirm = await Swal.fire({
+            title: 'ต้องการลบข้อมูลนี้?', text: "ข้อมูลจะถูกลบถาวร ไม่สามารถกู้คืนได้",
+            icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'ลบข้อมูล', cancelButtonText: 'ยกเลิก'
+        });
+        if (confirm.isConfirmed) {
+            loading();
+            const dateObj = new Date(d);
+            const dateStr = dateObj.getFullYear() + '-' + String(dateObj.getMonth()+1).padStart(2,'0') + '-' + String(dateObj.getDate()).padStart(2,'0');
+            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: "delete", date: dateStr, memberId: id}) });
+            Swal.fire({ icon: 'success', title: 'ลบข้อมูลแล้ว', timer: 1500, showConfirmButton: false });
+            loadData();
+        }
+    }
+
+    function filterData() {
+        const filter = document.getElementById('searchInput').value.toLowerCase();
+        const rows = document.getElementById('dataTable').getElementsByTagName('tr');
+        for (let row of rows) {
+            const text = row.innerText.toLowerCase();
+            row.style.display = text.includes(filter) ? "" : "none";
+        }
+    }
+
+    function loading() { Swal.fire({title: 'กำลังบันทึก...', didOpen: () => Swal.showLoading(), allowOutsideClick: false}); }
+
+    function showFullDetail(rowJson) {
+        const item = JSON.parse(decodeURIComponent(rowJson));
+        Swal.fire({
+            title: 'รายละเอียดงาน', width: '800px',
+            html: `
+                <div style="text-align:left; font-size:15px; color:var(--text-main);">
+                    <div style="background:#f8fafc; padding:24px; border-radius:12px; margin-bottom:16px; display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                        <div>
+                            <p style="margin:8px 0;"><b>ประเภท:</b> <span class="job-badge">${item[8] || 'ทั่วไป'}</span></p>
+                            <p style="margin:8px 0;"><b>รหัสสมาชิก:</b> ${String(item[1]).replace(/^'/, '')}</p>
+                            <p style="margin:8px 0;"><b>ชื่อลูกค้า:</b> ${item[2]}</p>
+                        </div>
+                        <div>
+                            <p style="margin:8px 0;"><b>เบอร์ติดต่อ:</b> ${String(item[3]).replace(/^'/, '')}</p>
+                            <p style="margin:8px 0;"><b>พนักงาน:</b> ${item[4]}</p>
+                            <p style="margin:8px 0;"><b>วันที่บันทึก:</b> ${fixDate(item[0])}</p>
+                        </div>
+                    </div>
+                    <p style="font-weight:600; margin-bottom:8px;">บันทึกเพิ่มเติม:</p>
+                    <div style="background:#f8fafc; padding:20px; border-radius:12px; border:1px solid var(--border); min-height:100px; white-space: pre-wrap; color:var(--text-main); line-height:1.6;">${item[6] || '- ไม่มีรายละเอียด -'}</div>
+                </div>
+            `,
+            confirmButtonText: 'ปิดหน้าต่าง', confirmButtonColor: '#4f46e5'
+        });
+    }
+
+    window.onload = () => {
         loadData();
+        includeSidebar(); // Load sidebar on start
     };
 </script>
 
