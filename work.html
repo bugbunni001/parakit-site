@@ -15,8 +15,6 @@
         :root {
             --primary: #4f46e5;
             --primary-light: #eef2ff;
-            --sidebar-bg: #1e293b;
-            --sidebar-hover: #334155;
             --text-main: #1e293b;
             --text-sub: #64748b;
             --bg-body: #f1f5f9;
@@ -26,83 +24,76 @@
             --danger: #ef4444;
             --warning: #f59e0b;
             --hover-row: #f0f4ff; 
-            --sidebar-width: 260px;
+            
+            /* Sidebar Variables */
+            --ios-blue: #007aff;
+            --sidebar-dark: rgba(28, 28, 30, 0.94);
+            --sidebar-width: 280px;
         }
 
-        * { box-sizing: border-box; }
-
+        /* --- Layout Adjustments for Sidebar --- */
         body {
             font-family: 'Kanit', sans-serif;
             background-color: var(--bg-body);
             margin: 0;
-            display: flex; /* รองรับ Sidebar */
-            min-height: 100vh;
+            padding: 0;
             color: var(--text-main);
+            min-height: 100vh;
+            line-height: 1.5;
+            transition: padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* --- Sidebar Styles (จากความจำ) --- */
-        .sidebar {
-            width: var(--sidebar-width);
-            background-color: var(--sidebar-bg);
-            color: white;
-            display: flex;
-            flex-direction: column;
-            position: fixed;
-            height: 100vh;
-            transition: all 0.3s ease;
-            z-index: 1000;
+        /* Top Header Style */
+        .top-header {
+            position: fixed; top: 0; left: 0; right: 0; height: 60px;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            z-index: 1200; display: flex; align-items: center; padding: 0 20px;
+            border-bottom: 0.5px solid rgba(0,0,0,0.1);
+            transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .sidebar-header {
-            padding: 24px;
-            font-size: 20px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+        .top-toggle {
+            width: 36px; height: 36px; border-radius: 10px; border: none;
+            background: transparent; color: var(--ios-blue); cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px; transition: background 0.2s; margin-right: 15px;
+        }
+        .top-toggle:hover { background: rgba(0, 122, 255, 0.1); }
+
+        /* Sidebar Containers */
+        .sidebar { 
+            position: fixed; top: 0; left: 0; width: var(--sidebar-width); height: 100vh; 
+            background: var(--sidebar-dark); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+            color: #fff; overflow-y: auto; transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 2000; box-shadow: 10px 0 30px rgba(0,0,0,0.1);
         }
 
-        .sidebar-menu {
-            flex-grow: 1;
-            padding: 20px 0;
-            list-style: none;
-            margin: 0;
+        .overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.3); backdrop-filter: blur(4px); display: none; z-index: 1500; }
+        .overlay.show { display: block; }
+
+        /* Responsive Sidebar Logic */
+        @media(min-width:769px) { 
+            body:not(.collapsed) { padding-left: var(--sidebar-width); }
+            body:not(.collapsed) .top-header { left: var(--sidebar-width); }
+            body.collapsed .sidebar { transform: translateX(-100%); }
+            body.collapsed .top-header { left: 0; }
         }
 
-        .menu-item {
-            padding: 12px 24px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            color: rgba(255,255,255,0.7);
-            text-decoration: none;
-            transition: 0.2s;
-            cursor: pointer;
+        @media(max-width:768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.show { transform: translateX(0); }
+            body { padding-left: 0 !important; }
+            .top-header { left: 0 !important; }
         }
 
-        .menu-item:hover, .menu-item.active {
-            background-color: var(--sidebar-hover);
-            color: white;
-            border-left: 4px solid var(--primary);
-        }
-
-        .menu-item i { width: 20px; text-align: center; }
-
-        /* --- Main Content Area --- */
-        .main-content {
-            flex-grow: 1;
-            margin-left: var(--sidebar-width);
-            padding: 32px;
-            transition: all 0.3s ease;
-        }
-
+        /* --- Main Content Styling --- */
         .container {
-            max-width: 1200px;
+            max-width: 1280px;
             margin: 0 auto;
+            padding: 84px 24px 40px; /* Top padding for header */
         }
 
-        /* --- UI Elements --- */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -120,7 +111,6 @@
             border: 1px solid var(--border);
             transition: transform 0.2s ease;
         }
-
         .stat-card:hover { transform: translateY(-4px); }
 
         .stat-icon {
@@ -130,8 +120,8 @@
             font-size: 24px;
         }
 
-        .stat-value { font-size: 24px; font-weight: 600; display: block; }
-        .stat-label { font-size: 13px; color: var(--text-sub); }
+        .stat-value { font-size: 24px; font-weight: 600; color: var(--text-main); display: block; }
+        .stat-label { font-size: 13px; color: var(--text-sub); font-weight: 400; }
 
         .header-section {
             display: flex; justify-content: space-between; align-items: center;
@@ -143,17 +133,19 @@
             width: 100%; padding: 12px 16px 12px 48px;
             border-radius: 12px; border: 1px solid var(--border);
             background: var(--card); font-family: inherit; outline: none;
+            transition: 0.2s; box-sizing: border-box;
         }
+        .search-box input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-light); }
         .search-box i { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-sub); }
 
         .btn-add {
             background: var(--primary); color: white; border: none;
             padding: 12px 24px; border-radius: 12px; font-weight: 500;
-            cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.2s;
+            cursor: pointer; display: flex; align-items: center; gap: 8px;
+            transition: 0.2s; white-space: nowrap;
         }
         .btn-add:hover { background: #3730a3; }
 
-        /* --- Table Styling --- */
         .table-container {
             background: var(--card); border-radius: 16px;
             border: 1px solid var(--border); overflow: hidden;
@@ -165,10 +157,21 @@
             background: #f8fafc; padding: 16px 20px; text-align: left;
             font-weight: 600; color: var(--text-sub);
             border-bottom: 1px solid var(--border);
-            text-transform: uppercase; font-size: 11px;
+            text-transform: uppercase; letter-spacing: 0.025em; font-size: 12px;
         }
-        td { padding: 16px 20px; border-bottom: 1px solid var(--border); transition: 0.2s; }
+
+        td { padding: 16px 20px; border-bottom: 1px solid var(--border); vertical-align: middle; transition: 0.2s; }
         tbody tr:hover td { background-color: var(--hover-row); }
+
+        .customer-flex { display: flex; flex-direction: column; gap: 4px; }
+        .name-txt { font-weight: 600; color: var(--text-main); font-size: 15px; transition: 0.2s; }
+        .id-tag { display: block; color: var(--text-sub); font-size: 13px; margin-top: 4px; font-weight: 400; }
+        .phone-link { color: var(--primary); text-decoration: none; font-size: 13px; font-weight: 500; }
+        .note-preview {
+            color: var(--text-sub); font-size: 13px;
+            display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical;
+            overflow: hidden; margin-top: 2px;
+        }
 
         .job-badge {
             display: inline-flex; padding: 4px 10px; border-radius: 8px;
@@ -183,122 +186,158 @@
             color: var(--text-sub); cursor: pointer;
             display: flex; align-items: center; justify-content: center; transition: 0.2s;
         }
-        .btn-circle:hover { color: var(--primary); border-color: var(--primary); }
+        .btn-circle:hover { background: #f8fafc; color: var(--primary); border-color: var(--primary); }
         .btn-circle.active-pin { background: #fffbeb; color: var(--warning); border-color: var(--warning); }
         .btn-circle.delete:hover { background: #fef2f2; color: var(--danger); border-color: var(--danger); }
 
-        /* --- Mobile Responsiveness --- */
-        @media (max-width: 992px) {
-            .sidebar { width: 70px; }
-            .sidebar-header span, .menu-item span { display: none; }
-            .main-content { margin-left: 70px; }
+        .swal-label { display: block; margin-bottom: 6px; font-size: 14px; font-weight: 500; text-align: left; }
+        .swal-input-m {
+            width: 100%; padding: 10px 12px; border-radius: 8px;
+            border: 1px solid var(--border); font-family: 'Kanit';
+            margin-bottom: 12px; box-sizing: border-box;
         }
 
         @media (max-width: 768px) {
             .header-section { flex-direction: column; align-items: stretch; }
             .search-box { max-width: 100%; }
+            .hide-mobile { display: none; }
         }
     </style>
 </head>
 <body>
 
-<aside class="sidebar">
-    <div class="sidebar-header">
-        <i class="fa-solid fa-rocket"></i>
-        <span>Parakit-Site</span>
+<header class="top-header">
+    <button class="top-toggle" onclick="toggleSidebar()">☰</button>
+    <div style="font-weight: 700; font-size: 1.25rem; color: var(--text-main); letter-spacing: -0.8px;">ระบบเคลียร์งาน</div>
+</header>
+
+<div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+<aside class="sidebar" id="sidebar"></aside>
+
+<div class="container">
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #e0e7ff; color: #4338ca;"><i class="fa-solid fa-layer-group"></i></div>
+            <div>
+                <span class="stat-label">งานทั้งหมด</span>
+                <span class="stat-value" id="totalJobs">0</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #fef3c7; color: #d97706;"><i class="fa-solid fa-thumbtack"></i></div>
+            <div>
+                <span class="stat-label">ปักหมุดเร่งด่วน</span>
+                <span class="stat-value" id="pinnedJobs">0</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #dcfce7; color: #15803d;"><i class="fa-solid fa-calendar-check"></i></div>
+            <div>
+                <span class="stat-label">รายการวันนี้</span>
+                <span class="stat-value" id="todayJobs">0</span>
+            </div>
+        </div>
     </div>
-    <ul class="sidebar-menu">
-        <a href="#" class="menu-item active">
-            <i class="fa-solid fa-house"></i>
-            <span>หน้าหลัก</span>
-        </a>
-        <a href="#" class="menu-item">
-            <i class="fa-solid fa-list-check"></i>
-            <span>รายการงาน</span>
-        </a>
-        <a href="#" class="menu-item">
-            <i class="fa-solid fa-chart-simple"></i>
-            <span>รายงาน</span>
-        </a>
-        <a href="#" class="menu-item">
-            <i class="fa-solid fa-gear"></i>
-            <span>ตั้งค่า</span>
-        </a>
-    </ul>
-</aside>
 
-<main class="main-content">
-    <div class="container">
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-icon" style="background: #e0e7ff; color: #4338ca;"><i class="fa-solid fa-layer-group"></i></div>
-                <div>
-                    <span class="stat-label">งานทั้งหมด</span>
-                    <span class="stat-value" id="totalJobs">0</span>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon" style="background: #fef3c7; color: #d97706;"><i class="fa-solid fa-thumbtack"></i></div>
-                <div>
-                    <span class="stat-label">ปักหมุดเร่งด่วน</span>
-                    <span class="stat-value" id="pinnedJobs">0</span>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon" style="background: #dcfce7; color: #15803d;"><i class="fa-solid fa-calendar-check"></i></div>
-                <div>
-                    <span class="stat-label">รายการวันนี้</span>
-                    <span class="stat-value" id="todayJobs">0</span>
-                </div>
-            </div>
+    <div class="header-section">
+        <button class="btn-add" onclick="openAddJobModal()">
+            <i class="fa-solid fa-plus"></i> เพิ่มรายการ
+        </button>
+        <div class="search-box">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="searchInput" placeholder="ค้นหาชื่อ, ID, เบอร์โทร หรือรายละเอียด..." onkeyup="filterData()">
         </div>
-
-        <div class="header-section">
-            <button class="btn-add" onclick="openAddJobModal()">
-                <i class="fa-solid fa-plus"></i> เพิ่มรายการ
-            </button>
-            <div class="search-box">
-                <i class="fa-solid fa-magnifying-glass"></i>
-                <input type="text" id="searchInput" placeholder="ค้นหาชื่อ, ID, เบอร์โทร..." onkeyup="filterData()">
-            </div>
-        </div>
-
-        <div class="table-container">
-            <div style="overflow-x: auto;">
-                <table id="mainTable">
-                    <thead>
-                        <tr>
-                            <th width="110">วันที่</th>
-                            <th width="180">ประเภทงาน & ID</th>
-                            <th>ข้อมูลลูกค้า</th>
-                            <th width="120">ผู้รับผิดชอบ</th>
-                            <th width="50">รูป</th>
-                            <th width="120" style="text-align: right;">จัดการ</th>
-                        </tr>
-                    </thead>
-                    <tbody id="dataTable">
-                        <tr><td colspan="6" style="text-align:center; padding:60px; color:var(--text-sub);">กำลังโหลดข้อมูล...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        
-        <footer style="text-align: center; margin-top: 40px; color: var(--text-sub); font-size: 13px;">
-            <p>© 2026 Copyright by Angerina Frog</p>
-        </footer>
     </div>
-</main>
+
+    <div class="table-container">
+        <div style="overflow-x: auto;">
+            <table id="mainTable">
+                <thead>
+                    <tr>
+                        <th width="110">วันที่</th>
+                        <th width="180">ประเภทงาน & ID</th>
+                        <th>ข้อมูลลูกค้า</th>
+                        <th width="140" class="hide-mobile">ผู้รับผิดชอบ</th>
+                        <th width="60">รูป</th>
+                        <th width="140" style="text-align: right;">จัดการ</th>
+                    </tr>
+                </thead>
+                <tbody id="dataTable">
+                    <tr><td colspan="6" style="text-align:center; padding:60px; color:var(--text-sub);">กำลังโหลดข้อมูล...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <footer style="text-align: center; margin-top: 40px; color: var(--text-sub); font-size: 13px;">
+        <p>© 2026 Copyright by Angerina Frog</p>
+    </footer>
+</div>
 
 <script>
-    // URL สคริปต์เดิมของคุณ
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwvzgyyJ9y29xcQkZPBQFvdV6_uC_8GRrsjWk2f5obJjTp4QRAAUnbuAtkDFFVVMRIF/exec';
     
-    const jobTypes = ["MGM ปรับลด", "ยกเลิกบริการ (ปกติ)", "ยกเลิกบริการ (5P)", "เปลี่ยนรายเดือนเป็นเติมเงิน", "เปลี่ยนโปรโมชั่น", "Add ส่วนลด", "Add เน็ตเพิ่ม", "MNP", "ระงับสัญญาณชั่วคราว", "ส่งเรื่องตรวจสอบ"];
+    const jobTypes = [
+        "MGM ปรับลด", "ยกเลิกบริการ (ปกติ)", "ยกเลิกบริการ (5P)", 
+        "เปลี่ยนรายเดือนเป็นเติมเงิน", "เปลี่ยนโปรโมชั่น", "Add ส่วนลด", 
+        "Add เน็ตเพิ่ม", "MNP", "ระงับสัญญาณชั่วคราว", "ส่งเรื่องตรวจสอบ"
+    ];
 
+    // --- Sidebar System Logic ---
+    function includeSidebar() {
+        const cached = localStorage.getItem('sidebar_cache');
+        if (cached) {
+            document.getElementById('sidebar').innerHTML = cached;
+            restoreMenuState();
+        }
+
+        fetch('sidebar.html')
+            .then(response => response.text())
+            .then(data => {
+                if (data !== cached) {
+                    document.getElementById('sidebar').innerHTML = data;
+                    localStorage.setItem('sidebar_cache', data);
+                    restoreMenuState();
+                }
+            })
+            .catch(err => console.warn("Sidebar Load Error"));
+            
+        if(localStorage.getItem('sidebar_collapsed') === 'true' && window.innerWidth > 768) {
+            document.body.classList.add('collapsed');
+        }
+    }
+
+    function toggleSidebar() {
+        if (window.innerWidth <= 768) {
+            document.getElementById("sidebar").classList.toggle("show");
+            document.getElementById("overlay").classList.toggle("show");
+        } else {
+            const isCollapsed = document.body.classList.toggle("collapsed");
+            localStorage.setItem('sidebar_collapsed', isCollapsed);
+        }
+    }
+
+    window.toggleDrop = function(btn, id) {
+        const item = btn.parentElement;
+        const isOpen = item.classList.toggle("open");
+        if (id) localStorage.setItem('menu-' + id, isOpen);
+    }
+
+    function restoreMenuState() {
+        ['credit', 'branch', 'sales'].forEach(id => {
+            if (localStorage.getItem('menu-' + id) === 'true') {
+                const el = document.getElementById('menu-' + id);
+                if (el) el.classList.add('open');
+            }
+        });
+    }
+
+    // --- Core Data Functions ---
     function fixDate(dateVal) {
         if (!dateVal) return "-";
         const d = new Date(dateVal);
-        return isNaN(d) ? dateVal : d.toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' });
+        if (isNaN(d)) return dateVal;
+        return d.toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' });
     }
 
     async function loadData() {
@@ -309,20 +348,20 @@
             tableBody.innerHTML = '';
 
             document.getElementById('totalJobs').innerText = data.length;
-            document.getElementById('pinnedJobs').innerText = data.filter(r => String(r[7]) === "true").length;
+            document.getElementById('pinnedJobs').innerText = data.filter(r => r[7] === "true" || r[7] === true).length;
             const todayStr = new Date().toISOString().split('T')[0];
             document.getElementById('todayJobs').innerText = data.filter(r => String(r[0]).includes(todayStr)).length;
 
             const sortedData = data.sort((a, b) => {
-                const pinA = String(a[7]) === "true";
-                const pinB = String(b[7]) === "true";
+                const pinA = (a[7] === "true" || a[7] === true);
+                const pinB = (b[7] === "true" || b[7] === true);
                 if (pinA !== pinB) return pinA ? -1 : 1;
                 return new Date(b[0]) - new Date(a[0]);
             });
 
             sortedData.forEach(row => {
                 const tr = document.createElement('tr');
-                const isPinned = String(row[7]) === "true";
+                const isPinned = (row[7] === "true" || row[7] === true);
                 if (isPinned) tr.style.backgroundColor = "#fffcf0";
 
                 const rowJson = encodeURIComponent(JSON.stringify(row));
@@ -330,79 +369,194 @@
                 const cleanPhone = String(row[3]).replace(/^'/, '');
 
                 tr.innerHTML = `
-                    <td style="font-weight:500;">${fixDate(row[0])}</td>
+                    <td style="color:var(--text-main); font-weight:500;">${fixDate(row[0])}</td>
                     <td>
                         <span class="job-badge">${row[8] || 'ทั่วไป'}</span>
-                        <div style="font-size:12px; color:var(--text-sub); margin-top:4px;">ID: ${cleanId}</div>
+                        <span class="id-tag">รหัสลูกค้า: ${cleanId}</span>
                     </td>
                     <td>
-                        <div onclick="showFullDetail('${rowJson}')" style="cursor:pointer">
-                            <div style="font-weight:600;">${row[2]}</div>
-                            <div style="font-size:12px; color:var(--primary);"><i class="fa-solid fa-phone"></i> ${cleanPhone}</div>
+                        <div class="customer-flex" onclick="showFullDetail('${rowJson}')" style="cursor:pointer">
+                            <div class="customer-head">
+                                <span class="name-txt">${row[2]}</span>
+                                <span class="phone-link"><i class="fa-solid fa-phone-flip" style="font-size:10px"></i> ${cleanPhone}</span>
+                            </div>
+                            <div class="note-preview"><b>Note:</b> ${row[6] || '-'}</div>
                         </div>
                     </td>
-                    <td style="color:var(--text-sub); font-size:13px;"><i class="fa-regular fa-user"></i> ${row[4]}</td>
+                    <td class="hide-mobile" style="color:var(--text-sub);"><i class="fa-regular fa-circle-user"></i> ${row[4]}</td>
                     <td>${row[5] ? `<a href="${row[5]}" target="_blank" style="color:var(--primary);"><i class="fa-solid fa-image"></i></a>` : '-'}</td>
                     <td>
                         <div class="action-group">
-                            <button class="btn-circle ${isPinned ? 'active-pin' : ''}" onclick="togglePin('${row[0]}', '${row[1]}')"><i class="fa-solid fa-thumbtack"></i></button>
-                            <button class="btn-circle" onclick="editData('${rowJson}')"><i class="fa-solid fa-pen"></i></button>
-                            <button class="btn-circle delete" onclick="deleteData('${row[0]}', '${row[1]}')"><i class="fa-solid fa-trash-can"></i></button>
+                            <button class="btn-circle ${isPinned ? 'active-pin' : ''}" onclick="togglePin('${row[0]}', '${row[1]}')" title="ปักหมุด"><i class="fa-solid fa-thumbtack"></i></button>
+                            <button class="btn-circle" onclick="editData('${rowJson}')" title="แก้ไข"><i class="fa-solid fa-pen-to-square"></i></button>
+                            <button class="btn-circle delete" onclick="deleteData('${row[0]}', '${row[1]}')" title="ลบ"><i class="fa-solid fa-trash-can"></i></button>
                         </div>
                     </td>
                 `;
                 tableBody.appendChild(tr);
             });
         } catch (e) { 
-            document.getElementById('dataTable').innerHTML = '<tr><td colspan="6" style="text-align:center; color:red; padding:40px;">โหลดข้อมูลไม่สำเร็จ</td></tr>';
+            document.getElementById('dataTable').innerHTML = '<tr><td colspan="6" style="text-align:center; color:red; padding:40px;">ไม่สามารถโหลดข้อมูลได้</td></tr>';
         }
     }
-
-    // --- ส่วนฟังก์ชันอื่นๆ (Add, Edit, Delete) ยังคงเดิมจากโค้ดที่คุณให้มา ---
-    // (เพื่อประหยัดพื้นที่ ผมคง Logic เดิมไว้ให้ทั้งหมดครับ)
 
     function openAddJobModal() {
         const today = new Date().toISOString().split('T')[0];
         let typeOptions = jobTypes.map(t => `<option value="${t}">${t}</option>`).join('');
+
         Swal.fire({
             title: 'สร้างรายการใหม่',
-            width: '800px',
+            width: '800px', 
+            padding: '2em',
             html: `
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; text-align:left;">
-                    <div><label class="swal-label">ประเภทงาน</label><select id="jobType" class="swal-input-m"><option value="">-- เลือก --</option>${typeOptions}</select></div>
-                    <div><label class="swal-label">พนักงาน</label><select id="staff" class="swal-input-m"><option value="ศุภกฤต">ศุภกฤต</option><option value="นวพล">นวพล</option><option value="ปิยะพร">ปิยะพร</option><option value="กรทักษ์">กรทักษ์</option></select></div>
-                    <div><label class="swal-label">วันที่</label><input type="date" id="date" class="swal-input-m" value="${today}"></div>
-                    <div><label class="swal-label">รหัสสมาชิก</label><input type="text" id="memberId" class="swal-input-m"></div>
-                    <div><label class="swal-label">ชื่อลูกค้า</label><input type="text" id="name" class="swal-input-m"></div>
-                    <div><label class="swal-label">เบอร์ติดต่อ</label><input type="text" id="phone" class="swal-input-m"></div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                    <div style="text-align:left;">
+                        <label class="swal-label">ประเภทงาน</label>
+                        <select id="jobType" class="swal-input-m">
+                            <option value="">-- เลือกประเภทงาน --</option>
+                            ${typeOptions}
+                        </select>
+                    </div>
+                    <div style="text-align:left;">
+                        <label class="swal-label">พนักงาน</label>
+                        <select id="staff" class="swal-input-m">
+                            <option value="">-- เลือกพนักงาน --</option>
+                            <option value="ศุภกฤต">ศุภกฤต</option>
+                            <option value="นวพล">นวพล</option>
+                            <option value="ปิยะพร">ปิยะพร</option>
+                            <option value="กรทักษ์">กรทักษ์</option>
+                        </select>
+                    </div>
                 </div>
-                <div style="text-align:left; margin-top:16px;">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                    <div style="text-align:left;">
+                        <label class="swal-label">วันที่</label>
+                        <input type="date" id="date" class="swal-input-m" value="${today}">
+                    </div>
+                    <div style="text-align:left;">
+                        <label class="swal-label">รหัสสมาชิก</label>
+                        <input type="text" id="memberId" class="swal-input-m" placeholder="TMH/TOL/TVS">
+                    </div>
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                    <div style="text-align:left;">
+                        <label class="swal-label">ชื่อลูกค้า</label>
+                        <input type="text" id="name" class="swal-input-m">
+                    </div>
+                    <div style="text-align:left;">
+                        <label class="swal-label">เบอร์ติดต่อ</label>
+                        <input type="text" id="phone" class="swal-input-m">
+                    </div>
+                </div>
+                <div style="text-align:left;">
                     <label class="swal-label">รายละเอียด</label>
-                    <textarea id="jobDetail" class="swal-input-m" style="height:80px;"></textarea>
+                    <textarea id="jobDetail" class="swal-input-m" style="height:100px;"></textarea>
+                </div>
+                <div style="text-align:left;">
+                    <label class="swal-label">รูปภาพประกอบ</label>
+                    <input type="file" id="file" class="swal-input-m" accept="image/*">
                 </div>
             `,
             showCancelButton: true,
-            confirmButtonText: 'บันทึก',
+            confirmButtonText: 'บันทึกรายการ',
+            confirmButtonColor: '#4f46e5',
             preConfirm: async () => {
                 const values = {
                     date: document.getElementById('date').value,
                     jobType: document.getElementById('jobType').value,
-                    memberId: "'" + document.getElementById('memberId').value,
+                    memberId: document.getElementById('memberId').value,
                     name: document.getElementById('name').value,
-                    phone: "'" + document.getElementById('phone').value,
+                    phone: document.getElementById('phone').value,
                     staff: document.getElementById('staff').value,
-                    jobDetail: document.getElementById('jobDetail').value,
-                    action: "insert"
+                    jobDetail: document.getElementById('jobDetail').value
                 };
-                if(!values.name || !values.jobType) return Swal.showValidationMessage('กรุณากรอกข้อมูลสำคัญ');
-                return values;
+                if(!values.jobType || !values.name || !values.phone) return Swal.showValidationMessage('กรุณากรอกข้อมูลสำคัญให้ครบ');
+                
+                let fileData = null;
+                const fileInput = document.getElementById('file');
+                if (fileInput.files.length > 0) {
+                    fileData = await new Promise(resolve => {
+                        const reader = new FileReader();
+                        reader.onload = () => resolve(reader.result);
+                        reader.readAsDataURL(fileInput.files[0]);
+                    });
+                }
+                return { action: "insert", ...values, memberId: "'" + values.memberId, phone: "'" + values.phone, fileData };
             }
         }).then(async (result) => {
             if (result.isConfirmed) {
                 loading();
                 await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(result.value) });
+                Swal.fire({ icon: 'success', title: 'สำเร็จ', timer: 1500, showConfirmButton: false });
                 loadData();
-                Swal.close();
+            }
+        });
+    }
+
+    window.editData = function(rowJson) {
+        const item = JSON.parse(decodeURIComponent(rowJson));
+        const oldDate = new Date(item[0]).toISOString().split('T')[0];
+        let typeOptions = jobTypes.map(t => `<option value="${t}" ${item[8] === t ? 'selected' : ''}>${t}</option>`).join('');
+        const cleanPhone = String(item[3]).replace(/^'/, '');
+
+        Swal.fire({
+            title: 'แก้ไขข้อมูล',
+            width: '800px', 
+            padding: '2em',
+            html: `
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                    <div style="text-align:left;">
+                        <label class="swal-label">ประเภทงาน</label>
+                        <select id="swal-jobType" class="swal-input-m">${typeOptions}</select>
+                    </div>
+                    <div style="text-align:left;">
+                        <label class="swal-label">พนักงาน</label>
+                        <select id="swal-staff" class="swal-input-m">
+                            <option value="ศุภกฤต" ${item[4] === 'ศุภกฤต' ? 'selected' : ''}>ศุภกฤต</option>
+                            <option value="นวพล" ${item[4] === 'นวพล' ? 'selected' : ''}>นวพล</option>
+                            <option value="ปิยะพร" ${item[4] === 'ปิยะพร' ? 'selected' : ''}>ปิยะพร</option>
+                            <option value="กรทักษ์" ${item[4] === 'กรทักษ์' ? 'selected' : ''}>กรทักษ์</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                    <div style="text-align:left;">
+                        <label class="swal-label">ชื่อลูกค้า</label>
+                        <input type="text" id="swal-name" class="swal-input-m" value="${item[2]}">
+                    </div>
+                    <div style="text-align:left;">
+                        <label class="swal-label">เบอร์ติดต่อ</label>
+                        <input type="text" id="swal-phone" class="swal-input-m" value="${cleanPhone}">
+                    </div>
+                </div>
+                <div style="text-align:left;">
+                    <label class="swal-label">รายละเอียด</label>
+                    <textarea id="swal-jobDetail" class="swal-input-m" style="height:120px;">${item[6] || ''}</textarea>
+                </div>
+            `,
+            showCancelButton: true,
+            confirmButtonText: 'อัพเดทข้อมูล',
+            confirmButtonColor: '#10b981',
+            preConfirm: () => {
+                return {
+                    action: "update",
+                    oldDate: oldDate,
+                    oldMemberId: String(item[1]),
+                    date: oldDate,
+                    memberId: String(item[1]),
+                    name: document.getElementById('swal-name').value,
+                    phone: "'" + document.getElementById('swal-phone').value,
+                    staff: document.getElementById('swal-staff').value,
+                    jobDetail: document.getElementById('swal-jobDetail').value,
+                    jobType: document.getElementById('swal-jobType').value
+                }
+            }
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                loading();
+                await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(result.value) });
+                Swal.fire({ icon: 'success', title: 'อัพเดทเรียบร้อย', timer: 1500, showConfirmButton: false });
+                loadData();
             }
         });
     }
@@ -412,30 +566,75 @@
         const d = new Date(date);
         const dateStr = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
         await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: "togglePin", date: dateStr, memberId: id}) });
-        loadData();
         Swal.close();
+        loadData();
     }
 
     async function deleteData(d, id) {
-        if ((await Swal.fire({ title: 'ลบข้อมูล?', icon: 'warning', showCancelButton: true })).isConfirmed) {
+        const confirm = await Swal.fire({
+            title: 'ต้องการลบข้อมูลนี้?',
+            text: "ข้อมูลจะถูกลบถาวร ไม่สามารถกู้คืนได้",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            confirmButtonText: 'ลบข้อมูล',
+            cancelButtonText: 'ยกเลิก'
+        });
+        if (confirm.isConfirmed) {
             loading();
             const dateObj = new Date(d);
             const dateStr = dateObj.getFullYear() + '-' + String(dateObj.getMonth()+1).padStart(2,'0') + '-' + String(dateObj.getDate()).padStart(2,'0');
             await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: "delete", date: dateStr, memberId: id}) });
+            Swal.fire({ icon: 'success', title: 'ลบข้อมูลแล้ว', timer: 1500, showConfirmButton: false });
             loadData();
-            Swal.close();
         }
     }
 
-    function loading() { Swal.fire({title: 'กำลังประมวลผล...', didOpen: () => Swal.showLoading(), allowOutsideClick: false}); }
-    
     function filterData() {
         const filter = document.getElementById('searchInput').value.toLowerCase();
-        const rows = document.querySelectorAll('#dataTable tr');
-        rows.forEach(row => row.style.display = row.innerText.toLowerCase().includes(filter) ? "" : "none");
+        const rows = document.getElementById('dataTable').getElementsByTagName('tr');
+        for (let row of rows) {
+            const text = row.innerText.toLowerCase();
+            row.style.display = text.includes(filter) ? "" : "none";
+        }
     }
 
-    window.onload = loadData;
+    function loading() {
+        Swal.fire({title: 'กำลังบันทึก...', didOpen: () => Swal.showLoading(), allowOutsideClick: false});
+    }
+
+    function showFullDetail(rowJson) {
+        const item = JSON.parse(decodeURIComponent(rowJson));
+        Swal.fire({
+            title: 'รายละเอียดงาน',
+            width: '800px',
+            html: `
+                <div style="text-align:left; font-size:15px; color:var(--text-main);">
+                    <div style="background:#f8fafc; padding:24px; border-radius:12px; margin-bottom:16px; display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                        <div>
+                            <p style="margin:8px 0;"><b>ประเภท:</b> <span class="job-badge">${item[8] || 'ทั่วไป'}</span></p>
+                            <p style="margin:8px 0;"><b>รหัสสมาชิก:</b> ${String(item[1]).replace(/^'/, '')}</p>
+                            <p style="margin:8px 0;"><b>ชื่อลูกค้า:</b> ${item[2]}</p>
+                        </div>
+                        <div>
+                            <p style="margin:8px 0;"><b>เบอร์ติดต่อ:</b> ${String(item[3]).replace(/^'/, '')}</p>
+                            <p style="margin:8px 0;"><b>พนักงาน:</b> ${item[4]}</p>
+                            <p style="margin:8px 0;"><b>วันที่บันทึก:</b> ${fixDate(item[0])}</p>
+                        </div>
+                    </div>
+                    <p style="font-weight:600; margin-bottom:8px;">บันทึกเพิ่มเติม:</p>
+                    <div style="background:#f8fafc; padding:20px; border-radius:12px; border:1px solid var(--border); min-height:100px; white-space: pre-wrap; color:var(--text-main); line-height:1.6;">${item[6] || '- ไม่มีรายละเอียด -'}</div>
+                </div>
+            `,
+            confirmButtonText: 'ปิดหน้าต่าง',
+            confirmButtonColor: '#4f46e5'
+        });
+    }
+
+    window.onload = () => {
+        includeSidebar();
+        loadData();
+    };
 </script>
 
 </body>
