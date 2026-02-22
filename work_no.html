@@ -81,7 +81,7 @@
         /* Content Area */
         .main-content { 
             display: flex; flex-direction: column; align-items: center; 
-            padding: 40px 25px; /* ปรับ Padding ด้านบนใหม่หลังจากเอา Header ออก */
+            padding: 40px 25px; /* ปรับลด padding-top เนื่องจากไม่มี header แล้ว */
             animation: fadeIn 0.6s ease-out; 
         }
 
@@ -136,22 +136,36 @@
         }
 
         .pinned-row { background: rgba(255, 149, 0, 0.08) !important; }
-        .btn-pin, .btn-edit, .btn-delete {
-            width: 36px; height: 36px; border-radius: 10px; border: none; cursor: pointer; transition: 0.2s;
-            display: inline-flex; align-items: center; justify-content: center; font-size: 14px;
+
+        .action-btns {
+            display: flex;
+            gap: 10px;
+            align-items: center;
         }
-        .btn-pin:hover, .btn-edit:hover, .btn-delete:hover { transform: scale(1.1); }
-        .btn-pin { background: #fff8ed; color: var(--ios-orange); margin-right: 4px; }
-        .btn-pin.active { background: var(--ios-orange); color: white; }
-        .btn-edit { background: #eef7ed; color: var(--ios-green); margin-right: 4px; }
+
+        .btn-pin, .btn-edit, .btn-delete {
+            width: 38px; height: 38px; border-radius: 12px; border: none; cursor: pointer; transition: all 0.2s;
+            display: inline-flex; align-items: center; justify-content: center; font-size: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        .btn-pin { background: #fff8ed; color: var(--ios-orange); }
+        .btn-pin.active { background: var(--ios-orange); color: white; box-shadow: 0 4px 10px rgba(255, 149, 0, 0.3); }
+        
+        .btn-edit { background: #eef7ed; color: var(--ios-green); }
+        .btn-edit:hover { background: var(--ios-green); color: white; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(52, 199, 89, 0.3); }
+
         .btn-delete { background: #fff0f0; color: var(--ios-red); }
+        .btn-delete:hover { background: var(--ios-red); color: white; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(255, 59, 48, 0.3); }
+        
+        .btn-pin:hover:not(.active) { background: #ffe6c2; transform: translateY(-2px); }
 
         /* Modal Customization */
         .swal2-container { z-index: 9999 !important; }
         .swal-modal-custom { border-radius: 30px !important; padding: 20px !important; }
         .swal2-title { font-weight: 700 !important; color: var(--text-main) !important; }
 
-        /* Grid Form/Detail Layout */
+        /* Grid Layout for Form */
         .swal-form-container { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; text-align: left; margin-top: 15px; }
         .swal-field-full { grid-column: span 2; }
         .swal-label { font-size: 13px; font-weight: 600; color: var(--text-light); margin-bottom: 6px; display: block; margin-left: 5px; }
@@ -161,7 +175,6 @@
         }
         .swal-input-styled:focus { border-color: var(--ios-blue); background: #fff; box-shadow: 0 0 0 4px rgba(0,122,255,0.1); }
         
-        /* View Detail Mode - Clean Style */
         .detail-view-item { background: #f9f9f9; padding: 12px 15px; border-radius: 14px; border: 1.5px solid #f0f0f5; }
         .detail-view-item .val { font-size: 15px; font-weight: 600; color: var(--text-main); display: block; }
 
@@ -197,10 +210,9 @@
                     <th width="160">ประเภทงาน</th>
                     <th>รหัสสมาชิก</th>
                     <th>ชื่อลูกค้า / เบอร์</th>
-                    <th>รายละเอียด</th>
-                    <th>พนักงาน</th>
+                    <th width="300">รายละเอียด</th> <th>พนักงาน</th>
                     <th>เอกสาร</th>
-                    <th width="140">จัดการ</th>
+                    <th width="160">จัดการ</th>
                 </tr>
             </thead>
             <tbody id="dataTable">
@@ -210,7 +222,7 @@
     </div>
     
     <p style="margin-top:30px; font-size:13px; color:rgba(0,0,0,0.5); font-weight: 500;">
-        <i class="fa-solid fa-copyright"></i> 2026 Crafted by <strong>Angerina Frog</strong>
+        <i class="fa-solid fa-copyright"></i> 2026 Copyright by <strong>Angerina Frog</strong>
     </p>
 </div>
 
@@ -220,7 +232,7 @@
     const jobTypes = [
         "MGM ปรับลด", "ยกเลิกบริการ (ปกติ)", "ยกเลิกบริการ (5P)", "MNP",
         "เปลี่ยนรายเดือนเป็นเติมเงิน", "เปลี่ยนโปรโมชั่น", "Add ส่วนลด",
-        "Add เน็ตเพิ่ม", "ระงับสัญญาณชั่วคราว", "ส่งเรื่องตรวจสอบ"
+        "Add เน็ตเพิ่ม", "ระงับสัญญาณ(ชั่วคราว)", "ส่งเรื่องตรวจสอบ"
     ];
 
     let fullData = [];
@@ -307,13 +319,19 @@
                     <td><span class="job-type-badge">${row[8] || "ทั่วไป"}</span></td>
                     <td onclick="showFullDetail('${rowJson}')" style="cursor:pointer; font-weight:600; color:var(--ios-blue);">${String(row[1]).replace(/^'/, '')}</td>
                     <td onclick="showFullDetail('${rowJson}')" style="cursor:pointer;">${row[2]}<br><small style="color:#8e8e93">${String(row[3]).replace(/^'/, '')}</small></td>
-                    <td onclick="showFullDetail('${rowJson}')" style="cursor:pointer;"><div style="max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#666;">${row[6] || "-"}</div></td>
+                    <td onclick="showFullDetail('${rowJson}')" style="cursor:pointer;">
+                        <div style="max-width:300px; max-height:100px; overflow:hidden; white-space:normal; display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; color:#666; font-size:13px; line-height:1.4;">
+                            ${row[6] || "-"}
+                        </div>
+                    </td>
                     <td>${row[4]}</td>
                     <td>${row[5] ? `<a href="${row[5]}" target="_blank" style="color:var(--ios-blue); text-decoration:none;"><i class="fa-solid fa-image"></i> รูป</a>` : '-'}</td>
                     <td>
-                        <button class="btn-pin ${isPinned ? 'active' : ''}" onclick="togglePin('${row[0]}', '${row[1]}')" title="ปักหมุด"><i class="fa-solid fa-thumbtack"></i></button>
-                        <button class="btn-edit" onclick="editData('${rowJson}')" title="แก้ไข"><i class="fa-solid fa-pen-to-square"></i></button>
-                        <button class="btn-delete" onclick="deleteData('${row[0]}', '${row[1]}')" title="ลบ"><i class="fa-solid fa-trash"></i></button>
+                        <div class="action-btns">
+                            <button class="btn-pin ${isPinned ? 'active' : ''}" onclick="togglePin('${row[0]}', '${row[1]}')" title="ปักหมุด"><i class="fa-solid fa-thumbtack"></i></button>
+                            <button class="btn-edit" onclick="editData('${rowJson}')" title="แก้ไขข้อมูล"><i class="fa-solid fa-pen-to-square"></i></button>
+                            <button class="btn-delete" onclick="deleteData('${row[0]}', '${row[1]}')" title="ลบรายการ"><i class="fa-solid fa-trash"></i></button>
+                        </div>
                     </td>
                 `;
                 tableBody.appendChild(tr);
