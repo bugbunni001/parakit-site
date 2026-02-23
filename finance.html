@@ -17,11 +17,13 @@
             --ios-bg: #f2f2f7;
             --glass-white: rgba(255, 255, 255, 0.7);
             --glass-border: rgba(255, 255, 255, 0.4);
-            --sidebar-dark: rgba(28, 28, 30, 0.96); /* จาก index.html */
+            /* Sidebar style from index.html */
+            --sidebar-dark: rgba(28, 28, 30, 0.96);
             --text-main: #1c1c1e;
             --text-light: #8e8e93;
-            --transition-bounce: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); /* จาก index.html */
             --transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            --transition-swift: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-bounce: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
         /* ===== GLOBAL RESET & STRUCTURE ===== */
@@ -40,7 +42,21 @@
             overflow-x: hidden;
         }
 
-        /* ===== New Floating Draggable Sidebar System (1:1 from index.html) ===== */
+        /* ===== Header Navbar (New from index) ===== */
+        .top-header {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            padding: 0 20px 0 75px; 
+            border-bottom: 0.5px solid rgba(0,0,0,0.1);
+        }
+
+        /* ===== Floating Draggable Button (1:1 from index) ===== */
         #floatingMenuBtn {
             position: fixed;
             top: 10px;
@@ -63,6 +79,7 @@
         }
         #floatingMenuBtn:active { transform: scale(0.9); }
 
+        /* ===== Floating Sidebar & Overlay (1:1 from index) ===== */
         .sidebar-overlay {
             position: fixed;
             inset: 0;
@@ -71,7 +88,6 @@
             display: none;
             opacity: 0;
             transition: opacity 0.3s;
-            backdrop-filter: blur(8px);
         }
         .sidebar-overlay.active { display: block; opacity: 1; }
 
@@ -89,28 +105,35 @@
             transition: opacity 0.3s, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
             box-shadow: 0 15px 40px rgba(0,0,0,0.4);
             border: 1px solid rgba(255,255,255,0.1);
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,0.2) transparent;
         }
-        .sidebar-float.active { opacity: 1; visibility: visible; transform: scale(1) translateY(0); }
+        .sidebar-float.active {
+            opacity: 1;
+            visibility: visible;
+            transform: scale(1) translateY(0);
+        }
+
+        /* Sidebar Content Styles */
         .sidebar-float .sidebar-header { padding: 20px; font-size: 17px; font-weight: 600; color: #fff; border-bottom: 0.5px solid rgba(255,255,255,0.1); }
-        .sidebar-float .menu { padding: 8px 0; display: flex; flex-direction: column; }
+        .sidebar-float .menu { padding: 8px 0; }
         .sidebar-float .menu a, .sidebar-float .drop-btn { 
             width: 100%; padding: 12px 20px; background: none; border: none; 
             color: #ebebf5; text-align: left; font-size: 14px; cursor: pointer; 
             display: flex; align-items: center; text-decoration: none; transition: 0.2s;
         }
         .sidebar-float .menu a:hover, .sidebar-float .drop-btn:hover { background: rgba(255,255,255,0.1); }
-        .sidebar-float .sub { display: none; background: rgba(0,0,0,0.2); padding: 5px 0; }
+        .sidebar-float .sub { display: none; background: rgba(0,0,0,0.2); }
         .sidebar-float .item.open .sub { display: block; }
         .sidebar-float .sub a { padding-left: 45px; font-size: 13px; color: #8e8e93; }
-        .arrow { margin-left: auto; transition: 0.3s; font-size: 10px; opacity: 0.6; }
-        .item.open .arrow { transform: rotate(90deg); }
 
-        /* ===== MAIN CONTENT (iOS COMPACT GLASS) ===== */
+        /* ===== MAIN CONTENT (Restored original box) ===== */
         .content { 
             padding: 80px 15px 40px; 
             display: flex; justify-content: center; 
             animation: fadeIn 0.6s ease-out;
         }
+
         @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
         .box { 
@@ -194,7 +217,9 @@
         .check-icon circle { stroke: var(--ios-green); stroke-width: 2.5; fill: none; }
         .check-icon path { stroke: var(--ios-green); stroke-width: 4; fill: none; stroke-linecap: round; }
         .warn-icon { font-size: 50px; color: #ff3b30; margin-bottom: 15px; }
+        
         .success .warn-icon, .error .check-icon { display: none; }
+        
         .btn-ok { 
             background: var(--text-main); color: #fff; width: 100%; 
             padding: 10px; border: none; border-radius: 12px; 
@@ -213,9 +238,14 @@
 
 <body>
 
-<button id="floatingMenuBtn">☰</button>
-<div class="sidebar-overlay" id="sidebarOverlay"></div>
-<div class="sidebar-float" id="sidebarFloat"></div>
+<header class="top-header">
+    <div style="font-weight: 700; font-size: 1.25rem; color: var(--text-main); letter-spacing: -0.8px;">ลงข้อมูลสินเชื่อ</div>
+</header>
+
+<button id="floatingMenuBtn" title="ลากเพื่อย้าย">เมนู</button>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebarFloat()"></div>
+<aside class="sidebar-float" id="sidebarFloat"></aside>
 
 <div class="content">
     <div class="box">
@@ -238,14 +268,17 @@
                 <label>ชื่อพนักงาน</label>
                 <input type="text" id="staffName" required placeholder="ชื่อพนักงาน">
             </div>
+
             <div class="form-row">
                 <label>ชื่อลูกค้า</label>
                 <input type="text" id="customerName" required placeholder="ชื่อ-นามสกุล ลูกค้า">
             </div>
+
             <div class="form-row">
                 <label>เบอร์โทรศัพท์ลูกค้า</label>
                 <input type="tel" id="customerPhone" required placeholder="08XXXXXXXX" pattern="[0-9]{10}">
             </div>
+
             <div class="form-row">
                 <label>ประเภทสินเชื่อ</label>
                 <select id="loanType" required>
@@ -304,193 +337,196 @@
 <footer>© 2026 Copy Right By Angerina Frog</footer>
 
 <script>
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyZqabSCrYmEBNr2z9zpWTYjyptJYoSiLsyN9tgvgPw9KbBH4RyF0FwWvx1Ofu8nE9seg/exec"; 
+    // --- Constant for App Script ---
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyZqabSCrYmEBNr2z9zpWTYjyptJYoSiLsyN9tgvgPw9KbBH4RyF0FwWvx1Ofu8nE9seg/exec"; 
 
-// --- ระบบ Floating Sidebar จาก index.html ---
-const floatBtn = document.getElementById('floatingMenuBtn');
-const sideFloat = document.getElementById('sidebarFloat');
-const overlay = document.getElementById('sidebarOverlay');
+    // --- Floating Sidebar Logic (1:1 from index.html) ---
+    const dragBtn = document.getElementById('floatingMenuBtn');
+    const sideFloat = document.getElementById('sidebarFloat');
+    const sideOverlay = document.getElementById('sidebarOverlay');
+    let isDragging = false;
+    let startX, startY, shiftX, shiftY;
 
-let isDragging = false;
-let currentX;
-let currentY;
-let initialX;
-let initialY;
-let xOffset = 0;
-let yOffset = 0;
-
-// โหลดตำแหน่งปุ่มจาก LocalStorage
-function loadButtonPosition() {
-    const pos = localStorage.getItem('btnPosition');
-    if (pos) {
-        const { x, y } = JSON.parse(pos);
-        xOffset = x; yOffset = y;
-        setTranslate(x, y, floatBtn);
+    function loadButtonPosition() {
+        const savedLeft = localStorage.getItem('floatBtnLeft');
+        const savedTop = localStorage.getItem('floatBtnTop');
+        if (savedLeft && savedTop) {
+            dragBtn.style.left = savedLeft + 'px';
+            dragBtn.style.top = savedTop + 'px';
+        }
     }
-}
 
-floatBtn.addEventListener('mousedown', dragStart);
-floatBtn.addEventListener('touchstart', dragStart, {passive: false});
-window.addEventListener('mousemove', drag);
-window.addEventListener('touchmove', drag, {passive: false});
-window.addEventListener('mouseup', dragEnd);
-window.addEventListener('touchend', dragEnd);
-
-function dragStart(e) {
-    initialX = (e.type === "touchstart" ? e.touches[0].clientX : e.clientX) - xOffset;
-    initialY = (e.type === "touchstart" ? e.touches[0].clientY : e.clientY) - yOffset;
-    if (e.target === floatBtn) isDragging = true;
-}
-
-function drag(e) {
-    if (isDragging) {
-        e.preventDefault();
-        currentX = (e.type === "touchmove" ? e.touches[0].clientX : e.clientX) - initialX;
-        currentY = (e.type === "touchmove" ? e.touches[0].clientY : e.clientY) - initialY;
-        xOffset = currentX; yOffset = currentY;
-        setTranslate(currentX, currentY, floatBtn);
-    }
-}
-
-function dragEnd() {
-    if (isDragging) {
+    dragBtn.onpointerdown = function(e) {
         isDragging = false;
-        localStorage.setItem('btnPosition', JSON.stringify({ x: xOffset, y: yOffset }));
-    }
-}
-
-function setTranslate(xPos, yPos, el) {
-    el.style.transform = `translate3d(${xPos}px, ${yPos}px, 0)`;
-}
-
-// คลิกปุ่มเพื่อเปิดเมนู
-floatBtn.addEventListener('click', () => {
-    if (Math.abs(currentX - (initialX + xOffset)) < 5 || !currentX) { 
-        const rect = floatBtn.getBoundingClientRect();
-        sideFloat.style.left = Math.min(rect.left, window.innerWidth - 300) + 'px';
-        sideFloat.style.top = Math.min(rect.bottom + 10, window.innerHeight - 400) + 'px';
-        sideFloat.classList.add('active');
-        overlay.classList.add('active');
-    }
-});
-
-overlay.addEventListener('click', () => {
-    sideFloat.classList.remove('active');
-    overlay.classList.remove('active');
-});
-
-function includeSidebar() {
-    fetch('sidebar.html?v=' + new Date().getTime())
-        .then(res => res.text())
-        .then(data => {
-            sideFloat.innerHTML = data;
-            ['credit', 'branch', 'sales'].forEach(id => {
-                if (localStorage.getItem('menu-' + id) === 'true') {
-                    const el = sideFloat.querySelector('#menu-' + id);
-                    if (el) el.classList.add('open');
-                }
-            });
-        });
-}
-
-window.toggleDrop = function(btn, id) {
-    const item = btn.parentElement;
-    const isOpen = item.classList.toggle("open");
-    if (id) localStorage.setItem('menu-' + id, isOpen);
-}
-
-// --- ฟังก์ชันเดิมของหน้าลงข้อมูลสินเชื่อ ---
-document.getElementById('date').value = new Date().toISOString().split("T")[0];
-
-function toggleReason() {
-    const isPass = document.getElementById('result').value === 'ผ่าน';
-    document.getElementById('reasonGroup').style.display = isPass ? 'block' : 'none';
-}
-
-function previewImage() {
-    const file = document.getElementById('imageFile').files[0];
-    const preview = document.getElementById('preview');
-    if (file) {
-        const reader = new FileReader();
-        reader.onloadend = () => { preview.src = reader.result; preview.style.display = 'block'; }
-        reader.readAsDataURL(file);
-    }
-}
-
-document.getElementById('loanForm').onsubmit = function(e) {
-    e.preventDefault();
-    const btn = document.getElementById('submitBtn');
-    const loading = document.getElementById('loading');
-    const staffName = document.getElementById('staffName').value.trim();
-    const customerName = document.getElementById('customerName').value.trim();
-    const customerPhone = document.getElementById('customerPhone').value.trim();
-
-    if (!staffName || !customerName || !customerPhone) {
-        showPopup("กรุณากรอกข้อมูลให้ครบถ้วน", false);
-        return;
-    }
-
-    loading.style.display = "flex";
-    btn.disabled = true;
-
-    const file = document.getElementById('imageFile').files[0];
-    const formData = {
-        date: document.getElementById('date').value,
-        branch: document.getElementById('branch').value,
-        staffName: staffName,
-        customerName: customerName,
-        customerPhone: customerPhone,
-        loanType: document.getElementById('loanType').value,
-        result: document.getElementById('result').value,
-        reason: document.getElementById('reason').value || "ไม่ผ่าน"
+        startX = e.clientX; startY = e.clientY;
+        const rect = dragBtn.getBoundingClientRect();
+        shiftX = e.clientX - rect.left;
+        shiftY = e.clientY - rect.top;
+        dragBtn.setPointerCapture(e.pointerId);
+        document.addEventListener('pointermove', onPointerMove);
+        document.addEventListener('pointerup', onPointerUp);
     };
 
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            formData.imageFile = e.target.result;
-            formData.imageName = file.name;
-            formData.imageType = file.type;
-            sendData(formData);
-        };
-        reader.readAsDataURL(file);
-    } else {
-        sendData(formData);
+    function onPointerMove(e) {
+        if (!isDragging && (Math.abs(e.clientX - startX) > 5 || Math.abs(e.clientY - startY) > 5)) isDragging = true;
+        if (isDragging) {
+            let newX = e.clientX - shiftX;
+            let newY = e.clientY - shiftY;
+            newX = Math.max(0, Math.min(newX, window.innerWidth - dragBtn.offsetWidth));
+            newY = Math.max(0, Math.min(newY, window.innerHeight - dragBtn.offsetHeight));
+            dragBtn.style.left = newX + 'px';
+            dragBtn.style.top = newY + 'px';
+        }
     }
-};
 
-function sendData(data) {
-    fetch(WEB_APP_URL, {
-        method: "POST",
-        mode: "no-cors", 
-        body: JSON.stringify(data)
-    })
-    .then(() => {
-        document.getElementById('loading').style.display = "none";
-        showPopup("บันทึกข้อมูลสำเร็จ", true);
-        setTimeout(() => location.reload(), 2000);
-    })
-    .catch(err => {
-        document.getElementById('loading').style.display = "none";
-        showPopup("ผิดพลาด: " + err, false);
-        document.getElementById('submitBtn').disabled = false;
-    });
-}
+    function onPointerUp(e) {
+        document.removeEventListener('pointermove', onPointerMove);
+        document.removeEventListener('pointerup', onPointerUp);
+        dragBtn.releasePointerCapture(e.pointerId);
+        if (isDragging) {
+            localStorage.setItem('floatBtnLeft', dragBtn.offsetLeft);
+            localStorage.setItem('floatBtnTop', dragBtn.offsetTop);
+        } else {
+            toggleSidebarFloat();
+        }
+        isDragging = false;
+    }
 
-function showPopup(text, isSuccess) {
-    const popup = document.getElementById("popup");
-    document.getElementById("popupText").innerText = text;
-    popup.classList.remove("success", "error");
-    popup.classList.add(isSuccess ? "success" : "error");
-    popup.classList.add("show");
-}
+    function toggleSidebarFloat() {
+        const btnRect = dragBtn.getBoundingClientRect();
+        const sidebarWidth = 280;
+        let top = btnRect.bottom + 10;
+        let left = btnRect.left;
+        if (left + sidebarWidth > window.innerWidth) left = window.innerWidth - sidebarWidth - 15;
+        if (top + 400 > window.innerHeight) {
+            top = btnRect.top - 410;
+            if (top < 10) top = 10;
+        }
+        sideFloat.style.top = top + 'px';
+        sideFloat.style.left = left + 'px';
+        sideFloat.style.transformOrigin = `${btnRect.left - left + 20}px ${btnRect.top > top ? 'bottom' : 'top'}`;
+        const isActive = sideFloat.classList.toggle('active');
+        sideOverlay.classList.toggle('active', isActive);
+        if (isActive && !sideFloat.innerHTML) loadSidebarContent();
+    }
 
-function closePopup() { document.getElementById("popup").classList.remove("show"); }
+    function closeSidebarFloat() {
+        sideFloat.classList.remove('active');
+        sideOverlay.classList.remove('active');
+    }
 
-window.onload = () => {
-    loadButtonPosition();
-    includeSidebar();
-};
+    function loadSidebarContent() {
+        fetch('sidebar.html')
+            .then(res => res.text())
+            .then(data => {
+                sideFloat.innerHTML = `<div class="sidebar-header">เมนูนำทาง</div>` + data;
+                ['credit', 'branch', 'sales'].forEach(id => {
+                    if (localStorage.getItem('menu-' + id) === 'true') {
+                        const el = sideFloat.querySelector('#menu-' + id);
+                        if (el) el.classList.add('open');
+                    }
+                });
+            });
+    }
+
+    window.toggleDrop = function(btn, id) {
+        const item = btn.parentElement;
+        const isOpen = item.classList.toggle("open");
+        if (id) localStorage.setItem('menu-' + id, isOpen);
+    }
+
+    // --- Original Form Logic ---
+    document.getElementById('date').value = new Date().toISOString().split("T")[0];
+
+    function toggleReason() {
+        const isPass = document.getElementById('result').value === 'ผ่าน';
+        document.getElementById('reasonGroup').style.display = isPass ? 'block' : 'none';
+    }
+
+    function previewImage() {
+        const file = document.getElementById('imageFile').files[0];
+        const preview = document.getElementById('preview');
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => { preview.src = reader.result; preview.style.display = 'block'; }
+            reader.readAsDataURL(file);
+        }
+    }
+
+    document.getElementById('loanForm').onsubmit = function(e) {
+        e.preventDefault();
+        const btn = document.getElementById('submitBtn');
+        const loading = document.getElementById('loading');
+        const staffName = document.getElementById('staffName').value.trim();
+        const customerName = document.getElementById('customerName').value.trim();
+        const customerPhone = document.getElementById('customerPhone').value.trim();
+
+        if (!staffName || !customerName || !customerPhone) {
+            showPopup("กรุณากรอกข้อมูลให้ครบถ้วน", false);
+            return;
+        }
+
+        loading.style.display = "flex";
+        btn.disabled = true;
+
+        const file = document.getElementById('imageFile').files[0];
+        const formData = {
+            date: document.getElementById('date').value,
+            branch: document.getElementById('branch').value,
+            staffName: staffName,
+            customerName: customerName,
+            customerPhone: customerPhone,
+            loanType: document.getElementById('loanType').value,
+            result: document.getElementById('result').value,
+            reason: document.getElementById('reason').value || "ไม่ผ่าน"
+        };
+
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                formData.imageFile = e.target.result;
+                formData.imageName = file.name;
+                formData.imageType = file.type;
+                sendData(formData);
+            };
+            reader.readAsDataURL(file);
+        } else {
+            sendData(formData);
+        }
+    };
+
+    function sendData(data) {
+        fetch(WEB_APP_URL, {
+            method: "POST",
+            mode: "no-cors", 
+            body: JSON.stringify(data)
+        })
+        .then(() => {
+            document.getElementById('loading').style.display = "none";
+            showPopup("บันทึกข้อมูลสำเร็จ", true);
+            setTimeout(() => location.reload(), 2000);
+        })
+        .catch(err => {
+            document.getElementById('loading').style.display = "none";
+            showPopup("ผิดพลาด: " + err, false);
+            document.getElementById('submitBtn').disabled = false;
+        });
+    }
+
+    function showPopup(text, isSuccess) {
+        const popup = document.getElementById("popup");
+        const pBox = document.getElementById("pBox");
+        document.getElementById("popupText").innerText = text;
+        popup.classList.remove("success", "error");
+        popup.classList.add(isSuccess ? "success" : "error");
+        popup.classList.add("show");
+    }
+
+    function closePopup() { 
+        document.getElementById("popup").classList.remove("show");
+    }
+
+    window.onload = loadButtonPosition;
 </script>
 </body>
 </html>
