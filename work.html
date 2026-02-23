@@ -39,6 +39,7 @@
             min-height: 100vh;
             padding-bottom: 60px;
             transition: padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            scroll-behavior: smooth;
         }
 
         /* Header Style */
@@ -142,6 +143,7 @@
             width: 100%; max-width: 1200px;
             display: flex; justify-content: space-between; align-items: center;
             margin-bottom: 25px; gap: 15px;
+            flex-wrap: wrap;
         }
 
         .btn-add-job {
@@ -153,8 +155,17 @@
         }
         .btn-add-job:hover { transform: translateY(-3px); box-shadow: 0 12px 25px rgba(0, 122, 255, 0.4); opacity: 0.9; }
 
+        /* Search & Refresh Area */
+        .search-area-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-grow: 1;
+            max-width: 410px;
+        }
+
         .search-wrapper { 
-            width: 100%; max-width: 350px; position: relative; 
+            flex-grow: 1; position: relative; 
         }
         .search-wrapper i { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: var(--ios-blue); }
         .search-input { 
@@ -164,6 +175,15 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.03);
         }
         .search-input:focus { border-color: var(--ios-blue); box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1); background: white; }
+
+        .btn-refresh-inline {
+            width: 48px; height: 48px; border-radius: 18px; border: 1px solid var(--glass-border);
+            background: rgba(255, 255, 255, 0.8); color: var(--ios-blue);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.3s; font-size: 18px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+        }
+        .btn-refresh-inline:hover { background: white; transform: scale(1.05); color: var(--ios-green); border-color: var(--ios-green); }
 
         /* Table Design */
         .table-wrapper { 
@@ -193,7 +213,7 @@
         /* Updated Action Buttons Container */
         .action-btns {
             display: flex;
-            gap: 10px; /* ระยะห่างระหว่างปุ่ม */
+            gap: 10px;
             align-items: center;
         }
 
@@ -213,6 +233,53 @@
         .btn-delete:hover { background: var(--ios-red); color: white; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(255, 59, 48, 0.3); }
         
         .btn-pin:hover:not(.active) { background: #ffe6c2; transform: translateY(-2px); }
+
+        /* Floating Controls */
+        .floating-controls {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 1100;
+        }
+
+        .btn-float {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            border: 1px solid var(--glass-border);
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            color: var(--ios-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 18px;
+            text-decoration: none;
+        }
+
+        .btn-float:hover {
+            background: white;
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0,122,255,0.2);
+        }
+
+        #btn-back-to-top {
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(20px);
+        }
+
+        #btn-back-to-top.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
 
         /* Modal Customization */
         .swal2-container { z-index: 9999 !important; }
@@ -246,6 +313,12 @@
     <div style="font-weight: 700; font-size: 1.4rem; color: var(--text-main); letter-spacing: -1px; margin-left: 15px;">ระบบเคลียร์งาน</div>
 </header>
 
+<div class="floating-controls">
+    <button id="btn-back-to-top" class="btn-float" onclick="scrollToTop()" title="กลับไปด้านบน">
+        <i class="fa-solid fa-arrow-up"></i>
+    </button>
+</div>
+
 <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 
 <aside class="sidebar" id="sidebar"></aside>
@@ -263,9 +336,14 @@
         <button class="btn-add-job" onclick="openAddJobModal()">
             <i class="fa-solid fa-plus-circle"></i> เพิ่มรายการใหม่
         </button>
-        <div class="search-wrapper">
-            <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" id="searchInput" class="search-input" placeholder="ค้นหาข้อมูล..." onkeyup="filterData()">
+        <div class="search-area-wrapper">
+            <div class="search-wrapper">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="searchInput" class="search-input" placeholder="ค้นหาข้อมูล..." onkeyup="filterData()">
+            </div>
+            <button class="btn-refresh-inline" onclick="loadData()" title="รีเฟรชข้อมูล">
+                <i class="fa-solid fa-rotate-right"></i>
+            </button>
         </div>
     </div>
 
@@ -359,6 +437,20 @@
         return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
     }
 
+    // --- Scroll & Float Logic ---
+    window.onscroll = function() {
+        const btn = document.getElementById("btn-back-to-top");
+        if (document.body.scrollTop > 200 || document.documentElement.scrollTop > 200) {
+            btn.classList.add("show");
+        } else {
+            btn.classList.remove("show");
+        }
+    };
+
+    function scrollToTop() {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
     // --- Stats Update ---
     function updateStats(data) {
         const statsCon = document.getElementById('statsContainer');
@@ -406,6 +498,9 @@
     // --- CRUD Core ---
     async function loadData() {
         const tableBody = document.getElementById('dataTable');
+        const refreshBtn = document.querySelector('.fa-rotate-right');
+        if(refreshBtn) refreshBtn.classList.add('fa-spin');
+
         try {
             const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: "read"}) });
             const data = await res.json();
@@ -424,7 +519,6 @@
                 if (isPinned) tr.classList.add('pinned-row');
 
                 const rowJson = encodeURIComponent(JSON.stringify(row));
-                // แก้ไขส่วนรายละเอียดในแถบรายการให้แสดงเยอะขึ้นและรองรับการขึ้นบรรทัดใหม่
                 tr.innerHTML = `
                     <td class="date-col">${fixDate(row[0])}</td>
                     <td><span class="job-type-badge">${row[8] || "ทั่วไป"}</span></td>
@@ -449,6 +543,9 @@
             });
             updateStats(data);
         } catch (e) { tableBody.innerHTML = '<tr><td colspan="8">โหลดข้อมูลไม่สำเร็จ</td></tr>'; }
+        finally {
+            if(refreshBtn) refreshBtn.classList.remove('fa-spin');
+        }
     }
 
     // --- Modal Functions ---
