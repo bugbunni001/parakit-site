@@ -14,31 +14,86 @@
             --glass-bg: rgba(255, 255, 255, 0.85); 
             --glass-border: rgba(255, 255, 255, 0.5); 
             --primary-blue: #0071e3; 
-            --sidebar-color: rgba(28, 28, 30, 0.98); 
+            --sidebar-dark: rgba(28, 28, 30, 0.96); /* จาก index */
+            --ios-blue: #007aff; /* จาก index */
             --text-main: #1d1d1f; 
             --text-light: #86868b; 
             --card-shadow: 0 10px 40px rgba(0,0,0,0.04); 
             --success: #34c759; 
             --danger: #ff3b30; 
-            --sidebar-width: 280px; 
+            /* ลบ sidebar-width เดิมออกเพราะใช้แบบลอย */
         }
         * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; -webkit-tap-highlight-color: transparent; }
-        body { margin: 0; background: var(--ios-bg); color: var(--text-main); -webkit-font-smoothing: antialiased; transition: padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1); overflow-x: hidden; min-height: 100vh; }
+        body { margin: 0; background: var(--ios-bg); color: var(--text-main); -webkit-font-smoothing: antialiased; overflow-x: hidden; min-height: 100vh; }
         
-        /* Layout Structure */
-        .top-header { position: fixed; top: 0; left: 0; right: 0; height: 70px; background: rgba(255,255,255,0.7); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); z-index: 1200; display: flex; align-items: center; padding: 0 20px; border-bottom: 1px solid rgba(0,0,0,0.05); transition: left 0.3s ease; }
-        .sidebar { position: fixed; top: 0; left: 0; width: var(--sidebar-width); height: 100vh; background: var(--sidebar-color); color: #fff; overflow-y: auto; transition: transform 0.3s ease; z-index: 2000; }
-        
-        @media(min-width:769px) { 
-            body:not(.collapsed) { padding-left: var(--sidebar-width); } 
-            body:not(.collapsed) .top-header { left: var(--sidebar-width); } 
-            body.collapsed .sidebar { transform: translateX(-100%); } 
-            body.collapsed .top-header { left: 0; } 
+        /* ===== Floating Sidebar & Draggable Button Styles (จาก index.html 1:1) ===== */
+        #floatingMenuBtn {
+            position: fixed;
+            top: 10px;
+            left: 15px;
+            width: 45px;
+            height: 45px;
+            background: var(--ios-blue);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            cursor: move;
+            z-index: 2100;
+            box-shadow: 0 4px 15px rgba(0, 122, 255, 0.4);
+            border: none;
+            touch-action: none;
+            transition: transform 0.2s, opacity 0.2s;
         }
+        #floatingMenuBtn:active { transform: scale(0.9); }
+
+        .sidebar-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.2);
+            z-index: 2000;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .sidebar-overlay.active { display: block; opacity: 1; }
+
+        .sidebar-float {
+            position: fixed;
+            width: 280px;
+            max-height: 70vh;
+            background: var(--sidebar-dark);
+            border-radius: 20px;
+            overflow-y: auto;
+            z-index: 2001;
+            opacity: 0;
+            visibility: hidden;
+            transform: scale(0.8) translateY(10px);
+            transition: opacity 0.3s, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.1);
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,0.2) transparent;
+        }
+        .sidebar-float.active { opacity: 1; visibility: visible; transform: scale(1) translateY(0); }
+        .sidebar-float .sidebar-header { padding: 20px; font-size: 17px; font-weight: 600; color: #fff; border-bottom: 0.5px solid rgba(255,255,255,0.1); }
+        .sidebar-float .menu { padding: 8px 0; }
+        .sidebar-float .menu a, .sidebar-float .drop-btn { 
+            width: 100%; padding: 12px 20px; background: none; border: none; 
+            color: #ebebf5; text-align: left; font-size: 14px; cursor: pointer; 
+            display: flex; align-items: center; text-decoration: none; transition: 0.2s;
+        }
+        .sidebar-float .menu a:hover, .sidebar-float .drop-btn:hover { background: rgba(255,255,255,0.1); }
+        .sidebar-float .sub { display: none; background: rgba(0,0,0,0.2); }
+        .sidebar-float .item.open .sub { display: block; }
+        .sidebar-float .sub a { padding-left: 45px; font-size: 13px; color: #8e8e93; }
+
+        /* ===== Layout Style เดิม ===== */
+        .top-header { position: fixed; top: 0; left: 0; right: 0; height: 70px; background: rgba(255,255,255,0.7); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); z-index: 1000; display: flex; align-items: center; padding: 0 20px 0 75px; border-bottom: 1px solid rgba(0,0,0,0.05); }
+        
         @media(max-width:768px) { 
-            .sidebar { transform: translateX(-100%); } 
-            .sidebar.show { transform: translateX(0); } 
-            body { padding-left: 0 !important; } .top-header { left: 0 !important; }
             .grid-layout { grid-template-columns: 1fr !important; }
             .stat-grid { grid-template-columns: 1fr !important; }
             .toolbar { flex-direction: column; align-items: stretch !important; gap: 15px !important; border-radius: 18px !important; }
@@ -46,11 +101,8 @@
             .search-box { width: 100% !important; }
         }
 
-        /* Elements Style & Hover Effects */
         .main-wrapper { padding: 90px 15px 40px; display: flex; justify-content: center; width: 100%; }
         .content-container { width: 100%; max-width: 1300px; }
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); display: none; z-index: 1500; }
-        .overlay.show { display: block; }
 
         .toolbar { background: var(--glass-bg); padding: 18px 25px; display: flex; align-items: center; justify-content: flex-end; gap: 12px; border-radius: 24px; border: 1px solid var(--glass-border); box-shadow: var(--card-shadow); margin-bottom: 25px; }
         .modern-date { border: 1.5px solid #e5e5e7; border-radius: 14px; padding: 10px 15px; font-size: 15px; background: #fff; outline: none; transition: 0.2s; }
@@ -97,19 +149,17 @@
         .spinner { width: 50px; height: 50px; border: 4px solid #f2f2f7; border-top: 4px solid var(--primary-blue); border-radius: 50%; animation: spin 1s infinite linear; }
         @keyframes spin { to { transform: rotate(360deg); } }
         footer { padding: 40px 20px; text-align: center; color: var(--text-light); font-size: 12px; }
-        .top-toggle { width: 40px; height: 40px; border-radius: 12px; border: none; background: #f2f2f7; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
-        .top-toggle:hover { background: #e5e5ea; transform: rotate(90deg); }
     </style>
 </head>
 <body>
 
 <header class="top-header">
-    <button class="top-toggle" onclick="toggleSidebar()">☰</button>
-    <div style="font-weight: 600; font-size: 1.1rem; color: var(--text-main); margin-left: 15px;">รายงานยอดขาย Shop</div>
+    <div style="font-weight: 600; font-size: 1.1rem; color: var(--text-main);">รายงานยอดขาย Shop</div>
 </header>
 
-<div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
-<aside class="sidebar" id="sidebar"></aside>
+<button id="floatingMenuBtn" title="ลากเพื่อย้าย">เมนู</button>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebarFloat()"></div>
+<aside class="sidebar-float" id="sidebarFloat"></aside>
 
 <div id="loader"><div class="spinner"></div><p style="margin-top:20px; font-weight: 500; color: var(--text-main);">กำลังดึงข้อมูลการขาย...</p></div>
 
@@ -157,6 +207,7 @@
 </div>
 
 <script>
+    // --- JS ดึงข้อมูลเดิมทั้งหมด ---
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyAF2Ex6Bok6rXgPw9nG4UOiOYJWeLoXYDJnIVHr4bTaWlPLTscZkkv7Sv0lgA69QRC/exec", DEFAULT_USER_NAME = "นวพล", itemsPerPage = 5;
     let currentWebPage = 1, allWebData = [], filteredWebData = [];
     const $ = id => document.getElementById(id);
@@ -164,33 +215,103 @@
     const formatDecimalTwo = val => { const n = parseFloat(val); return isNaN(n) ? val : n.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
 
     window.addEventListener('DOMContentLoaded', () => {
-        includeSidebar();
+        loadButtonPosition(); // โหลดตำแหน่งปุ่มเมนู
         $('targetDate').value = new Date().toISOString().split('T')[0];
     });
 
-    function includeSidebar() {
-        const cached = localStorage.getItem('sidebar_cache');
-        if (cached) { $('sidebar').innerHTML = cached; restoreMenuState(); }
-        fetch('sidebar.html').then(r => r.text()).then(data => {
-            $('sidebar').innerHTML = data;
-            localStorage.setItem('sidebar_cache', data);
-            restoreMenuState();
-        }).catch(() => {});
-        if(localStorage.getItem('sidebar_collapsed') === 'true' && window.innerWidth > 768) document.body.classList.add('collapsed');
-    }
+    // --- Floating Draggable Sidebar Logic (จาก index.html 1:1) ---
+    const dragBtn = $('floatingMenuBtn');
+    const sideFloat = $('sidebarFloat');
+    const sideOverlay = $('sidebarOverlay');
+    let isDragging = false;
+    let startX, startY, shiftX, shiftY;
 
-    function toggleSidebar() {
-        if (window.innerWidth <= 768) {
-            $('sidebar').classList.toggle("show");
-            $('overlay').classList.toggle("show");
-        } else {
-            localStorage.setItem('sidebar_collapsed', document.body.classList.toggle("collapsed"));
+    function loadButtonPosition() {
+        const savedLeft = localStorage.getItem('floatBtnLeft');
+        const savedTop = localStorage.getItem('floatBtnTop');
+        if (savedLeft && savedTop) {
+            dragBtn.style.left = savedLeft + 'px';
+            dragBtn.style.top = savedTop + 'px';
         }
     }
 
-    function restoreMenuState() { ['credit', 'branch', 'sales'].forEach(id => { if (localStorage.getItem('menu-' + id) === 'true') { const el = $('menu-' + id); if (el) el.classList.add('open'); } }); }
-    window.toggleDrop = (btn, id) => { const item = btn.parentElement; item.classList.toggle("open"); if (id) localStorage.setItem('menu-' + id, item.classList.contains("open")); };
+    dragBtn.onpointerdown = function(e) {
+        isDragging = false;
+        startX = e.clientX; startY = e.clientY;
+        const rect = dragBtn.getBoundingClientRect();
+        shiftX = e.clientX - rect.left; shiftY = e.clientY - rect.top;
+        dragBtn.setPointerCapture(e.pointerId);
+        document.addEventListener('pointermove', onPointerMove);
+        document.addEventListener('pointerup', onPointerUp);
+    };
 
+    function onPointerMove(e) {
+        if (!isDragging && (Math.abs(e.clientX - startX) > 5 || Math.abs(e.clientY - startY) > 5)) isDragging = true;
+        if (isDragging) {
+            let newX = e.clientX - shiftX;
+            let newY = e.clientY - shiftY;
+            newX = Math.max(0, Math.min(newX, window.innerWidth - dragBtn.offsetWidth));
+            newY = Math.max(0, Math.min(newY, window.innerHeight - dragBtn.offsetHeight));
+            dragBtn.style.left = newX + 'px';
+            dragBtn.style.top = newY + 'px';
+        }
+    }
+
+    function onPointerUp(e) {
+        document.removeEventListener('pointermove', onPointerMove);
+        document.removeEventListener('pointerup', onPointerUp);
+        dragBtn.releasePointerCapture(e.pointerId);
+        if (isDragging) {
+            localStorage.setItem('floatBtnLeft', dragBtn.offsetLeft);
+            localStorage.setItem('floatBtnTop', dragBtn.offsetTop);
+        } else {
+            toggleSidebarFloat();
+        }
+        isDragging = false;
+    }
+
+    function toggleSidebarFloat() {
+        const btnRect = dragBtn.getBoundingClientRect();
+        const sidebarWidth = 280;
+        let top = btnRect.bottom + 10;
+        let left = btnRect.left;
+        if (left + sidebarWidth > window.innerWidth) left = window.innerWidth - sidebarWidth - 15;
+        if (top + 400 > window.innerHeight) {
+            top = btnRect.top - 410;
+            if (top < 10) top = 10;
+        }
+        sideFloat.style.top = top + 'px';
+        sideFloat.style.left = left + 'px';
+        sideFloat.style.transformOrigin = `${btnRect.left - left + 20}px ${btnRect.top > top ? 'bottom' : 'top'}`;
+        const isActive = sideFloat.classList.toggle('active');
+        sideOverlay.classList.toggle('active', isActive);
+        if (isActive && !sideFloat.innerHTML) loadSidebarContent();
+    }
+
+    function closeSidebarFloat() {
+        sideFloat.classList.remove('active');
+        sideOverlay.classList.remove('active');
+    }
+
+    function loadSidebarContent() {
+        fetch('sidebar.html').then(res => res.text()).then(data => {
+            sideFloat.innerHTML = `<div class="sidebar-header">เมนูนำทาง</div>` + data;
+            ['credit', 'branch', 'sales'].forEach(id => {
+                if (localStorage.getItem('menu-' + id) === 'true') {
+                    const el = sideFloat.querySelector('#menu-' + id);
+                    if (el) el.classList.add('open');
+                }
+            });
+        });
+    }
+
+    window.toggleDrop = function(btn, id) {
+        const item = btn.parentElement;
+        const isOpen = item.classList.toggle("open");
+        if (id) localStorage.setItem('menu-' + id, isOpen);
+    }
+
+    // --- ฟังก์ชันการทำงานเดิม 100% ---
     async function fetchData() {
         const dateInput = $('targetDate').value;
         if(!dateInput) return alert('กรุณาเลือกวันที่ก่อนครับ');
