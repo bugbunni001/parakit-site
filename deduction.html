@@ -21,7 +21,7 @@
             --ios-green: #34c759;
             --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
             --transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            /* Sidebar Variables From index.html */
+            /* Floating Menu Vars (1:1 from index) */
             --transition-swift: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             --transition-bounce: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
@@ -36,10 +36,10 @@
             min-height: 100vh;
         }
 
-        /* ===== NEW FLOATING SIDEBAR SYSTEM (1:1 From index.html) ===== */
+        /* ===== FLOATING MENU SYSTEM (1:1 FROM INDEX) ===== */
         #floatingMenuBtn {
             position: fixed;
-            top: 10px;
+            top: 15px;
             left: 15px;
             width: 45px;
             height: 45px;
@@ -55,6 +55,7 @@
             box-shadow: 0 4px 15px rgba(0, 122, 255, 0.4);
             border: none;
             touch-action: none;
+            user-select: none;
             transition: transform 0.2s, opacity 0.2s;
         }
         #floatingMenuBtn:active { transform: scale(0.9); }
@@ -62,11 +63,13 @@
         .sidebar-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.2);
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
             z-index: 2000;
             display: none;
             opacity: 0;
-            transition: opacity 0.3s;
+            transition: opacity 0.3s var(--transition-swift);
         }
         .sidebar-overlay.active { display: block; opacity: 1; }
 
@@ -75,13 +78,17 @@
             width: 280px;
             max-height: 70vh;
             background: var(--sidebar-dark);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border-radius: 20px;
             overflow-y: auto;
             z-index: 2001;
             opacity: 0;
             visibility: hidden;
             transform: scale(0.8) translateY(10px);
-            transition: opacity 0.3s, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transition: opacity 0.3s var(--transition-swift), 
+                        transform 0.4s var(--transition-bounce),
+                        visibility 0.3s;
             box-shadow: 0 15px 40px rgba(0,0,0,0.4);
             border: 1px solid rgba(255,255,255,0.1);
             scrollbar-width: thin;
@@ -93,6 +100,7 @@
             transform: scale(1) translateY(0);
         }
 
+        /* Sidebar Internal Styling (1:1 from index) */
         .sidebar-float .sidebar-header { padding: 20px; font-size: 17px; font-weight: 600; color: #fff; border-bottom: 0.5px solid rgba(255,255,255,0.1); }
         .sidebar-float .menu { padding: 8px 0; }
         .sidebar-float .menu a, .sidebar-float .drop-btn { 
@@ -105,68 +113,81 @@
         .sidebar-float .item.open .sub { display: block; }
         .sidebar-float .sub a { padding-left: 45px; font-size: 13px; color: #8e8e93; }
 
-        /* ===== ORIGINAL CONTENT STYLES (Keep 100%) ===== */
-        .top-header { 
-            position: fixed; top: 0; left: 0; right: 0; height: 64px; 
-            background: rgba(245, 245, 247, 0.8); 
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); 
-            z-index: 1200; display: flex; align-items: center; padding: 0 20px 0 75px; 
-            border-bottom: 1px solid rgba(0,0,0,0.05); 
-        }
-
+        /* ===== CONTENT LAYOUT (Original) ===== */
         .content { padding: 84px 16px 40px; max-width: 1100px; margin: 0 auto; animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
         @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-        .summary-container { margin-bottom: 24px; }
-        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
-        .summary-card { background: #fff; padding: 20px; border-radius: 20px; border: 1px solid rgba(0,0,0,0.03); box-shadow: var(--card-shadow); transition: var(--transition); display: flex; flex-direction: column; gap: 4px; }
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+        .summary-card { 
+            background: #fff; padding: 20px; border-radius: 20px; 
+            border: 1px solid rgba(0,0,0,0.03); box-shadow: var(--card-shadow);
+            transition: var(--transition);
+            display: flex; flex-direction: column; gap: 4px;
+        }
         .summary-card:hover { transform: translateY(-5px); box-shadow: 0 8px 30px rgba(0,0,0,0.08); }
         .summary-name { font-size: 14px; color: var(--text-light); font-weight: 500; }
         .summary-val { font-size: 24px; font-weight: 700; color: var(--text-main); letter-spacing: -1px; }
 
         .action-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; }
-        .btn-add { background: var(--ios-blue); color: white; border: none; padding: 12px 24px; border-radius: 14px; font-size: 15px; font-weight: 600; cursor: pointer; transition: var(--transition); box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3); display: flex; align-items: center; gap: 8px; }
+        .btn-add {
+            background: var(--ios-blue); color: white; border: none; padding: 12px 24px; 
+            border-radius: 14px; font-size: 15px; font-weight: 600; cursor: pointer;
+            transition: var(--transition); box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3);
+            display: flex; align-items: center; gap: 8px;
+        }
         .btn-add:hover { transform: scale(1.03); filter: brightness(1.1); }
 
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: none; align-items: center; justify-content: center; z-index: 3000; padding: 20px; backdrop-filter: blur(10px); }
         .modal.show { display: flex; }
-        .form-container { background: #fff; padding: 32px; border-radius: 28px; width: 100%; max-width: 480px; box-shadow: 0 30px 60px rgba(0,0,0,0.15); animation: modalPop 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        .form-container { 
+            background: #fff; padding: 32px; border-radius: 28px; 
+            width: 100%; max-width: 480px; box-shadow: 0 30px 60px rgba(0,0,0,0.15);
+            animation: modalPop 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
         @keyframes modalPop { from { opacity: 0; transform: scale(0.9) translateY(30px); } to { opacity: 1; transform: scale(1) translateY(0); } }
 
-        .form-grid { display: grid; grid-template-columns: 1fr; gap: 18px; }
-        label { display: block; margin-bottom: 6px; font-size: 13px; font-weight: 600; color: var(--text-light); margin-left: 4px; }
-        input, select { width: 100%; padding: 14px; border: 1.5px solid #f2f2f7; border-radius: 14px; font-size: 16px; background: #f9f9fb; outline: none; transition: 0.2s; }
-        input:focus, select:focus { border-color: var(--ios-blue); background: #fff; box-shadow: 0 0 0 4px rgba(0,122,255,0.1); }
+        input, select { 
+            width: 100%; padding: 14px; border: 1.5px solid #f2f2f7; border-radius: 14px; 
+            font-size: 16px; background: #f9f9fb; outline: none; transition: 0.2s; 
+        }
+        input:focus, select:focus { border-color: var(--ios-blue); background: #fff; }
         
-        .btn-submit { width: 100%; padding: 16px; border: none; border-radius: 16px; background: var(--ios-blue); color: white; font-size: 17px; font-weight: 600; cursor: pointer; transition: var(--transition); margin-top: 10px; }
+        .btn-submit { 
+            width: 100%; padding: 16px; border: none; border-radius: 16px; 
+            background: var(--ios-blue); color: white; font-size: 17px; font-weight: 600; 
+            cursor: pointer; transition: var(--transition); margin-top: 10px;
+        }
 
-        .table-box { background: #fff; padding: 24px; border-radius: 24px; border: 1px solid rgba(0,0,0,0.03); box-shadow: var(--card-shadow); overflow: hidden; }
+        .table-box { 
+            background: #fff; padding: 24px; border-radius: 24px; 
+            border: 1px solid rgba(0,0,0,0.03); box-shadow: var(--card-shadow); overflow: hidden;
+        }
         .table-container { width: 100%; overflow-x: auto; border-radius: 16px; border: 1px solid #f2f2f7; }
         table { width: 100%; border-collapse: collapse; min-width: 700px; }
-        th { padding: 14px 16px; text-align: left; color: var(--text-light); font-size: 13px; background: #f9f9fb; font-weight: 500; }
+        th { padding: 14px 16px; text-align: left; color: var(--text-light); font-size: 13px; background: #f9f9fb; }
         td { padding: 16px; border-bottom: 1px solid #f2f2f7; font-size: 15px; }
         
         .amt-red { color: var(--ios-red); font-weight: 700; }
-        .btn-delete { background: #fff1f0; border: none; color: var(--ios-red); width: 36px; height: 36px; border-radius: 10px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
+        .btn-delete { background: #fff1f0; border: none; color: var(--ios-red); width: 36px; height: 36px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
         .popup { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: none; align-items: center; justify-content: center; z-index: 4000; padding: 20px; backdrop-filter: blur(8px); }
         .popup.show { display: flex; }
-        .popup-box { background: #fff; padding: 28px; border-radius: 28px; text-align: center; max-width: 360px; width: 100%; box-shadow: 0 25px 50px rgba(0,0,0,0.2); }
+        .popup-box { background: #fff; padding: 28px; border-radius: 28px; text-align: center; max-width: 360px; width: 100%; }
         .spinner { width: 32px; height: 32px; border: 3px solid rgba(0,122,255,0.15); border-top-color: var(--ios-blue); border-radius: 50%; animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
         
         footer { text-align: center; padding: 50px 20px; color: var(--text-light); font-size: 12px; }
-        .page-btn { border:none; width:36px; height:36px; border-radius:10px; cursor:pointer; font-weight:600; transition: 0.2s; margin: 0 2px; }
-        .btn-bulk-delete { background: var(--ios-red); color: white; border: none; padding: 10px 18px; border-radius: 12px; font-size: 13px; font-weight: 600; cursor: pointer; display: none; transition: 0.2s; }
+        .btn-bulk-delete { background: var(--ios-red); color: white; border: none; padding: 10px 18px; border-radius: 12px; font-size: 13px; font-weight: 600; cursor: pointer; display: none; }
     </style>
 </head>
 <body>
 
-<header class="top-header">
-    <div style="font-weight: 700; font-size: 1.15rem; letter-spacing: -0.5px; margin-left: 10px;">บันทึกการหักเงิน</div>
-</header>
-
 <button id="floatingMenuBtn" title="ลากเพื่อย้าย">เมนู</button>
+
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebarFloat()"></div>
 <aside class="sidebar-float" id="sidebarFloat"></aside>
 
@@ -190,11 +211,13 @@
     </div>
 
     <div class="table-box">
-        <div class="table-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <div class="table-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
             <div style="display:flex; gap:12px; align-items:center;">
                 <button id="bulkDeleteBtn" class="btn-bulk-delete" onclick="openAuthPopup('bulkDelete')">ลบที่เลือก (<span id="selectedCount">0</span>)</button>
             </div>
-            <button onclick="fetchData(true)" style="background:none; border:none; color:var(--ios-blue); font-weight:600; cursor:pointer; font-size:14px;">รีเฟรชข้อมูล</button>
+            <button onclick="fetchData(true)" style="background:none; border:none; color:var(--ios-blue); font-weight:600; cursor:pointer; font-size:14px;">
+                รีเฟรชข้อมูล
+            </button>
         </div>
         
         <div class="table-container">
@@ -223,19 +246,20 @@
             </div>
             <button onclick="closeForm()" style="background:#f2f2f7; border:none; width:32px; height:32px; border-radius:50%; cursor:pointer;">×</button>
         </div>
+        
         <form id="deductionForm" onsubmit="return false;">
-            <div class="form-grid">
-                <div class="form-row"><label>วันที่ดำเนินการ</label><input type="date" id="date" required></div>
-                <div class="form-row">
-                    <label>พนักงาน</label>
+            <div class="form-grid" style="display:grid; gap:18px;">
+                <div><label style="font-size:13px; font-weight:600; color:var(--text-light);">วันที่ดำเนินการ</label><input type="date" id="date" required></div>
+                <div>
+                    <label style="font-size:13px; font-weight:600; color:var(--text-light);">พนักงาน</label>
                     <select id="employee" required>
                         <option value="" disabled selected>-- เลือกรายชื่อ --</option>
                         <option value="ศุภกฤต">ศุภกฤต</option><option value="นวพล">นวพล</option>
                         <option value="ปิยะพร">ปิยะพร</option><option value="กรทักษ์">กรทักษ์</option>
                     </select>
                 </div>
-                <div class="form-row">
-                    <label>เหตุผลหลัก</label>
+                <div>
+                    <label style="font-size:13px; font-weight:600; color:var(--text-light);">เหตุผลหลัก</label>
                     <select id="reason" onchange="checkReason(this)" required>
                         <option value="" disabled selected>-- ระบุเหตุผล --</option>
                         <option value="มาสาย">มาสาย</option><option value="ไม่ลงเวลาเข้า-ออกงาน">ไม่ลงเวลาเข้า-ออกงาน</option>
@@ -244,12 +268,12 @@
                         <option value="อื่นๆ">อื่นๆ</option>
                     </select>
                 </div>
-                <div class="form-row" id="otherReasonContainer" style="display:none;">
-                    <label>ระบุเหตุผลเพิ่มเติม</label>
+                <div id="otherReasonContainer" style="display:none;">
+                    <label style="font-size:13px; font-weight:600; color:var(--text-light);">ระบุเหตุผลเพิ่มเติม</label>
                     <input type="text" id="otherReason" placeholder="พิมพ์เหตุผลอื่นๆ...">
                 </div>
-                <div class="form-row">
-                    <label>จำนวนเงิน (THB)</label>
+                <div>
+                    <label style="font-size:13px; font-weight:600; color:var(--text-light);">จำนวนเงิน (THB)</label>
                     <select id="amount" required>
                         <option value="" disabled selected>-- เลือกยอดเงิน --</option>
                         <option value="10">10 ฿</option><option value="20">20 ฿</option>
@@ -279,6 +303,7 @@
         </div>
         <div id="otpInputForm" style="display:none;">
             <h3 style="margin-top:0;">กรอกรหัส OTP</h3>
+            <p style="color:var(--text-light); font-size:14px; margin-bottom:20px;">รหัส 6 หลักส่งไปที่อีเมลแล้ว</p>
             <input type="number" id="confirmOTP" placeholder="000000" style="text-align: center; margin-bottom: 25px; font-size: 28px; letter-spacing: 6px; font-weight: 700;">
             <div style="display: flex; gap: 12px;">
                 <button class="btn-submit" style="background:#f2f2f7; color:#3a3a3c; margin:0;" onclick="resetAuthPopup()">ย้อนกลับ</button>
@@ -311,6 +336,13 @@
     let generatedOTP = "", allData = [], currentPage = 1, rowsPerPage = 7, currentMode = 'submit', rowToDelete = null;
     let selectedRows = [], isProcessing = false;
 
+    // --- Floating Sidebar Logic (1:1 from index) ---
+    const dragBtn = document.getElementById('floatingMenuBtn');
+    const sideFloat = document.getElementById('sidebarFloat');
+    const sideOverlay = document.getElementById('sidebarOverlay');
+    let isDragging = false;
+    let startX, startY, shiftX, shiftY;
+
     const svgIcons = {
         success: `<svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#34c759" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`,
         error: `<svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#ff3b30" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`,
@@ -318,103 +350,117 @@
     };
 
     window.onload = () => {
-        initFloatingSidebar();
+        loadButtonPosition();
         document.getElementById('date').value = new Date().toISOString().split("T")[0];
         fetchData(false);
         setupEventListeners();
     };
 
-    /* ===== NEW FLOATING SIDEBAR LOGIC (1:1 From index.html) ===== */
-    function initFloatingSidebar() {
-        const sideFloat = document.getElementById('sidebarFloat');
-        const sideBtn = document.getElementById('floatingMenuBtn');
-        const sideOverlay = document.getElementById('sidebarOverlay');
-
-        // Fetch & Load Sidebar Content
-        const cached = localStorage.getItem('sidebar_cache');
-        if (cached) { sideFloat.innerHTML = cached; restoreMenuState(); }
-        fetch('sidebar.html').then(r => r.text()).then(data => {
-            if (data !== cached) { sideFloat.innerHTML = data; localStorage.setItem('sidebar_cache', data); restoreMenuState(); }
-        }).catch(err => console.warn("Sidebar Load Error"));
-
-        // Toggle Function
-        sideBtn.addEventListener('click', () => {
-            const isMoving = sideBtn.getAttribute('data-moving') === 'true';
-            if (!isMoving) {
-                sideFloat.classList.toggle('active');
-                sideOverlay.classList.toggle('active');
-                if (sideFloat.classList.contains('active')) positionSidebar();
-            }
-        });
-
-        window.closeSidebarFloat = () => {
-            sideFloat.classList.remove('active');
-            sideOverlay.classList.remove('active');
-        };
-
-        // Draggable Logic
-        let isDragging = false, currentX, currentY, initialX, initialY, xOffset = 0, yOffset = 0;
-        const savedX = localStorage.getItem('menuBtnX'), savedY = localStorage.getItem('menuBtnY');
-        if (savedX && savedY) { xOffset = parseFloat(savedX); yOffset = parseFloat(savedY); setTranslate(xOffset, yOffset, sideBtn); }
-
-        sideBtn.addEventListener("touchstart", dragStart, {passive: false});
-        sideBtn.addEventListener("touchend", dragEnd, {passive: false});
-        sideBtn.addEventListener("touchmove", drag, {passive: false});
-        sideBtn.addEventListener("mousedown", dragStart);
-        document.addEventListener("mousemove", drag);
-        document.addEventListener("mouseup", dragEnd);
-
-        function dragStart(e) {
-            initialX = (e.type === "touchstart" ? e.touches[0].clientX : e.clientX) - xOffset;
-            initialY = (e.type === "touchstart" ? e.touches[0].clientY : e.clientY) - yOffset;
-            if (e.target === sideBtn) { isDragging = true; sideBtn.setAttribute('data-moving', 'false'); }
-        }
-        function drag(e) {
-            if (isDragging) {
-                e.preventDefault();
-                currentX = (e.type === "touchmove" ? e.touches[0].clientX : e.clientX) - initialX;
-                currentY = (e.type === "touchmove" ? e.touches[0].clientY : e.clientY) - initialY;
-                xOffset = currentX; yOffset = currentY;
-                setTranslate(currentX, currentY, sideBtn);
-                sideBtn.setAttribute('data-moving', 'true');
-            }
-        }
-        function dragEnd() { 
-            isDragging = false; 
-            localStorage.setItem('menuBtnX', xOffset); localStorage.setItem('menuBtnY', yOffset);
-            setTimeout(() => sideBtn.setAttribute('data-moving', 'false'), 50);
-        }
-        function setTranslate(xPos, yPos, el) { el.style.transform = `translate3d(${xPos}px, ${yPos}px, 0)`; }
-
-        function positionSidebar() {
-            const btnRect = sideBtn.getBoundingClientRect();
-            sideFloat.style.top = (btnRect.bottom + 10) + "px";
-            sideFloat.style.left = Math.min(btnRect.left, window.innerWidth - 300) + "px";
-        }
-        
-        window.toggleDrop = function(btn, id) {
-            const item = btn.parentElement;
-            const isOpen = item.classList.toggle("open");
-            if (id) localStorage.setItem('menu-' + id, isOpen);
-        };
-        function restoreMenuState() {
-            ['credit', 'branch', 'sales'].forEach(id => {
-                if (localStorage.getItem('menu-' + id) === 'true') {
-                    const el = sideFloat.querySelector('#menu-' + id);
-                    if (el) el.classList.add('open');
-                }
-            });
+    /* ===== FLOATING MENU LOGIC (1:1 FROM INDEX) ===== */
+    function loadButtonPosition() {
+        const savedLeft = localStorage.getItem('floatBtnLeft');
+        const savedTop = localStorage.getItem('floatBtnTop');
+        if (savedLeft && savedTop) {
+            dragBtn.style.left = savedLeft + 'px';
+            dragBtn.style.top = savedTop + 'px';
         }
     }
 
-    /* ===== ORIGINAL PAGE LOGIC (Keep 100%) ===== */
+    dragBtn.onpointerdown = function(e) {
+        isDragging = false;
+        startX = e.clientX;
+        startY = e.clientY;
+        const rect = dragBtn.getBoundingClientRect();
+        shiftX = e.clientX - rect.left;
+        shiftY = e.clientY - rect.top;
+        dragBtn.setPointerCapture(e.pointerId);
+        document.addEventListener('pointermove', onPointerMove);
+        document.addEventListener('pointerup', onPointerUp);
+    };
+
+    function onPointerMove(e) {
+        if (!isDragging && (Math.abs(e.clientX - startX) > 5 || Math.abs(e.clientY - startY) > 5)) {
+            isDragging = true;
+        }
+        if (isDragging) {
+            let newX = e.clientX - shiftX;
+            let newY = e.clientY - shiftY;
+            newX = Math.max(0, Math.min(newX, window.innerWidth - dragBtn.offsetWidth));
+            newY = Math.max(0, Math.min(newY, window.innerHeight - dragBtn.offsetHeight));
+            dragBtn.style.left = newX + 'px';
+            dragBtn.style.top = newY + 'px';
+        }
+    }
+
+    function onPointerUp(e) {
+        document.removeEventListener('pointermove', onPointerMove);
+        document.removeEventListener('pointerup', onPointerUp);
+        dragBtn.releasePointerCapture(e.pointerId);
+        if (isDragging) {
+            localStorage.setItem('floatBtnLeft', dragBtn.offsetLeft);
+            localStorage.setItem('floatBtnTop', dragBtn.offsetTop);
+        } else {
+            toggleSidebarFloat();
+        }
+        isDragging = false;
+    }
+
+    function toggleSidebarFloat() {
+        const btnRect = dragBtn.getBoundingClientRect();
+        const sidebarWidth = 280;
+        let top = btnRect.bottom + 10;
+        let left = btnRect.left;
+
+        if (left + sidebarWidth > window.innerWidth) left = window.innerWidth - sidebarWidth - 15;
+        if (top + 400 > window.innerHeight) {
+            top = btnRect.top - 410;
+            if (top < 10) top = 10;
+        }
+
+        sideFloat.style.top = top + 'px';
+        sideFloat.style.left = left + 'px';
+        sideFloat.style.transformOrigin = `${btnRect.left - left + 20}px ${btnRect.top > top ? 'bottom' : 'top'}`;
+
+        const isActive = sideFloat.classList.toggle('active');
+        sideOverlay.classList.toggle('active', isActive);
+        if (isActive && !sideFloat.innerHTML) loadSidebarContent();
+    }
+
+    function closeSidebarFloat() {
+        sideFloat.classList.remove('active');
+        sideOverlay.classList.remove('active');
+    }
+
+    function loadSidebarContent() {
+        fetch('sidebar.html')
+            .then(res => res.text())
+            .then(data => {
+                sideFloat.innerHTML = `<div class="sidebar-header">เมนูนำทาง</div>` + data;
+                ['credit', 'branch', 'sales'].forEach(id => {
+                    if (localStorage.getItem('menu-' + id) === 'true') {
+                        const el = sideFloat.querySelector('#menu-' + id);
+                        if (el) el.classList.add('open');
+                    }
+                });
+            });
+    }
+
+    window.toggleDrop = function(btn, id) {
+        const item = btn.parentElement;
+        const isOpen = item.classList.toggle("open");
+        if (id) localStorage.setItem('menu-' + id, isOpen);
+    }
+
+    /* ===== ORIGINAL PAGE LOGIC (No Changes) ===== */
     function openForm() { document.getElementById('formModal').classList.add('show'); }
     function closeForm() { document.getElementById('formModal').classList.remove('show'); }
 
     function setupEventListeners() {
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
-                if (document.getElementById('formModal').classList.contains('show') && !document.getElementById('authPopup').classList.contains('show')) { openAuthPopup('submit'); }
+                if (document.getElementById('formModal').classList.contains('show') && !document.getElementById('authPopup').classList.contains('show')) {
+                    openAuthPopup('submit');
+                }
                 else if (document.getElementById('authPopup').classList.contains('show')) {
                     if (document.getElementById('otpInputForm').style.display !== 'none') verifyAndExecute();
                     else if (document.getElementById('otpSelectAdmin').style.display !== 'none') sendOTPRequest();
@@ -433,8 +479,11 @@
             updateSummary(data.rows);
             displayTable();
             updateBulkUI();
-        } catch (e) { document.getElementById('tableBody').innerHTML = '<tr><td colspan="7" style="text-align:center; color:red;">โหลดข้อมูลไม่สำเร็จ</td></tr>'; } 
-        finally { document.getElementById('loading').style.display = 'none'; }
+        } catch (e) { 
+            document.getElementById('tableBody').innerHTML = '<tr><td colspan="7" style="text-align:center; color:red;">โหลดข้อมูลไม่สำเร็จ</td></tr>'; 
+        } finally { 
+            document.getElementById('loading').style.display = 'none'; 
+        }
     }
 
     function displayTable() {
@@ -474,9 +523,8 @@
         if (total <= 1) return;
         for (let i = 1; i <= total; i++) {
             const btn = document.createElement('button');
-            btn.className = 'page-btn';
+            btn.style.cssText = `border:none; width:36px; height:36px; border-radius:10px; cursor:pointer; font-weight:600; margin: 0 2px; background:${i===currentPage?'var(--ios-blue)':'#f2f2f7'}; color:${i===currentPage?'#fff':'#3a3a3c'}`;
             btn.innerText = i;
-            btn.style.cssText = `background:${i===currentPage?'var(--ios-blue)':'#f2f2f7'}; color:${i===currentPage?'#fff':'#3a3a3c'}`;
             btn.onclick = () => { currentPage = i; displayTable(); };
             container.appendChild(btn);
         }
@@ -518,7 +566,8 @@
             showStatusPopup("บันทึกข้อมูลเรียบร้อยแล้ว", true); 
             document.getElementById('deductionForm').reset(); 
             document.getElementById('date').value = new Date().toISOString().split("T")[0]; 
-            closeForm(); fetchData(true);
+            closeForm();
+            fetchData(true);
         } catch (e) { showStatusPopup("เกิดข้อผิดพลาด", false); } finally { setProcessing(false); }
     }
 
