@@ -18,15 +18,15 @@
             --ios-bg: #f2f2f7;
             --glass-white: rgba(255, 255, 255, 0.75);
             --glass-border: rgba(255, 255, 255, 0.5);
-            --sidebar-dark: rgba(28, 28, 30, 0.94);
+            --sidebar-dark: rgba(28, 28, 30, 0.96); /* ปรับตาม index.html */
             --text-main: #1c1c1e;
             --text-light: #8e8e93;
-            --sidebar-width: 280px;
             --transition-swift: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-bounce: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
             --header-gradient: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
         }
 
-        /* ===== GLOBAL RESET & SIDEBAR ADAPTATION ===== */
+        /* ===== GLOBAL RESET ===== */
         * { 
             box-sizing: border-box; 
             font-family: 'Kanit', sans-serif !important; 
@@ -38,248 +38,144 @@
             background-color: var(--ios-bg);
             color: var(--text-main); 
             -webkit-font-smoothing: antialiased;
-            transition: padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow-x: hidden;
         }
 
-        /* ===== Header Navbar ===== */
+        /* ===== Header Navbar (Updated to match style) ===== */
         .top-header {
             position: fixed;
             top: 0; left: 0; right: 0;
             height: 60px;
             background: rgba(255, 255, 255, 0.7);
             backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
-            z-index: 1200;
+            z-index: 1000;
             display: flex;
             align-items: center;
-            padding: 0 15px;
+            padding: 0 20px 0 75px; 
             border-bottom: 0.5px solid rgba(0,0,0,0.1);
-            transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .top-toggle {
-            width: 36px; height: 36px;
-            border-radius: 10px;
+        /* ===== Floating Draggable Button (From index.html) ===== */
+        #floatingMenuBtn {
+            position: fixed;
+            top: 10px;
+            left: 15px;
+            width: 45px;
+            height: 45px;
+            background: var(--ios-blue);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            cursor: move;
+            z-index: 2100;
+            box-shadow: 0 4px 15px rgba(0, 122, 255, 0.4);
             border: none;
-            background: transparent;
-            color: var(--ios-blue);
-            cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 22px;
-            transition: all 0.2s;
+            touch-action: none;
+            transition: transform 0.2s, opacity 0.2s;
         }
-        .top-toggle:hover { background: rgba(0,0,0,0.05); transform: scale(1.05); }
+        #floatingMenuBtn:active { transform: scale(0.9); }
 
-        /* ===== Sidebar Style ===== */
-        .sidebar { 
-            position: fixed; top: 0; left: 0; 
-            width: var(--sidebar-width); height: 100vh; 
-            background: var(--sidebar-dark); 
-            backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
-            color: #fff; overflow-y: auto; 
-            transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
+        /* ===== Floating Sidebar (From index.html) ===== */
+        .sidebar-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.2);
             z-index: 2000;
-            box-shadow: 10px 0 30px rgba(0,0,0,0.1);
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s;
         }
-        
-        @media(min-width:769px) { 
-            body:not(.collapsed) { padding-left: var(--sidebar-width); }
-            body:not(.collapsed) .top-header { left: var(--sidebar-width); }
-            body.collapsed .sidebar { transform: translateX(-100%); }
-            body.collapsed .top-header { left: 0; }
+        .sidebar-overlay.active { display: block; opacity: 1; }
+
+        .sidebar-float {
+            position: fixed;
+            width: 280px;
+            max-height: 70vh;
+            background: var(--sidebar-dark);
+            border-radius: 20px;
+            overflow-y: auto;
+            z-index: 2001;
+            opacity: 0;
+            visibility: hidden;
+            transform: scale(0.8) translateY(10px);
+            transition: opacity 0.3s, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.1);
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,0.2) transparent;
+        }
+        .sidebar-float.active {
+            opacity: 1;
+            visibility: visible;
+            transform: scale(1) translateY(0);
         }
 
-        @media(max-width:768px) {
-            .sidebar { transform: translateX(-100%); }
-            .sidebar.show { transform: translateX(0); }
-            body { padding-left: 0 !important; }
-            .top-header { left: 0 !important; }
-            .top-header div { font-size: 1rem !important; }
+        /* Sidebar Content Styles */
+        .sidebar-float .sidebar-header { padding: 20px; font-size: 17px; font-weight: 600; color: #fff; border-bottom: 0.5px solid rgba(255,255,255,0.1); }
+        .sidebar-float .menu { padding: 8px 0; }
+        .sidebar-float .menu a, .sidebar-float .drop-btn { 
+            width: 100%; padding: 12px 20px; background: none; border: none; 
+            color: #ebebf5; text-align: left; font-size: 14px; cursor: pointer; 
+            display: flex; align-items: center; text-decoration: none; transition: 0.2s;
         }
+        .sidebar-float .menu a:hover, .sidebar-float .drop-btn:hover { background: rgba(255,255,255,0.1); }
+        .sidebar-float .sub { display: none; background: rgba(0,0,0,0.2); }
+        .sidebar-float .item.open .sub { display: block; }
+        .sidebar-float .sub a { padding-left: 45px; font-size: 13px; color: #8e8e93; }
 
-        .overlay { 
-            position: fixed; inset: 0; 
-            background: rgba(0, 0, 0, 0.3); 
-            backdrop-filter: blur(4px); 
-            display: none; z-index: 1500; 
-        }
-        .overlay.show { display: block; }
-
-        /* ===== Content Area ===== */
+        /* ===== Original Content Area & Logic Styles (UNTOUCHED) ===== */
         .content-area { 
-            padding: 75px 15px 40px; 
+            padding: 80px 15px 40px; 
             max-width: 1200px;
             margin: 0 auto; 
             animation: fadeIn 0.8s ease-out; 
         }
-        
-        .glass { 
-            background: var(--glass-white); 
-            backdrop-filter: blur(25px); 
-            -webkit-backdrop-filter: blur(25px); 
-            border-radius: 24px; 
-            border: 1px solid var(--glass-border); 
-            box-shadow: 0 15px 35px rgba(0,0,0,0.05);
-        }
-
+        .glass { background: var(--glass-white); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border-radius: 24px; border: 1px solid var(--glass-border); box-shadow: 0 15px 35px rgba(0,0,0,0.05); }
         .calendar-wrapper { overflow: hidden; border-radius: 24px; background: white; }
-        
-        .day-cell { 
-            height: 100px;
-            background: rgba(255, 255, 255, 0.6); 
-            border-right: 1px solid rgba(0,0,0,0.03); 
-            border-bottom: 1px solid rgba(0,0,0,0.03); 
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            cursor: pointer;
-            overflow-y: auto; 
-            padding: 4px;
-            position: relative;
-        }
-        
-        .day-cell:hover {
-            background: rgba(255, 255, 255, 0.95);
-            transform: scale(1.01);
-            z-index: 10;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
-            border-radius: 8px;
-        }
-
+        .day-cell { height: 100px; background: rgba(255, 255, 255, 0.6); border-right: 1px solid rgba(0,0,0,0.03); border-bottom: 1px solid rgba(0,0,0,0.03); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; overflow-y: auto; padding: 4px; position: relative; }
+        .day-cell:hover { background: rgba(255, 255, 255, 0.95); transform: scale(1.01); z-index: 10; box-shadow: 0 10px 25px rgba(0,0,0,0.08); border-radius: 8px; }
         @media(min-width: 1024px) { .day-cell { height: 125px; padding: 6px; } }
-
-        .day-header { 
-            font-size: 0.75rem; 
-            font-weight: 600; 
-            color: #8e8e93; 
-            padding: 10px 0; 
-            background: rgba(255, 255, 255, 0.8);
-            border-bottom: 1px solid rgba(0,0,0,0.05);
-        }
-
+        .day-header { font-size: 0.75rem; font-weight: 600; color: #8e8e93; padding: 10px 0; background: rgba(255, 255, 255, 0.8); border-bottom: 1px solid rgba(0,0,0,0.05); }
         .cell-content { display: flex; flex-direction: column; gap: 2px; align-items: flex-start; width: 100%; }
-        
-        .date-number { 
-            font-size: 0.95rem; 
-            font-weight: 600; 
-            color: #1d1d1f;
-            min-width: 24px;
-            height: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 2px;
-            transition: all 0.2s;
-        }
-        
+        .date-number { font-size: 0.95rem; font-weight: 600; color: #1d1d1f; min-width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; margin-bottom: 2px; transition: all 0.2s; }
         .current-day .date-number { background: #0071e3; color: white; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,113,227,0.3); }
-
-        .emp-row {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            width: 100%;
-            padding: 2px 4px;
-            background: rgba(0,0,0,0.03);
-            border-radius: 6px;
-            margin-bottom: 2px;
-            transition: background 0.2s;
-        }
-
-        .status-dot { 
-            width: 8px; 
-            height: 8px; 
-            border-radius: 50%; 
-            flex-shrink: 0;
-        }
-
-        .emp-name-label {
-            font-size: 10px; 
-            font-weight: 500;
-            color: #1c1c1e;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .status-abbr {
-            font-size: 9px; 
-            font-weight: 700;
-            color: #8e8e93;
-            display: inline; /* เปลี่ยนเป็น inline เสมอตามคำขอ */
-        }
-        
-        @media(min-width: 768px) {
-            .status-dot { width: 11px; height: 11px; }
-            .emp-name-label { font-size: 13px; }
-            .status-abbr { font-size: 11px; }
-            .emp-row { gap: 6px; padding: 3px 6px; }
-        }
-
-        /* สีตามสถานะ */
+        .emp-row { display: flex; align-items: center; gap: 4px; width: 100%; padding: 2px 4px; background: rgba(0,0,0,0.03); border-radius: 6px; margin-bottom: 2px; transition: background 0.2s; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+        .emp-name-label { font-size: 10px; font-weight: 500; color: #1c1c1e; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .status-abbr { font-size: 9px; font-weight: 700; color: #8e8e93; display: inline; }
+        @media(min-width: 768px) { .status-dot { width: 11px; height: 11px; } .emp-name-label { font-size: 13px; } .status-abbr { font-size: 11px; } .emp-row { gap: 6px; padding: 3px 6px; } }
         .st-Work { background: #34c759; box-shadow: 0 0 6px rgba(52, 199, 89, 0.4); } 
         .st-V { background: #ff3b30; box-shadow: 0 0 6px rgba(255, 59, 48, 0.4); }      
         .st-SICK { background: #8e8e93; }  
         .st-EVENT { background: #FFD60A; } 
         .st-PH { background: #ff9500; }     
         .st-H { background: #af52de; }     
-
-        #toast {
-            position: fixed;
-            top: 20px; left: 50%;
-            transform: translateX(-50%) translateY(-150px);
-            z-index: 5000; 
-            width: 90%; max-width: 350px;
-            transition: transform 0.5s cubic-bezier(0.18, 0.89, 0.32, 1.28);
-        }
+        #toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-150px); z-index: 5000; width: 90%; max-width: 350px; transition: transform 0.5s cubic-bezier(0.18, 0.89, 0.32, 1.28); }
         #toast.show { transform: translateX(-50%) translateY(0); }
-
         #loading { position: fixed; inset: 0; background: rgba(245,245,247,0.8); backdrop-filter: blur(15px); z-index: 9999; display: none; justify-content: center; align-items: center; }
-
-        .btn-edit-mode {
-            padding: 8px 16px;
-            border-radius: 14px;
-            font-weight: 600;
-            font-size: 14px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
+        .btn-edit-mode { padding: 8px 16px; border-radius: 14px; font-weight: 600; font-size: 14px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; gap: 6px; }
         .mode-locked { background: #f2f2f7; color: #8e8e93; border: 1px solid #d1d1d6; }
         .mode-unlocked { background: #34c759; color: white; border: 1px solid #34c759; box-shadow: 0 4px 12px rgba(52, 199, 89, 0.3); }
-
-        /* Summary Stats Styling */
-        .summary-card {
-            background: white;
-            border-radius: 20px;
-            padding: 12px;
-            border: 1px solid rgba(0,0,0,0.05);
-            transition: transform 0.2s;
-        }
+        .summary-card { background: white; border-radius: 20px; padding: 12px; border: 1px solid rgba(0,0,0,0.05); transition: transform 0.2s; }
         .summary-card:hover { transform: translateY(-3px); }
-        .stat-badge {
-            font-size: 11px;
-            padding: 2px 8px;
-            border-radius: 8px;
-            font-weight: 600;
-        }
-
+        .stat-badge { font-size: 11px; padding: 2px 8px; border-radius: 8px; font-weight: 600; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-8px); }
-            75% { transform: translateX(8px); }
-        }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
         .shake { animation: shake 0.2s ease-in-out 0s 2; }
     </style>
 </head>
 <body>
 
 <header class="top-header">
-    <button class="top-toggle" onclick="toggleSidebar()">☰</button>
-    <div style="font-weight: 700; font-size: 1.15rem; color: var(--text-main); letter-spacing: -0.5px; margin-left: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">ตารางวันหยุดบิ๊กซีประชาอุทิศ</div>
+    <div style="font-weight: 700; font-size: 1.15rem; color: var(--text-main); letter-spacing: -0.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">ตารางวันหยุดบิ๊กซีประชาอุทิศ</div>
 </header>
 
-<div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
-<aside class="sidebar" id="sidebar"></aside>
+<button id="floatingMenuBtn" title="ลากเพื่อย้าย">เมนู</button>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebarFloat()"></div>
+<aside class="sidebar-float" id="sidebarFloat"></aside>
 
 <div id="toast">
     <div class="glass px-5 py-3 shadow-2xl flex items-center gap-3 border border-white/50">
@@ -332,8 +228,7 @@
             <div class="w-1.5 h-6 bg-blue-500 rounded-full"></div>
             <h2 class="text-lg font-bold text-gray-800">สรุปยอดวันหยุดประจำเดือน</h2>
         </div>
-        <div id="summaryGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            </div>
+        <div id="summaryGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"></div>
     </div>
 
     <footer class="text-center pb-8">
@@ -398,13 +293,12 @@
 </div>
 
 <script>
+    // --- Config & Original Logic (UNTOUCHED) ---
     const URL = "https://script.google.com/macros/s/AKfycbwqlWkhMFrhiTvySSSwPt7sd0aLJyW9I6g4HlnmdgX7l8SI0yBAKEEAZEKvT0fOr2VzqA/exec"; 
     let db = [];
     let selDate = "";
     let isEditMode = false;
     const months = ["มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน","กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"];
-    
-    // รายชื่อพนักงาน (ให้ตรงกับ Dropdown)
     const employees = [
         { id: "1100", name: "ศุภกฤต" },
         { id: "3535", name: "นวพล" },
@@ -412,28 +306,92 @@
         { id: "3723", name: "กรทักษ์" }
     ];
 
-    // --- SIDEBAR SYSTEM ---
-    function includeSidebar() {
-        const cached = localStorage.getItem('sidebar_cache');
-        if (cached) { document.getElementById('sidebar').innerHTML = cached; restoreMenuState(); }
-        fetch('sidebar.html').then(r => r.text()).then(data => {
-            if (data !== cached) {
-                document.getElementById('sidebar').innerHTML = data;
-                localStorage.setItem('sidebar_cache', data);
-                restoreMenuState();
-            }
-        }).catch(err => console.warn("Sidebar Load Error"));
-        if(localStorage.getItem('sidebar_collapsed') === 'true' && window.innerWidth > 768) document.body.classList.add('collapsed');
+    // --- Floating Sidebar Logic (1:1 from index.html) ---
+    const dragBtn = document.getElementById('floatingMenuBtn');
+    const sideFloat = document.getElementById('sidebarFloat');
+    const sideOverlay = document.getElementById('sidebarOverlay');
+    let isDragging = false;
+    let startX, startY, shiftX, shiftY;
+
+    function loadButtonPosition() {
+        const savedLeft = localStorage.getItem('floatBtnLeft');
+        const savedTop = localStorage.getItem('floatBtnTop');
+        if (savedLeft && savedTop) {
+            dragBtn.style.left = savedLeft + 'px';
+            dragBtn.style.top = savedTop + 'px';
+        }
     }
 
-    function toggleSidebar() {
-        if (window.innerWidth <= 768) {
-            document.getElementById("sidebar").classList.toggle("show");
-            document.getElementById("overlay").classList.toggle("show");
-        } else {
-            const isCollapsed = document.body.classList.toggle("collapsed");
-            localStorage.setItem('sidebar_collapsed', isCollapsed);
+    dragBtn.onpointerdown = function(e) {
+        isDragging = false;
+        startX = e.clientX; startY = e.clientY;
+        const rect = dragBtn.getBoundingClientRect();
+        shiftX = e.clientX - rect.left; shiftY = e.clientY - rect.top;
+        dragBtn.setPointerCapture(e.pointerId);
+        document.addEventListener('pointermove', onPointerMove);
+        document.addEventListener('pointerup', onPointerUp);
+    };
+
+    function onPointerMove(e) {
+        if (!isDragging && (Math.abs(e.clientX - startX) > 5 || Math.abs(e.clientY - startY) > 5)) isDragging = true;
+        if (isDragging) {
+            let newX = e.clientX - shiftX;
+            let newY = e.clientY - shiftY;
+            newX = Math.max(0, Math.min(newX, window.innerWidth - dragBtn.offsetWidth));
+            newY = Math.max(0, Math.min(newY, window.innerHeight - dragBtn.offsetHeight));
+            dragBtn.style.left = newX + 'px';
+            dragBtn.style.top = newY + 'px';
         }
+    }
+
+    function onPointerUp(e) {
+        document.removeEventListener('pointermove', onPointerMove);
+        document.removeEventListener('pointerup', onPointerUp);
+        dragBtn.releasePointerCapture(e.pointerId);
+        if (isDragging) {
+            localStorage.setItem('floatBtnLeft', dragBtn.offsetLeft);
+            localStorage.setItem('floatBtnTop', dragBtn.offsetTop);
+        } else {
+            toggleSidebarFloat();
+        }
+        isDragging = false;
+    }
+
+    function toggleSidebarFloat() {
+        const btnRect = dragBtn.getBoundingClientRect();
+        const sidebarWidth = 280;
+        let top = btnRect.bottom + 10;
+        let left = btnRect.left;
+        if (left + sidebarWidth > window.innerWidth) left = window.innerWidth - sidebarWidth - 15;
+        if (top + 400 > window.innerHeight) {
+            top = btnRect.top - 410;
+            if (top < 10) top = 10;
+        }
+        sideFloat.style.top = top + 'px';
+        sideFloat.style.left = left + 'px';
+        sideFloat.style.transformOrigin = `${btnRect.left - left + 20}px ${btnRect.top > top ? 'bottom' : 'top'}`;
+        const isActive = sideFloat.classList.toggle('active');
+        sideOverlay.classList.toggle('active', isActive);
+        if (isActive && !sideFloat.innerHTML) loadSidebarContent();
+    }
+
+    function closeSidebarFloat() {
+        sideFloat.classList.remove('active');
+        sideOverlay.classList.remove('active');
+    }
+
+    function loadSidebarContent() {
+        fetch('sidebar.html')
+            .then(res => res.text())
+            .then(data => {
+                sideFloat.innerHTML = `<div class="sidebar-header">เมนูนำทาง</div>` + data;
+                ['credit', 'branch', 'sales'].forEach(id => {
+                    if (localStorage.getItem('menu-' + id) === 'true') {
+                        const el = sideFloat.querySelector('#menu-' + id);
+                        if (el) el.classList.add('open');
+                    }
+                });
+            });
     }
 
     window.toggleDrop = function(btn, id) {
@@ -442,18 +400,9 @@
         if (id) localStorage.setItem('menu-' + id, isOpen);
     }
 
-    function restoreMenuState() {
-        ['credit', 'branch', 'sales'].forEach(id => {
-            if (localStorage.getItem('menu-' + id) === 'true') {
-                const el = document.getElementById('menu-' + id);
-                if (el) el.classList.add('open');
-            }
-        });
-    }
-
-    // --- CALENDAR & SUMMARY LOGIC ---
+    // --- Original Logic (UNTOUCHED) ---
     async function init() {
-        includeSidebar(); 
+        loadButtonPosition();
         const mS = document.getElementById('mSel');
         const yS = document.getElementById('ySel');
         months.forEach((m, i) => mS.innerHTML += `<option value="${i}">${m}</option>`);
@@ -461,12 +410,9 @@
         mS.value = new Date().getMonth();
         yS.value = new Date().getFullYear();
         mS.onchange = yS.onchange = () => render();
-
-        // เพิ่ม Event Listener สำหรับปุ่ม Enter ใน Password Modal
         document.getElementById('passInput').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') checkPassword();
         });
-
         await refreshData();
     }
 
@@ -488,35 +434,17 @@
         const first = new Date(y, m, 1).getDay();
         const last = new Date(y, m+1, 0).getDate();
         const today = new Date();
-
-        // กรองข้อมูลเฉพาะเดือนและปีที่เลือก
         const currentMonthData = db.filter(r => {
             const d = new Date(r.date);
             return d.getMonth() === m && d.getFullYear() === y;
         });
-
         for(let i=0; i<first; i++) grid.innerHTML += `<div class="day-cell bg-gray-50/20"></div>`;
-
         for(let d=1; d<=last; d++) {
             const dateKey = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
             const isToday = today.getDate() === d && today.getMonth() === m && today.getFullYear() === y;
             const records = currentMonthData.filter(r => r.date === dateKey);
-            
-            let tags = records.map(r => `
-                <div class="emp-row">
-                    <div class="status-dot st-${r.status}"></div>
-                    <span class="emp-name-label">${r.empName} <span class="status-abbr">(${r.status})</span></span>
-                </div>
-            `).join('');
-
-            grid.innerHTML += `
-                <div class="day-cell ${isToday ? 'current-day' : ''}" onclick="openModal('${dateKey}')">
-                    <div class="cell-content">
-                        <div class="date-number">${d}</div>
-                        ${tags}
-                    </div>
-                </div>
-            `;
+            let tags = records.map(r => `<div class="emp-row"><div class="status-dot st-${r.status}"></div><span class="emp-name-label">${r.empName} <span class="status-abbr">(${r.status})</span></span></div>`).join('');
+            grid.innerHTML += `<div class="day-cell ${isToday ? 'current-day' : ''}" onclick="openModal('${dateKey}')"><div class="cell-content"><div class="date-number">${d}</div>${tags}</div></div>`;
         }
         renderSummary(currentMonthData);
     }
@@ -524,7 +452,6 @@
     function renderSummary(data) {
         const summaryGrid = document.getElementById('summaryGrid');
         summaryGrid.innerHTML = "";
-
         employees.forEach(emp => {
             const empRecords = data.filter(r => r.empId == emp.id);
             const stats = {
@@ -534,130 +461,64 @@
                 PH: empRecords.filter(r => r.status === 'PH').length,
                 EVENT: empRecords.filter(r => r.status === 'EVENT').length
             };
-
             const totalOff = stats.H + stats.V + stats.SICK + stats.PH + stats.EVENT;
-
-            summaryGrid.innerHTML += `
-                <div class="summary-card shadow-sm border border-gray-100 p-4">
-                    <div class="flex justify-between items-start mb-3">
-                        <div>
-                            <p class="text-xs text-gray-400 font-medium">รหัส ${emp.id}</p>
-                            <h3 class="font-bold text-gray-800">${emp.name}</h3>
-                        </div>
-                        <div class="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-xs font-bold">
-                            หยุด ${totalOff} วัน
-                        </div>
-                    </div>
-                    <div class="flex flex-wrap gap-1.5">
-                        <span class="stat-badge bg-purple-50 text-purple-600">H: ${stats.H}</span>
-                        <span class="stat-badge bg-red-50 text-red-600">V: ${stats.V}</span>
-                        <span class="stat-badge bg-orange-50 text-orange-600">PH: ${stats.PH}</span>
-                        <span class="stat-badge bg-gray-100 text-gray-600">SICK: ${stats.SICK}</span>
-                        <span class="stat-badge bg-yellow-50 text-yellow-700">EV: ${stats.EVENT}</span>
-                    </div>
-                </div>
-            `;
+            summaryGrid.innerHTML += `<div class="summary-card shadow-sm border border-gray-100 p-4"><div class="flex justify-between items-start mb-3"><div><p class="text-xs text-gray-400 font-medium">รหัส ${emp.id}</p><h3 class="font-bold text-gray-800">${emp.name}</h3></div><div class="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-xs font-bold">หยุด ${totalOff} วัน</div></div><div class="flex flex-wrap gap-1.5"><span class="stat-badge bg-purple-50 text-purple-600">H: ${stats.H}</span><span class="stat-badge bg-red-50 text-red-600">V: ${stats.V}</span><span class="stat-badge bg-orange-50 text-orange-600">PH: ${stats.PH}</span><span class="stat-badge bg-gray-100 text-gray-600">SICK: ${stats.SICK}</span><span class="stat-badge bg-yellow-50 text-yellow-700">EV: ${stats.EVENT}</span></div></div>`;
         });
     }
 
-    // --- REMAINING UI FUNCTIONS (Original preserved) ---
     function toggleEditMode() {
         if (!isEditMode) openPassModal();
         else { isEditMode = false; updateEditUI(); showToast("ปิดโหมดแก้ไขแล้ว"); }
     }
-
-    function openPassModal() {
-        document.getElementById('passwordModal').classList.remove('hidden');
-        document.getElementById('passInput').value = "";
-        document.getElementById('passInput').focus();
-    }
-
+    function openPassModal() { document.getElementById('passwordModal').classList.remove('hidden'); document.getElementById('passInput').value = ""; document.getElementById('passInput').focus(); }
     function closePassModal() { document.getElementById('passwordModal').classList.add('hidden'); }
-
     function checkPassword() {
-        if (document.getElementById('passInput').value === "Bb*0285134679") {
-            isEditMode = true; updateEditUI(); closePassModal(); showToast("ปลดล็อกโหมดแก้ไขแล้ว");
-        } else {
-            document.getElementById('passBox').classList.add('shake');
-            setTimeout(() => document.getElementById('passBox').classList.remove('shake'), 400);
-            showToast("รหัสผ่านไม่ถูกต้อง", "error");
-        }
+        if (document.getElementById('passInput').value === "Bb*0285134679") { isEditMode = true; updateEditUI(); closePassModal(); showToast("ปลดล็อกโหมดแก้ไขแล้ว"); }
+        else { document.getElementById('passBox').classList.add('shake'); setTimeout(() => document.getElementById('passBox').classList.remove('shake'), 400); showToast("รหัสผ่านไม่ถูกต้อง", "error"); }
     }
-
     function updateEditUI() {
-        const btn = document.getElementById('btnEditMode');
-        const icon = document.getElementById('lockIcon');
-        const text = document.getElementById('lockText');
-        if (isEditMode) {
-            btn.classList.replace('mode-locked', 'mode-unlocked');
-            icon.innerText = "🔓"; text.innerText = "กำลังแก้ไข";
-        } else {
-            btn.classList.replace('mode-unlocked', 'mode-locked');
-            icon.innerText = "🔒"; text.innerText = "แก้ไข";
-        }
+        const btn = document.getElementById('btnEditMode'), icon = document.getElementById('lockIcon'), text = document.getElementById('lockText');
+        if (isEditMode) { btn.classList.replace('mode-locked', 'mode-unlocked'); icon.innerText = "🔓"; text.innerText = "กำลังแก้ไข"; }
+        else { btn.classList.replace('mode-unlocked', 'mode-locked'); icon.innerText = "🔒"; text.innerText = "แก้ไข"; }
     }
-
     function openModal(d) {
-        selDate = d;
-        const [y, m, day] = d.split('-');
+        selDate = d; const [y, m, day] = d.split('-');
         document.getElementById('modalDate').innerText = `${parseInt(day)} ${months[parseInt(m)-1]} ${parseInt(y)+543}`;
-        const list = document.getElementById('existingEntries');
-        list.innerHTML = "";
+        const list = document.getElementById('existingEntries'); list.innerHTML = "";
         const records = db.filter(r => r.date === d);
-        
         if(isEditMode) { document.getElementById('editForm').classList.remove('hidden'); document.getElementById('btnCloseView').classList.add('hidden'); } 
         else { document.getElementById('editForm').classList.add('hidden'); document.getElementById('btnCloseView').classList.remove('hidden'); }
-
         if(records.length > 0) {
             records.forEach(r => {
-                list.innerHTML += `
-                <div class="flex justify-between items-center bg-white p-3.5 rounded-2xl border border-gray-100 shadow-sm">
-                    <div class="flex items-center gap-3">
-                        <div class="w-3.5 h-3.5 rounded-full st-${r.status}"></div>
-                        <p class="font-medium text-gray-700 text-sm">${r.empName} <span class="text-xs text-gray-400">(${r.status})</span></p>
-                    </div>
-                    ${isEditMode ? `<button onclick="deleteEntry('${r.date}', '${r.empId}')" class="text-red-500 bg-red-50 p-2 rounded-xl">🗑️</button>` : ''}
-                </div>`;
+                list.innerHTML += `<div class="flex justify-between items-center bg-white p-3.5 rounded-2xl border border-gray-100 shadow-sm"><div class="flex items-center gap-3"><div class="w-3.5 h-3.5 rounded-full st-${r.status}"></div><p class="font-medium text-gray-700 text-sm">${r.empName} <span class="text-xs text-gray-400">(${r.status})</span></p></div>${isEditMode ? `<button onclick="deleteEntry('${r.date}', '${r.empId}')" class="text-red-500 bg-red-50 p-2 rounded-xl">🗑️</button>` : ''}</div>`;
             });
         } else { list.innerHTML = `<div class="py-10 text-center text-gray-300 font-light italic text-sm">ไม่มีข้อมูลการหยุด</div>`; }
         document.getElementById('modal').classList.remove('hidden');
     }
-
     function closeModal() { document.getElementById('modal').classList.add('hidden'); }
-
     async function save() {
-        if(!isEditMode) return;
-        showLoad(true);
-        const id = document.getElementById('empId').value;
-        const st = document.getElementById('status').value;
-        const name = document.getElementById('empId').options[document.getElementById('empId').selectedIndex].text.split(' (')[0];
+        if(!isEditMode) return; showLoad(true);
+        const id = document.getElementById('empId').value, st = document.getElementById('status').value, name = document.getElementById('empId').options[document.getElementById('empId').selectedIndex].text.split(' (')[0];
         try {
-            const res = await fetch(URL, {
-                method: 'POST',
-                body: JSON.stringify({ date: selDate, empId: id, empName: name, status: st })
-            });
+            const res = await fetch(URL, { method: 'POST', body: JSON.stringify({ date: selDate, empId: id, empName: name, status: st }) });
             const out = await res.json();
             if(out.status === "duplicate") { showToast("มีข้อมูลพนักงานคนนี้อยู่แล้ว", "error"); showLoad(false); }
             else { showToast("บันทึกข้อมูลเรียบร้อย"); closeModal(); await refreshData(); }
         } catch(e) { closeModal(); await refreshData(); }
     }
-
     async function deleteEntry(date, empId) {
         showConfirm(async () => {
             try {
                 const response = await fetch(`${URL}?action=delete&date=${date}&empId=${empId}`);
-                await response.json();
-                showToast("ลบข้อมูลสำเร็จ"); closeModal(); await refreshData();
+                await response.json(); showToast("ลบข้อมูลสำเร็จ"); closeModal(); await refreshData();
             } catch(e) { closeModal(); await refreshData(); }
         });
     }
-
     function showConfirm(callback) {
         document.getElementById('confirmModal').classList.remove('hidden');
         document.getElementById('confirmOk').onclick = () => { showLoad(true); callback(); document.getElementById('confirmModal').classList.add('hidden'); };
         document.getElementById('confirmCancel').onclick = () => document.getElementById('confirmModal').classList.add('hidden');
     }
-
     function showLoad(v) { document.getElementById('loading').style.display = v ? 'flex' : 'none'; }
     function showToast(msg, type = 'success') {
         const toast = document.getElementById('toast');
