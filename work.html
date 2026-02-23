@@ -22,7 +22,6 @@
             --sidebar-dark: rgba(28, 28, 30, 0.94);
             --text-main: #1c1c1e;
             --text-light: #636366;
-            --sidebar-width: 280px;
             --ios-red: #FF3B30;
             --ios-green: #34C759;
             --ios-orange: #FF9500;
@@ -38,7 +37,6 @@
             color: var(--text-main); 
             min-height: 100vh;
             padding-bottom: 60px;
-            transition: padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             scroll-behavior: smooth;
         }
 
@@ -49,48 +47,72 @@
             height: 65px;
             background: rgba(255, 255, 255, 0.4);
             backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            z-index: 1200;
+            z-index: 1000;
             display: flex; align-items: center;
             padding: 0 25px;
             border-bottom: 1px solid var(--glass-border);
-            transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .top-toggle {
-            width: 40px; height: 40px;
-            border-radius: 12px; border: none;
-            background: rgba(0, 122, 255, 0.1);
-            color: var(--ios-blue);
-            cursor: pointer; font-size: 20px;
-            transition: all 0.2s;
+        /* ===== Floating Draggable Button (From index.html) ===== */
+        #floatingMenuBtn {
+            position: fixed;
+            top: 10px;
+            left: 15px;
+            width: 45px;
+            height: 45px;
+            background: var(--ios-blue);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            cursor: move;
+            z-index: 2100;
+            box-shadow: 0 4px 15px rgba(0, 122, 255, 0.4);
+            border: none;
+            touch-action: none;
         }
-        .top-toggle:hover { background: var(--ios-blue); color: white; transform: scale(1.05); }
 
-        /* Sidebar Base (ห้ามแก้ตามสั่ง) */
-        .sidebar { 
-            position: fixed; top: 0; left: 0; 
-            width: var(--sidebar-width); height: 100vh; 
-            background: var(--sidebar-dark); 
-            backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
-            color: #fff; overflow-y: auto; 
-            transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
+        /* ===== Floating Sidebar (From index.html) ===== */
+        .sidebar-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.2);
             z-index: 2000;
-            box-shadow: 10px 0 30px rgba(0,0,0,0.15);
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s;
         }
+        .sidebar-overlay.active { display: block; opacity: 1; }
 
-        @media(min-width:769px) { 
-            body:not(.collapsed) { padding-left: var(--sidebar-width); }
-            body:not(.collapsed) .top-header { left: var(--sidebar-width); }
-            body.collapsed .sidebar { transform: translateX(-100%); }
-            body.collapsed .top-header { left: 0; }
+        .sidebar-float {
+            position: fixed;
+            width: 280px;
+            max-height: 70vh;
+            background: var(--sidebar-dark);
+            border-radius: 20px;
+            overflow-y: auto;
+            z-index: 2001;
+            opacity: 0;
+            visibility: hidden;
+            transform: scale(0.8) translateY(10px);
+            transition: opacity 0.3s, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.1);
         }
-
-        @media(max-width:768px) {
-            .sidebar { transform: translateX(-100%); }
-            .sidebar.show { transform: translateX(0); }
-            body { padding-left: 0 !important; }
-            .top-header { left: 0 !important; }
+        .sidebar-float.active { opacity: 1; visibility: visible; transform: scale(1) translateY(0); }
+        .sidebar-float .sidebar-header { padding: 20px; font-size: 17px; font-weight: 600; color: #fff; border-bottom: 0.5px solid rgba(255,255,255,0.1); }
+        .sidebar-float .menu { padding: 8px 0; }
+        .sidebar-float .menu a, .sidebar-float .drop-btn { 
+            width: 100%; padding: 12px 20px; background: none; border: none; 
+            color: #ebebf5; text-align: left; font-size: 14px; cursor: pointer; 
+            display: flex; align-items: center; text-decoration: none; transition: 0.2s;
         }
+        .sidebar-float .menu a:hover, .sidebar-float .drop-btn:hover { background: rgba(255,255,255,0.1); }
+        .sidebar-float .sub { display: none; background: rgba(0,0,0,0.2); }
+        .sidebar-float .item.open .sub { display: block; }
+        .sidebar-float .sub a { padding-left: 45px; font-size: 13px; color: #8e8e93; }
 
         /* Stat Cards */
         .stats-container {
@@ -210,12 +232,7 @@
 
         .pinned-row { background: rgba(255, 149, 0, 0.08) !important; }
 
-        /* Updated Action Buttons Container */
-        .action-btns {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
+        .action-btns { display: flex; gap: 10px; align-items: center; }
 
         .btn-pin, .btn-edit, .btn-delete {
             width: 38px; height: 38px; border-radius: 12px; border: none; cursor: pointer; transition: all 0.2s;
@@ -225,13 +242,10 @@
         
         .btn-pin { background: #fff8ed; color: var(--ios-orange); }
         .btn-pin.active { background: var(--ios-orange); color: white; box-shadow: 0 4px 10px rgba(255, 149, 0, 0.3); }
-        
         .btn-edit { background: #eef7ed; color: var(--ios-green); }
         .btn-edit:hover { background: var(--ios-green); color: white; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(52, 199, 89, 0.3); }
-
         .btn-delete { background: #fff0f0; color: var(--ios-red); }
         .btn-delete:hover { background: var(--ios-red); color: white; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(255, 59, 48, 0.3); }
-        
         .btn-pin:hover:not(.active) { background: #ffe6c2; transform: translateY(-2px); }
 
         /* Floating Controls */
@@ -246,47 +260,20 @@
         }
 
         .btn-float {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            border: 1px solid var(--glass-border);
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(10px);
-            color: var(--ios-blue);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            font-size: 18px;
-            text-decoration: none;
+            width: 45px; height: 45px; border-radius: 50%; border: 1px solid var(--glass-border);
+            background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px);
+            color: var(--ios-blue); display: flex; align-items: center; justify-content: center;
+            cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.1); transition: all 0.3s;
+            font-size: 18px; text-decoration: none;
         }
 
-        .btn-float:hover {
-            background: white;
-            transform: scale(1.1);
-            box-shadow: 0 6px 20px rgba(0,122,255,0.2);
-        }
-
-        #btn-back-to-top {
-            opacity: 0;
-            visibility: hidden;
-            transform: translateY(20px);
-        }
-
-        #btn-back-to-top.show {
-            opacity: 1;
-            visibility: visible;
-            transform: translateY(0);
-        }
+        #btn-back-to-top { opacity: 0; visibility: hidden; transform: translateY(20px); transition: 0.3s; }
+        #btn-back-to-top.show { opacity: 1; visibility: visible; transform: translateY(0); }
 
         /* Modal Customization */
         .swal2-container { z-index: 9999 !important; }
         .swal-modal-custom { border-radius: 30px !important; padding: 20px !important; }
         .swal2-title { font-weight: 700 !important; color: var(--text-main) !important; }
-
-        /* Grid Form/Detail Layout */
         .swal-form-container { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; text-align: left; margin-top: 15px; }
         .swal-field-full { grid-column: span 2; }
         .swal-label { font-size: 13px; font-weight: 600; color: var(--text-light); margin-bottom: 6px; display: block; margin-left: 5px; }
@@ -295,13 +282,8 @@
             font-size: 15px; outline: none; transition: 0.2s; background: #f9f9f9;
         }
         .swal-input-styled:focus { border-color: var(--ios-blue); background: #fff; box-shadow: 0 0 0 4px rgba(0,122,255,0.1); }
-        
-        /* View Detail Mode - Clean Style */
         .detail-view-item { background: #f9f9f9; padding: 12px 15px; border-radius: 14px; border: 1.5px solid #f0f0f5; }
         .detail-view-item .val { font-size: 15px; font-weight: 600; color: var(--text-main); display: block; }
-
-        .overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.2); backdrop-filter: blur(4px); display: none; z-index: 1500; }
-        .overlay.show { display: block; }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
     </style>
@@ -309,9 +291,12 @@
 <body>
 
 <header class="top-header">
-    <button class="top-toggle" onclick="toggleSidebar()">☰</button>
-    <div style="font-weight: 700; font-size: 1.4rem; color: var(--text-main); letter-spacing: -1px; margin-left: 15px;">ระบบเคลียร์งาน</div>
+    <div style="font-weight: 700; font-size: 1.4rem; color: var(--text-main); letter-spacing: -1px; margin-left: 60px;">ระบบเคลียร์งาน</div>
 </header>
+
+<button id="floatingMenuBtn" title="ลากเพื่อย้าย">เมนู</button>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebarFloat()"></div>
+<aside class="sidebar-float" id="sidebarFloat"></aside>
 
 <div class="floating-controls">
     <button id="btn-back-to-top" class="btn-float" onclick="scrollToTop()" title="กลับไปด้านบน">
@@ -319,12 +304,7 @@
     </button>
 </div>
 
-<div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
-
-<aside class="sidebar" id="sidebar"></aside>
-
 <div class="main-content">
-    
     <div class="stats-container" id="statsContainer">
         <div class="stat-card active" onclick="filterByType('ทั้งหมด', this)">
             <span class="count" id="count-total">0</span>
@@ -373,59 +353,111 @@
 
 <script>
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyhHbjBTWqnxjS_rUVk7jKE7aOyk6SLCxudOp-AA0bZSlRXXK6WyCjl-nwnu7qi8s8/exec';
-
     const jobTypes = [
         "MGM ปรับลด", "ยกเลิกบริการ (ปกติ)", "ยกเลิกบริการ (5P)", "MNP",
         "เปลี่ยนรายเดือนเป็นเติมเงิน", "เปลี่ยนโปรโมชั่น", "Add ส่วนลด",
         "Add เน็ตเพิ่ม", "ระงับสัญญาณชั่วคราวTOL", "ส่งเรื่องตรวจสอบ"
     ];
-
     let fullData = [];
 
-    // --- Sidebar System (ห้ามแก้ตามสั่ง) ---
-    function includeSidebar() {
-        const cached = localStorage.getItem('sidebar_cache');
-        if (cached) { document.getElementById('sidebar').innerHTML = cached; restoreMenuState(); }
-        fetch('sidebar.html')
-            .then(response => response.text())
-            .then(data => {
-                if (data !== cached) {
-                    document.getElementById('sidebar').innerHTML = data;
-                    localStorage.setItem('sidebar_cache', data);
-                    restoreMenuState();
-                }
-            }).catch(err => console.warn("Sidebar Load Error"));
-        if(localStorage.getItem('sidebar_collapsed') === 'true' && window.innerWidth > 768) {
-            document.body.classList.add('collapsed');
+    // --- Floating Sidebar Logic (1:1 from index.html) ---
+    const dragBtn = document.getElementById('floatingMenuBtn');
+    const sideFloat = document.getElementById('sidebarFloat');
+    const sideOverlay = document.getElementById('sidebarOverlay');
+    let isDragging = false;
+    let startX, startY, shiftX, shiftY;
+
+    function loadButtonPosition() {
+        const savedLeft = localStorage.getItem('floatBtnLeft');
+        const savedTop = localStorage.getItem('floatBtnTop');
+        if (savedLeft && savedTop) {
+            dragBtn.style.left = savedLeft + 'px';
+            dragBtn.style.top = savedTop + 'px';
         }
     }
 
-    function toggleSidebar() {
-        if (window.innerWidth <= 768) {
-            document.getElementById("sidebar").classList.toggle("show");
-            document.getElementById("overlay").classList.toggle("show");
-        } else {
-            const isCollapsed = document.body.classList.toggle("collapsed");
-            localStorage.setItem('sidebar_collapsed', isCollapsed);
+    dragBtn.onpointerdown = function(e) {
+        isDragging = false;
+        startX = e.clientX; startY = e.clientY;
+        const rect = dragBtn.getBoundingClientRect();
+        shiftX = e.clientX - rect.left;
+        shiftY = e.clientY - rect.top;
+        dragBtn.setPointerCapture(e.pointerId);
+        document.addEventListener('pointermove', onPointerMove);
+        document.addEventListener('pointerup', onPointerUp);
+    };
+
+    function onPointerMove(e) {
+        if (!isDragging && (Math.abs(e.clientX - startX) > 5 || Math.abs(e.clientY - startY) > 5)) isDragging = true;
+        if (isDragging) {
+            let newX = e.clientX - shiftX;
+            let newY = e.clientY - shiftY;
+            newX = Math.max(0, Math.min(newX, window.innerWidth - dragBtn.offsetWidth));
+            newY = Math.max(0, Math.min(newY, window.innerHeight - dragBtn.offsetHeight));
+            dragBtn.style.left = newX + 'px';
+            dragBtn.style.top = newY + 'px';
         }
+    }
+
+    function onPointerUp(e) {
+        document.removeEventListener('pointermove', onPointerMove);
+        document.removeEventListener('pointerup', onPointerUp);
+        dragBtn.releasePointerCapture(e.pointerId);
+        if (isDragging) {
+            localStorage.setItem('floatBtnLeft', dragBtn.offsetLeft);
+            localStorage.setItem('floatBtnTop', dragBtn.offsetTop);
+        } else {
+            toggleSidebarFloat();
+        }
+        isDragging = false;
+    }
+
+    function toggleSidebarFloat() {
+        const btnRect = dragBtn.getBoundingClientRect();
+        const sidebarWidth = 280;
+        let top = btnRect.bottom + 10;
+        let left = btnRect.left;
+        if (left + sidebarWidth > window.innerWidth) left = window.innerWidth - sidebarWidth - 15;
+        if (top + 400 > window.innerHeight) top = btnRect.top - 410;
+        if (top < 10) top = 10;
+        sideFloat.style.top = top + 'px';
+        sideFloat.style.left = left + 'px';
+        sideFloat.style.transformOrigin = `${btnRect.left - left + 20}px ${btnRect.top > top ? 'bottom' : 'top'}`;
+        const isActive = sideFloat.classList.toggle('active');
+        sideOverlay.classList.toggle('active', isActive);
+        if (isActive && !sideFloat.innerHTML) loadSidebarContent();
+    }
+
+    function closeSidebarFloat() {
+        sideFloat.classList.remove('active');
+        sideOverlay.classList.remove('active');
+    }
+
+    function loadSidebarContent() {
+        fetch('sidebar.html')
+            .then(res => res.text())
+            .then(data => {
+                sideFloat.innerHTML = `<div class="sidebar-header">เมนูนำทาง</div>` + data;
+                restoreMenuState();
+            });
     }
 
     window.toggleDrop = function(btn, id) {
         const item = btn.parentElement;
-        item.classList.toggle("open");
-        if (id) localStorage.setItem('menu-' + id, item.classList.contains("open"));
+        const isOpen = item.classList.toggle("open");
+        if (id) localStorage.setItem('menu-' + id, isOpen);
     }
 
     function restoreMenuState() {
         ['credit', 'branch', 'sales'].forEach(id => {
             if (localStorage.getItem('menu-' + id) === 'true') {
-                const el = document.getElementById('menu-' + id);
+                const el = sideFloat.querySelector('#menu-' + id);
                 if (el) el.classList.add('open');
             }
         });
     }
 
-    // --- Utilities ---
+    // --- Original Work Logic (ห้ามแก้ตามสั่ง) ---
     function fixDate(dateVal) {
         if (!dateVal) return "-";
         const d = new Date(dateVal);
@@ -437,45 +469,21 @@
         return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
     }
 
-    // --- Scroll & Float Logic ---
     window.onscroll = function() {
         const btn = document.getElementById("btn-back-to-top");
-        if (document.body.scrollTop > 200 || document.documentElement.scrollTop > 200) {
-            btn.classList.add("show");
-        } else {
-            btn.classList.remove("show");
-        }
+        if (document.body.scrollTop > 200 || document.documentElement.scrollTop > 200) btn.classList.add("show");
+        else btn.classList.remove("show");
     };
 
-    function scrollToTop() {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+    function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
 
-    // --- Stats Update ---
     function updateStats(data) {
         const statsCon = document.getElementById('statsContainer');
-        const counts = {};
-        jobTypes.forEach(t => counts[t] = 0);
-        data.forEach(row => {
-            const type = row[8] || "ทั่วไป";
-            if(counts[type] !== undefined) counts[type]++;
-        });
-
+        const counts = {}; jobTypes.forEach(t => counts[t] = 0);
+        data.forEach(row => { const type = row[8] || "ทั่วไป"; if(counts[type] !== undefined) counts[type]++; });
         const currentTotal = data.length;
-        let cardsHtml = `
-            <div class="stat-card active" onclick="filterByType('ทั้งหมด', this)">
-                <span class="count" id="count-total">${currentTotal}</span>
-                <span class="label">ทั้งหมด</span>
-            </div>
-        `;
-        jobTypes.forEach(type => {
-            cardsHtml += `
-                <div class="stat-card" onclick="filterByType('${type}', this)">
-                    <span class="count">${counts[type]}</span>
-                    <span class="label">${type}</span>
-                </div>
-            `;
-        });
+        let cardsHtml = `<div class="stat-card active" onclick="filterByType('ทั้งหมด', this)"><span class="count" id="count-total">${currentTotal}</span><span class="label">ทั้งหมด</span></div>`;
+        jobTypes.forEach(type => { cardsHtml += `<div class="stat-card" onclick="filterByType('${type}', this)"><span class="count">${counts[type]}</span><span class="label">${type}</span></div>`; });
         statsCon.innerHTML = cardsHtml;
     }
 
@@ -495,18 +503,14 @@
         }
     }
 
-    // --- CRUD Core ---
     async function loadData() {
         const tableBody = document.getElementById('dataTable');
         const refreshBtn = document.querySelector('.fa-rotate-right');
         if(refreshBtn) refreshBtn.classList.add('fa-spin');
-
         try {
             const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: "read"}) });
-            const data = await res.json();
-            fullData = data;
+            const data = await res.json(); fullData = data;
             tableBody.innerHTML = '';
-            
             data.sort((a, b) => {
                 const pinA = (a[7] === "true" || a[7] === true);
                 const pinB = (b[7] === "true" || b[7] === true);
@@ -517,38 +521,27 @@
                 const tr = document.createElement('tr');
                 const isPinned = (row[7] === "true" || row[7] === true);
                 if (isPinned) tr.classList.add('pinned-row');
-
                 const rowJson = encodeURIComponent(JSON.stringify(row));
                 tr.innerHTML = `
                     <td class="date-col">${fixDate(row[0])}</td>
                     <td><span class="job-type-badge">${row[8] || "ทั่วไป"}</span></td>
                     <td onclick="showFullDetail('${rowJson}')" style="cursor:pointer; font-weight:600; color:var(--ios-blue);">${String(row[1]).replace(/^'/, '')}</td>
                     <td onclick="showFullDetail('${rowJson}')" style="cursor:pointer;">${row[2]}<br><small style="color:#8e8e93">${String(row[3]).replace(/^'/, '')}</small></td>
-                    <td onclick="showFullDetail('${rowJson}')" style="cursor:pointer;">
-                        <div style="max-width:300px; max-height:100px; overflow:hidden; white-space:normal; display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; color:#666; font-size:13px; line-height:1.4;">
-                            ${row[6] || "-"}
-                        </div>
-                    </td>
+                    <td onclick="showFullDetail('${rowJson}')" style="cursor:pointer;"><div style="max-width:300px; max-height:100px; overflow:hidden; white-space:normal; display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; color:#666; font-size:13px; line-height:1.4;">${row[6] || "-"}</div></td>
                     <td>${row[4]}</td>
                     <td>${row[5] ? `<a href="${row[5]}" target="_blank" style="color:var(--ios-blue); text-decoration:none;"><i class="fa-solid fa-image"></i> รูป</a>` : '-'}</td>
-                    <td>
-                        <div class="action-btns">
-                            <button class="btn-pin ${isPinned ? 'active' : ''}" onclick="togglePin('${row[0]}', '${row[1]}')" title="ปักหมุด"><i class="fa-solid fa-thumbtack"></i></button>
-                            <button class="btn-edit" onclick="editData('${rowJson}')" title="แก้ไขข้อมูล"><i class="fa-solid fa-pen-to-square"></i></button>
-                            <button class="btn-delete" onclick="deleteData('${row[0]}', '${row[1]}')" title="ลบรายการ"><i class="fa-solid fa-trash"></i></button>
-                        </div>
-                    </td>
-                `;
+                    <td><div class="action-btns">
+                        <button class="btn-pin ${isPinned ? 'active' : ''}" onclick="togglePin('${row[0]}', '${row[1]}')" title="ปักหมุด"><i class="fa-solid fa-thumbtack"></i></button>
+                        <button class="btn-edit" onclick="editData('${rowJson}')" title="แก้ไขข้อมูล"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="btn-delete" onclick="deleteData('${row[0]}', '${row[1]}')" title="ลบรายการ"><i class="fa-solid fa-trash"></i></button>
+                    </div></td>`;
                 tableBody.appendChild(tr);
             });
             updateStats(data);
         } catch (e) { tableBody.innerHTML = '<tr><td colspan="8">โหลดข้อมูลไม่สำเร็จ</td></tr>'; }
-        finally {
-            if(refreshBtn) refreshBtn.classList.remove('fa-spin');
-        }
+        finally { if(refreshBtn) refreshBtn.classList.remove('fa-spin'); }
     }
 
-    // --- Modal Functions ---
     window.showFullDetail = function(rowJson) {
         const item = JSON.parse(decodeURIComponent(rowJson));
         Swal.fire({
@@ -557,46 +550,16 @@
             width: '700px',
             html: `
                 <div class="swal-form-container">
-                    <div class="swal-field-full">
-                        <label class="swal-label">ประเภทงาน</label>
-                        <div class="detail-view-item"><span class="job-type-badge">${item[8] || 'ทั่วไป'}</span></div>
-                    </div>
-                    <div>
-                        <label class="swal-label">วันที่ดำเนินการ</label>
-                        <div class="detail-view-item"><span class="val">${fixDate(item[0])}</span></div>
-                    </div>
-                    <div>
-                        <label class="swal-label">รหัสสมาชิก</label>
-                        <div class="detail-view-item"><span class="val">${String(item[1]).replace(/^'/, '')}</span></div>
-                    </div>
-                    <div class="swal-field-full">
-                        <label class="swal-label">ชื่อลูกค้า</label>
-                        <div class="detail-view-item"><span class="val">${item[2]}</span></div>
-                    </div>
-                    <div>
-                        <label class="swal-label">เบอร์ติดต่อ</label>
-                        <div class="detail-view-item"><span class="val">${String(item[3]).replace(/^'/, '')}</span></div>
-                    </div>
-                    <div>
-                        <label class="swal-label">พนักงาน</label>
-                        <div class="detail-view-item"><span class="val">${item[4]}</span></div>
-                    </div>
-                    <div class="swal-field-full">
-                        <label class="swal-label">รายละเอียดเพิ่มเติม</label>
-                        <div class="detail-view-item" style="min-height:160px;"><span class="val" style="font-weight:400; white-space:pre-wrap;">${item[6] || '-'}</span></div>
-                    </div>
-                    ${item[5] ? `
-                    <div class="swal-field-full" style="text-align:center; margin-top:10px;">
-                        <a href="${item[5]}" target="_blank" style="color:var(--ios-blue); text-decoration:none; font-weight:600; font-size:14px;">
-                            <i class="fa-solid fa-image"></i> เปิดดูรูปภาพแนบ
-                        </a>
-                    </div>` : ''}
-                </div>
-            `,
-            showCancelButton: true,
-            confirmButtonText: 'แก้ไขข้อมูล',
-            confirmButtonColor: '#34C759',
-            cancelButtonText: 'ปิด'
+                    <div class="swal-field-full"><label class="swal-label">ประเภทงาน</label><div class="detail-view-item"><span class="job-type-badge">${item[8] || 'ทั่วไป'}</span></div></div>
+                    <div><label class="swal-label">วันที่ดำเนินการ</label><div class="detail-view-item"><span class="val">${fixDate(item[0])}</span></div></div>
+                    <div><label class="swal-label">รหัสสมาชิก</label><div class="detail-view-item"><span class="val">${String(item[1]).replace(/^'/, '')}</span></div></div>
+                    <div class="swal-field-full"><label class="swal-label">ชื่อลูกค้า</label><div class="detail-view-item"><span class="val">${item[2]}</span></div></div>
+                    <div><label class="swal-label">เบอร์ติดต่อ</label><div class="detail-view-item"><span class="val">${String(item[3]).replace(/^'/, '')}</span></div></div>
+                    <div><label class="swal-label">พนักงาน</label><div class="detail-view-item"><span class="val">${item[4]}</span></div></div>
+                    <div class="swal-field-full"><label class="swal-label">รายละเอียดเพิ่มเติม</label><div class="detail-view-item" style="min-height:160px;"><span class="val" style="font-weight:400; white-space:pre-wrap;">${item[6] || '-'}</span></div></div>
+                    ${item[5] ? `<div class="swal-field-full" style="text-align:center; margin-top:10px;"><a href="${item[5]}" target="_blank" style="color:var(--ios-blue); text-decoration:none; font-weight:600; font-size:14px;"><i class="fa-solid fa-image"></i> เปิดดูรูปภาพแนบ</a></div>` : ''}
+                </div>`,
+            showCancelButton: true, confirmButtonText: 'แก้ไขข้อมูล', confirmButtonColor: '#34C759', cancelButtonText: 'ปิด'
         }).then((result) => { if (result.isConfirmed) editData(rowJson); });
     }
 
@@ -604,55 +567,26 @@
         const item = JSON.parse(decodeURIComponent(rowJson));
         let typeOptions = `<option value="">-- เลือกประเภทงาน --</option>`;
         jobTypes.forEach(t => { typeOptions += `<option value="${t}" ${item[8] === t ? 'selected' : ''}>${t}</option>`; });
-
         Swal.fire({
             title: 'แก้ไขข้อมูลรายการ',
             customClass: { popup: 'swal-modal-custom' },
             width: '700px',
             html: `
                 <div class="swal-form-container">
-                    <div class="swal-field-full">
-                        <label class="swal-label">ประเภทงาน</label>
-                        <select id="swal-jobType" class="swal-input-styled">${typeOptions}</select>
-                    </div>
-                    <div>
-                        <label class="swal-label">วันที่</label>
-                        <input type="date" id="swal-date" class="swal-input-styled" value="${formatForInputDate(item[0])}">
-                    </div>
-                    <div>
-                        <label class="swal-label">รหัสสมาชิก</label>
-                        <input type="text" id="swal-memberId" class="swal-input-styled" value="${String(item[1]).replace(/^'/, '')}">
-                    </div>
-                    <div class="swal-field-full">
-                        <label class="swal-label">ชื่อลูกค้า</label>
-                        <input type="text" id="swal-name" class="swal-input-styled" value="${item[2]}">
-                    </div>
-                    <div>
-                        <label class="swal-label">เบอร์ติดต่อ</label>
-                        <input type="text" id="swal-phone" class="swal-input-styled" value="${String(item[3]).replace(/^'/, '')}">
-                    </div>
-                    <div>
-                        <label class="swal-label">พนักงาน</label>
-                        <select id="swal-staff" class="swal-input-styled">
-                            ${['ศุภกฤต', 'นวพล', 'ปิยะพร', 'กรทักษ์'].map(s => `<option value="${s}" ${item[4] === s ? 'selected' : ''}>${s}</option>`).join('')}
-                        </select>
-                    </div>
-                    <div class="swal-field-full">
-                        <label class="swal-label">รายละเอียดเพิ่มเติม</label>
-                        <textarea id="swal-jobDetail" class="swal-input-styled" style="height:160px;">${item[6] || ''}</textarea>
-                    </div>
-                </div>
-            `,
+                    <div class="swal-field-full"><label class="swal-label">ประเภทงาน</label><select id="swal-jobType" class="swal-input-styled">${typeOptions}</select></div>
+                    <div><label class="swal-label">วันที่</label><input type="date" id="swal-date" class="swal-input-styled" value="${formatForInputDate(item[0])}"></div>
+                    <div><label class="swal-label">รหัสสมาชิก</label><input type="text" id="swal-memberId" class="swal-input-styled" value="${String(item[1]).replace(/^'/, '')}"></div>
+                    <div class="swal-field-full"><label class="swal-label">ชื่อลูกค้า</label><input type="text" id="swal-name" class="swal-input-styled" value="${item[2]}"></div>
+                    <div><label class="swal-label">เบอร์ติดต่อ</label><input type="text" id="swal-phone" class="swal-input-styled" value="${String(item[3]).replace(/^'/, '')}"></div>
+                    <div><label class="swal-label">พนักงาน</label><select id="swal-staff" class="swal-input-styled">${['ศุภกฤต', 'นวพล', 'ปิยะพร', 'กรทักษ์'].map(s => `<option value="${s}" ${item[4] === s ? 'selected' : ''}>${s}</option>`).join('')}</select></div>
+                    <div class="swal-field-full"><label class="swal-label">รายละเอียดเพิ่มเติม</label><textarea id="swal-jobDetail" class="swal-input-styled" style="height:160px;">${item[6] || ''}</textarea></div>
+                </div>`,
             showCancelButton: true, confirmButtonText: 'บันทึกการแก้ไข', confirmButtonColor: '#007aff',
             preConfirm: () => ({
                 action: "update", oldDate: formatForInputDate(item[0]), oldMemberId: String(item[1]),
-                date: document.getElementById('swal-date').value,
-                memberId: "'" + document.getElementById('swal-memberId').value,
-                name: document.getElementById('swal-name').value,
-                phone: "'" + document.getElementById('swal-phone').value,
-                staff: document.getElementById('swal-staff').value,
-                jobDetail: document.getElementById('swal-jobDetail').value,
-                jobType: document.getElementById('swal-jobType').value
+                date: document.getElementById('swal-date').value, memberId: "'" + document.getElementById('swal-memberId').value,
+                name: document.getElementById('swal-name').value, phone: "'" + document.getElementById('swal-phone').value,
+                staff: document.getElementById('swal-staff').value, jobDetail: document.getElementById('swal-jobDetail').value, jobType: document.getElementById('swal-jobType').value
             })
         }).then(async (result) => {
             if (result.isConfirmed) {
@@ -667,17 +601,11 @@
         const d = new Date(date);
         const dateStr = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
         Swal.fire({title: 'กำลังดำเนินการ...', didOpen: () => Swal.showLoading()});
-        try {
-            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "togglePin", date: dateStr, memberId: memberId }) });
-            Swal.close(); loadData();
-        } catch (err) { Swal.fire('Error', 'Error', 'error'); }
+        try { await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "togglePin", date: dateStr, memberId: memberId }) }); Swal.close(); loadData(); } catch (err) { Swal.fire('Error', 'Error', 'error'); }
     }
 
     async function deleteData(d, id) {
-        const confirm = await Swal.fire({
-            title: 'ยืนยันการลบ?', text: "ข้อมูลนี้จะถูกลบออกจากฐานข้อมูล", icon: 'warning',
-            showCancelButton: true, confirmButtonColor: '#FF3B30', confirmButtonText: 'ลบเลย'
-        });
+        const confirm = await Swal.fire({ title: 'ยืนยันการลบ?', text: "ข้อมูลนี้จะถูกลบออกจากฐานข้อมูล", icon: 'warning', showCancelButton: true, confirmButtonColor: '#FF3B30', confirmButtonText: 'ลบเลย' });
         if (confirm.isConfirmed) {
             const dateObj = new Date(d);
             const dateStr = dateObj.getFullYear() + '-' + String(dateObj.getMonth()+1).padStart(2,'0') + '-' + String(dateObj.getDate()).padStart(2,'0');
@@ -691,9 +619,7 @@
         let typeOptions = `<option value="">-- เลือกประเภทงาน --</option>`;
         jobTypes.forEach(t => { typeOptions += `<option value="${t}">${t}</option>`; });
         Swal.fire({
-            title: 'บันทึกงานใหม่',
-            customClass: { popup: 'swal-modal-custom' },
-            width: '700px',
+            title: 'บันทึกงานใหม่', customClass: { popup: 'swal-modal-custom' }, width: '700px',
             html: `
                 <div class="swal-form-container">
                     <div class="swal-field-full"><label class="swal-label">ประเภทงาน</label><select id="jobType" class="swal-input-styled">${typeOptions}</select></div>
@@ -704,36 +630,18 @@
                     <div><label class="swal-label">พนักงาน</label><select id="staff" class="swal-input-styled"><option value="">-- เลือก --</option><option value="ศุภกฤต">ศุภกฤต</option><option value="นวพล">นวพล</option><option value="ปิยะพร">ปิยะพร</option><option value="กรทักษ์">กรทักษ์</option></select></div>
                     <div class="swal-field-full"><label class="swal-label">รายละเอียด</label><textarea id="jobDetail" class="swal-input-styled" style="height:160px;"></textarea></div>
                     <div class="swal-field-full"><label class="swal-label">แนบรูปภาพ</label><input type="file" id="file" class="swal-input-styled" accept="image/*"></div>
-                </div>
-            `,
+                </div>`,
             showCancelButton: true, confirmButtonText: 'บันทึกข้อมูล', preConfirm: async () => {
-                const vals = {
-                    jobType: document.getElementById('jobType').value,
-                    date: document.getElementById('date').value,
-                    memberId: "'" + document.getElementById('memberId').value,
-                    name: document.getElementById('name').value,
-                    phone: "'" + document.getElementById('phone').value,
-                    staff: document.getElementById('staff').value,
-                    jobDetail: document.getElementById('jobDetail').value
-                };
+                const vals = { jobType: document.getElementById('jobType').value, date: document.getElementById('date').value, memberId: "'" + document.getElementById('memberId').value, name: document.getElementById('name').value, phone: "'" + document.getElementById('phone').value, staff: document.getElementById('staff').value, jobDetail: document.getElementById('jobDetail').value };
                 if (!vals.jobType || !vals.name || !vals.staff) { Swal.showValidationMessage('กรุณากรอกข้อมูลสำคัญ'); return false; }
-                const fileInput = document.getElementById('file');
-                let fileData = null;
-                if (fileInput.files.length > 0) {
-                    fileData = await new Promise(r => { const rd = new FileReader(); rd.onload = () => r(rd.result); rd.readAsDataURL(fileInput.files[0]); });
-                }
+                const fileInput = document.getElementById('file'); let fileData = null;
+                if (fileInput.files.length > 0) fileData = await new Promise(r => { const rd = new FileReader(); rd.onload = () => r(rd.result); rd.readAsDataURL(fileInput.files[0]); });
                 return { action: "insert", ...vals, fileData };
             }
-        }).then(async (result) => {
-            if (result.isConfirmed) {
-                Swal.fire({title: 'กำลังบันทึก...', didOpen: () => Swal.showLoading()});
-                await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(result.value) });
-                Swal.fire('สำเร็จ', 'บันทึกเรียบร้อย', 'success'); loadData();
-            }
-        });
+        }).then(async (result) => { if (result.isConfirmed) { Swal.fire({title: 'กำลังบันทึก...', didOpen: () => Swal.showLoading()}); await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(result.value) }); Swal.fire('สำเร็จ', 'บันทึกเรียบร้อย', 'success'); loadData(); } });
     }
 
-    window.onload = () => { includeSidebar(); loadData(); };
+    window.onload = () => { loadButtonPosition(); loadData(); };
 </script>
 
 </body>
