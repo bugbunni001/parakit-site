@@ -36,6 +36,7 @@
             color: var(--text-main); 
             min-height: 100vh;
             padding-bottom: 60px;
+            scroll-behavior: smooth;
         }
 
         /* Stat Cards */
@@ -78,10 +79,10 @@
         .stat-card .count { font-size: 22px; font-weight: 700; color: var(--ios-blue); line-height: 1; }
         .stat-card .label { font-size: 12px; color: var(--text-light); font-weight: 500; margin-top: 6px; }
 
-        /* Content Area */
+        /* Content Area (Adjusted padding as header is removed) */
         .main-content { 
             display: flex; flex-direction: column; align-items: center; 
-            padding: 40px 25px; /* ปรับลด padding-top เนื่องจากไม่มี header แล้ว */
+            padding: 40px 25px; 
             animation: fadeIn 0.6s ease-out; 
         }
 
@@ -89,6 +90,7 @@
             width: 100%; max-width: 1200px;
             display: flex; justify-content: space-between; align-items: center;
             margin-bottom: 25px; gap: 15px;
+            flex-wrap: wrap;
         }
 
         .btn-add-job {
@@ -100,8 +102,17 @@
         }
         .btn-add-job:hover { transform: translateY(-3px); box-shadow: 0 12px 25px rgba(0, 122, 255, 0.4); opacity: 0.9; }
 
+        /* Search & Refresh Area */
+        .search-area-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-grow: 1;
+            max-width: 410px;
+        }
+
         .search-wrapper { 
-            width: 100%; max-width: 350px; position: relative; 
+            flex-grow: 1; position: relative; 
         }
         .search-wrapper i { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: var(--ios-blue); }
         .search-input { 
@@ -111,6 +122,15 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.03);
         }
         .search-input:focus { border-color: var(--ios-blue); box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1); background: white; }
+
+        .btn-refresh-inline {
+            width: 48px; height: 48px; border-radius: 18px; border: 1px solid var(--glass-border);
+            background: rgba(255, 255, 255, 0.8); color: var(--ios-blue);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.3s; font-size: 18px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+        }
+        .btn-refresh-inline:hover { background: white; transform: scale(1.05); color: var(--ios-green); border-color: var(--ios-green); }
 
         /* Table Design */
         .table-wrapper { 
@@ -160,12 +180,59 @@
         
         .btn-pin:hover:not(.active) { background: #ffe6c2; transform: translateY(-2px); }
 
+        /* Floating Controls */
+        .floating-controls {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 1100;
+        }
+
+        .btn-float {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            border: 1px solid var(--glass-border);
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            color: var(--ios-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 18px;
+            text-decoration: none;
+        }
+
+        .btn-float:hover {
+            background: white;
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0,122,255,0.2);
+        }
+
+        #btn-back-to-top {
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(20px);
+        }
+
+        #btn-back-to-top.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
         /* Modal Customization */
         .swal2-container { z-index: 9999 !important; }
         .swal-modal-custom { border-radius: 30px !important; padding: 20px !important; }
         .swal2-title { font-weight: 700 !important; color: var(--text-main) !important; }
 
-        /* Grid Layout for Form */
+        /* Grid Form/Detail Layout */
         .swal-form-container { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; text-align: left; margin-top: 15px; }
         .swal-field-full { grid-column: span 2; }
         .swal-label { font-size: 13px; font-weight: 600; color: var(--text-light); margin-bottom: 6px; display: block; margin-left: 5px; }
@@ -175,6 +242,7 @@
         }
         .swal-input-styled:focus { border-color: var(--ios-blue); background: #fff; box-shadow: 0 0 0 4px rgba(0,122,255,0.1); }
         
+        /* View Detail Mode - Clean Style */
         .detail-view-item { background: #f9f9f9; padding: 12px 15px; border-radius: 14px; border: 1.5px solid #f0f0f5; }
         .detail-view-item .val { font-size: 15px; font-weight: 600; color: var(--text-main); display: block; }
 
@@ -182,6 +250,12 @@
     </style>
 </head>
 <body>
+
+<div class="floating-controls">
+    <button id="btn-back-to-top" class="btn-float" onclick="scrollToTop()" title="กลับไปด้านบน">
+        <i class="fa-solid fa-arrow-up"></i>
+    </button>
+</div>
 
 <div class="main-content">
     
@@ -196,9 +270,14 @@
         <button class="btn-add-job" onclick="openAddJobModal()">
             <i class="fa-solid fa-plus-circle"></i> เพิ่มรายการใหม่
         </button>
-        <div class="search-wrapper">
-            <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" id="searchInput" class="search-input" placeholder="ค้นหาข้อมูล..." onkeyup="filterData()">
+        <div class="search-area-wrapper">
+            <div class="search-wrapper">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="searchInput" class="search-input" placeholder="ค้นหาข้อมูล..." onkeyup="filterData()">
+            </div>
+            <button class="btn-refresh-inline" onclick="loadData()" title="รีเฟรชข้อมูล">
+                <i class="fa-solid fa-rotate-right"></i>
+            </button>
         </div>
     </div>
 
@@ -249,6 +328,20 @@
         return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
     }
 
+    // --- Scroll & Float Logic ---
+    window.onscroll = function() {
+        const btn = document.getElementById("btn-back-to-top");
+        if (document.body.scrollTop > 200 || document.documentElement.scrollTop > 200) {
+            btn.classList.add("show");
+        } else {
+            btn.classList.remove("show");
+        }
+    };
+
+    function scrollToTop() {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
     // --- Stats Update ---
     function updateStats(data) {
         const statsCon = document.getElementById('statsContainer');
@@ -296,6 +389,9 @@
     // --- CRUD Core ---
     async function loadData() {
         const tableBody = document.getElementById('dataTable');
+        const refreshBtn = document.querySelector('.fa-rotate-right');
+        if(refreshBtn) refreshBtn.classList.add('fa-spin');
+
         try {
             const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: "read"}) });
             const data = await res.json();
@@ -338,6 +434,9 @@
             });
             updateStats(data);
         } catch (e) { tableBody.innerHTML = '<tr><td colspan="8">โหลดข้อมูลไม่สำเร็จ</td></tr>'; }
+        finally {
+            if(refreshBtn) refreshBtn.classList.remove('fa-spin');
+        }
     }
 
     // --- Modal Functions ---
@@ -441,7 +540,7 @@
                 date: document.getElementById('swal-date').value,
                 memberId: "'" + document.getElementById('swal-memberId').value,
                 name: document.getElementById('swal-name').value,
-                phone: "'" + document.getElementById('swal-phone').value,
+                phone: "'" + document.getElementById('phone').value,
                 staff: document.getElementById('swal-staff').value,
                 jobDetail: document.getElementById('swal-jobDetail').value,
                 jobType: document.getElementById('swal-jobType').value
