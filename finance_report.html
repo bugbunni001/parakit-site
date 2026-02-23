@@ -15,10 +15,9 @@
             --ios-orange: #ff9500;
             --glass-bg: rgba(255, 255, 255, 0.7);
             --glass-border: rgba(255, 255, 255, 0.4);
-            --sidebar-bg: #0f172a;
+            --sidebar-dark: rgba(28, 28, 30, 0.96); /* จาก index.html */
             --text-main: #1c1c1e;
             --text-muted: #8e8e93;
-            --sidebar-width: 260px;
             --transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
@@ -36,24 +35,86 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        /* ===== SIDEBAR & LAYOUT (Keeping Original Structure) ===== */
-        #sidebar-container { width: var(--sidebar-width); background: var(--sidebar-bg); height: 100vh; position: fixed; left: 0; top: 0; transition: var(--transition); z-index: 2000; overflow-y: auto; }
-        .main-content { flex-grow: 1; margin-left: var(--sidebar-width); padding: 30px; width: calc(100% - var(--sidebar-width)); transition: var(--transition); display: flex; flex-direction: column; align-items: center; }
-        .report-container { width: 100%; max-width: 1200px; }
+        /* ===== NEW FLOATING SIDEBAR CSS (From index.html) ===== */
+        #floatingMenuBtn {
+            position: fixed;
+            top: 10px;
+            left: 15px;
+            width: 45px;
+            height: 45px;
+            background: var(--ios-blue);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            cursor: move;
+            z-index: 2100;
+            box-shadow: 0 4px 15px rgba(0, 122, 255, 0.4);
+            border: none;
+            touch-action: none;
+            transition: transform 0.2s, opacity 0.2s;
+        }
+        #floatingMenuBtn:active { transform: scale(0.9); }
 
-        body.collapsed #sidebar-container { transform: translateX(calc(var(--sidebar-width) * -1)); }
-        body.collapsed .main-content { margin-left: 0; width: 100%; }
+        .sidebar-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.2);
+            z-index: 2000;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .sidebar-overlay.active { display: block; opacity: 1; }
 
-        @media (max-width: 900px) { 
-            #sidebar-container { transform: translateX(calc(var(--sidebar-width) * -1)); } 
-            .main-content { margin-left: 0 !important; width: 100% !important; padding: 15px; } 
-            body.show-sidebar #sidebar-container { transform: translateX(0); }
+        .sidebar-float {
+            position: fixed;
+            width: 280px;
+            max-height: 70vh;
+            background: var(--sidebar-dark);
+            border-radius: 20px;
+            overflow-y: auto;
+            z-index: 2001;
+            opacity: 0;
+            visibility: hidden;
+            transform: scale(0.8) translateY(10px);
+            transition: opacity 0.3s, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.1);
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,0.2) transparent;
+        }
+        .sidebar-float.active {
+            opacity: 1;
+            visibility: visible;
+            transform: scale(1) translateY(0);
         }
 
-        .overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.2); display: none; backdrop-filter: blur(8px); z-index: 1500; }
-        body.show-sidebar .overlay { display: block; }
+        .sidebar-float .sidebar-header { padding: 20px; font-size: 17px; font-weight: 600; color: #fff; border-bottom: 0.5px solid rgba(255,255,255,0.1); }
+        .sidebar-float .menu { padding: 8px 0; }
+        .sidebar-float .menu a, .sidebar-float .drop-btn { 
+            width: 100%; padding: 12px 20px; background: none; border: none; 
+            color: #ebebf5; text-align: left; font-size: 14px; cursor: pointer; 
+            display: flex; align-items: center; text-decoration: none; transition: 0.2s;
+        }
+        .sidebar-float .menu a:hover, .sidebar-float .drop-btn:hover { background: rgba(255,255,255,0.1); }
+        .sidebar-float .sub { display: none; background: rgba(0,0,0,0.2); }
+        .sidebar-float .item.open .sub { display: block; }
+        .sidebar-float .sub a { padding-left: 45px; font-size: 13px; color: #8e8e93; }
 
-        /* ===== HEADER (iOS Glass Style) ===== */
+        /* ===== MAIN LAYOUT ADJUSTMENT ===== */
+        .main-content { 
+            width: 100%; 
+            padding: 80px 20px 30px; /* เพิ่ม padding top เพื่อหลบปุ่มลอย */
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+        }
+        .report-container { width: 100%; max-width: 1200px; }
+
+        /* ===== HEADER & OTHER ORIGINAL STYLES ===== */
         .header-bar { 
             background: var(--glass-bg);
             backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
@@ -82,7 +143,6 @@
         }
         .btn-fetch:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0, 122, 255, 0.3); }
 
-        /* ===== CARDS (iOS Glass Style) ===== */
         .card { 
             background: var(--glass-bg); 
             backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
@@ -98,7 +158,6 @@
             display: flex; justify-content: space-between; align-items: center; 
         }
 
-        /* Stats Grid */
         .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); padding: 25px; gap: 15px; }
         .stat-box { 
             padding: 20px; border-radius: 20px; 
@@ -110,7 +169,6 @@
         .stat-label { font-size: 13px; font-weight: 500; color: var(--text-muted); margin-bottom: 5px; }
         .stat-value { font-size: 32px; font-weight: 700; letter-spacing: -1px; }
 
-        /* Tables (Clean iOS Style) */
         .table-wrapper { width: 100%; overflow-x: auto; padding: 0 10px 15px; }
         table { width: 100%; border-collapse: collapse; }
         th { 
@@ -127,12 +185,6 @@
             z-index: 10; min-width: 180px; 
         }
 
-        /* Reason Table Special */
-        .reason-table-container table { table-layout: fixed; }
-        .reason-table-container th, .reason-table-container td { font-size: 12px !important; padding: 12px 6px !important; }
-        .reason-table-container .shop-name { position: static; min-width: 120px; }
-
-        /* Badges */
         .badge { 
             padding: 6px 12px; border-radius: 10px; font-size: 11px; font-weight: 600; 
             display: inline-block; box-shadow: 0 2px 5px rgba(0,0,0,0.02);
@@ -143,32 +195,16 @@
         .c4 { background: #fff3e0; color: #ff9800; }
         .c5 { background: #f3e5f5; color: #9c27b0; }
 
-        /* Charts - Fixed Alignment */
-        .chart-container { 
-            padding: 15px; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center;
-            width: 100%;
-        }
+        .chart-container { padding: 15px; display: flex; justify-content: center; align-items: center; width: 100%; }
         .iframe-wrap { 
-            width: 100%; 
-            max-width: 100%;
-            aspect-ratio: 16 / 9; 
-            border-radius: 20px; 
-            overflow: hidden; 
+            width: 100%; max-width: 100%; aspect-ratio: 16 / 9; 
+            border-radius: 20px; overflow: hidden; 
             border: 1px solid var(--glass-border);
             box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-            display: flex;
-            justify-content: center;
+            display: flex; justify-content: center;
         }
-        .iframe-wrap iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
+        .iframe-wrap iframe { width: 100%; height: 100%; border: none; }
         
-        /* Loading */
         .loading-overlay { 
             position: fixed; inset: 0; background: rgba(255,255,255,0.7); 
             display: none; flex-direction: column; justify-content: center; 
@@ -178,7 +214,6 @@
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
         footer { text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 12px; }
-
         .col-total { background: rgba(0, 122, 255, 0.05) !important; font-weight: 700 !important; color: var(--ios-blue) !important; }
     </style>
 </head>
@@ -189,16 +224,15 @@
     <span style="color: var(--text-main); font-weight: 500; margin-top: 15px;">กำลังอัปเดตข้อมูลความสวย...</span>
 </div>
 
-<div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
-
-<aside id="sidebar-container"></aside>
+<button id="floatingMenuBtn" title="ลากเพื่อย้าย">เมนู</button>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebarFloat()"></div>
+<aside class="sidebar-float" id="sidebarFloat"></aside>
 
 <main class="main-content">
     <div class="report-container">
         
         <div class="header-bar">
             <div>
-                <button onclick="toggleSidebar()" style="background:rgba(0,0,0,0.05); border:none; padding:10px; border-radius:12px; cursor:pointer; margin-right:10px;">☰</button>
                 <h2 style="display:inline-flex;">📊 ระบบจัดการรายงานสินเชื่อ</h2>
             </div>
             <div style="display:flex; align-items:center; gap:12px;">
@@ -284,54 +318,110 @@
     window.onload = () => {
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('targetDate').value = today;
-        includeSidebar();
-        restoreSidebarState();
+        loadButtonPosition(); // โหลดตำแหน่งปุ่มเมนู
         refreshData();
     };
 
-    async function includeSidebar() {
-        try {
-            const response = await fetch('sidebar.html?v=' + new Date().getTime());
-            const data = await response.text();
-            const container = document.getElementById('sidebar-container');
-            container.innerHTML = data;
+    // --- NEW FLOATING SIDEBAR JS (From index.html) ---
+    const dragBtn = document.getElementById('floatingMenuBtn');
+    const sideFloat = document.getElementById('sidebarFloat');
+    const sideOverlay = document.getElementById('sidebarOverlay');
+    let isDragging = false;
+    let startX, startY;
+    let shiftX, shiftY;
 
-            container.querySelectorAll('.item').forEach((item, index) => {
-                const isOpened = localStorage.getItem('dropdown-' + index);
-                if (isOpened === 'true') item.classList.add('open');
-            });
-
-            container.addEventListener('click', function (e) {
-                const dropBtn = e.target.closest('.drop-btn');
-                if (dropBtn) {
-                    const parent = dropBtn.parentElement;
-                    parent.classList.toggle('open');
-                    container.querySelectorAll('.item').forEach((item, index) => {
-                        localStorage.setItem('dropdown-' + index, item.classList.contains('open'));
-                    });
-                }
-            });
-        } catch (err) { console.warn("Sidebar Load Error"); }
+    function loadButtonPosition() {
+        const savedLeft = localStorage.getItem('floatBtnLeft');
+        const savedTop = localStorage.getItem('floatBtnTop');
+        if (savedLeft && savedTop) {
+            dragBtn.style.left = savedLeft + 'px';
+            dragBtn.style.top = savedTop + 'px';
+        }
     }
 
-    function toggleSidebar() {
-        const body = document.getElementById('mainBody');
-        if (window.innerWidth <= 900) {
-            body.classList.toggle('show-sidebar');
+    dragBtn.onpointerdown = function(e) {
+        isDragging = false;
+        startX = e.clientX;
+        startY = e.clientY;
+        const rect = dragBtn.getBoundingClientRect();
+        shiftX = e.clientX - rect.left;
+        shiftY = e.clientY - rect.top;
+        dragBtn.setPointerCapture(e.pointerId);
+        document.addEventListener('pointermove', onPointerMove);
+        document.addEventListener('pointerup', onPointerUp);
+    };
+
+    function onPointerMove(e) {
+        if (!isDragging && (Math.abs(e.clientX - startX) > 5 || Math.abs(e.clientY - startY) > 5)) {
+            isDragging = true;
+        }
+        if (isDragging) {
+            let newX = e.clientX - shiftX;
+            let newY = e.clientY - shiftY;
+            newX = Math.max(0, Math.min(newX, window.innerWidth - dragBtn.offsetWidth));
+            newY = Math.max(0, Math.min(newY, window.innerHeight - dragBtn.offsetHeight));
+            dragBtn.style.left = newX + 'px';
+            dragBtn.style.top = newY + 'px';
+        }
+    }
+
+    function onPointerUp(e) {
+        document.removeEventListener('pointermove', onPointerMove);
+        document.removeEventListener('pointerup', onPointerUp);
+        dragBtn.releasePointerCapture(e.pointerId);
+        if (isDragging) {
+            localStorage.setItem('floatBtnLeft', dragBtn.offsetLeft);
+            localStorage.setItem('floatBtnTop', dragBtn.offsetTop);
         } else {
-            const isCollapsed = body.classList.toggle('collapsed');
-            localStorage.setItem('sidebar-collapsed', isCollapsed);
+            toggleSidebarFloat();
         }
+        isDragging = false;
     }
 
-    function restoreSidebarState() {
-        if (window.innerWidth > 900) {
-            if (localStorage.getItem('sidebar-collapsed') === 'true') {
-                document.getElementById('mainBody').classList.add('collapsed');
-            }
+    function toggleSidebarFloat() {
+        const btnRect = dragBtn.getBoundingClientRect();
+        const sidebarWidth = 280;
+        let top = btnRect.bottom + 10;
+        let left = btnRect.left;
+        if (left + sidebarWidth > window.innerWidth) left = window.innerWidth - sidebarWidth - 15;
+        if (top + 400 > window.innerHeight) {
+            top = btnRect.top - 410;
+            if (top < 10) top = 10;
         }
+        sideFloat.style.top = top + 'px';
+        sideFloat.style.left = left + 'px';
+        sideFloat.style.transformOrigin = `${btnRect.left - left + 20}px ${btnRect.top > top ? 'bottom' : 'top'}`;
+        const isActive = sideFloat.classList.toggle('active');
+        sideOverlay.classList.toggle('active', isActive);
+        if (isActive && !sideFloat.innerHTML) loadSidebarContent();
     }
 
+    function closeSidebarFloat() {
+        sideFloat.classList.remove('active');
+        sideOverlay.classList.remove('active');
+    }
+
+    function loadSidebarContent() {
+        fetch('sidebar.html')
+            .then(res => res.text())
+            .then(data => {
+                sideFloat.innerHTML = `<div class="sidebar-header">เมนูนำทาง</div>` + data;
+                ['credit', 'branch', 'sales'].forEach(id => {
+                    if (localStorage.getItem('menu-' + id) === 'true') {
+                        const el = sideFloat.querySelector('#menu-' + id);
+                        if (el) el.classList.add('open');
+                    }
+                });
+            });
+    }
+
+    window.toggleDrop = function(btn, id) {
+        const item = btn.parentElement;
+        const isOpen = item.classList.toggle("open");
+        if (id) localStorage.setItem('menu-' + id, isOpen);
+    }
+
+    // --- ORIGINAL DATA FUNCTIONS ---
     async function refreshData() {
         const date = document.getElementById('targetDate').value;
         const loader = document.getElementById('loader');
@@ -339,22 +429,16 @@
         try {
             const response = await fetch(`${WEB_APP_URL}?date=${date}`);
             const data = await response.json();
-            
             renderTable(data.dailyTable, 'daily');
             renderTable(data.monthlyTable, 'month');
             document.getElementById('date-label').innerText = date;
             document.getElementById('month-label').innerText = data.displayMonth;
-
             if(data.appStats) {
                 document.getElementById('stat-appin').innerText = data.appStats.appIn.toLocaleString();
                 document.getElementById('stat-approved').innerText = data.appStats.approved.toLocaleString();
                 document.getElementById('stat-rejected').innerText = data.appStats.rejected.toLocaleString();
             }
-
-            if(data.reasonTable) {
-                renderReasonTable(data.reasonTable);
-            }
-
+            if(data.reasonTable) { renderReasonTable(data.reasonTable); }
             loader.style.display = 'none';
         } catch (error) {
             console.error(error);
@@ -366,28 +450,18 @@
     function renderTable(tableObj, type) {
         let headerHtml = `<th>ชื่อสาขา</th>` + 
             tableObj.loanTypes.map((n, i) => `<th><span class="badge c${(i % 5) + 1}">${n}</span></th>`).join('');
-        
-        if (type === 'month') {
-            headerHtml += `<th class="col-total">🏆 รวม</th>`;
-        }
-        
+        if (type === 'month') { headerHtml += `<th class="col-total">🏆 รวม</th>`; }
         document.getElementById('h-' + type).innerHTML = headerHtml;
-        
         let html = '';
         tableObj.branches.forEach(branch => {
             let rowTotal = 0;
             html += `<tr><td class="shop-name">${branch}</td>`;
-            
             tableObj.loanTypes.forEach(t => {
                 const val = tableObj.data[branch][t] || 0;
                 rowTotal += val;
                 html += `<td style="${val > 0 ? 'font-weight:600; color:var(--ios-blue)' : 'color:#cbd5e1'}">${val.toLocaleString()}</td>`;
             });
-
-            if (type === 'month') {
-                html += `<td class="col-total">${rowTotal.toLocaleString()}</td>`;
-            }
-            
+            if (type === 'month') { html += `<td class="col-total">${rowTotal.toLocaleString()}</td>`; }
             html += `</tr>`;
         });
         document.getElementById('b-' + type).innerHTML = html;
@@ -397,7 +471,6 @@
         const headerRow = document.getElementById('h-reason');
         headerRow.innerHTML = `<th>ชื่อสาขา</th>` + 
             tableObj.headers.map(h => `<th><span class="badge" style="background:rgba(0,0,0,0.05); color:var(--text-muted);">${h}</span></th>`).join('');
-        
         let html = '';
         tableObj.branches.forEach(branch => {
             html += `<tr><td class="shop-name">${branch}</td>`;
