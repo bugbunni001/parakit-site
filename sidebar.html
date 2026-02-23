@@ -1,163 +1,140 @@
 <style>
-    /* 1. โครงสร้างหลักของ Sidebar - Modern Deep Dark */
+    /* 1. โครงสร้างหลักของ Sidebar - iOS Glassmorphism */
     .sidebar {
         position: fixed;
-        top: 0;
-        left: 0;
-        width: 280px; /* ขยายกว้างขึ้นเล็กน้อยให้ดูไม่อึดอัด */
-        height: 100vh;
-        height: 100dvh;
-        background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
-        color: #f8fafc;
+        top: 15px; /* ลอยจากขอบบน */
+        left: 15px; /* ลอยจากขอบซ้าย */
+        width: 280px;
+        height: calc(100vh - 30px);
+        background: rgba(255, 255, 255, 0.4); /* โปร่งแสง */
+        backdrop-filter: blur(20px) saturate(180%); /* เอฟเฟกต์กระจกฝ้า */
+        -webkit-backdrop-filter: blur(20px) saturate(180%);
+        border: 1px solid rgba(255, 255, 255, 0.5); /* เส้นขอบแก้ว */
+        border-radius: 24px; /* มุมโค้งมนแบบ iOS */
+        color: #1c1c1e;
         z-index: 2000;
         display: flex;
         flex-direction: column;
         overflow-y: auto;
         overflow-x: hidden;
-        -webkit-overflow-scrolling: touch;
-        transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 4px 0 25px rgba(0,0,0,0.3);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Dark Mode Support (Optional) */
+    @media (prefers-color-scheme: dark) {
+        .sidebar {
+            background: rgba(28, 28, 30, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+        }
     }
 
     /* 2. Responsive Settings */
     @media (max-width: 991.98px) {
-        .sidebar { transform: translateX(-280px); }
+        .sidebar { transform: translateX(-310px); }
         .sidebar.show { transform: translateX(0); }
     }
 
-    @media (min-width: 992px) {
-        .sidebar { transform: translateX(0); border-right: 1px solid rgba(255,255,255,0.05); }
-    }
-
-    /* 3. Header - ปรับให้ดูพรีเมียมขึ้น */
+    /* 3. Header - เรียบหรูสไตล์ Apple */
     .sidebar-header {
-        padding: 30px 24px;
-        font-size: 20px;
-        font-weight: 700;
-        background: rgba(15, 23, 42, 0.8);
-        backdrop-filter: blur(10px);
-        color: #fff;
-        border-bottom: 1px solid rgba(255,255,255,0.05);
-        position: sticky;
-        top: 0;
-        z-index: 10;
+        padding: 25px 20px;
+        font-size: 18px;
+        font-weight: 600;
         display: flex;
         align-items: center;
         gap: 12px;
-        letter-spacing: 0.5px;
-    }
-    
-    .sidebar-header i {
-        color: #38bdf8; /* สีฟ้าสว่างเพิ่มความเด่น */
-        font-size: 22px;
+        border-bottom: 0.5px solid rgba(0, 0, 0, 0.1);
+        background: rgba(255, 255, 255, 0.2);
     }
 
-    /* 4. รายการเมนู - ปรับ Hover และระยะห่าง */
+    /* 4. รายการเมนู - ปรับให้เหมือน List ใน iOS Settings */
     .menu {
         display: flex;
         flex-direction: column;
-        padding: 15px 12px 100px 12px; /* เพิ่ม Padding รอบๆ ให้เมนูดูเป็น Card */
+        padding: 15px 12px;
     }
 
-    .item {
-        margin-bottom: 4px;
-    }
+    .item { margin-bottom: 2px; }
 
     .menu a, .menu .drop-btn {
         width: 100%;
-        min-height: 48px;
-        padding: 12px 16px;
+        min-height: 44px;
+        padding: 10px 14px;
         background: transparent;
         border: none;
-        border-radius: 8px; /* ปรับให้โค้งมนดูสมัยใหม่ */
-        color: #94a3b8;
+        border-radius: 12px;
+        color: inherit;
         text-align: left;
-        font-size: 14px;
+        font-size: 15px;
         font-weight: 400;
         cursor: pointer;
         display: flex;
         align-items: center;
         text-decoration: none;
-        transition: all 0.25s ease;
-        position: relative;
+        transition: background 0.2s ease;
     }
 
-    /* Effect เมื่อ Hover หรือ Active */
+    /* Hover Effect - ใช้สีเทาอ่อนจางๆ */
     .menu a:hover, .menu .drop-btn:hover {
-        background: rgba(255, 255, 255, 0.05);
-        color: #fff;
-        padding-left: 22px;
+        background: rgba(0, 0, 0, 0.05);
     }
 
-    /* เส้น Highlight ด้านข้างเมนู */
-    .menu a:hover::before, .menu .drop-btn:hover::before {
-        content: "";
-        position: absolute;
-        left: 0;
-        top: 10px;
-        bottom: 10px;
-        width: 4px;
-        background: #10b981; /* สีเขียว Success */
-        border-radius: 0 4px 4px 0;
+    /* Active State สำหรับปุ่มที่ถูกกด */
+    .menu a:active, .menu .drop-btn:active {
+        background: rgba(0, 0, 0, 0.1);
+        transform: scale(0.98);
     }
 
-    /* 5. เมนูย่อย (Submenu) - ปรับ Layer ให้ชัดเจน */
+    /* 5. เมนูย่อย (Submenu) - เหมือนกาง Folder */
     .sub {
         display: none;
-        background: rgba(0, 0, 0, 0.2);
-        margin: 4px 0 8px 0;
-        border-radius: 8px;
-        padding: 5px 0;
+        background: rgba(0, 0, 0, 0.03);
+        margin: 4px 8px;
+        border-radius: 12px;
+        overflow: hidden;
     }
 
     .item.open .sub {
         display: block;
-        animation: slideDown 0.3s ease-out;
+        animation: iosSlideDown 0.3s ease-out;
     }
 
     .sub a {
-        padding-left: 48px;
-        font-size: 13.5px;
-        color: #64748b;
-        min-height: 38px;
+        padding-left: 45px;
+        font-size: 14px;
+        color: rgba(0, 0, 0, 0.6);
+    }
+    
+    @media (prefers-color-scheme: dark) {
+        .sub a { color: rgba(255, 255, 255, 0.6); }
+        .menu a:hover, .menu .drop-btn:hover { background: rgba(255, 255, 255, 0.1); }
     }
 
-    .sub a:hover {
-        color: #10b981;
-        background: transparent;
-        padding-left: 54px;
-    }
-
-    /* 6. ลูกศร - ปรับให้ดูนิ่มนวล */
+    /* 6. ลูกศร - ใช้สไตล์ Chevron */
     .arrow {
         margin-left: auto;
-        transition: transform 0.3s ease;
-        font-size: 10px;
-        opacity: 0.4;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        font-size: 12px;
+        opacity: 0.3;
     }
 
     .item.open .arrow {
         transform: rotate(90deg);
-        opacity: 1;
-        color: #10b981;
+        opacity: 0.8;
     }
 
-    /* Animation */
-    @keyframes slideDown {
-        from { opacity: 0; transform: translateY(-10px); }
+    /* iOS Style Animation */
+    @keyframes iosSlideDown {
+        from { opacity: 0; transform: translateY(-5px); }
         to { opacity: 1; transform: translateY(0); }
     }
 
-    /* สกロールบาร์ - แบบบางพิเศษ */
-    .sidebar::-webkit-scrollbar {
-        width: 5px;
-    }
+    /* สกロールบาร์ - ซ่อนไว้จนกว่าจะเลื่อนเหมือน iOS */
+    .sidebar::-webkit-scrollbar { width: 3px; }
     .sidebar::-webkit-scrollbar-thumb {
-        background: rgba(255,255,255,0.05);
+        background: rgba(0, 0, 0, 0.1);
         border-radius: 10px;
-    }
-    .sidebar:hover::-webkit-scrollbar-thumb {
-        background: rgba(255,255,255,0.1);
     }
 </style>
 
@@ -203,17 +180,10 @@
 </div>
 
 <script>
-    // ฟังก์ชัน กาง-หุบ เมนูย่อย (ปรับปรุงประสิทธิภาพ)
+    // ฟังก์ชัน กาง-หุบ เมนูย่อย (รักษาความเสถียรเดิม)
     window.toggleDrop = function(btn, id) {
         const item = btn.closest('.item'); 
         if (!item) return;
-
-        // ปิดเมนูอื่นๆ ก่อน (Optional: ถ้าต้องการให้เปิดได้ทีละเมนูเดียว)
-        /*
-        document.querySelectorAll('.item').forEach(el => {
-            if(el !== item) el.classList.remove('open');
-        });
-        */
 
         const isOpen = item.classList.toggle("open");
         
@@ -222,7 +192,7 @@
         }
     }
 
-    // ฟังก์ชันคืนค่าสถานะเมนูที่เคยเปิดไว้
+    // ฟังก์ชันคืนค่าสถานะเมนู
     function restoreMenuState() {
         const menus = ['credit', 'branch']; 
         menus.forEach(id => {
@@ -233,7 +203,5 @@
         });
     }
 
-    // รันฟังก์ชันคืนค่าสถานะ
     document.addEventListener('DOMContentLoaded', restoreMenuState);
 </script>
-
