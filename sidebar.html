@@ -1,137 +1,137 @@
 <style>
-    /* 1. โครงสร้างหลักของ Sidebar - iOS Glassmorphism */
+    /* 1. โครงสร้างหลัก Sidebar - iOS Glassmorphism */
     .sidebar {
         position: fixed;
-        top: 15px; /* ลอยจากขอบบน */
-        left: 15px; /* ลอยจากขอบซ้าย */
+        top: 0;
+        left: 0;
         width: 280px;
-        height: calc(100vh - 30px);
-        background: rgba(255, 255, 255, 0.4); /* โปร่งแสง */
-        backdrop-filter: blur(20px) saturate(180%); /* เอฟเฟกต์กระจกฝ้า */
-        -webkit-backdrop-filter: blur(20px) saturate(180%);
-        border: 1px solid rgba(255, 255, 255, 0.5); /* เส้นขอบแก้ว */
-        border-radius: 24px; /* มุมโค้งมนแบบ iOS */
+        height: 100vh;
+        height: 100dvh;
+        /* พื้นหลังขาวกระจกโปร่งแสง */
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(25px) saturate(180%);
+        -webkit-backdrop-filter: blur(25px) saturate(180%);
         color: #1c1c1e;
         z-index: 2000;
         display: flex;
         flex-direction: column;
         overflow-y: auto;
         overflow-x: hidden;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        border-right: 1px solid rgba(255, 255, 255, 0.3);
+        transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 10px 0 30px rgba(0, 0, 0, 0.05);
     }
 
-    /* Dark Mode Support (Optional) */
-    @media (prefers-color-scheme: dark) {
-        .sidebar {
-            background: rgba(28, 28, 30, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: #ffffff;
-        }
-    }
-
-    /* 2. Responsive Settings */
+    /* 2. Responsive */
     @media (max-width: 991.98px) {
-        .sidebar { transform: translateX(-310px); }
+        .sidebar { transform: translateX(-280px); }
         .sidebar.show { transform: translateX(0); }
     }
 
     /* 3. Header - เรียบหรูสไตล์ Apple */
     .sidebar-header {
-        padding: 25px 20px;
-        font-size: 18px;
-        font-weight: 600;
+        padding: 30px 24px;
+        font-size: 20px;
+        font-weight: 700;
+        background: rgba(255, 255, 255, 0.5);
+        color: #1c1c1e;
+        border-bottom: 0.5px solid rgba(0, 0, 0, 0.1);
+        position: sticky;
+        top: 0;
+        z-index: 10;
         display: flex;
         align-items: center;
         gap: 12px;
-        border-bottom: 0.5px solid rgba(0, 0, 0, 0.1);
-        background: rgba(255, 255, 255, 0.2);
+        letter-spacing: -0.5px;
+    }
+    
+    .sidebar-header i {
+        color: #007aff; /* สีฟ้า iOS */
+        font-size: 22px;
     }
 
-    /* 4. รายการเมนู - ปรับให้เหมือน List ใน iOS Settings */
+    /* 4. รายการเมนู - เน้นความชัดเจน (High Contrast) */
     .menu {
         display: flex;
         flex-direction: column;
-        padding: 15px 12px;
+        padding: 15px 12px 100px 12px;
     }
 
-    .item { margin-bottom: 2px; }
+    .item { margin-bottom: 5px; }
 
     .menu a, .menu .drop-btn {
         width: 100%;
-        min-height: 44px;
-        padding: 10px 14px;
+        min-height: 50px;
+        padding: 12px 16px;
         background: transparent;
         border: none;
         border-radius: 12px;
-        color: inherit;
+        color: #1c1c1e; /* สีตัวหนังสือเข้มชัดเจน */
         text-align: left;
         font-size: 15px;
-        font-weight: 400;
+        font-weight: 500;
         cursor: pointer;
         display: flex;
         align-items: center;
         text-decoration: none;
-        transition: background 0.2s ease;
+        transition: all 0.2s ease;
+        position: relative;
     }
 
-    /* Hover Effect - ใช้สีเทาอ่อนจางๆ */
+    /* Hover Effect - ใช้สีเทาอ่อนแบบ iOS */
     .menu a:hover, .menu .drop-btn:hover {
         background: rgba(0, 0, 0, 0.05);
+        color: #007aff;
     }
 
-    /* Active State สำหรับปุ่มที่ถูกกด */
-    .menu a:active, .menu .drop-btn:active {
-        background: rgba(0, 0, 0, 0.1);
-        transform: scale(0.98);
-    }
-
-    /* 5. เมนูย่อย (Submenu) - เหมือนกาง Folder */
+    /* 5. เมนูย่อย (Submenu) - ก้อนเนื้อหาแยกชั้นชัดเจน */
     .sub {
         display: none;
         background: rgba(0, 0, 0, 0.03);
         margin: 4px 8px;
         border-radius: 12px;
-        overflow: hidden;
+        padding: 4px 0;
     }
 
     .item.open .sub {
         display: block;
-        animation: iosSlideDown 0.3s ease-out;
+        animation: iosSlideDown 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
     }
 
     .sub a {
         padding-left: 45px;
         font-size: 14px;
-        color: rgba(0, 0, 0, 0.6);
-    }
-    
-    @media (prefers-color-scheme: dark) {
-        .sub a { color: rgba(255, 255, 255, 0.6); }
-        .menu a:hover, .menu .drop-btn:hover { background: rgba(255, 255, 255, 0.1); }
+        color: #3a3a3c;
+        min-height: 44px;
+        font-weight: 400;
     }
 
-    /* 6. ลูกศร - ใช้สไตล์ Chevron */
+    .sub a:hover {
+        color: #007aff;
+        background: rgba(0, 122, 255, 0.1);
+    }
+
+    /* 6. ลูกศร - เรียบง่าย */
     .arrow {
         margin-left: auto;
-        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        font-size: 12px;
-        opacity: 0.3;
+        transition: transform 0.3s ease;
+        font-size: 11px;
+        color: #8e8e93;
     }
 
     .item.open .arrow {
         transform: rotate(90deg);
-        opacity: 0.8;
+        color: #007aff;
     }
 
-    /* iOS Style Animation */
+    /* Keyframes */
     @keyframes iosSlideDown {
-        from { opacity: 0; transform: translateY(-5px); }
-        to { opacity: 1; transform: translateY(0); }
+        from { opacity: 0; transform: scaleY(0.95) translateY(-10px); }
+        to { opacity: 1; transform: scaleY(1) translateY(0); }
     }
 
-    /* สกロールบาร์ - ซ่อนไว้จนกว่าจะเลื่อนเหมือน iOS */
-    .sidebar::-webkit-scrollbar { width: 3px; }
+    /* Scrollbar */
+    .sidebar::-webkit-scrollbar { width: 4px; }
     .sidebar::-webkit-scrollbar-thumb {
         background: rgba(0, 0, 0, 0.1);
         border-radius: 10px;
@@ -180,7 +180,6 @@
 </div>
 
 <script>
-    // ฟังก์ชัน กาง-หุบ เมนูย่อย (รักษาความเสถียรเดิม)
     window.toggleDrop = function(btn, id) {
         const item = btn.closest('.item'); 
         if (!item) return;
@@ -192,7 +191,6 @@
         }
     }
 
-    // ฟังก์ชันคืนค่าสถานะเมนู
     function restoreMenuState() {
         const menus = ['credit', 'branch']; 
         menus.forEach(id => {
