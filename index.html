@@ -131,7 +131,7 @@
         .sidebar-float .item.open .sub { display: block; }
         .sidebar-float .sub a { padding-left: 45px; font-size: 13px; color: #8e8e93; }
 
-        /* ===== UI Elements (Same as original) ===== */
+        /* ===== UI Elements ===== */
         .section-label { font-size: 19px; font-weight: 600; margin: 20px 0; color: var(--text-main); letter-spacing: -0.5px; }
         .service-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 20px; margin-bottom: 25px; }
         .service-card { text-align: center; text-decoration: none; color: var(--text-main); display: flex; flex-direction: column; align-items: center; transition: var(--transition-bounce); }
@@ -233,61 +233,77 @@
     const sideOverlay = document.getElementById('sidebarOverlay');
     let isDragging = false;
     let startX, startY;
+    let shiftX, shiftY;
 
-    // --- ระบบลากและจัดการตำแหน่งเมนู ---
+    // --- ระบบลากปุ่มแบบแก้ไขบั๊กเมาส์ค้าง ---
     dragBtn.onpointerdown = function(e) {
         isDragging = false;
         startX = e.clientX;
         startY = e.clientY;
         
-        let shiftX = e.clientX - dragBtn.getBoundingClientRect().left;
-        let shiftY = e.clientY - dragBtn.getBoundingClientRect().top;
+        const rect = dragBtn.getBoundingClientRect();
+        shiftX = e.clientX - rect.left;
+        shiftY = e.clientY - rect.top;
 
-        function moveAt(pageX, pageY) {
-            // ถ้ามีการขยับเกิน 5px ถือว่ากำลังลาก
-            if (Math.abs(pageX - startX) > 5 || Math.abs(pageY - startY) > 5) {
-                isDragging = true;
-            }
-            dragBtn.style.left = pageX - shiftX + 'px';
-            dragBtn.style.top = pageY - shiftY + 'px';
+        // ล็อค Pointer ไว้ที่ปุ่ม (ป้องกันการหลุดขณะลากเร็วๆ)
+        dragBtn.setPointerCapture(e.pointerId);
+        
+        document.addEventListener('pointermove', onPointerMove);
+        document.addEventListener('pointerup', onPointerUp);
+    };
+
+    function onPointerMove(e) {
+        // เช็คว่าขยับพอที่จะถือว่าเป็นการลากหรือไม่
+        if (!isDragging && (Math.abs(e.clientX - startX) > 5 || Math.abs(e.clientY - startY) > 5)) {
+            isDragging = true;
         }
 
-        function onPointerMove(e) { moveAt(e.clientX, e.clientY); }
-        document.addEventListener('pointermove', onPointerMove);
+        if (isDragging) {
+            let newX = e.clientX - shiftX;
+            let newY = e.clientY - shiftY;
+            
+            // จำกัดขอบเขตไม่ให้ล้นจอ
+            newX = Math.max(0, Math.min(newX, window.innerWidth - dragBtn.offsetWidth));
+            newY = Math.max(0, Math.min(newY, window.innerHeight - dragBtn.offsetHeight));
 
-        dragBtn.onpointerup = function() {
-            document.removeEventListener('pointermove', onPointerMove);
-            dragBtn.onpointerup = null;
-        };
-    };
+            dragBtn.style.left = newX + 'px';
+            dragBtn.style.top = newY + 'px';
+        }
+    }
 
-    dragBtn.onclick = function() {
-        if (!isDragging) toggleSidebarFloat();
-    };
+    function onPointerUp(e) {
+        document.removeEventListener('pointermove', onPointerMove);
+        document.removeEventListener('pointerup', onPointerUp);
+        
+        // คลายการล็อค Pointer
+        dragBtn.releasePointerCapture(e.pointerId);
+
+        // ถ้าไม่ได้ลาก (แค่คลิก) ให้เปิดเมนู
+        if (!isDragging) {
+            toggleSidebarFloat();
+        }
+        isDragging = false;
+    }
 
     function toggleSidebarFloat() {
         const btnRect = dragBtn.getBoundingClientRect();
         const sidebarWidth = 280;
         
-        // คำนวณตำแหน่งเมนูให้ออกจากปุ่ม
         let top = btnRect.bottom + 10;
         let left = btnRect.left;
 
-        // เช็คขอบขวา: ถ้าเมนูจะเลยขอบจอ ให้เขยิบมาทางซ้าย
         if (left + sidebarWidth > window.innerWidth) {
             left = window.innerWidth - sidebarWidth - 15;
         }
         
-        // เช็คขอบล่าง: ถ้าเมนูจะเลยขอบจอ ให้แสดงเหนือปุ่มแทน
         if (top + 400 > window.innerHeight) {
-            top = btnRect.top - 410; // 400 คือความสูงโดยประมาณ
+            top = btnRect.top - 410;
             if (top < 10) top = 10;
         }
 
         sideFloat.style.top = top + 'px';
         sideFloat.style.left = left + 'px';
         
-        // ตั้งค่า Origin ให้กางออกมาจากจุดที่ปุ่มอยู่
         sideFloat.style.transformOrigin = `${btnRect.left - left + 20}px ${btnRect.top > top ? 'bottom' : 'top'}`;
 
         const isActive = sideFloat.classList.toggle('active');
@@ -306,7 +322,6 @@
             .then(res => res.text())
             .then(data => {
                 sideFloat.innerHTML = `<div class="sidebar-header">เมนูนำทาง</div>` + data;
-                // กู้คืนสถานะ Dropdown
                 ['credit', 'branch', 'sales'].forEach(id => {
                     if (localStorage.getItem('menu-' + id) === 'true') {
                         const el = sideFloat.querySelector('#menu-' + id);
@@ -322,7 +337,6 @@
         if (id) localStorage.setItem('menu-' + id, isOpen);
     }
 
-    // --- Work Modal Functions ---
     function openWorkModal() {
         document.getElementById('workModal').classList.add('active');
         document.body.style.overflow = 'hidden';
