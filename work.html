@@ -627,7 +627,7 @@
     async function toggleProcessing(date, memberId, jobType) {
         const d = new Date(date);
         const dateStr = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-        Swal.fire({title: 'กำลังดำเนินการ...', didOpen: () => Swal.showLoading()});
+        Swal.fire({title: 'กำลังดำเนินการ...', allowOutsideClick: false, allowEscapeKey: false, didOpen: () => Swal.showLoading()});
         try { 
             await fetch(SCRIPT_URL, { 
                 method: 'POST', 
@@ -635,13 +635,13 @@
             }); 
             Swal.close(); 
             loadData(); 
-        } catch (err) { Swal.fire('Error', 'เกิดข้อผิดพลาด', 'error'); }
+        } catch (err) { Swal.fire({title: 'Error', text: 'เกิดข้อผิดพลาด', icon: 'error', allowOutsideClick: false, allowEscapeKey: false}); }
     }
 
     async function togglePin(date, memberId, jobType) {
         const d = new Date(date);
         const dateStr = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-        Swal.fire({title: 'กำลังดำเนินการ...', didOpen: () => Swal.showLoading()});
+        Swal.fire({title: 'กำลังดำเนินการ...', allowOutsideClick: false, allowEscapeKey: false, didOpen: () => Swal.showLoading()});
         try { 
             await fetch(SCRIPT_URL, { 
                 method: 'POST', 
@@ -649,17 +649,17 @@
             }); 
             Swal.close(); 
             loadData(); 
-        } catch (err) { Swal.fire('Error', 'Error', 'error'); }
+        } catch (err) { Swal.fire({title: 'Error', text: 'Error', icon: 'error', allowOutsideClick: false, allowEscapeKey: false}); }
     }
 
     async function deleteData(d, id, jobType) {
-        const confirm = await Swal.fire({ title: 'ยืนยันการลบ?', text: "ข้อมูลนี้จะถูกลบออกจากฐานข้อมูล", icon: 'warning', showCancelButton: true, confirmButtonColor: '#FF3B30', confirmButtonText: 'ลบเลย' });
+        const confirm = await Swal.fire({ title: 'ยืนยันการลบ?', text: "ข้อมูลนี้จะถูกลบออกจากฐานข้อมูล", icon: 'warning', showCancelButton: true, confirmButtonColor: '#FF3B30', confirmButtonText: 'ลบเลย', allowOutsideClick: false, allowEscapeKey: false });
         if (confirm.isConfirmed) {
             const dateObj = new Date(d);
             const dateStr = dateObj.getFullYear() + '-' + String(dateObj.getMonth()+1).padStart(2,'0') + '-' + String(dateObj.getDate()).padStart(2,'0');
-            Swal.fire({title: 'กำลังลบ...', didOpen: () => Swal.showLoading()});
+            Swal.fire({title: 'กำลังลบ...', allowOutsideClick: false, allowEscapeKey: false, didOpen: () => Swal.showLoading()});
             await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: "delete", date: dateStr, memberId: id, jobType: jobType}) });
-            Swal.fire('ลบแล้ว!', '', 'success'); loadData();
+            Swal.fire({title: 'ลบแล้ว!', text: '', icon: 'success', allowOutsideClick: false, allowEscapeKey: false}); loadData();
         }
     }
 
@@ -669,6 +669,8 @@
             title: 'รายละเอียดรายการ',
             customClass: { popup: 'swal-modal-custom' },
             width: '700px',
+            allowOutsideClick: false,
+            allowEscapeKey: false,
             html: `
                 <div class="swal-form-container">
                     <div class="swal-field-full"><label class="swal-label">ประเภทงาน</label><div class="detail-view-item"><span class="job-type-badge">${item[8] || 'ทั่วไป'}</span></div></div>
@@ -693,6 +695,8 @@
             title: 'แก้ไขข้อมูลรายการ',
             customClass: { popup: 'swal-modal-custom' },
             width: '700px',
+            allowOutsideClick: false,
+            allowEscapeKey: false,
             html: `
                 <div class="swal-form-container">
                     <div class="swal-field-full"><label class="swal-label">ประเภทงาน</label><select id="swal-jobType" class="swal-input-styled">${typeOptions}</select></div>
@@ -708,9 +712,9 @@
             preConfirm: () => ({ action: "update", oldDate: formatForInputDate(item[0]), oldMemberId: String(item[1]), oldJobType: item[8], date: document.getElementById('swal-date').value, memberId: "'" + document.getElementById('swal-memberId').value, name: document.getElementById('swal-name').value, phone: "'" + document.getElementById('swal-phone').value, staff: document.getElementById('swal-staff').value, jobDetail: document.getElementById('swal-jobDetail').value, jobType: document.getElementById('swal-jobType').value })
         }).then(async (result) => {
             if (result.isConfirmed) {
-                Swal.fire({title: 'กำลังอัพเดท...', didOpen: () => Swal.showLoading()});
+                Swal.fire({title: 'กำลังอัพเดท...', allowOutsideClick: false, allowEscapeKey: false, didOpen: () => Swal.showLoading()});
                 await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(result.value) });
-                Swal.fire('สำเร็จ', 'แก้ไขข้อมูลเรียบร้อย', 'success'); loadData();
+                Swal.fire({title: 'สำเร็จ', text: 'แก้ไขข้อมูลเรียบร้อย', icon: 'success', allowOutsideClick: false, allowEscapeKey: false}); loadData();
             }
         });
     }
@@ -722,6 +726,8 @@
             title: 'บันทึกงานใหม่',
             customClass: { popup: 'swal-modal-custom' },
             width: '700px',
+            allowOutsideClick: false,
+            allowEscapeKey: false,
             html: `
                 <div class="swal-form-container">
                     <div class="swal-field-full"><label class="swal-label">ประเภทงาน</label><select id="jobType" class="swal-input-styled">${typeOptions}</select></div>
@@ -743,9 +749,9 @@
             }
         }).then(async (result) => {
             if (result.isConfirmed) {
-                Swal.fire({title: 'กำลังบันทึก...', didOpen: () => Swal.showLoading()});
+                Swal.fire({title: 'กำลังบันทึก...', allowOutsideClick: false, allowEscapeKey: false, didOpen: () => Swal.showLoading()});
                 await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(result.value) });
-                Swal.fire('สำเร็จ', 'บันทึกเรียบร้อย', 'success'); loadData();
+                Swal.fire({title: 'สำเร็จ', text: 'บันทึกเรียบร้อย', icon: 'success', allowOutsideClick: false, allowEscapeKey: false}); loadData();
             }
         });
     }
