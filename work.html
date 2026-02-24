@@ -127,8 +127,28 @@
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
             gap: 12px;
-            padding: 10px 0 25px 0;
+            padding: 10px 0 15px 0;
         }
+
+        .stat-card-long {
+            grid-column: 1 / -1;
+            background: linear-gradient(90deg, #5856d6, #007aff);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: 0.3s;
+            box-shadow: 0 4px 15px rgba(88, 86, 214, 0.3);
+            margin-bottom: 10px;
+        }
+        .stat-card-long:hover { transform: scale(1.01); filter: brightness(1.1); }
+        .stat-card-long .info { display: flex; flex-direction: column; }
+        .stat-card-long .title { font-size: 20px; font-weight: 600; }
+        .stat-card-long .date-label { font-size: 24px; opacity: 0.9; }
+        .stat-card-long .count-val { font-size: 28px; font-weight: 700; }
 
         .stat-card {
             padding: 15px 10px;
@@ -228,6 +248,17 @@
         td { padding: 16px 15px; border-bottom: 1px solid rgba(255,255,255,0.4); font-size: 14px; vertical-align: middle; transition: 0.2s; }
         tbody tr:hover td { background: rgba(255, 255, 255, 0.4); }
 
+        .report-id-label {
+            font-size: 10px;
+            color: var(--text-light);
+            background: rgba(0,0,0,0.05);
+            padding: 1px 5px;
+            border-radius: 4px;
+            display: block;
+            margin-top: 4px;
+            font-weight: 400;
+        }
+
         .job-type-badge {
             background: white; color: var(--ios-blue);
             padding: 4px 12px; border-radius: 10px;
@@ -238,10 +269,27 @@
 
         .pinned-row { background: rgba(255, 149, 0, 0.08) !important; }
 
+        .action-btns-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            align-items: center;
+        }
+
         .action-btns {
             display: flex;
             gap: 6px;
             align-items: center;
+        }
+
+        .deadline-label-small {
+            font-size: 11px;
+            color: var(--ios-red);
+            font-weight: 600;
+            background: #fff0f0;
+            padding: 2px 8px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 59, 48, 0.2);
         }
 
         .btn-pin, .btn-process, .btn-edit, .btn-delete {
@@ -356,7 +404,7 @@
                 <i class="fa-solid fa-magnifying-glass"></i>
                 <input type="text" id="searchInput" class="search-input" placeholder="ค้นหาข้อมูล..." onkeyup="filterData()">
             </div>
-            <button class="btn-refresh-inline" onclick="loadData()" title="รีเฟรชข้อมูล">
+            <button class="btn-refresh-inline" onclick="loadData(true)" title="รีเฟรชข้อมูล">
                 <i class="fa-solid fa-rotate-right"></i>
             </button>
         </div>
@@ -366,11 +414,12 @@
         <table>
             <thead>
                 <tr>
-                    <th width="110">วันที่</th>
+                    <th width="120">วันที่ / เลขที่</th>
                     <th width="160">ประเภทงาน</th>
                     <th>รหัสสมาชิก</th>
                     <th>ชื่อลูกค้า / เบอร์</th>
-                    <th width="300">รายละเอียด</th> <th>พนักงาน</th>
+                    <th width="300">รายละเอียด</th> 
+                    <th>พนักงาน</th>
                     <th>เอกสาร</th>
                     <th width="180">จัดการ</th>
                 </tr>
@@ -387,7 +436,7 @@
 </div>
 
 <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxlPlSVdSsODvMlSBo-Yzjl2VGcLy6zUENv0Q1u5MynNcURGU01eKCpmu-cHTeifVna/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz0kmLEb1_AlV4pPVU3qES7EnyXlGKjIt7X4ko_tQVpTuSHcCeTyshZ92KUL4lEL_iu/exec';
 
     const jobTypes = [
         "MGM ปรับลด", "ยกเลิกบริการ (ปกติ)", "ยกเลิกบริการ (5P)", "MNP",
@@ -402,6 +451,10 @@
     const sideOverlay = document.getElementById('sidebarOverlay');
     let isDragging = false;
     let startX, startY, shiftX, shiftY;
+
+    function generateReportId() {
+        return Math.floor(1000000000 + Math.random() * 9000000000).toString();
+    }
 
     function loadButtonPosition() {
         const savedLeft = localStorage.getItem('floatBtnLeft');
@@ -473,7 +526,7 @@
                         if (el) el.classList.add('open');
                     }
                 });
-            });
+            }).catch(err => console.log("Sidebar load failed"));
     }
 
     window.toggleDrop = function(btn, id) {
@@ -483,13 +536,15 @@
     }
 
     function fixDate(dateVal) {
-        if (!dateVal) return "-";
+        if (!dateVal || dateVal === "-") return "-";
         const d = new Date(dateVal);
         return isNaN(d) ? dateVal : `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
     }
 
     function formatForInputDate(dateVal) {
+        if (!dateVal) return "";
         const d = new Date(dateVal);
+        if (isNaN(d)) return "";
         return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
     }
 
@@ -506,7 +561,9 @@
         const counts = {};
         let processingCount = 0;
         let pinnedCount = 0;
-        
+        let deadlineCount = 0;
+        const todayStr = formatForInputDate(new Date());
+
         jobTypes.forEach(t => counts[t] = 0);
         
         data.forEach(row => {
@@ -514,12 +571,20 @@
             if(counts[type] !== undefined) counts[type]++;
             if(row[7] === "true" || row[7] === true) pinnedCount++;
             if(row[9] === "true" || row[9] === true) processingCount++;
+            const deadline = formatForInputDate(row[10]);
+            if(deadline === todayStr) deadlineCount++;
         });
 
-        const currentTotal = data.length;
         let cardsHtml = `
+            <div class="stat-card-long" onclick="filterByDeadline(this)">
+                <div class="info">
+                    <span class="title">ครบกำหนดงาน (วันนี้)</span>
+                    <span class="date-label">${fixDate(new Date())}</span>
+                </div>
+                <div class="count-val">${deadlineCount} รายการ</div>
+            </div>
             <div class="stat-card active" onclick="filterByType('ทั้งหมด', this)">
-                <span class="count">${currentTotal}</span>
+                <span class="count">${data.length}</span>
                 <span class="label">ทั้งหมด</span>
             </div>
             <div class="stat-card pinned-stat" onclick="filterByPinned(this)">
@@ -531,11 +596,20 @@
                 <span class="label">กำลังดำเนินการ</span>
             </div>
         `;
-        
         jobTypes.forEach(type => {
             cardsHtml += `<div class="stat-card" onclick="filterByType('${type}', this)"><span class="count">${counts[type]}</span><span class="label">${type}</span></div>`;
         });
         statsCon.innerHTML = cardsHtml;
+    }
+
+    function filterByDeadline(el) {
+        document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
+        const todayStr = fixDate(new Date());
+        const rows = document.getElementById('dataTable').getElementsByTagName('tr');
+        for (let i = 0; i < rows.length; i++) {
+            const rowDeadline = rows[i].getAttribute('data-deadline');
+            rows[i].style.display = (rowDeadline === todayStr) ? "" : "none";
+        }
     }
 
     function filterByPinned(el) {
@@ -543,8 +617,7 @@
         el.classList.add('active');
         const rows = document.getElementById('dataTable').getElementsByTagName('tr');
         for (let i = 0; i < rows.length; i++) {
-            const isPinned = rows[i].querySelector('.btn-pin.active');
-            rows[i].style.display = isPinned ? "" : "none";
+            rows[i].style.display = rows[i].querySelector('.btn-pin.active') ? "" : "none";
         }
     }
 
@@ -553,8 +626,7 @@
         el.classList.add('active');
         const rows = document.getElementById('dataTable').getElementsByTagName('tr');
         for (let i = 0; i < rows.length; i++) {
-            const isProcessing = rows[i].querySelector('.btn-process.active');
-            rows[i].style.display = isProcessing ? "" : "none";
+            rows[i].style.display = rows[i].querySelector('.btn-process.active') ? "" : "none";
         }
     }
 
@@ -574,9 +646,13 @@
         }
     }
 
-    async function loadData() {
+    // แก้ไข: loadData ให้รองรับการเก็บสถานะหน้าปัจจุบัน
+    async function loadData(manual = false) {
         const tableBody = document.getElementById('dataTable');
         const refreshBtn = document.querySelector('.fa-rotate-right');
+        const scrollPos = window.scrollY; // เก็บตำแหน่ง Scroll
+        const currentSearch = document.getElementById('searchInput').value; // เก็บค่าค้นหา
+
         if(refreshBtn) refreshBtn.classList.add('fa-spin');
         try {
             const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: "read"}) });
@@ -594,77 +670,97 @@
                 const tr = document.createElement('tr');
                 const isPinned = (row[7] === "true" || row[7] === true);
                 const isProcessing = (row[9] === "true" || row[9] === true);
-                const jobType = row[8] || "ทั่วไป";
-                
-                if (isPinned) tr.classList.add('pinned-row');
+                const reportId = row[11] || "-";
                 const rowJson = encodeURIComponent(JSON.stringify(row));
+                const deadlineDate = fixDate(row[10]);
+
+                tr.setAttribute('data-deadline', deadlineDate);
+                if (isPinned) tr.classList.add('pinned-row');
+
+                // แก้ไข: แสดงรูปภาพหลายรูป
+                let filesHtml = '-';
+                if (row[5]) {
+                    const urls = row[5].split(", ");
+                    filesHtml = urls.map((u, i) => `<a href="${u}" target="_blank" style="color:var(--ios-blue); text-decoration:none; margin-right:5px;"><i class="fa-solid fa-file"></i> ${i+1}</a>`).join('');
+                }
+
                 tr.innerHTML = `
-                    <td class="date-col">${fixDate(row[0])}</td>
-                    <td><span class="job-type-badge">${jobType}</span></td>
+                    <td>
+                        <strong>${fixDate(row[0])}</strong>
+                        <span class="report-id-label">ID: ${reportId}</span>
+                    </td>
+                    <td><span class="job-type-badge">${row[8] || "ทั่วไป"}</span></td>
                     <td onclick="showFullDetail('${rowJson}')" style="cursor:pointer; font-weight:600; color:var(--ios-blue);">${String(row[1]).replace(/^'/, '')}</td>
                     <td onclick="showFullDetail('${rowJson}')" style="cursor:pointer;">${row[2]}<br><small style="color:#8e8e93">${String(row[3]).replace(/^'/, '')}</small></td>
                     <td onclick="showFullDetail('${rowJson}')" style="cursor:pointer;">
                         <div style="max-width:300px; max-height:100px; overflow:hidden; white-space:normal; display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; color:#666; font-size:13px; line-height:1.4;">${row[6] || "-"}</div>
                     </td>
                     <td>${row[4]}</td>
-                    <td>${row[5] ? `<a href="${row[5]}" target="_blank" style="color:var(--ios-blue); text-decoration:none;"><i class="fa-solid fa-image"></i> รูป</a>` : '-'}</td>
+                    <td>${filesHtml}</td>
                     <td>
-                        <div class="action-btns">
-                            <button class="btn-pin ${isPinned ? 'active' : ''}" onclick="togglePin('${row[0]}', '${row[1]}', '${jobType}')" title="ปักหมุด"><i class="fa-solid fa-thumbtack"></i></button>
-                            <button class="btn-process ${isProcessing ? 'active' : ''}" onclick="toggleProcessing('${row[0]}', '${row[1]}', '${jobType}')" title="กำลังดำเนินการ"><i class="fa-solid fa-clock-rotate-left"></i></button>
-                            <button class="btn-edit" onclick="editData('${rowJson}')" title="แก้ไขข้อมูล"><i class="fa-solid fa-pen-to-square"></i></button>
-                            <button class="btn-delete" onclick="deleteData('${row[0]}', '${row[1]}', '${jobType}')" title="ลบรายการ"><i class="fa-solid fa-trash"></i></button>
+                        <div class="action-btns-container">
+                            <div class="action-btns">
+                                <button class="btn-pin ${isPinned ? 'active' : ''}" onclick="togglePin('${reportId}')" title="ปักหมุด"><i class="fa-solid fa-thumbtack"></i></button>
+                                <button class="btn-process ${isProcessing ? 'active' : ''}" onclick="toggleProcessing('${reportId}')" title="กำลังดำเนินการ"><i class="fa-solid fa-clock-rotate-left"></i></button>
+                                <button class="btn-edit" onclick="editData('${rowJson}')" title="แก้ไขข้อมูล"><i class="fa-solid fa-pen-to-square"></i></button>
+                                <button class="btn-delete" onclick="deleteData('${reportId}')" title="ลบรายการ"><i class="fa-solid fa-trash"></i></button>
+                            </div>
+                            ${deadlineDate !== "-" ? `<span class="deadline-label-small">ครบกำหนด : ${deadlineDate}</span>` : ''}
                         </div>
                     </td>
                 `;
                 tableBody.appendChild(tr);
             });
             updateStats(data);
+            
+            // คืนค่าตำแหน่งการเลื่อนและสถานะค้นหา
+            if (!manual) {
+                document.getElementById('searchInput').value = currentSearch;
+                filterData();
+                window.scrollTo(0, scrollPos);
+            }
+
         } catch (e) { tableBody.innerHTML = '<tr><td colspan="8">โหลดข้อมูลไม่สำเร็จ</td></tr>'; }
         finally { if(refreshBtn) refreshBtn.classList.remove('fa-spin'); }
     }
 
-    async function toggleProcessing(date, memberId, jobType) {
-        const d = new Date(date);
-        const dateStr = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    async function toggleProcessing(reportId) {
         Swal.fire({title: 'กำลังดำเนินการ...', allowOutsideClick: false, allowEscapeKey: false, didOpen: () => Swal.showLoading()});
         try { 
-            await fetch(SCRIPT_URL, { 
-                method: 'POST', 
-                body: JSON.stringify({ action: "toggleProcessing", date: dateStr, memberId: memberId, jobType: jobType }) 
-            }); 
-            Swal.close(); 
-            loadData(); 
-        } catch (err) { Swal.fire({title: 'Error', text: 'เกิดข้อผิดพลาด', icon: 'error', allowOutsideClick: false, allowEscapeKey: false}); }
+            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "toggleProcessing", reportId: reportId }) }); 
+            Swal.close(); loadData(); 
+        } catch (err) { Swal.fire({title: 'Error', icon: 'error', allowOutsideClick: false}); }
     }
 
-    async function togglePin(date, memberId, jobType) {
-        const d = new Date(date);
-        const dateStr = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    async function togglePin(reportId) {
         Swal.fire({title: 'กำลังดำเนินการ...', allowOutsideClick: false, allowEscapeKey: false, didOpen: () => Swal.showLoading()});
         try { 
-            await fetch(SCRIPT_URL, { 
-                method: 'POST', 
-                body: JSON.stringify({ action: "togglePin", date: dateStr, memberId: memberId, jobType: jobType }) 
-            }); 
-            Swal.close(); 
-            loadData(); 
-        } catch (err) { Swal.fire({title: 'Error', text: 'Error', icon: 'error', allowOutsideClick: false, allowEscapeKey: false}); }
+            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "togglePin", reportId: reportId }) }); 
+            Swal.close(); loadData(); 
+        } catch (err) { Swal.fire({title: 'Error', icon: 'error', allowOutsideClick: false}); }
     }
 
-    async function deleteData(d, id, jobType) {
-        const confirm = await Swal.fire({ title: 'ยืนยันการลบ?', text: "ข้อมูลนี้จะถูกลบออกจากฐานข้อมูล", icon: 'warning', showCancelButton: true, confirmButtonColor: '#FF3B30', confirmButtonText: 'ลบเลย', allowOutsideClick: false, allowEscapeKey: false });
+    async function deleteData(reportId) {
+        const confirm = await Swal.fire({ 
+            title: 'ยืนยันการลบ?', text: "ID: " + reportId, icon: 'warning', 
+            showCancelButton: true, confirmButtonColor: '#FF3B30', confirmButtonText: 'ลบเลย',
+            allowOutsideClick: false, allowEscapeKey: false
+        });
         if (confirm.isConfirmed) {
-            const dateObj = new Date(d);
-            const dateStr = dateObj.getFullYear() + '-' + String(dateObj.getMonth()+1).padStart(2,'0') + '-' + String(dateObj.getDate()).padStart(2,'0');
             Swal.fire({title: 'กำลังลบ...', allowOutsideClick: false, allowEscapeKey: false, didOpen: () => Swal.showLoading()});
-            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: "delete", date: dateStr, memberId: id, jobType: jobType}) });
-            Swal.fire({title: 'ลบแล้ว!', text: '', icon: 'success', allowOutsideClick: false, allowEscapeKey: false}); loadData();
+            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: "delete", reportId: reportId}) });
+            Swal.fire({title: 'ลบแล้ว!', icon: 'success', timer: 1500, allowOutsideClick: false}); loadData();
         }
     }
 
     window.showFullDetail = function(rowJson) {
         const item = JSON.parse(decodeURIComponent(rowJson));
+        let filesDetail = '-';
+        if (item[5]) {
+            const urls = item[5].split(", ");
+            filesDetail = urls.map((u, i) => `<a href="${u}" target="_blank" style="color:var(--ios-blue); text-decoration:none; font-weight:600; margin-right:15px;"><i class="fa-solid fa-file"></i> ไฟล์ที่ ${i+1}</a>`).join('');
+        }
+
         Swal.fire({
             title: 'รายละเอียดรายการ',
             customClass: { popup: 'swal-modal-custom' },
@@ -673,14 +769,16 @@
             allowEscapeKey: false,
             html: `
                 <div class="swal-form-container">
+                    <div class="swal-field-full"><label class="swal-label">Report ID</label><div class="detail-view-item"><span class="val">${item[11] || '-'}</span></div></div>
                     <div class="swal-field-full"><label class="swal-label">ประเภทงาน</label><div class="detail-view-item"><span class="job-type-badge">${item[8] || 'ทั่วไป'}</span></div></div>
                     <div><label class="swal-label">วันที่ดำเนินการ</label><div class="detail-view-item"><span class="val">${fixDate(item[0])}</span></div></div>
                     <div><label class="swal-label">รหัสสมาชิก</label><div class="detail-view-item"><span class="val">${String(item[1]).replace(/^'/, '')}</span></div></div>
                     <div class="swal-field-full"><label class="swal-label">ชื่อลูกค้า</label><div class="detail-view-item"><span class="val">${item[2]}</span></div></div>
                     <div><label class="swal-label">เบอร์ติดต่อ</label><div class="detail-view-item"><span class="val">${String(item[3]).replace(/^'/, '')}</span></div></div>
                     <div><label class="swal-label">พนักงาน</label><div class="detail-view-item"><span class="val">${item[4]}</span></div></div>
+                    <div><label class="swal-label">วันครบกำหนดงาน</label><div class="detail-view-item"><span class="val" style="color:var(--ios-red);">${fixDate(item[10])}</span></div></div>
                     <div class="swal-field-full"><label class="swal-label">รายละเอียดเพิ่มเติม</label><div class="detail-view-item" style="min-height:160px;"><span class="val" style="font-weight:400; white-space:pre-wrap;">${item[6] || '-'}</span></div></div>
-                    ${item[5] ? `<div class="swal-field-full" style="text-align:center; margin-top:10px;"><a href="${item[5]}" target="_blank" style="color:var(--ios-blue); text-decoration:none; font-weight:600; font-size:14px;"><i class="fa-solid fa-image"></i> เปิดดูรูปภาพแนบ</a></div>` : ''}
+                    <div class="swal-field-full" style="text-align:center; margin-top:10px;">${filesDetail}</div>
                 </div>
             `,
             showCancelButton: true, confirmButtonText: 'แก้ไขข้อมูล', confirmButtonColor: '#34C759', cancelButtonText: 'ปิด'
@@ -692,7 +790,7 @@
         let typeOptions = `<option value="">-- เลือกประเภทงาน --</option>`;
         jobTypes.forEach(t => { typeOptions += `<option value="${t}" ${item[8] === t ? 'selected' : ''}>${t}</option>`; });
         Swal.fire({
-            title: 'แก้ไขข้อมูลรายการ',
+            title: 'แก้ไขข้อมูล: ' + (item[11] || ''),
             customClass: { popup: 'swal-modal-custom' },
             width: '700px',
             allowOutsideClick: false,
@@ -705,16 +803,17 @@
                     <div class="swal-field-full"><label class="swal-label">ชื่อลูกค้า</label><input type="text" id="swal-name" class="swal-input-styled" value="${item[2]}"></div>
                     <div><label class="swal-label">เบอร์ติดต่อ</label><input type="text" id="swal-phone" class="swal-input-styled" value="${String(item[3]).replace(/^'/, '')}"></div>
                     <div><label class="swal-label">พนักงาน</label><select id="swal-staff" class="swal-input-styled">${['ศุภกฤต', 'นวพล', 'ปิยะพร', 'กรทักษ์'].map(s => `<option value="${s}" ${item[4] === s ? 'selected' : ''}>${s}</option>`).join('')}</select></div>
-                    <div class="swal-field-full"><label class="swal-label">รายละเอียดเพิ่มเติม</label><textarea id="swal-jobDetail" class="swal-input-styled" style="height:160px;">${item[6] || ''}</textarea></div>
+                    <div class="swal-field-full"><label class="swal-label">วันครบกำหนดงาน</label><input type="date" id="swal-deadline" class="swal-input-styled" value="${formatForInputDate(item[10])}"></div>
+                    <div class="swal-field-full"><label class="swal-label">รายละเอียด</label><textarea id="swal-jobDetail" class="swal-input-styled" style="height:160px;">${item[6] || ''}</textarea></div>
                 </div>
             `,
             showCancelButton: true, confirmButtonText: 'บันทึกการแก้ไข', confirmButtonColor: '#007aff',
-            preConfirm: () => ({ action: "update", oldDate: formatForInputDate(item[0]), oldMemberId: String(item[1]), oldJobType: item[8], date: document.getElementById('swal-date').value, memberId: "'" + document.getElementById('swal-memberId').value, name: document.getElementById('swal-name').value, phone: "'" + document.getElementById('swal-phone').value, staff: document.getElementById('swal-staff').value, jobDetail: document.getElementById('swal-jobDetail').value, jobType: document.getElementById('swal-jobType').value })
+            preConfirm: () => ({ action: "update", reportId: item[11], date: document.getElementById('swal-date').value, memberId: "'" + document.getElementById('swal-memberId').value, name: document.getElementById('swal-name').value, phone: "'" + document.getElementById('swal-phone').value, staff: document.getElementById('swal-staff').value, jobDetail: document.getElementById('swal-jobDetail').value, jobType: document.getElementById('swal-jobType').value, deadline: document.getElementById('swal-deadline').value })
         }).then(async (result) => {
             if (result.isConfirmed) {
                 Swal.fire({title: 'กำลังอัพเดท...', allowOutsideClick: false, allowEscapeKey: false, didOpen: () => Swal.showLoading()});
                 await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(result.value) });
-                Swal.fire({title: 'สำเร็จ', text: 'แก้ไขข้อมูลเรียบร้อย', icon: 'success', allowOutsideClick: false, allowEscapeKey: false}); loadData();
+                Swal.fire({title: 'สำเร็จ', icon: 'success', timer: 1500, allowOutsideClick: false}); loadData();
             }
         });
     }
@@ -722,8 +821,9 @@
     window.openAddJobModal = function() {
         let typeOptions = `<option value="">-- เลือกประเภทงาน --</option>`;
         jobTypes.forEach(t => { typeOptions += `<option value="${t}">${t}</option>`; });
+        const newId = generateReportId();
         Swal.fire({
-            title: 'บันทึกงานใหม่',
+            title: 'บันทึกงานใหม่ (ID: ' + newId + ')',
             customClass: { popup: 'swal-modal-custom' },
             width: '700px',
             allowOutsideClick: false,
@@ -736,22 +836,36 @@
                     <div class="swal-field-full"><label class="swal-label">ชื่อลูกค้า</label><input type="text" id="name" class="swal-input-styled"></div>
                     <div><label class="swal-label">เบอร์ติดต่อ</label><input type="text" id="phone" class="swal-input-styled" placeholder="0XXXXXXXXX"></div>
                     <div><label class="swal-label">พนักงาน</label><select id="staff" class="swal-input-styled"><option value="">-- เลือก --</option><option value="ศุภกฤต">ศุภกฤต</option><option value="นวพล">นวพล</option><option value="ปิยะพร">ปิยะพร</option><option value="กรทักษ์">กรทักษ์</option></select></div>
+                    <div class="swal-field-full"><label class="swal-label">กำหนดส่งงาน</label><input type="date" id="deadline" class="swal-input-styled"></div>
                     <div class="swal-field-full"><label class="swal-label">รายละเอียด</label><textarea id="jobDetail" class="swal-input-styled" style="height:160px;"></textarea></div>
-                    <div class="swal-field-full"><label class="swal-label">แนบรูปภาพ</label><input type="file" id="file" class="swal-input-styled" accept="image/*"></div>
+                    <div class="swal-field-full"><label class="swal-label">แนบไฟล์ (สูงสุด 3 ไฟล์: รูปภาพ, PDF, Word, Excel)</label><input type="file" id="file" class="swal-input-styled" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" multiple></div>
                 </div>
             `,
             showCancelButton: true, confirmButtonText: 'บันทึกข้อมูล', preConfirm: async () => {
-                const vals = { jobType: document.getElementById('jobType').value, date: document.getElementById('date').value, memberId: "'" + document.getElementById('memberId').value, name: document.getElementById('name').value, phone: "'" + document.getElementById('phone').value, staff: document.getElementById('staff').value, jobDetail: document.getElementById('jobDetail').value };
+                const vals = { reportId: newId, jobType: document.getElementById('jobType').value, date: document.getElementById('date').value, memberId: "'" + document.getElementById('memberId').value, name: document.getElementById('name').value, phone: "'" + document.getElementById('phone').value, staff: document.getElementById('staff').value, jobDetail: document.getElementById('jobDetail').value, deadline: document.getElementById('deadline').value };
+                
                 if (!vals.jobType || !vals.name || !vals.staff) { Swal.showValidationMessage('กรุณากรอกข้อมูลสำคัญ'); return false; }
-                const fileInput = document.getElementById('file'); let fileData = null;
-                if (fileInput.files.length > 0) { fileData = await new Promise(r => { const rd = new FileReader(); rd.onload = () => r(rd.result); rd.readAsDataURL(fileInput.files[0]); }); }
-                return { action: "insert", ...vals, fileData };
+                
+                const fileInput = document.getElementById('file');
+                if (fileInput.files.length > 3) { Swal.showValidationMessage('แนบไฟล์ได้สูงสุด 3 ไฟล์เท่านั้น'); return false; }
+
+                let files = [];
+                for (let i = 0; i < fileInput.files.length; i++) {
+                    const fileData = await new Promise(r => { 
+                        const rd = new FileReader(); 
+                        rd.onload = () => r(rd.result); 
+                        rd.readAsDataURL(fileInput.files[i]); 
+                    });
+                    files.push({ name: fileInput.files[i].name, data: fileData });
+                }
+                
+                return { action: "insert", ...vals, files: files };
             }
         }).then(async (result) => {
             if (result.isConfirmed) {
                 Swal.fire({title: 'กำลังบันทึก...', allowOutsideClick: false, allowEscapeKey: false, didOpen: () => Swal.showLoading()});
                 await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(result.value) });
-                Swal.fire({title: 'สำเร็จ', text: 'บันทึกเรียบร้อย', icon: 'success', allowOutsideClick: false, allowEscapeKey: false}); loadData();
+                Swal.fire({title: 'สำเร็จ', icon: 'success', timer: 1500, allowOutsideClick: false}); loadData();
             }
         });
     }
