@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Care+ - Parakit-site</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --ios-blue: #007aff;
+            --ios-bg: #f2f2f7;
+            --glass-white: rgba(255, 255, 255, 0.75);
+            --glass-border: rgba(255, 255, 255, 0.5);
+            --sidebar-dark: rgba(28, 28, 30, 0.96);
+            --text-main: #1c1c1e;
+            --text-light: #8e8e93;
+            --transition-swift: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-bounce: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        /* ===== GLOBAL RESET ===== */
+        * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
+        
+        body { 
+            margin: 0; 
+            background-color: var(--ios-bg);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(0, 122, 255, 0.08) 0px, transparent 40%), 
+                radial-gradient(at 100% 100%, rgba(255, 45, 85, 0.06) 0px, transparent 40%);
+            background-attachment: fixed;
+            color: var(--text-main); 
+            -webkit-font-smoothing: antialiased;
+            padding-bottom: 60px;
+            overflow-x: hidden;
+        }
+
+        /* ===== Header Navbar ===== */
+        .top-header {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            padding: 0 20px 0 75px; 
+            border-bottom: 0.5px solid rgba(0,0,0,0.1);
+        }
+
+        .content { 
+            padding: 80px 20px 40px; 
+            max-width: 1300px; 
+            margin: 0 auto; 
+            animation: fadeIn 0.8s ease-out; 
+        }
+
+        /* ===== Floating Draggable Button (จาก index.html) ===== */
+        #floatingMenuBtn {
+            position: fixed;
+            top: 10px;
+            left: 15px;
+            width: 45px;
+            height: 45px;
+            background: var(--ios-blue);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            cursor: move;
+            z-index: 2100;
+            box-shadow: 0 4px 15px rgba(0, 122, 255, 0.4);
+            border: none;
+            touch-action: none;
+            transition: transform 0.2s, opacity 0.2s;
+        }
+        #floatingMenuBtn:active { transform: scale(0.9); }
+
+        /* ===== Floating Sidebar (จาก index.html) ===== */
+        .sidebar-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.2);
+            z-index: 2000;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .sidebar-overlay.active { display: block; opacity: 1; }
+
+        .sidebar-float {
+            position: fixed;
+            width: 280px;
+            max-height: 70vh;
+            background: var(--sidebar-dark);
+            border-radius: 20px;
+            overflow-y: auto;
+            z-index: 2001;
+            opacity: 0;
+            visibility: hidden;
+            transform: scale(0.8) translateY(10px);
+            transition: opacity 0.3s, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.1);
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,0.2) transparent;
+        }
+        .sidebar-float.active {
+            opacity: 1;
+            visibility: visible;
+            transform: scale(1) translateY(0);
+        }
+
+        /* Sidebar Content Styles */
+        .sidebar-float .sidebar-header { padding: 20px; font-size: 17px; font-weight: 600; color: #fff; border-bottom: 0.5px solid rgba(255,255,255,0.1); }
+        .sidebar-float .menu { padding: 8px 0; }
+        .sidebar-float .menu a, .sidebar-float .drop-btn { 
+            width: 100%; padding: 12px 20px; background: none; border: none; 
+            color: #ebebf5; text-align: left; font-size: 14px; cursor: pointer; 
+            display: flex; align-items: center; text-decoration: none; transition: 0.2s;
+        }
+        .sidebar-float .menu a:hover, .sidebar-float .drop-btn:hover { background: rgba(255,255,255,0.1); }
+        .sidebar-float .sub { display: none; background: rgba(0,0,0,0.2); }
+        .sidebar-float .item.open .sub { display: block; }
+        .sidebar-float .sub a { padding-left: 45px; font-size: 13px; color: #8e8e93; }
+
+        /* ===== Social Care+ Page Styles ===== */
+        .info-card { 
+            max-width: 850px; 
+            margin: 0 auto; 
+            background: var(--glass-white); 
+            backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+            padding: 25px; 
+            border-radius: 35px; 
+            box-shadow: 0 20px 60px rgba(0,0,0,0.06);
+            border: 1px solid var(--glass-border);
+        }
+        .btn-container { text-align: center; margin-bottom: 35px; }
+        .btn-guide {
+            display: inline-flex; align-items: center; justify-content: center;
+            background: linear-gradient(135deg, #007aff 0%, #0051ff 100%);
+            color: white; text-decoration: none; padding: 16px 32px;
+            border-radius: 20px; font-weight: 500; gap: 10px;
+            transition: var(--transition-bounce);
+            box-shadow: 0 10px 25px rgba(0, 122, 255, 0.3);
+        }
+        .btn-guide:hover { transform: translateY(-5px) scale(1.03); }
+        
+        .responsive-img {
+            max-width: 100%; height: auto; display: block;
+            margin: 25px auto; border-radius: 24px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+        }
+
+        footer { text-align: center; padding: 60px 20px 40px; color: var(--text-light); font-size: 12px; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        @media (max-width: 768px) {
+            .top-header { padding-left: 70px; }
+            .info-card { padding: 20px; border-radius: 20px; }
+        }
+    </style>
+</head>
+
+<body>
+
+<header class="top-header">
+    <div style="font-weight: 700; font-size: 1.25rem; color: var(--text-main); letter-spacing: -0.8px;">Social Care+</div>
+</header>
+
+<button id="floatingMenuBtn" title="ลากเพื่อย้าย">เมนู</button>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebarFloat()"></div>
+<aside class="sidebar-float" id="sidebarFloat"></aside>
+
+<div class="content">
+    <div class="info-card">
+        <div class="btn-container">
+            <a class="btn-guide" href="https://static.vrcomseven.com/20260115/103822-%E0%B8%84%E0%B8%B9%E0%B9%88%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%95%E0%B8%B1%E0%B8%94%E0%B8%AA%E0%B8%B4%E0%B8%99%E0%B8%84%E0%B9%89%E0%B8%B2-Social-Care+-KJ9d.pdf" target="_blank">
+                📄 คลิ๊กเพื่อดู คู่มือการตัดขายผ่าน LS
+            </a>
+        </div>
+        
+        <img src="https://i.postimg.cc/nLD3JJCz/616575334-25491448347178839-7451669251559590402-n.jpg" class="responsive-img">
+        <img src="https://i.postimg.cc/38hRm4XK/CONTENT-SOCIAL-CARE-Jan-2026.jpg" class="responsive-img">
+        <img src="https://i.postimg.cc/GrrKhw0g/615758705-25491448370512170-2748739875965096788-n.jpg" class="responsive-img">
+        <img src="https://i.postimg.cc/Wj2mcGrQ/615429251-25491448410512166-7247742471364854088-n.jpg" class="responsive-img">
+        <img src="https://i.postimg.cc/XnydkQ6M/615556222-25491448413845499-6146352792300419636-n.jpg" class="responsive-img">
+    </div>
+
+    <footer>© 2026 Copy Right By Angerina Frog</footer>
+</div>
+
+<script>
+    const dragBtn = document.getElementById('floatingMenuBtn');
+    const sideFloat = document.getElementById('sidebarFloat');
+    const sideOverlay = document.getElementById('sidebarOverlay');
+    let isDragging = false;
+    let startX, startY;
+    let shiftX, shiftY;
+
+    // --- โหลดตำแหน่งปุ่มจาก LocalStorage ---
+    function loadButtonPosition() {
+        const savedLeft = localStorage.getItem('floatBtnLeft');
+        const savedTop = localStorage.getItem('floatBtnTop');
+        if (savedLeft && savedTop) {
+            dragBtn.style.left = savedLeft + 'px';
+            dragBtn.style.top = savedTop + 'px';
+        }
+    }
+
+    // --- ระบบลากปุ่มแบบ Smooth ---
+    dragBtn.onpointerdown = function(e) {
+        isDragging = false;
+        startX = e.clientX;
+        startY = e.clientY;
+        
+        const rect = dragBtn.getBoundingClientRect();
+        shiftX = e.clientX - rect.left;
+        shiftY = e.clientY - rect.top;
+
+        dragBtn.setPointerCapture(e.pointerId);
+        document.addEventListener('pointermove', onPointerMove);
+        document.addEventListener('pointerup', onPointerUp);
+    };
+
+    function onPointerMove(e) {
+        if (!isDragging && (Math.abs(e.clientX - startX) > 5 || Math.abs(e.clientY - startY) > 5)) {
+            isDragging = true;
+        }
+
+        if (isDragging) {
+            let newX = e.clientX - shiftX;
+            let newY = e.clientY - shiftY;
+            
+            newX = Math.max(0, Math.min(newX, window.innerWidth - dragBtn.offsetWidth));
+            newY = Math.max(0, Math.min(newY, window.innerHeight - dragBtn.offsetHeight));
+
+            dragBtn.style.left = newX + 'px';
+            dragBtn.style.top = newY + 'px';
+        }
+    }
+
+    function onPointerUp(e) {
+        document.removeEventListener('pointermove', onPointerMove);
+        document.removeEventListener('pointerup', onPointerUp);
+        dragBtn.releasePointerCapture(e.pointerId);
+
+        if (isDragging) {
+            localStorage.setItem('floatBtnLeft', dragBtn.offsetLeft);
+            localStorage.setItem('floatBtnTop', dragBtn.offsetTop);
+        } else {
+            toggleSidebarFloat();
+        }
+        isDragging = false;
+    }
+
+    // --- ระบบคำนวณตำแหน่งเมนูให้ตามปุ่ม ---
+    function toggleSidebarFloat() {
+        const btnRect = dragBtn.getBoundingClientRect();
+        const sidebarWidth = 280;
+        
+        let top = btnRect.bottom + 10;
+        let left = btnRect.left;
+
+        if (left + sidebarWidth > window.innerWidth) {
+            left = window.innerWidth - sidebarWidth - 15;
+        }
+        
+        if (top + 400 > window.innerHeight) {
+            top = btnRect.top - 410;
+            if (top < 10) top = 10;
+        }
+
+        sideFloat.style.top = top + 'px';
+        sideFloat.style.left = left + 'px';
+        
+        sideFloat.style.transformOrigin = `${btnRect.left - left + 20}px ${btnRect.top > top ? 'bottom' : 'top'}`;
+
+        const isActive = sideFloat.classList.toggle('active');
+        sideOverlay.classList.toggle('active', isActive);
+        
+        if (isActive && !sideFloat.innerHTML) loadSidebarContent();
+    }
+
+    function closeSidebarFloat() {
+        sideFloat.classList.remove('active');
+        sideOverlay.classList.remove('active');
+    }
+
+    function loadSidebarContent() {
+        const version = new Date().getTime(); 
+        fetch('sidebar.html?v=' + version)
+            .then(res => res.text())
+            .then(data => {
+                sideFloat.innerHTML = `<div class="sidebar-header">เมนูนำทาง</div>` + data;
+                // กู้คืนสถานะการเปิดเมนูย่อย
+                ['credit', 'branch', 'sales', 'device'].forEach(id => {
+                    if (localStorage.getItem('menu-' + id) === 'true') {
+                        const el = sideFloat.querySelector('#menu-' + id);
+                        if (el) el.classList.add('open');
+                    }
+                });
+            });
+    }
+
+    // ฟังก์ชันสำหรับเปิดปิดเมนูย่อย
+    window.toggleDrop = function(btn, id) {
+        const item = btn.parentElement;
+        const isOpen = item.classList.toggle("open");
+        if (id) localStorage.setItem('menu-' + id, isOpen);
+    }
+
+    document.addEventListener('DOMContentLoaded', loadButtonPosition);
+</script>
+
+</body>
+</html>
