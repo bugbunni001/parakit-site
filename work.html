@@ -313,6 +313,54 @@
         
         .btn-pin:hover:not(.active) { background: #ffe6c2; transform: translateY(-2px); }
 
+        /* Pagination Styles */
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin-top: 25px;
+            width: 100%;
+            max-width: 1300px;
+        }
+
+        .pagination-btn {
+            min-width: 40px;
+            height: 40px;
+            padding: 0 10px;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            background: rgba(255, 255, 255, 0.6);
+            color: var(--text-main);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pagination-btn:hover {
+            background: white;
+            border-color: var(--ios-blue);
+            color: var(--ios-blue);
+            transform: translateY(-2px);
+        }
+
+        .pagination-btn.active {
+            background: var(--ios-blue);
+            color: white;
+            border-color: var(--ios-blue);
+            box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+        }
+
+        .pagination-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
+
         .floating-controls {
             position: fixed;
             bottom: 25px;
@@ -370,6 +418,15 @@
         
         .detail-view-item { background: #f9f9f9; padding: 12px 15px; border-radius: 14px; border: 1.5px solid #f0f0f5; }
         .detail-view-item .val { font-size: 15px; font-weight: 600; color: var(--text-main); display: block; }
+
+        /* File list styles */
+        .file-list { margin-top: 10px; display: flex; flex-direction: column; gap: 5px; }
+        .file-item {
+            display: flex; justify-content: space-between; align-items: center;
+            background: #fff; padding: 8px 12px; border-radius: 10px; border: 1px solid #e5e5ea;
+            font-size: 13px;
+        }
+        .file-item .remove-file { color: var(--ios-red); cursor: pointer; font-size: 16px; padding-left: 10px; }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
     </style>
@@ -429,6 +486,8 @@
             </tbody>
         </table>
     </div>
+
+    <div id="pagination" class="pagination-container"></div>
     
     <p style="margin-top:30px; font-size:13px; color:rgba(0,0,0,0.5); font-weight: 500;">
         <i class="fa-solid fa-copyright"></i> 2026 Copyright by <strong>Angerina Frog</strong>
@@ -445,6 +504,12 @@
     ];
 
     let fullData = [];
+    let filteredData = [];
+    let currentPage = 1;
+    const itemsPerPage = 10;
+    
+    // Global variable for temporary file storage
+    let selectedFiles = [];
 
     const dragBtn = document.getElementById('floatingMenuBtn');
     const sideFloat = document.getElementById('sidebarFloat');
@@ -605,29 +670,25 @@
     function filterByDeadline(el) {
         document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
         const todayStr = fixDate(new Date());
-        const rows = document.getElementById('dataTable').getElementsByTagName('tr');
-        for (let i = 0; i < rows.length; i++) {
-            const rowDeadline = rows[i].getAttribute('data-deadline');
-            rows[i].style.display = (rowDeadline === todayStr) ? "" : "none";
-        }
+        filteredData = fullData.filter(row => fixDate(row[10]) === todayStr);
+        currentPage = 1;
+        renderTable();
     }
 
     function filterByPinned(el) {
         document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
         el.classList.add('active');
-        const rows = document.getElementById('dataTable').getElementsByTagName('tr');
-        for (let i = 0; i < rows.length; i++) {
-            rows[i].style.display = rows[i].querySelector('.btn-pin.active') ? "" : "none";
-        }
+        filteredData = fullData.filter(row => (row[7] === "true" || row[7] === true));
+        currentPage = 1;
+        renderTable();
     }
 
     function filterByProcessing(el) {
         document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
         el.classList.add('active');
-        const rows = document.getElementById('dataTable').getElementsByTagName('tr');
-        for (let i = 0; i < rows.length; i++) {
-            rows[i].style.display = rows[i].querySelector('.btn-process.active') ? "" : "none";
-        }
+        filteredData = fullData.filter(row => (row[9] === "true" || row[9] === true));
+        currentPage = 1;
+        renderTable();
     }
 
     function filterByType(type, el) {
@@ -639,89 +700,147 @@
 
     function filterData() {
         const filter = document.getElementById('searchInput').value.toLowerCase();
-        const rows = document.getElementById('dataTable').getElementsByTagName('tr');
-        for (let i = 0; i < rows.length; i++) {
-            const text = rows[i].textContent || rows[i].innerText;
-            rows[i].style.display = text.toLowerCase().includes(filter) ? "" : "none";
+        if (!filter) {
+            filteredData = [...fullData];
+        } else {
+            filteredData = fullData.filter(row => {
+                const text = row.join(' ').toLowerCase();
+                return text.includes(filter);
+            });
         }
+        currentPage = 1;
+        renderTable();
     }
 
-    // แก้ไข: loadData ให้รองรับการเก็บสถานะหน้าปัจจุบัน
     async function loadData(manual = false) {
         const tableBody = document.getElementById('dataTable');
         const refreshBtn = document.querySelector('.fa-rotate-right');
-        const scrollPos = window.scrollY; // เก็บตำแหน่ง Scroll
-        const currentSearch = document.getElementById('searchInput').value; // เก็บค่าค้นหา
+        const scrollPos = window.scrollY;
+        const currentSearch = document.getElementById('searchInput').value;
 
         if(refreshBtn) refreshBtn.classList.add('fa-spin');
         try {
             const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: "read"}) });
             const data = await res.json();
-            fullData = data;
-            tableBody.innerHTML = '';
             
-            data.sort((a, b) => {
+            // Sort Data
+            fullData = data.sort((a, b) => {
                 const pinA = (a[7] === "true" || a[7] === true);
                 const pinB = (b[7] === "true" || b[7] === true);
                 if (pinA && !pinB) return -1;
                 if (!pinA && pinB) return 1;
                 return new Date(b[0]) - new Date(a[0]);
-            }).forEach(row => {
-                const tr = document.createElement('tr');
-                const isPinned = (row[7] === "true" || row[7] === true);
-                const isProcessing = (row[9] === "true" || row[9] === true);
-                const reportId = row[11] || "-";
-                const rowJson = encodeURIComponent(JSON.stringify(row));
-                const deadlineDate = fixDate(row[10]);
-
-                tr.setAttribute('data-deadline', deadlineDate);
-                if (isPinned) tr.classList.add('pinned-row');
-
-                // แก้ไข: แสดงรูปภาพหลายรูป
-                let filesHtml = '-';
-                if (row[5]) {
-                    const urls = row[5].split(", ");
-                    filesHtml = urls.map((u, i) => `<a href="${u}" target="_blank" style="color:var(--ios-blue); text-decoration:none; margin-right:5px;"><i class="fa-solid fa-file"></i> ${i+1}</a>`).join('');
-                }
-
-                tr.innerHTML = `
-                    <td>
-                        <strong>${fixDate(row[0])}</strong>
-                        <span class="report-id-label">ID: ${reportId}</span>
-                    </td>
-                    <td><span class="job-type-badge">${row[8] || "ทั่วไป"}</span></td>
-                    <td onclick="showFullDetail('${rowJson}')" style="cursor:pointer; font-weight:600; color:var(--ios-blue);">${String(row[1]).replace(/^'/, '')}</td>
-                    <td onclick="showFullDetail('${rowJson}')" style="cursor:pointer;">${row[2]}<br><small style="color:#8e8e93">${String(row[3]).replace(/^'/, '')}</small></td>
-                    <td onclick="showFullDetail('${rowJson}')" style="cursor:pointer;">
-                        <div style="max-width:300px; max-height:100px; overflow:hidden; white-space:normal; display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; color:#666; font-size:13px; line-height:1.4;">${row[6] || "-"}</div>
-                    </td>
-                    <td>${row[4]}</td>
-                    <td>${filesHtml}</td>
-                    <td>
-                        <div class="action-btns-container">
-                            <div class="action-btns">
-                                <button class="btn-pin ${isPinned ? 'active' : ''}" onclick="togglePin('${reportId}')" title="ปักหมุด"><i class="fa-solid fa-thumbtack"></i></button>
-                                <button class="btn-process ${isProcessing ? 'active' : ''}" onclick="toggleProcessing('${reportId}')" title="กำลังดำเนินการ"><i class="fa-solid fa-clock-rotate-left"></i></button>
-                                <button class="btn-edit" onclick="editData('${rowJson}')" title="แก้ไขข้อมูล"><i class="fa-solid fa-pen-to-square"></i></button>
-                                <button class="btn-delete" onclick="deleteData('${reportId}')" title="ลบรายการ"><i class="fa-solid fa-trash"></i></button>
-                            </div>
-                            ${deadlineDate !== "-" ? `<span class="deadline-label-small">ครบกำหนด : ${deadlineDate}</span>` : ''}
-                        </div>
-                    </td>
-                `;
-                tableBody.appendChild(tr);
             });
-            updateStats(data);
+
+            filteredData = [...fullData];
+            updateStats(fullData);
             
-            // คืนค่าตำแหน่งการเลื่อนและสถานะค้นหา
-            if (!manual) {
+            if (!manual && currentSearch) {
                 document.getElementById('searchInput').value = currentSearch;
                 filterData();
-                window.scrollTo(0, scrollPos);
+            } else {
+                renderTable();
             }
+
+            if (!manual) window.scrollTo(0, scrollPos);
 
         } catch (e) { tableBody.innerHTML = '<tr><td colspan="8">โหลดข้อมูลไม่สำเร็จ</td></tr>'; }
         finally { if(refreshBtn) refreshBtn.classList.remove('fa-spin'); }
+    }
+
+    function renderTable() {
+        const tableBody = document.getElementById('dataTable');
+        tableBody.innerHTML = '';
+
+        if (filteredData.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:50px; color:#888;">ไม่พบข้อมูล</td></tr>';
+            renderPagination(0);
+            return;
+        }
+
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        const paginatedItems = filteredData.slice(startIndex, endIndex);
+
+        paginatedItems.forEach(row => {
+            const tr = document.createElement('tr');
+            const isPinned = (row[7] === "true" || row[7] === true);
+            const isProcessing = (row[9] === "true" || row[9] === true);
+            const reportId = row[11] || "-";
+            const rowJson = encodeURIComponent(JSON.stringify(row));
+            const deadlineDate = fixDate(row[10]);
+
+            tr.setAttribute('data-deadline', deadlineDate);
+            if (isPinned) tr.classList.add('pinned-row');
+
+            let filesHtml = '-';
+            if (row[5]) {
+                const urls = row[5].split(", ");
+                filesHtml = urls.map((u, i) => `<a href="${u}" target="_blank" style="color:var(--ios-blue); text-decoration:none; margin-right:5px;"><i class="fa-solid fa-file"></i> ${i+1}</a>`).join('');
+            }
+
+            tr.innerHTML = `
+                <td>
+                    <strong>${fixDate(row[0])}</strong>
+                    <span class="report-id-label">ID: ${reportId}</span>
+                </td>
+                <td><span class="job-type-badge">${row[8] || "ทั่วไป"}</span></td>
+                <td onclick="showFullDetail('${rowJson}')" style="cursor:pointer; font-weight:600; color:var(--ios-blue);">${String(row[1]).replace(/^'/, '')}</td>
+                <td onclick="showFullDetail('${rowJson}')" style="cursor:pointer;">${row[2]}<br><small style="color:#8e8e93">${String(row[3]).replace(/^'/, '')}</small></td>
+                <td onclick="showFullDetail('${rowJson}')" style="cursor:pointer;">
+                    <div style="max-width:300px; max-height:100px; overflow:hidden; white-space:normal; display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; color:#666; font-size:13px; line-height:1.4;">${row[6] || "-"}</div>
+                </td>
+                <td>${row[4]}</td>
+                <td>${filesHtml}</td>
+                <td>
+                    <div class="action-btns-container">
+                        <div class="action-btns">
+                            <button class="btn-pin ${isPinned ? 'active' : ''}" onclick="togglePin('${reportId}')" title="ปักหมุด"><i class="fa-solid fa-thumbtack"></i></button>
+                            <button class="btn-process ${isProcessing ? 'active' : ''}" onclick="toggleProcessing('${reportId}')" title="กำลังดำเนินการ"><i class="fa-solid fa-clock-rotate-left"></i></button>
+                            <button class="btn-edit" onclick="editData('${rowJson}')" title="แก้ไขข้อมูล"><i class="fa-solid fa-pen-to-square"></i></button>
+                            <button class="btn-delete" onclick="deleteData('${reportId}')" title="ลบรายการ"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                        ${deadlineDate !== "-" ? `<span class="deadline-label-small">ครบกำหนด : ${deadlineDate}</span>` : ''}
+                    </div>
+                </td>
+            `;
+            tableBody.appendChild(tr);
+        });
+
+        renderPagination(filteredData.length);
+    }
+
+    function renderPagination(totalItems) {
+        const paginationCon = document.getElementById('pagination');
+        paginationCon.innerHTML = '';
+        
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
+        if (totalPages <= 1) return;
+
+        // ปุ่มย้อนกลับ
+        const prevBtn = document.createElement('button');
+        prevBtn.className = 'pagination-btn';
+        prevBtn.innerHTML = '<i class="fa-solid fa-chevron-left"></i>';
+        prevBtn.disabled = currentPage === 1;
+        prevBtn.onclick = () => { currentPage--; renderTable(); scrollToTop(); };
+        paginationCon.appendChild(prevBtn);
+
+        // เลขหน้า
+        for (let i = 1; i <= totalPages; i++) {
+            const pageBtn = document.createElement('button');
+            pageBtn.className = `pagination-btn ${i === currentPage ? 'active' : ''}`;
+            pageBtn.innerText = i;
+            pageBtn.onclick = () => { currentPage = i; renderTable(); scrollToTop(); };
+            paginationCon.appendChild(pageBtn);
+        }
+
+        // ปุ่มถัดไป
+        const nextBtn = document.createElement('button');
+        nextBtn.className = 'pagination-btn';
+        nextBtn.innerHTML = '<i class="fa-solid fa-chevron-right"></i>';
+        nextBtn.disabled = currentPage === totalPages;
+        nextBtn.onclick = () => { currentPage++; renderTable(); scrollToTop(); };
+        paginationCon.appendChild(nextBtn);
     }
 
     async function toggleProcessing(reportId) {
@@ -818,10 +937,61 @@
         });
     }
 
+    // Function to handle file selection and update display
+    window.handleFileSelect = async function(event) {
+        const files = event.target.files;
+        const fileListDiv = document.getElementById('selectedFileList');
+        
+        for (let i = 0; i < files.length; i++) {
+            if (selectedFiles.length >= 3) {
+                Swal.showValidationMessage('แนบไฟล์ได้สูงสุด 3 ไฟล์เท่านั้น');
+                break;
+            }
+            
+            const file = files[i];
+            const reader = new FileReader();
+            
+            const filePromise = new Promise(resolve => {
+                reader.onload = () => resolve({
+                    name: file.name,
+                    data: reader.result,
+                    id: Date.now() + Math.random() // Unique ID for removal
+                });
+                reader.readAsDataURL(file);
+            });
+            
+            const fileObj = await filePromise;
+            selectedFiles.push(fileObj);
+        }
+        
+        // Clear input so same file can be selected again if removed
+        event.target.value = "";
+        renderSelectedFiles();
+    };
+
+    window.removeFile = function(id) {
+        selectedFiles = selectedFiles.filter(f => f.id !== id);
+        renderSelectedFiles();
+    };
+
+    function renderSelectedFiles() {
+        const fileListDiv = document.getElementById('selectedFileList');
+        if (!fileListDiv) return;
+        
+        fileListDiv.innerHTML = selectedFiles.map(file => `
+            <div class="file-item">
+                <span><i class="fa-solid fa-file"></i> ${file.name}</span>
+                <span class="remove-file" onclick="removeFile(${file.id})"><i class="fa-solid fa-circle-xmark"></i></span>
+            </div>
+        `).join('');
+    }
+
     window.openAddJobModal = function() {
+        selectedFiles = []; // Reset files
         let typeOptions = `<option value="">-- เลือกประเภทงาน --</option>`;
         jobTypes.forEach(t => { typeOptions += `<option value="${t}">${t}</option>`; });
         const newId = generateReportId();
+        
         Swal.fire({
             title: 'บันทึกงานใหม่ (ID: ' + newId + ')',
             customClass: { popup: 'swal-modal-custom' },
@@ -838,28 +1008,20 @@
                     <div><label class="swal-label">พนักงาน</label><select id="staff" class="swal-input-styled"><option value="">-- เลือก --</option><option value="ศุภกฤต">ศุภกฤต</option><option value="นวพล">นวพล</option><option value="ปิยะพร">ปิยะพร</option><option value="กรทักษ์">กรทักษ์</option></select></div>
                     <div class="swal-field-full"><label class="swal-label">วันครบกำหนดงาน</label><input type="date" id="deadline" class="swal-input-styled"></div>
                     <div class="swal-field-full"><label class="swal-label">รายละเอียด</label><textarea id="jobDetail" class="swal-input-styled" style="height:160px;"></textarea></div>
-                    <div class="swal-field-full"><label class="swal-label">แนบไฟล์ (สูงสุด 3 ไฟล์: รูปภาพ, PDF, Word, Excel)</label><input type="file" id="file" class="swal-input-styled" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" multiple></div>
+                    <div class="swal-field-full">
+                        <label class="swal-label">แนบไฟล์ (สูงสุด 3 ไฟล์: รูปภาพ, PDF, Word, Excel)</label>
+                        <input type="file" id="file" class="swal-input-styled" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" onchange="handleFileSelect(event)">
+                        <div id="selectedFileList" class="file-list"></div>
+                    </div>
                 </div>
             `,
             showCancelButton: true, confirmButtonText: 'บันทึกข้อมูล', preConfirm: async () => {
                 const vals = { reportId: newId, jobType: document.getElementById('jobType').value, date: document.getElementById('date').value, memberId: "'" + document.getElementById('memberId').value, name: document.getElementById('name').value, phone: "'" + document.getElementById('phone').value, staff: document.getElementById('staff').value, jobDetail: document.getElementById('jobDetail').value, deadline: document.getElementById('deadline').value };
                 
                 if (!vals.jobType || !vals.name || !vals.staff) { Swal.showValidationMessage('กรุณากรอกข้อมูลสำคัญ'); return false; }
+                if (selectedFiles.length > 3) { Swal.showValidationMessage('แนบไฟล์ได้สูงสุด 3 ไฟล์เท่านั้น'); return false; }
                 
-                const fileInput = document.getElementById('file');
-                if (fileInput.files.length > 3) { Swal.showValidationMessage('แนบไฟล์ได้สูงสุด 3 ไฟล์เท่านั้น'); return false; }
-
-                let files = [];
-                for (let i = 0; i < fileInput.files.length; i++) {
-                    const fileData = await new Promise(r => { 
-                        const rd = new FileReader(); 
-                        rd.onload = () => r(rd.result); 
-                        rd.readAsDataURL(fileInput.files[i]); 
-                    });
-                    files.push({ name: fileInput.files[i].name, data: fileData });
-                }
-                
-                return { action: "insert", ...vals, files: files };
+                return { action: "insert", ...vals, files: selectedFiles.map(f => ({name: f.name, data: f.data})) };
             }
         }).then(async (result) => {
             if (result.isConfirmed) {
