@@ -379,28 +379,14 @@
             background: rgba(255, 255, 255, 0.7);
             backdrop-filter: blur(10px);
             color: var(--ios-blue);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            font-size: 18px;
-            text-decoration: none;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); font-size: 18px; text-decoration: none;
         }
 
-        .btn-float:hover {
-            background: white;
-            transform: scale(1.1);
-            box-shadow: 0 6px 20px rgba(0,122,255,0.2);
-        }
+        .btn-float:hover { background: white; transform: scale(1.1); box-shadow: 0 6px 20px rgba(0,122,255,0.2); }
 
-        #btn-back-to-top {
-            opacity: 0;
-            visibility: hidden;
-            transform: translateY(20px);
-        }
-
+        #btn-back-to-top { opacity: 0; visibility: hidden; transform: translateY(20px); }
         #btn-back-to-top.show { opacity: 1; visibility: visible; transform: translateY(0); }
 
         .swal2-container { z-index: 9999 !important; }
@@ -419,7 +405,6 @@
         .detail-view-item { background: #f9f9f9; padding: 12px 15px; border-radius: 14px; border: 1.5px solid #f0f0f5; }
         .detail-view-item .val { font-size: 15px; font-weight: 600; color: var(--text-main); display: block; }
 
-        /* File list styles */
         .file-list { margin-top: 10px; display: flex; flex-direction: column; gap: 5px; }
         .file-item {
             display: flex; justify-content: space-between; align-items: center;
@@ -428,7 +413,6 @@
         }
         .file-item .remove-file { color: var(--ios-red); cursor: pointer; font-size: 16px; padding-left: 10px; }
         
-        /* Edit specific file styles */
         .existing-file-item { background: #f0f9ff; border-color: #bae6fd; }
         .existing-file-item i.fa-trash-can { color: var(--ios-red); }
 
@@ -512,8 +496,8 @@
     let currentPage = 1;
     const itemsPerPage = 10;
     
-    let selectedFiles = []; // For newly picked files
-    let existingFiles = []; // For files already on server
+    let selectedFiles = []; 
+    let existingFiles = []; 
 
     const dragBtn = document.getElementById('floatingMenuBtn');
     const sideFloat = document.getElementById('sidebarFloat');
@@ -707,7 +691,7 @@
         renderTable();
     }
 
-    async function loadData(manual = false) {
+    async function loadData(manual = false, stayAtPage = null) {
         const tableBody = document.getElementById('dataTable');
         const refreshBtn = document.querySelector('.fa-rotate-right');
         const scrollPos = window.scrollY;
@@ -725,10 +709,16 @@
             });
             filteredData = [...fullData];
             updateStats(fullData);
+            
+            if (stayAtPage) currentPage = stayAtPage;
+
             if (!manual && currentSearch) {
                 document.getElementById('searchInput').value = currentSearch;
-                filterData();
-            } else { renderTable(); }
+                const filter = currentSearch.toLowerCase();
+                filteredData = fullData.filter(row => row.join(' ').toLowerCase().includes(filter));
+            }
+
+            renderTable();
             if (!manual) window.scrollTo(0, scrollPos);
         } catch (e) { tableBody.innerHTML = '<tr><td colspan="8">โหลดข้อมูลไม่สำเร็จ</td></tr>'; }
         finally { if(refreshBtn) refreshBtn.classList.remove('fa-spin'); }
@@ -741,6 +731,10 @@
             tableBody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:50px; color:#888;">ไม่พบข้อมูล</td></tr>';
             renderPagination(0); return;
         }
+        
+        const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+        if (currentPage > totalPages && totalPages > 0) currentPage = totalPages;
+
         const startIndex = (currentPage - 1) * itemsPerPage;
         const endIndex = startIndex + itemsPerPage;
         const paginatedItems = filteredData.slice(startIndex, endIndex);
@@ -808,22 +802,25 @@
     }
 
     async function toggleProcessing(reportId) {
+        const pageToStay = currentPage;
         Swal.fire({title: 'กำลังดำเนินการ...', allowOutsideClick: false, allowEscapeKey: false, didOpen: () => Swal.showLoading()});
         try { 
             await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "toggleProcessing", reportId: reportId }) }); 
-            Swal.close(); loadData(); 
+            Swal.close(); loadData(false, pageToStay); 
         } catch (err) { Swal.fire({title: 'Error', icon: 'error', allowOutsideClick: false}); }
     }
 
     async function togglePin(reportId) {
+        const pageToStay = currentPage;
         Swal.fire({title: 'กำลังดำเนินการ...', allowOutsideClick: false, allowEscapeKey: false, didOpen: () => Swal.showLoading()});
         try { 
             await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "togglePin", reportId: reportId }) }); 
-            Swal.close(); loadData(); 
+            Swal.close(); loadData(false, pageToStay); 
         } catch (err) { Swal.fire({title: 'Error', icon: 'error', allowOutsideClick: false}); }
     }
 
     async function deleteData(reportId) {
+        const pageToStay = currentPage;
         const confirm = await Swal.fire({ 
             title: 'ยืนยันการลบ?', text: "ID: " + reportId, icon: 'warning', 
             showCancelButton: true, confirmButtonColor: '#FF3B30', confirmButtonText: 'ลบเลย',
@@ -832,7 +829,8 @@
         if (confirm.isConfirmed) {
             Swal.fire({title: 'กำลังลบ...', allowOutsideClick: false, allowEscapeKey: false, didOpen: () => Swal.showLoading()});
             await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: "delete", reportId: reportId}) });
-            Swal.fire({title: 'ลบแล้ว!', icon: 'success', timer: 1500, allowOutsideClick: false}); loadData();
+            Swal.fire({title: 'ลบแล้ว!', icon: 'success', timer: 1500, allowOutsideClick: false}); 
+            loadData(false, pageToStay);
         }
     }
 
@@ -865,11 +863,10 @@
         }).then((result) => { if (result.isConfirmed) editData(rowJson); });
     }
 
-    // Function to handle file selection and update display
     window.handleFileSelect = async function(event) {
         const files = event.target.files;
         for (let i = 0; i < files.length; i++) {
-            if (selectedFiles.length + existingFiles.length >= 5) { // Increased limit slightly for flexibility
+            if (selectedFiles.length + existingFiles.length >= 5) { 
                 Swal.showValidationMessage('แนบไฟล์รวมได้สูงสุด 5 ไฟล์เท่านั้น'); break; 
             }
             const file = files[i];
@@ -890,7 +887,6 @@
         renderSelectedFiles();
     };
     
-    // Function to remove existing file from current list
     window.removeExistingFile = function(url) {
         existingFiles = existingFiles.filter(u => u !== url);
         renderSelectedFiles();
@@ -899,10 +895,7 @@
     function renderSelectedFiles() {
         const fileListDiv = document.getElementById('selectedFileList');
         if (!fileListDiv) return;
-        
         let html = '';
-        
-        // Show existing files (from server)
         existingFiles.forEach((url, idx) => {
             html += `
                 <div class="file-item existing-file-item">
@@ -915,8 +908,6 @@
                 </div>
             `;
         });
-        
-        // Show newly selected files (local)
         selectedFiles.forEach(file => {
             html += `
                 <div class="file-item">
@@ -925,13 +916,12 @@
                 </div>
             `;
         });
-        
         fileListDiv.innerHTML = html;
     }
 
     window.openAddJobModal = function() {
         selectedFiles = [];
-        existingFiles = []; // Clear
+        existingFiles = []; 
         let typeOptions = `<option value="">-- เลือกประเภทงาน --</option>`;
         jobTypes.forEach(t => { typeOptions += `<option value="${t}">${t}</option>`; });
         const newId = generateReportId();
@@ -970,15 +960,13 @@
         });
     }
 
-    // Update editData to support file deletion
     window.editData = function(rowJson) {
         const item = JSON.parse(decodeURIComponent(rowJson));
+        const pageToStay = currentPage;
         selectedFiles = []; 
-        existingFiles = item[5] ? item[5].split(", ") : []; // Load server files
-        
+        existingFiles = item[5] ? item[5].split(", ") : []; 
         let typeOptions = `<option value="">-- เลือกประเภทงาน --</option>`;
         jobTypes.forEach(t => { typeOptions += `<option value="${t}" ${item[8] === t ? 'selected' : ''}>${t}</option>`; });
-        
         Swal.fire({
             title: 'แก้ไขข้อมูล: ' + (item[11] || ''),
             customClass: { popup: 'swal-modal-custom' }, width: '700px',
@@ -1015,7 +1003,7 @@
                     jobDetail: document.getElementById('swal-jobDetail').value, 
                     jobType: document.getElementById('swal-jobType').value, 
                     deadline: document.getElementById('swal-deadline').value,
-                    existingFiles: existingFiles, // Send back the list of files to KEEP
+                    existingFiles: existingFiles, 
                     files: selectedFiles.map(f => ({name: f.name, data: f.data})) 
                 };
             }
@@ -1023,7 +1011,8 @@
             if (result.isConfirmed) {
                 Swal.fire({title: 'กำลังอัพเดท...', allowOutsideClick: false, allowEscapeKey: false, didOpen: () => Swal.showLoading()});
                 await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(result.value) });
-                Swal.fire({title: 'สำเร็จ', icon: 'success', timer: 1500, allowOutsideClick: false}); loadData();
+                Swal.fire({title: 'สำเร็จ', icon: 'success', timer: 1500, allowOutsideClick: false}); 
+                loadData(false, pageToStay);
             }
         });
     }
