@@ -12,21 +12,47 @@
         :root {
             --ios-blue: #007aff; 
             --ios-bg: #f5f5f7; 
-            --sidebar-dark: rgba(28, 28, 30, 0.96); 
+            --sidebar-dark: rgba(28, 28, 30, 0.94);
             --glass-white: rgba(255, 255, 255, 0.85); 
             --glass-border: rgba(255, 255, 255, 0.5);
             --text-main: #1d1d1f; 
             --text-light: #86868b; 
             --ios-red: #ff3b30; 
             --ios-green: #34c759;
-            --card-shadow: 0 8px 32px rgba(0,0,0,0.08);
-            --transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-swift: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-bounce: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        
+        * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; -webkit-tap-highlight-color: transparent; }
+        
+        body { 
+            margin: 0; 
+            background-color: var(--ios-bg); 
+            color: var(--text-main); 
+            -webkit-font-smoothing: antialiased; 
+            min-height: 100vh;
+            font-size: 14px;
+            padding-bottom: 60px;
+            overflow-x: hidden;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
-        body { background: var(--ios-bg); color: var(--text-main); min-height: 100vh; display: flex; overflow-x: hidden; }
+        /* ===== Header Navbar ===== */
+        .top-header {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            padding: 0 20px 0 75px; 
+            border-bottom: 0.5px solid rgba(0,0,0,0.1);
+        }
 
-        /* ===== FLOATING SIDEBAR SYSTEM (New) ===== */
+        /* ===== Floating Menu & Sidebar ===== */
         #floatingMenuBtn {
             position: fixed;
             top: 10px;
@@ -39,43 +65,43 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
-            cursor: move;
+            font-size: 14px;
+            cursor: grab;
             z-index: 2100;
             box-shadow: 0 4px 15px rgba(0, 122, 255, 0.4);
             border: none;
             touch-action: none;
-            transition: transform 0.2s, opacity 0.2s;
+            will-change: transform;
         }
-        #floatingMenuBtn:active { transform: scale(0.9); }
+        #floatingMenuBtn:active { cursor: grabbing; }
 
         .sidebar-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.2);
+            background: rgba(0,0,0,0.3);
             z-index: 2000;
             display: none;
             opacity: 0;
-            transition: opacity 0.3s;
+            transition: opacity 0.3s ease;
+            backdrop-filter: blur(4px);
         }
         .sidebar-overlay.active { display: block; opacity: 1; }
 
         .sidebar-float {
             position: fixed;
             width: 280px;
-            max-height: 70vh;
+            max-height: 75vh;
             background: var(--sidebar-dark);
             border-radius: 20px;
             overflow-y: auto;
             z-index: 2001;
             opacity: 0;
             visibility: hidden;
-            transform: scale(0.8) translateY(10px);
+            transform: scale(0.9) translateY(10px);
             transition: opacity 0.3s, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
             border: 1px solid rgba(255,255,255,0.1);
-            scrollbar-width: thin;
-            scrollbar-color: rgba(255,255,255,0.2) transparent;
+            backdrop-filter: blur(20px);
         }
         .sidebar-float.active {
             opacity: 1;
@@ -83,357 +109,496 @@
             transform: scale(1) translateY(0);
         }
 
+        /* Sidebar Internal Styles */
         .sidebar-float .sidebar-header { padding: 20px; font-size: 17px; font-weight: 600; color: #fff; border-bottom: 0.5px solid rgba(255,255,255,0.1); }
         .sidebar-float .menu { padding: 8px 0; }
         .sidebar-float .menu a, .sidebar-float .drop-btn { 
-            width: 100%; padding: 12px 20px; background: none; border: none; 
+            width: 100%; padding: 14px 20px; background: none; border: none; 
             color: #ebebf5; text-align: left; font-size: 14px; cursor: pointer; 
             display: flex; align-items: center; text-decoration: none; transition: 0.2s;
         }
-        .sidebar-float .menu a:hover, .sidebar-float .drop-btn:hover { background: rgba(255,255,255,0.1); }
-        .sidebar-float .sub { display: none; background: rgba(0,0,0,0.2); }
+        .sidebar-float .menu a:hover, .sidebar-float .drop-btn:hover { background: rgba(255,255,255,0.15); }
+        .sidebar-float .sub { display: none; background: rgba(0,0,0,0.3); }
         .sidebar-float .item.open .sub { display: block; }
         .sidebar-float .sub a { padding-left: 45px; font-size: 13px; color: #8e8e93; }
 
-        /* ===== MAIN CONTENT ===== */
-        .main-content { flex: 1; padding: 30px; width: 100%; transition: var(--transition); }
-        .header { margin-bottom: 30px; padding-top: 40px; }
-        .header h1 { font-size: 28px; font-weight: 600; color: var(--text-main); }
-        .header p { color: var(--text-light); font-size: 14px; }
+        /* ===== Content Styles ===== */
+        .content { padding: 80px 15px 40px; max-width: 1300px; margin: 0 auto; animation: fadeUp 0.5s ease-out; }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .glass-card {
-            background: var(--glass-white);
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
-            border-radius: 20px; padding: 25px;
-            box-shadow: var(--card-shadow); margin-bottom: 25px;
+        .summary-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px; margin-bottom: 30px;
         }
-
-        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
-        .input-group { display: flex; flex-direction: column; gap: 8px; }
-        .input-group label { font-size: 13px; font-weight: 500; color: var(--text-light); padding-left: 4px; }
-        .input-group input, .input-group select {
-            padding: 12px 16px; border-radius: 12px; border: 1px solid #e5e5e7;
-            background: #fff; font-size: 15px; outline: none; transition: 0.3s;
+        .summary-card { 
+            background: #fff; padding: 16px; border-radius: 18px; 
+            border: 1px solid rgba(0,0,0,0.02); box-shadow: var(--card-shadow);
+            transition: var(--transition); display: flex; flex-direction: column; gap: 4px;
         }
-        .input-group input:focus, .input-group select:focus { border-color: var(--ios-blue); box-shadow: 0 0 0 4px rgba(0,122,255,0.1); }
+        .summary-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.06); }
+        .summary-name { font-size: 13px; color: var(--text-light); font-weight: 500; }
+        .summary-val { font-size: 22px; font-weight: 700; color: var(--text-main); letter-spacing: -0.3px; }
 
-        .btn {
-            padding: 12px 24px; border-radius: 12px; border: none; font-size: 15px;
-            font-weight: 500; cursor: pointer; transition: all 0.2s; display: flex;
-            align-items: center; justify-content: center; gap: 8px;
+        .action-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; gap: 10px; }
+        .btn-add {
+            background: var(--ios-blue); color: white; border: none; padding: 10px 20px; 
+            border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer;
+            transition: var(--transition); box-shadow: 0 4px 10px rgba(0, 122, 255, 0.2);
+            display: flex; align-items: center; gap: 8px;
         }
-        .btn-primary { background: var(--ios-blue); color: #fff; width: 100%; }
-        .btn-primary:hover { background: #0066d6; transform: translateY(-1px); }
-        .btn-primary:active { transform: translateY(0); }
+        .btn-add:hover { transform: translateY(-2px); filter: brightness(1.05); }
 
-        .table-container { overflow-x: auto; margin-top: 10px; }
+        .table-box { background: #fff; padding: 20px; border-radius: 20px; box-shadow: var(--card-shadow); border: 1px solid rgba(0,0,0,0.02); }
+        .table-container { border-radius: 14px; border: 1px solid #f0f0f5; overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; min-width: 800px; }
-        th { text-align: left; padding: 15px; font-size: 13px; font-weight: 500; color: var(--text-light); border-bottom: 1px solid #e5e5e7; }
-        td { padding: 15px; font-size: 14px; color: var(--text-main); border-bottom: 1px solid #f2f2f7; }
-        
-        tr.selected { background: rgba(0,122,255,0.05); }
-        .badge { padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: 500; }
-        .badge-red { background: #fff5f5; color: var(--ios-red); }
-        
-        .action-btns { display: flex; gap: 8px; }
-        .icon-btn { 
-            width: 32px; height: 32px; border-radius: 8px; border: none; 
-            display: flex; align-items: center; justify-content: center; 
-            cursor: pointer; transition: 0.2s; background: #f2f2f7;
-        }
-        .icon-btn:hover { background: #e5e5e7; }
-        .icon-btn.delete:hover { background: #fff5f5; color: var(--ios-red); }
+        th { padding: 14px 15px; text-align: left; color: var(--text-light); font-size: 12px; background: #fafafa; font-weight: 600; text-transform: uppercase; }
+        td { padding: 14px 15px; border-bottom: 1px solid #f2f2f7; font-size: 14px; }
+        tr:hover td { background-color: #fcfcfd; }
 
-        /* Popup Status */
-        .status-popup {
-            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px);
-            background: var(--sidebar-dark); color: #fff; padding: 16px 24px;
-            border-radius: 16px; display: flex; align-items: center; gap: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 3000; transition: var(--transition);
+        .btn-delete { 
+            background: #fff1f0; border: none; color: var(--ios-red); 
+            width: 32px; height: 32px; border-radius: 8px; cursor: pointer; 
+            display: flex; align-items: center; justify-content: center;
+            transition: var(--transition);
         }
-        .status-popup.show { transform: translateX(-50%) translateY(0); }
+        .btn-delete:hover { background: var(--ios-red); color: white; }
 
-        #loading {
-            position: fixed; inset: 0; background: rgba(255,255,255,0.8);
-            backdrop-filter: blur(5px); z-index: 4000; display: none;
-            flex-direction: column; align-items: center; justify-content: center; gap: 15px;
-        }
-        .spinner { width: 30px; height: 30px; border: 3px solid #f3f3f3; border-top: 3px solid var(--ios-blue); border-radius: 50%; animation: spin 1s linear infinite; }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
+        /* Modals */
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.35); display: none; align-items: center; justify-content: center; z-index: 3000; padding: 15px; backdrop-filter: blur(8px); }
+        .modal.show { display: flex; }
+        .form-container { background: #fff; padding: 28px; border-radius: 24px; width: 100%; max-width: 440px; box-shadow: 0 20px 60px rgba(0,0,0,0.15); animation: modalPop 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes modalPop { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+        input, select { width: 100%; padding: 12px; border: 1.5px solid #f2f2f7; border-radius: 12px; font-size: 14px; background: #f9f9fb; transition: var(--transition); }
+        input:focus, select:focus { border-color: var(--ios-blue); background: #fff; outline: none; }
+        
+        .btn-submit { width: 100%; padding: 14px; border: none; border-radius: 14px; background: var(--ios-blue); color: white; font-size: 15px; font-weight: 600; cursor: pointer; transition: var(--transition); }
+        .btn-submit:hover { transform: translateY(-2px); filter: brightness(1.05); }
+
+        .pagination-btn { border: none; background: #f2f2f7; color: var(--text-main); padding: 8px 14px; border-radius: 8px; cursor: pointer; font-weight: 500; transition: 0.2s; }
+        .pagination-btn.active { background: var(--ios-blue); color: white; }
+
+        .spinner { width: 30px; height: 30px; border: 3px solid #f2f2f7; border-top-color: var(--ios-blue); border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        footer { text-align: center; padding: 60px 20px; color: var(--text-light); font-size: 12px; }
 
         @media (max-width: 768px) {
-            .main-content { padding: 15px; }
-            .form-grid { grid-template-columns: 1fr; }
+            .top-header { padding-left: 70px; }
+            .summary-grid { grid-template-columns: repeat(2, 1fr); }
         }
     </style>
 </head>
 <body>
 
-<button id="floatingMenuBtn" title="ลากเพื่อย้าย">เมนู</button>
+<header class="top-header">
+    <div style="font-weight: 700; font-size: 1.25rem; color: var(--text-main); letter-spacing: -0.8px;">ระบบหักเงิน</div>
+</header>
+
+<button id="floatingMenuBtn">เมนู</button>
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebarFloat()"></div>
 <aside class="sidebar-float" id="sidebarFloat"></aside>
 
-<div id="loading">
-    <div class="spinner"></div>
-    <p>กำลังดำเนินการ...</p>
-</div>
-
-<main class="main-content">
-    <header class="header">
-        <h1>บันทึกการหักเงิน</h1>
-        <p>จัดการข้อมูลรายการหักเงินพนักงานและค่าใช้จ่ายสาขา</p>
-    </header>
-
-    <div class="glass-card">
-        <form id="deductionForm">
-            <input type="hidden" id="editRowIndex">
-            <div class="form-grid">
-                <div class="input-group">
-                    <label>วันที่</label>
-                    <input type="date" id="date" required>
-                </div>
-                <div class="input-group">
-                    <label>สาขา</label>
-                    <select id="branch" required>
-                        <option value="">เลือกสาขา</option>
-                        <option value="สำนักงานใหญ่">สำนักงานใหญ่</option>
-                        <option value="สาขาพัทยา">สาขาพัทยา</option>
-                        <option value="สาขาชลบุรี">สาขาชลบุรี</option>
-                        <option value="สาขาระยอง">สาขาระยอง</option>
-                    </select>
-                </div>
-                <div class="input-group">
-                    <label>ประเภทรายการ</label>
-                    <select id="type" required>
-                        <option value="">เลือกประเภท</option>
-                        <option value="ขาดงาน">ขาดงาน</option>
-                        <option value="มาสาย">มาสาย</option>
-                        <option value="อุปกรณ์เสียหาย">อุปกรณ์เสียหาย</option>
-                        <option value="อื่นๆ">อื่นๆ</option>
-                    </select>
-                </div>
-                <div class="input-group">
-                    <label>ชื่อพนักงาน / รายการ</label>
-                    <input type="text" id="name" placeholder="ระบุชื่อหรือรายการ" required>
-                </div>
-                <div class="input-group">
-                    <label>จำนวนเงิน (บาท)</label>
-                    <input type="number" id="amount" placeholder="0.00" step="0.01" required>
-                </div>
-            </div>
-            <div class="input-group" style="margin-bottom: 20px;">
-                <label>หมายเหตุ</label>
-                <input type="text" id="note" placeholder="ระบุรายละเอียดเพิ่มเติม (ถ้ามี)">
-            </div>
-            <button type="submit" class="btn btn-primary" id="submitBtn">
-                <span id="btnText">บันทึกข้อมูล</span>
-            </button>
-        </form>
+<div class="content">
+    <div class="section-header">
+        <div style="font-size: 11px; font-weight: 700; color: var(--text-light); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;">Overview</div>
+        <div class="summary-grid">
+            <div class="summary-card"><div class="summary-name">ศุภกฤต</div><div class="summary-val" id="sum-ศุภกฤต">0 ฿</div></div>
+            <div class="summary-card"><div class="summary-name">นวพล</div><div class="summary-val" id="sum-นวพล">0 ฿</div></div>
+            <div class="summary-card"><div class="summary-name">ปิยะพร</div><div class="summary-val" id="sum-ปิยะพร">0 ฿</div></div>
+            <div class="summary-card"><div class="summary-name">กรทักษ์</div><div class="summary-val" id="sum-กรทักษ์">0 ฿</div></div>
+            <div class="summary-card"><div class="summary-name">จิดาภา</div><div class="summary-val" id="sum-จิดาภา">0 ฿</div></div>
+        </div>
     </div>
 
-    <div class="glass-card">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h2 style="font-size: 18px; font-weight: 600;">รายการล่าสุด</h2>
-            <button class="btn" style="background: var(--ios-red); color: #fff; padding: 8px 16px; font-size: 13px;" onclick="bulkDeleteData()">ลบที่เลือก</button>
+    <div class="action-bar">
+        <h3 style="margin:0; font-size: 20px; font-weight: 700; letter-spacing: -0.5px;">รายการบันทึก</h3>
+        <button class="btn-add" onclick="openForm()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            เพิ่มข้อมูล
+        </button>
+    </div>
+
+    <div class="table-box">
+        <div class="table-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <button id="bulkDeleteBtn" class="btn-bulk-delete" onclick="openAuthPopup('bulkDelete')" style="display: none; background: var(--ios-red); color:white; border:none; padding:8px 15px; border-radius:10px; font-size:13px; cursor:pointer;">ลบที่เลือก (<span id="selectedCount">0</span>)</button>
+            <div style="flex-grow: 1;"></div>
+            <button onclick="fetchData(true)" style="background:none; border:none; color:var(--ios-blue); font-weight:600; cursor:pointer; font-size:13px; padding: 6px 10px; border-radius: 8px;">รีเฟรชข้อมูล</button>
         </div>
+        
         <div class="table-container">
             <table>
                 <thead>
                     <tr>
-                        <th style="width: 40px;"><input type="checkbox" id="selectAll"></th>
-                        <th>วันที่</th>
-                        <th>สาขา</th>
-                        <th>ประเภท</th>
-                        <th>รายการ</th>
-                        <th>จำนวนเงิน</th>
-                        <th>หมายเหตุ</th>
-                        <th>จัดการ</th>
+                        <th style="width:40px; text-align:center;"><input type="checkbox" id="selectAll" onclick="toggleSelectAll(this)"></th>
+                        <th>วันที่</th><th>พนักงาน</th><th>เหตุผล</th><th>หมายเหตุ</th><th>หักเงิน</th><th style="width:50px;"></th>
                     </tr>
                 </thead>
                 <tbody id="tableBody">
-                    </tbody>
+                    <tr><td colspan="7" style="text-align:center; padding:50px;"><div class="spinner" style="margin:0 auto;"></div></td></tr>
+                </tbody>
             </table>
         </div>
-    </div>
-</main>
-
-<div id="statusPopup" class="status-popup">
-    <div id="statusIcon"></div>
-    <div>
-        <h4 id="statusTitle" style="font-size: 15px; margin-bottom: 2px;"></h4>
-        <p id="statusText" style="font-size: 13px; opacity: 0.8;"></p>
+        <div class="pagination" id="paginationContainer" style="display:flex; justify-content:center; gap:6px; margin-top:20px;"></div>
     </div>
 </div>
 
+<div class="modal" id="formModal" onclick="if(event.target==this) closeForm()">
+    <div class="form-container">
+        <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:20px;">
+            <div>
+                <h3 style="margin: 0; font-size: 20px; font-weight:700;">ลงข้อมูลการหักเงิน</h3>
+                <p style="color: var(--text-light); font-size: 13px; margin-top: 4px;">กรอกรายละเอียดให้ครบถ้วน</p>
+            </div>
+            <button onclick="closeForm()" style="background:#f2f2f7; border:none; width:30px; height:30px; border-radius:50%; cursor:pointer;">×</button>
+        </div>
+        <form id="deductionForm" onsubmit="event.preventDefault(); openAuthPopup('submit');">
+            <div style="display:grid; gap:16px; margin-bottom:24px;">
+                <div><label style="display:block; font-size:13px; font-weight:600; margin-bottom:5px;">วันที่ดำเนินการ</label><input type="date" id="date" required></div>
+                <div>
+                    <label style="display:block; font-size:13px; font-weight:600; margin-bottom:5px;">พนักงาน</label>
+                    <select id="employee" required>
+                        <option value="" disabled selected>-- เลือกรายชื่อ --</option>
+                        <option value="ศุภกฤต">ศุภกฤต</option>
+                        <option value="นวพล">นวพล</option>
+                        <option value="ปิยะพร">ปิยะพร</option>
+                        <option value="กรทักษ์">กรทักษ์</option>
+                        <option value="จิดาภา">จิดาภา</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="display:block; font-size:13px; font-weight:600; margin-bottom:5px;">เหตุผลหลัก</label>
+                    <select id="reason" onchange="checkReason(this)" required>
+                        <option value="" disabled selected>-- ระบุเหตุผล --</option>
+                        <option value="มาสาย">มาสาย</option>
+                        <option value="ไม่ลงเวลาเข้า-ออกงาน">ไม่ลงเวลาเข้า-ออกงาน</option>
+                        <option value="ยอดขายไม่เป็นไปตามตกลง">ยอดขายไม่เป็นไปตามตกลง</option>
+                        <option value="มี Score 1">มี Score 1</option>
+                        <option value="Retention %ต่ำกว่า 88%">Retention %ต่ำกว่า 88%</option>
+                        <option value="TVS NOW ไม่มียอด">TVS NOW ไม่มียอด</option>
+                        <option value="แต่งกายไม่ถูกระเบียบ">แต่งกายไม่ถูกระเบียบ</option>
+                        <option value="อื่นๆ">อื่นๆ</option>
+                    </select>
+                </div>
+                <div id="otherReasonContainer" style="display:none;">
+                    <label style="display:block; font-size:13px; font-weight:600; margin-bottom:5px;">ระบุเหตุผลเพิ่มเติม</label>
+                    <input type="text" id="otherReason" placeholder="ระบุเหตุผล...">
+                </div>
+                <div>
+                    <label style="display:block; font-size:13px; font-weight:600; margin-bottom:5px;">จำนวนเงิน (THB)</label>
+                    <select id="amount" required>
+                        <option value="" disabled selected>-- เลือกยอดเงิน --</option>
+                        <option value="10">10 ฿</option><option value="20">20 ฿</option>
+                        <option value="30">30 ฿</option><option value="50">50 ฿</option>
+                    </select>
+                </div>
+            </div>
+            <button type="submit" class="btn-submit">ยืนยันการบันทึกข้อมูล</button>
+        </form>
+    </div>
+</div>
+
+<div class="popup" id="authPopup" style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 4000; backdrop-filter: blur(8px);">
+    <div style="background:#fff; padding:24px; border-radius:24px; text-align:center; max-width:340px; width:100%;">
+        <div id="otpSelectAdmin">
+            <h3 style="margin-top:0; font-size: 18px;">ยืนยันตัวตน</h3>
+            <p style="color:var(--text-light); font-size:14px; margin-bottom:20px;">เลือก Admin เพื่อรับรหัส OTP</p>
+            <select id="adminEmailSelect" style="margin-bottom: 20px;">
+                <option value="" disabled selected>-- เลือกผู้รับรหัส --</option>
+                <option value="book016boat@gmail.com">ศุภกฤต (Admin)</option>
+                <option value="malikastory2542@gmail.com">ปิยะพร (Admin)</option>
+            </select>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-submit" style="background:#f2f2f7; color:#3a3a3c; margin:0;" onclick="closeAuthPopup()">ยกเลิก</button>
+                <button class="btn-submit" style="margin:0;" onclick="sendOTPRequest()">รับรหัส</button>
+            </div>
+        </div>
+        <div id="otpInputForm" style="display:none;">
+            <h3 style="margin-top:0; font-size: 18px;">กรอกรหัส OTP</h3>
+            <p style="color:var(--text-light); font-size:14px; margin-bottom:20px;">รหัส 6 หลักส่งไปที่อีเมลแล้ว</p>
+            <input type="text" id="otpInput" maxlength="6" placeholder="******" style="text-align:center; font-size:24px; letter-spacing:10px; margin-bottom:20px;">
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-submit" style="background:#f2f2f7; color:#3a3a3c; margin:0;" onclick="resetAuthPopup()">ย้อนกลับ</button>
+                <button class="btn-submit" style="margin:0;" onclick="verifyOTP()">ยืนยัน</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="loading" style="display:none; position:fixed; inset:0; background:rgba(255,255,255,0.7); backdrop-filter:blur(10px); z-index:9000; align-items:center; justify-content:center; flex-direction:column; gap:15px;">
+    <div class="spinner"></div>
+    <div style="font-weight:600; color:var(--ios-blue);">กำลังดำเนินการ...</div>
+</div>
+
+<div id="statusPopup" class="modal" onclick="if(event.target==this) closeStatusPopup()">
+    <div class="form-container" style="text-align:center; max-width:320px;">
+        <div id="statusIcon" style="font-size:50px; margin-bottom:15px;"></div>
+        <h3 id="statusTitle" style="margin:0 0 10px 0; font-size:20px;"></h3>
+        <p id="statusText" style="color:var(--text-light); margin:0 0 25px 0;"></p>
+        <button class="btn-submit" onclick="closeStatusPopup()">ตกลง</button>
+    </div>
+</div>
+
+<footer>&copy; 2025 Parakit-site System. All rights reserved.</footer>
+
 <script>
-    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxIDn-4Yn42YhA6F3C1x9Q4-pX1-yX4-yX4-yX4-yX4-yX4/exec"; 
-    let selectedRows = new Set();
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbygRgKpmN0uecI2DF91tX6i5g4UJ9XXmlFltV-W1S-a4hNK10y5IxWQ6RP-GFsUbkS9tQ/exec";
+    let allData = [];
+    let selectedRows = [];
+    let currentAuthAction = null;
+    let currentAuthIndex = null;
+    let generatedOTP = null;
+    let currentPage = 1;
+    const rowsPerPage = 7;
+
     const svgIcons = {
-        edit: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`,
-        delete: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>`,
-        success: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#34c759" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>`,
-        error: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff3b30" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`
+        success: '<svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#34c759" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>',
+        error: '<svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#ff3b30" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>'
     };
 
-    // --- NEW FLOATING SIDEBAR JS ---
-    const dragBtn = document.getElementById('floatingMenuBtn');
+    // --- Optimized Sidebar & Drag System ---
+    const floatingBtn = document.getElementById('floatingMenuBtn');
     const sideFloat = document.getElementById('sidebarFloat');
     const sideOverlay = document.getElementById('sidebarOverlay');
+    
     let isDragging = false;
-    let startX, startY, shiftX, shiftY;
+    let startX, startY, xOffset = 0, yOffset = 0;
+    let startTime;
 
-    function loadButtonPosition() {
-        const savedLeft = localStorage.getItem('floatBtnLeft');
-        const savedTop = localStorage.getItem('floatBtnTop');
-        if (savedLeft && savedTop) {
-            dragBtn.style.left = savedLeft + 'px';
-            dragBtn.style.top = savedTop + 'px';
+    // Load Position
+    const savedPos = localStorage.getItem('menuPos');
+    if (savedPos) {
+        const pos = JSON.parse(savedPos);
+        xOffset = pos.x; yOffset = pos.y;
+        floatingBtn.style.transform = `translate3d(${xOffset}px, ${yOffset}px, 0)`;
+    }
+
+    floatingBtn.addEventListener('mousedown', dragStart);
+    floatingBtn.addEventListener('touchstart', dragStart, {passive: false});
+
+    function dragStart(e) {
+        startTime = Date.now();
+        const clientX = e.type === "touchstart" ? e.touches[0].clientX : e.clientX;
+        const clientY = e.type === "touchstart" ? e.touches[0].clientY : e.clientY;
+        startX = clientX - xOffset;
+        startY = clientY - yOffset;
+        
+        if (e.target === floatingBtn) {
+            isDragging = true;
+            document.addEventListener('mousemove', drag);
+            document.addEventListener('touchmove', drag, {passive: false});
+            document.addEventListener('mouseup', dragEnd);
+            document.addEventListener('touchend', dragEnd);
         }
     }
 
-    dragBtn.onpointerdown = function(e) {
-        isDragging = false;
-        startX = e.clientX; startY = e.clientY;
-        const rect = dragBtn.getBoundingClientRect();
-        shiftX = e.clientX - rect.left;
-        shiftY = e.clientY - rect.top;
-        dragBtn.setPointerCapture(e.pointerId);
-        document.addEventListener('pointermove', onPointerMove);
-        document.addEventListener('pointerup', onPointerUp);
-    };
-
-    function onPointerMove(e) {
-        if (!isDragging && (Math.abs(e.clientX - startX) > 5 || Math.abs(e.clientY - startY) > 5)) isDragging = true;
+    function drag(e) {
         if (isDragging) {
-            let newX = e.clientX - shiftX;
-            let newY = e.clientY - shiftY;
-            newX = Math.max(0, Math.min(newX, window.innerWidth - dragBtn.offsetWidth));
-            newY = Math.max(0, Math.min(newY, window.innerHeight - dragBtn.offsetHeight));
-            dragBtn.style.left = newX + 'px';
-            dragBtn.style.top = newY + 'px';
+            if (e.type === "touchmove") e.preventDefault();
+            const clientX = e.type === "touchmove" ? e.touches[0].clientX : e.clientX;
+            const clientY = e.type === "touchmove" ? e.touches[0].clientY : e.clientY;
+            
+            xOffset = clientX - startX;
+            yOffset = clientY - startY;
+
+            // Use requestAnimationFrame for 60fps performance
+            requestAnimationFrame(() => {
+                floatingBtn.style.transform = `translate3d(${xOffset}px, ${yOffset}px, 0)`;
+            });
         }
     }
 
-    function onPointerUp(e) {
-        document.removeEventListener('pointermove', onPointerMove);
-        document.removeEventListener('pointerup', onPointerUp);
-        dragBtn.releasePointerCapture(e.pointerId);
-        if (isDragging) {
-            localStorage.setItem('floatBtnLeft', dragBtn.offsetLeft);
-            localStorage.setItem('floatBtnTop', dragBtn.offsetTop);
-        } else { toggleSidebarFloat(); }
+    function dragEnd() {
         isDragging = false;
+        document.removeEventListener('mousemove', drag);
+        document.removeEventListener('touchmove', drag);
+        
+        const duration = Date.now() - startTime;
+        // If pressed for less than 200ms, it's a CLICK, not a drag
+        if (duration < 200) {
+            toggleSidebarFloat();
+        } else {
+            localStorage.setItem('menuPos', JSON.stringify({x: xOffset, y: yOffset}));
+        }
     }
 
     function toggleSidebarFloat() {
-        const btnRect = dragBtn.getBoundingClientRect();
-        const sidebarWidth = 280;
-        let top = btnRect.bottom + 10;
-        let left = btnRect.left;
-        if (left + sidebarWidth > window.innerWidth) left = window.innerWidth - sidebarWidth - 15;
-        if (top + 400 > window.innerHeight) {
-            top = btnRect.top - 410;
-            if (top < 10) top = 10;
-        }
-        sideFloat.style.top = top + 'px';
-        sideFloat.style.left = left + 'px';
         const isActive = sideFloat.classList.toggle('active');
         sideOverlay.classList.toggle('active', isActive);
-        if (isActive && !sideFloat.innerHTML) loadSidebarContent();
+        if (isActive) {
+            const rect = floatingBtn.getBoundingClientRect();
+            // Position sidebar near the button but keep within screen
+            let topPos = rect.bottom + 10;
+            let leftPos = rect.left;
+            if (topPos + 400 > window.innerHeight) topPos = rect.top - 310;
+            if (leftPos + 280 > window.innerWidth) leftPos = window.innerWidth - 290;
+            
+            sideFloat.style.top = Math.max(10, topPos) + 'px';
+            sideFloat.style.left = Math.max(10, leftPos) + 'px';
+        }
     }
 
-    function closeSidebarFloat() {
-        sideFloat.classList.remove('active');
-        sideOverlay.classList.remove('active');
-    }
+    window.closeSidebarFloat = () => { 
+        sideFloat.classList.remove('active'); 
+        sideOverlay.classList.remove('active'); 
+    };
 
-    function loadSidebarContent() {
+    function loadSidebar() {
         fetch('sidebar.html')
             .then(res => res.text())
-            .then(data => {
-                sideFloat.innerHTML = `<div class="sidebar-header">เมนูนำทาง</div>` + data;
-                ['credit', 'branch', 'sales'].forEach(id => {
-                    if (localStorage.getItem('menu-' + id) === 'true') {
-                        const el = sideFloat.querySelector('#menu-' + id);
-                        if (el) el.classList.add('open');
-                    }
+            .then(html => {
+                sideFloat.innerHTML = html;
+                // Restore dropdown states
+                const items = sideFloat.querySelectorAll('.item');
+                items.forEach(item => {
+                    if (localStorage.getItem(item.id) === 'true') item.classList.add('open');
                 });
-            });
+            }).catch(err => console.error("Sidebar load failed"));
     }
 
     window.toggleDrop = function(btn, id) {
         const item = btn.parentElement;
         const isOpen = item.classList.toggle("open");
-        if (id) localStorage.setItem('menu-' + id, isOpen);
+        if (id) localStorage.setItem(id, isOpen);
     }
 
-    // --- ORIGINAL DEDUCTION LOGIC (Keep 100%) ---
-    document.getElementById('deductionForm').onsubmit = async (e) => {
-        e.preventDefault();
-        setProcessing(true);
-        const data = {
-            action: document.getElementById('editRowIndex').value ? "updateRow" : "addRow",
-            rowIndex: document.getElementById('editRowIndex').value,
-            date: document.getElementById('date').value,
-            branch: document.getElementById('branch').value,
-            type: document.getElementById('type').value,
-            name: document.getElementById('name').value,
-            amount: document.getElementById('amount').value,
-            note: document.getElementById('note').value
-        };
+    // --- Deduction logic ---
+    async function fetchData(showLoad = false) {
+        if (showLoad) setProcessing(true);
         try {
-            await fetch(APPS_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
-            showStatusPopup(data.rowIndex ? "อัปเดตข้อมูลสำเร็จ" : "บันทึกข้อมูลสำเร็จ", true);
-            e.target.reset();
-            document.getElementById('editRowIndex').value = '';
-            document.getElementById('btnText').innerText = 'บันทึกข้อมูล';
-            fetchData(true);
-        } catch (e) { showStatusPopup("เกิดข้อผิดพลาด กรุณาลองใหม่", false); }
-        finally { setProcessing(false); }
-    };
-
-    async function fetchData(silent = false) {
-        if (!silent) setProcessing(true);
-        try {
-            const res = await fetch(APPS_SCRIPT_URL + "?action=getData");
+            const res = await fetch(`${APPS_SCRIPT_URL}?action=read`);
             const data = await res.json();
-            const tbody = document.getElementById('tableBody');
-            tbody.innerHTML = data.map((row, idx) => `
-                <tr id="row-${row.rowIndex}">
-                    <td><input type="checkbox" onchange="toggleSelect(${row.rowIndex})" ${selectedRows.has(row.rowIndex) ? 'checked' : ''}></td>
-                    <td>${row.date}</td>
-                    <td>${row.branch}</td>
-                    <td><span class="badge badge-red">${row.type}</span></td>
-                    <td>${row.name}</td>
-                    <td style="font-weight:600">฿${parseFloat(row.amount).toLocaleString()}</td>
-                    <td style="color:var(--text-light); font-size:12px">${row.note || '-'}</td>
-                    <td>
-                        <div class="action-btns">
-                            <button class="icon-btn" onclick='editRow(${JSON.stringify(row)})'>${svgIcons.edit}</button>
-                            <button class="icon-btn delete" onclick="deleteRow(${row.rowIndex})">${svgIcons.delete}</button>
-                        </div>
-                    </td>
-                </tr>
-            `).join('');
-        } catch (e) { console.error(e); }
-        finally { setProcessing(false); }
+            allData = data; 
+            renderTable(allData);
+            updateSummary(allData);
+        } catch (e) { 
+            document.getElementById("tableBody").innerHTML = '<tr><td colspan="7" style="text-align:center; padding:40px; color:var(--ios-red);">ไม่สามารถเชื่อมต่อข้อมูลได้</td></tr>';
+        } finally { setProcessing(false); }
     }
 
-    function editRow(row) {
-        document.getElementById('editRowIndex').value = row.rowIndex;
-        document.getElementById('date').value = row.date;
-        document.getElementById('branch').value = row.branch;
-        document.getElementById('type').value = row.type;
-        document.getElementById('name').value = row.name;
-        document.getElementById('amount').value = row.amount;
-        document.getElementById('note').value = row.note;
-        document.getElementById('btnText').innerText = 'ตกลงแก้ไขข้อมูล';
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+    function renderTable(data) {
+        const tbody = document.getElementById("tableBody");
+        if (!data || data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:40px; color:var(--text-light);">ไม่พบข้อมูล</td></tr>';
+            return;
+        }
+        tbody.innerHTML = "";
+        const reversed = [...data].reverse();
+        const start = (currentPage - 1) * rowsPerPage;
+        const paginated = reversed.slice(start, start + rowsPerPage);
+
+        paginated.forEach((row, i) => {
+            const realIdx = data.length - (start + i);
+            let dStr = "-";
+            if (row[0]) {
+                const d = new Date(row[0]);
+                dStr = !isNaN(d) ? `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}` : row[0];
+            }
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td style="text-align:center;"><input type="checkbox" onchange="toggleRowSelection(${realIdx}, this)" ${selectedRows.includes(realIdx) ? 'checked' : ''}></td>
+                <td>${dStr}</td>
+                <td>${row[1] || '-'}</td>
+                <td>${row[2] || '-'}</td>
+                <td>${row[3] || '-'}</td>
+                <td style="font-weight:600; color:var(--ios-red);">-${parseFloat(row[4]).toLocaleString()} ฿</td>
+                <td><button class="btn-delete" onclick="openAuthPopup('delete', ${realIdx})"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button></td>
+            `;
+            tbody.appendChild(tr);
+        });
+        renderPagination(data.length);
     }
 
-    async function deleteRow(idx) {
-        if (!confirm("ยืนยันการลบรายการนี้?")) return;
+    function renderPagination(total) {
+        const pages = Math.ceil(total / rowsPerPage);
+        const container = document.getElementById("paginationContainer");
+        container.innerHTML = "";
+        if (pages <= 1) return;
+        for (let i = 1; i <= pages; i++) {
+            const btn = document.createElement("button");
+            btn.innerText = i;
+            btn.className = `pagination-btn ${i === currentPage ? 'active' : ''}`;
+            btn.onclick = () => { currentPage = i; renderTable(allData); window.scrollTo({top:0, behavior:'smooth'}); };
+            container.appendChild(btn);
+        }
+    }
+
+    function updateSummary(data) {
+        const sums = { "ศุภกฤต": 0, "นวพล": 0, "ปิยะพร": 0, "กรทักษ์": 0, "จิดาภา": 0 };
+        data.forEach(r => { if (sums.hasOwnProperty(r[1])) sums[r[1]] += parseFloat(r[4] || 0); });
+        for (let name in sums) {
+            const el = document.getElementById(`sum-${name}`);
+            if (el) el.innerText = `${sums[name].toLocaleString()} ฿`;
+        }
+    }
+
+    function toggleRowSelection(idx, cb) {
+        if (cb.checked) selectedRows.push(idx); else selectedRows = selectedRows.filter(id => id !== idx);
+        document.getElementById("bulkDeleteBtn").style.display = selectedRows.length > 0 ? "block" : "none";
+        document.getElementById("selectedCount").innerText = selectedRows.length;
+    }
+
+    function toggleSelectAll(master) {
+        const cbs = document.querySelectorAll('#tableBody input[type="checkbox"]');
+        cbs.forEach((cb, i) => {
+            const realIdx = allData.length - (((currentPage-1)*rowsPerPage) + i);
+            cb.checked = master.checked;
+            if (master.checked) { if(!selectedRows.includes(realIdx)) selectedRows.push(realIdx); }
+            else { selectedRows = selectedRows.filter(id => id !== realIdx); }
+        });
+        document.getElementById("bulkDeleteBtn").style.display = selectedRows.length > 0 ? "block" : "none";
+        document.getElementById("selectedCount").innerText = selectedRows.length;
+    }
+
+    function openForm() { document.getElementById("formModal").classList.add("show"); document.getElementById("date").valueAsDate = new Date(); }
+    function closeForm() { document.getElementById("formModal").classList.remove("show"); document.getElementById("deductionForm").reset(); }
+    function checkReason(sel) { document.getElementById("otherReasonContainer").style.display = sel.value === "อื่นๆ" ? "block" : "none"; }
+
+    function openAuthPopup(action, index = null) {
+        currentAuthAction = action; currentAuthIndex = index;
+        document.getElementById("authPopup").style.display = "flex";
+        resetAuthPopup();
+    }
+    function closeAuthPopup() { document.getElementById("authPopup").style.display = "none"; }
+    function resetAuthPopup() {
+        document.getElementById("otpSelectAdmin").style.display = "block";
+        document.getElementById("otpInputForm").style.display = "none";
+        document.getElementById("otpInput").value = "";
+    }
+
+    async function sendOTPRequest() {
+        const email = document.getElementById("adminEmailSelect").value;
+        if (!email) return alert("กรุณาเลือก Admin");
+        setProcessing(true);
+        generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
+        try {
+            await fetch(APPS_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: "sendOTP", email, otp: generatedOTP }) });
+            document.getElementById("otpSelectAdmin").style.display = "none";
+            document.getElementById("otpInputForm").style.display = "block";
+        } catch (e) { alert("ส่งไม่สำเร็จ"); } finally { setProcessing(false); }
+    }
+
+    function verifyOTP() {
+        if (document.getElementById("otpInput").value === generatedOTP) {
+            closeAuthPopup();
+            if (currentAuthAction === 'submit') submitData();
+            else if (currentAuthAction === 'delete') deleteData(currentAuthIndex);
+            else if (currentAuthAction === 'bulkDelete') bulkDeleteData();
+        } else alert("OTP ไม่ถูกต้อง");
+    }
+
+    async function submitData() {
+        setProcessing(true);
+        const form = document.getElementById("deductionForm");
+        const reason = form.reason.value === "อื่นๆ" ? form.otherReason.value : form.reason.value;
+        const payload = { action: "append", date: form.date.value, employee: form.employee.value, reason: reason, note: "-", amount: form.amount.value };
+        try {
+            await fetch(APPS_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
+            showStatusPopup("บันทึกข้อมูลสำเร็จ", true); closeForm(); fetchData(true);
+        } catch (e) { showStatusPopup("เกิดข้อผิดพลาด", false); } finally { setProcessing(false); }
+    }
+
+    async function deleteData(idx) {
         setProcessing(true);
         try {
             await fetch(APPS_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: "deleteRow", rowIndex: idx }) });
@@ -442,8 +607,6 @@
     }
 
     async function bulkDeleteData() {
-        if (selectedRows.size === 0) return alert("กรุณาเลือกรายการที่ต้องการลบ");
-        if (!confirm(`ยืนยันการลบทั้งหมด ${selectedRows.size} รายการ?`)) return;
         setProcessing(true);
         try {
             const sorted = [...selectedRows].sort((a,b) => b-a);
@@ -452,24 +615,17 @@
         } catch (e) { showStatusPopup("เกิดข้อผิดพลาด", false); } finally { setProcessing(false); }
     }
 
-    function toggleSelect(idx) {
-        if (selectedRows.has(idx)) selectedRows.delete(idx);
-        else selectedRows.add(idx);
-    }
-
     function setProcessing(val) { document.getElementById('loading').style.display = val ? 'flex' : 'none'; }
-    
     function showStatusPopup(text, isSuccess) {
         document.getElementById("statusIcon").innerHTML = isSuccess ? svgIcons.success : svgIcons.error;
         document.getElementById("statusTitle").innerText = isSuccess ? "สำเร็จ" : "ล้มเหลว";
         document.getElementById("statusText").innerText = text;
-        const popup = document.getElementById("statusPopup");
-        popup.classList.add("show");
-        setTimeout(() => popup.classList.remove("show"), 3000);
+        document.getElementById("statusPopup").classList.add("show");
     }
+    function closeStatusPopup() { document.getElementById("statusPopup").classList.remove("show"); }
 
     document.addEventListener('DOMContentLoaded', () => {
-        loadButtonPosition();
+        loadSidebar();
         fetchData();
     });
 </script>
