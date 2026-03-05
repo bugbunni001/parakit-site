@@ -210,7 +210,7 @@
             align-items: center;
             gap: 10px;
             flex-grow: 1;
-            max-width: 600px; /* ขยายความกว้างเพื่อให้พอดีกับปฏิทิน */
+            max-width: 600px; 
         }
 
         .date-filter-wrapper {
@@ -327,7 +327,6 @@
         
         .btn-pin:hover:not(.active) { background: #ffe6c2; transform: translateY(-2px); }
 
-        /* Pagination Styles */
         .pagination-container {
             display: flex;
             justify-content: center;
@@ -433,7 +432,6 @@
         .detail-view-item { background: #f9f9f9; padding: 12px 15px; border-radius: 14px; border: 1.5px solid #f0f0f5; }
         .detail-view-item .val { font-size: 15px; font-weight: 600; color: var(--text-main); display: block; }
 
-        /* File list styles */
         .file-list { margin-top: 10px; display: flex; flex-direction: column; gap: 5px; }
         .file-item {
             display: flex; justify-content: space-between; align-items: center;
@@ -442,7 +440,6 @@
         }
         .file-item .remove-file { color: var(--ios-red); cursor: pointer; font-size: 16px; padding-left: 10px; }
         
-        /* Edit specific file styles */
         .existing-file-item { background: #f0f9ff; border-color: #bae6fd; }
         .existing-file-item i.fa-trash-can { color: var(--ios-red); }
 
@@ -531,8 +528,8 @@
     let currentPage = 1;
     const itemsPerPage = 10;
     
-    let selectedFiles = []; // For newly picked files
-    let existingFiles = []; // For files already on server
+    let selectedFiles = []; 
+    let existingFiles = []; 
 
     const dragBtn = document.getElementById('floatingMenuBtn');
     const sideFloat = document.getElementById('sidebarFloat');
@@ -690,7 +687,7 @@
     function filterByDeadline(el) {
         document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
         const todayStr = fixDate(new Date());
-        document.getElementById('dateFilter').value = formatForInputDate(new Date()); // อัปเดตช่องปฏิทินด้วย
+        document.getElementById('dateFilter').value = formatForInputDate(new Date()); 
         filteredData = fullData.filter(row => fixDate(row[10]) === todayStr);
         currentPage = 1;
         renderTable();
@@ -719,7 +716,6 @@
         filterData();
     }
 
-    // ฟังก์ชันใหม่: กรองตามวันที่ครบกำหนดจากช่องปฏิทิน
     function filterByDate() {
         const selectedDate = document.getElementById('dateFilter').value;
         if (!selectedDate) {
@@ -768,11 +764,11 @@
             });
             
             if (manual) {
-                document.getElementById('dateFilter').value = ""; // ล้างวันที่เมื่อรีเฟรชมือ
+                document.getElementById('dateFilter').value = ""; 
                 document.getElementById('searchInput').value = "";
                 filteredData = [...fullData];
             } else {
-                filterData(); // ใช้ filterData เพื่อรวมการกรองทั้งสองอย่าง
+                filterData(); 
             }
 
             updateStats(fullData);
@@ -913,11 +909,10 @@
         }).then((result) => { if (result.isConfirmed) editData(rowJson); });
     }
 
-    // Function to handle file selection and update display
     window.handleFileSelect = async function(event) {
         const files = event.target.files;
         for (let i = 0; i < files.length; i++) {
-            if (selectedFiles.length + existingFiles.length >= 5) { // Increased limit slightly for flexibility
+            if (selectedFiles.length + existingFiles.length >= 5) { 
                 Swal.showValidationMessage('แนบไฟล์รวมได้สูงสุด 5 ไฟล์เท่านั้น'); break; 
             }
             const file = files[i];
@@ -938,7 +933,6 @@
         renderSelectedFiles();
     };
     
-    // Function to remove existing file from current list
     window.removeExistingFile = function(url) {
         existingFiles = existingFiles.filter(u => u !== url);
         renderSelectedFiles();
@@ -950,7 +944,6 @@
         
         let html = '';
         
-        // Show existing files (from server)
         existingFiles.forEach((url, idx) => {
             html += `
                 <div class="file-item existing-file-item">
@@ -964,7 +957,6 @@
             `;
         });
         
-        // Show newly selected files (local)
         selectedFiles.forEach(file => {
             html += `
                 <div class="file-item">
@@ -979,7 +971,7 @@
 
     window.openAddJobModal = function() {
         selectedFiles = [];
-        existingFiles = []; // Clear
+        existingFiles = []; 
         let typeOptions = `<option value="">-- เลือกประเภทงาน --</option>`;
         jobTypes.forEach(t => { typeOptions += `<option value="${t}">${t}</option>`; });
         const newId = generateReportId();
@@ -1018,11 +1010,10 @@
         });
     }
 
-    // Update editData to support file deletion
     window.editData = function(rowJson) {
         const item = JSON.parse(decodeURIComponent(rowJson));
         selectedFiles = []; 
-        existingFiles = item[5] ? item[5].split(", ") : []; // Load server files
+        existingFiles = item[5] ? item[5].split(", ") : []; 
         
         let typeOptions = `<option value="">-- เลือกประเภทงาน --</option>`;
         jobTypes.forEach(t => { typeOptions += `<option value="${t}" ${item[8] === t ? 'selected' : ''}>${t}</option>`; });
@@ -1063,7 +1054,7 @@
                     jobDetail: document.getElementById('swal-jobDetail').value, 
                     jobType: document.getElementById('swal-jobType').value, 
                     deadline: document.getElementById('swal-deadline').value,
-                    existingFiles: existingFiles, // Send back the list of files to KEEP
+                    existingFiles: existingFiles, 
                     files: selectedFiles.map(f => ({name: f.name, data: f.data})) 
                 };
             }
