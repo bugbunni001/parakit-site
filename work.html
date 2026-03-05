@@ -26,6 +26,7 @@
             --ios-red: #FF3B30;
             --ios-green: #34C759;
             --ios-orange: #FF9500;
+            --ios-purple: #8e5aff;
             --shadow-soft: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
         }
 
@@ -329,7 +330,7 @@
             border: 1px solid rgba(255, 59, 48, 0.2);
         }
 
-        .btn-pin, .btn-process, .btn-edit, .btn-delete {
+        .btn-pin, .btn-process, .btn-edit, .btn-delete, .btn-daily {
             width: 36px; height: 36px; border-radius: 10px; border: none; cursor: pointer; transition: all 0.2s;
             display: inline-flex; align-items: center; justify-content: center; font-size: 14px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
@@ -341,6 +342,10 @@
         .btn-process { background: #eef7ff; color: var(--ios-blue); }
         .btn-process.active { background: var(--ios-dark-blue); color: white; box-shadow: 0 4px 10px rgba(0, 86, 179, 0.3); }
         .btn-process:hover:not(.active) { background: #ddecff; transform: translateY(-2px); }
+
+        .btn-daily { background: #f5eeff; color: var(--ios-purple); }
+        .btn-daily.active { background: var(--ios-purple); color: white; box-shadow: 0 4px 10px rgba(142, 90, 255, 0.3); }
+        .btn-daily:hover:not(.active) { background: #efe5ff; transform: translateY(-2px); }
 
         .btn-edit { background: #eef7ed; color: var(--ios-green); }
         .btn-edit:hover { background: var(--ios-green); color: white; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(52, 199, 89, 0.3); }
@@ -524,7 +529,7 @@
                     <th width="300">รายละเอียด</th> 
                     <th>พนักงาน</th>
                     <th>เอกสาร</th>
-                    <th width="180">จัดการ</th>
+                    <th width="200">จัดการ</th>
                 </tr>
             </thead>
             <tbody id="dataTable">
@@ -541,12 +546,13 @@
 </div>
 
 <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwI59gZy_3FZOT8yQkR2aYG2LqyNhnHy_Uvki1MIDAMq9jBBI4aIdEgoW3pZsJQNeCw/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx9BIQFr6xoyubOnxZ-ZmyFQNVrqGSkSQnWmdxpuXN7mPvB4DG54eedrnL4-mhrel3y/exec';
 
     const jobTypes = [
         "MGM ปรับลด", "ยกเลิกบริการ (ปกติ)", "ยกเลิกบริการ (5P)", "MNP",
         "เปลี่ยนรายเดือนเป็นเติมเงิน", "เปลี่ยนโปรโมชั่น", "Add ส่วนลด",
-        "Add เน็ตเพิ่ม", "ระงับสัญญาณชั่วคราวTOL", "ส่งเรื่องตรวจสอบ"
+        "Add เน็ตเพิ่ม", "ระงับสัญญาณชั่วคราวTOL", "ส่งเรื่องตรวจสอบ",
+        "ขอเงินคืน"
     ];
 
     let fullData = [];
@@ -680,13 +686,16 @@
             if(counts[type] !== undefined) counts[type]++;
             if(row[7] === "true" || row[7] === true) pinnedCount++;
             if(row[9] === "true" || row[9] === true) processingCount++;
+            
             const deadline = formatForInputDate(row[10]);
-            if(deadline === todayStr) deadlineCount++;
+            const isDaily = (row[12] === "true" || row[12] === true);
+            // หากเป็นงานทุกวัน หรือ เป็นงานที่ตรงกับวันนี้ ให้นับเข้าแถบยาว
+            if(isDaily || deadline === todayStr) deadlineCount++;
         });
         let cardsHtml = `
             <div class="stat-card-long" onclick="filterByDeadline(this)">
                 <div class="info">
-                    <span class="title">งานที่ครบกำหนด(วันนี้)</span>
+                    <span class="title">งานที่ครบกำหนด(วันนี้) + งานทุกวัน</span>
                     <span class="date-label">${fixDate(new Date())}</span>
                 </div>
                 <div class="count-val">${deadlineCount} รายการ</div>
@@ -713,8 +722,8 @@
     function filterByDeadline(el) {
         document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
         const todayStr = fixDate(new Date());
-        document.getElementById('dateFilter').value = formatForInputDate(new Date()); 
-        filteredData = fullData.filter(row => fixDate(row[10]) === todayStr);
+        // งานที่แสดงทุกวัน (row[12]) จะแสดงในหน้านี้ด้วยเสมอ
+        filteredData = fullData.filter(row => fixDate(row[10]) === todayStr || (row[12] === "true" || row[12] === true));
         currentPage = 1;
         renderTable();
     }
@@ -749,7 +758,8 @@
         } else {
             filteredData = fullData.filter(row => {
                 const rowDeadline = formatForInputDate(row[10]);
-                return rowDeadline === selectedDate;
+                const isDaily = (row[12] === "true" || row[12] === true);
+                return rowDeadline === selectedDate || isDaily;
             });
         }
         currentPage = 1;
@@ -762,7 +772,7 @@
         
         filteredData = fullData.filter(row => {
             const matchesSearch = row.join(' ').toLowerCase().includes(filter);
-            const matchesDate = !dateFilter || formatForInputDate(row[10]) === dateFilter;
+            const matchesDate = !dateFilter || formatForInputDate(row[10]) === dateFilter || (row[12] === "true" || row[12] === true);
             return matchesSearch && matchesDate;
         });
         
@@ -774,8 +784,6 @@
         const tableBody = document.getElementById('dataTable');
         const refreshBtn = document.querySelector('.fa-rotate-right');
         const scrollPos = window.scrollY;
-        const currentSearch = document.getElementById('searchInput').value;
-        const currentDate = document.getElementById('dateFilter').value;
 
         if(refreshBtn) refreshBtn.classList.add('fa-spin');
         try {
@@ -818,6 +826,7 @@
             const tr = document.createElement('tr');
             const isPinned = (row[7] === "true" || row[7] === true);
             const isProcessing = (row[9] === "true" || row[9] === true);
+            const isDaily = (row[12] === "true" || row[12] === true);
             const reportId = row[11] || "-";
             const rowJson = encodeURIComponent(JSON.stringify(row));
             const deadlineDate = fixDate(row[10]);
@@ -841,10 +850,11 @@
                         <div class="action-btns">
                             <button class="btn-pin ${isPinned ? 'active' : ''}" onclick="togglePin('${reportId}')" title="ปักหมุด"><i class="fa-solid fa-thumbtack"></i></button>
                             <button class="btn-process ${isProcessing ? 'active' : ''}" onclick="toggleProcessing('${reportId}')" title="กำลังดำเนินการ"><i class="fa-solid fa-clock-rotate-left"></i></button>
+                            <button class="btn-daily ${isDaily ? 'active' : ''}" onclick="toggleDaily('${reportId}')" title="แสดงงานนี้ทุกวัน"><i class="fa-solid fa-infinity"></i></button>
                             <button class="btn-edit" onclick="editData('${rowJson}')" title="แก้ไขข้อมูล"><i class="fa-solid fa-pen-to-square"></i></button>
                             <button class="btn-delete" onclick="deleteData('${reportId}')" title="ลบรายการ"><i class="fa-solid fa-trash"></i></button>
                         </div>
-                        ${deadlineDate !== "-" ? `<span class="deadline-label-small">ครบกำหนด : ${deadlineDate}</span>` : ''}
+                        ${isDaily ? `<span class="deadline-label-small" style="background:#f5eeff; color:var(--ios-purple); border-color:rgba(142,90,255,0.2);">แสดงทุกวัน (Infinity)</span>` : (deadlineDate !== "-" ? `<span class="deadline-label-small">ครบกำหนด : ${deadlineDate}</span>` : '')}
                     </div>
                 </td>
             `;
@@ -893,6 +903,14 @@
         } catch (err) { Swal.fire({title: 'Error', icon: 'error', allowOutsideClick: false}); }
     }
 
+    async function toggleDaily(reportId) {
+        Swal.fire({title: 'กำลังดำเนินการ...', allowOutsideClick: false, allowEscapeKey: false, didOpen: () => Swal.showLoading()});
+        try { 
+            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "toggleDaily", reportId: reportId }) }); 
+            Swal.close(); loadData(); 
+        } catch (err) { Swal.fire({title: 'Error', icon: 'error', allowOutsideClick: false}); }
+    }
+
     async function deleteData(reportId) {
         const confirm = await Swal.fire({ 
             title: 'ยืนยันการลบ?', text: "ID: " + reportId, icon: 'warning', 
@@ -920,7 +938,7 @@
             html: `
                 <div class="swal-form-container">
                     <div class="swal-field-full"><label class="swal-label">Report ID</label><div class="detail-view-item"><span class="val">${item[11] || '-'}</span></div></div>
-                    <div class="swal-field-full"><label class="swal-label">ประเภทงาน</label><div class="detail-view-item"><span class="job-type-badge">${item[8] || 'ทั่วไป'}</span></div></div>
+                    <div class="swal-field-full"><label class="swal-label">ประเภทงาน</label><div class="detail-view-item"><span class="job-type-badge">${item[8] || 'ทั่วไป'}</span> ${item[12] === 'true' ? '<span class="job-type-badge" style="background:var(--ios-purple); color:white;">แสดงทุกวัน</span>' : ''}</div></div>
                     <div><label class="swal-label">วันที่ดำเนินการ</label><div class="detail-view-item"><span class="val">${fixDate(item[0])}</span></div></div>
                     <div><label class="swal-label">รหัสสมาชิก</label><div class="detail-view-item"><span class="val">${String(item[1]).replace(/^'/, '')}</span></div></div>
                     <div class="swal-field-full"><label class="swal-label">ชื่อลูกค้า</label><div class="detail-view-item"><span class="val">${item[2]}</span></div></div>
@@ -1014,6 +1032,10 @@
                     <div><label class="swal-label">เบอร์ติดต่อ</label><input type="text" id="phone" class="swal-input-styled" placeholder="0XXXXXXXXX"></div>
                     <div><label class="swal-label">พนักงาน</label><select id="staff" class="swal-input-styled"><option value="">-- เลือก --</option><option value="ศุภกฤต">ศุภกฤต</option><option value="นวพล">นวพล</option><option value="ปิยะพร">ปิยะพร</option><option value="กรทักษ์">กรทักษ์</option></select></div>
                     <div class="swal-field-full"><label class="swal-label">วันครบกำหนดงาน</label><input type="date" id="deadline" class="swal-input-styled"></div>
+                    <div class="swal-field-full" style="display:flex; align-items:center; gap:10px; background:#f5eeff; padding:10px; border-radius:14px; border:1px dashed var(--ios-purple);">
+                        <input type="checkbox" id="isDaily" style="width:20px; height:20px; cursor:pointer;">
+                        <label for="isDaily" style="font-size:14px; font-weight:600; color:var(--ios-purple); cursor:pointer;">แสดงงานนี้ทุกวัน (Infinity Mode)</label>
+                    </div>
                     <div class="swal-field-full"><label class="swal-label">รายละเอียด</label><textarea id="jobDetail" class="swal-input-styled" style="height:160px;"></textarea></div>
                     <div class="swal-field-full">
                         <label class="swal-label">แนบไฟล์ (รูปภาพ, PDF, Word, Excel) **แนบได้สูงสุด 3 ไฟล์** </label>
@@ -1023,7 +1045,18 @@
                 </div>
             `,
             showCancelButton: true, confirmButtonText: 'บันทึกข้อมูล', preConfirm: async () => {
-                const vals = { reportId: newId, jobType: document.getElementById('jobType').value, date: document.getElementById('date').value, memberId: "'" + document.getElementById('memberId').value, name: document.getElementById('name').value, phone: "'" + document.getElementById('phone').value, staff: document.getElementById('staff').value, jobDetail: document.getElementById('jobDetail').value, deadline: document.getElementById('deadline').value };
+                const vals = { 
+                    reportId: newId, 
+                    jobType: document.getElementById('jobType').value, 
+                    date: document.getElementById('date').value, 
+                    memberId: "'" + document.getElementById('memberId').value, 
+                    name: document.getElementById('name').value, 
+                    phone: "'" + document.getElementById('phone').value, 
+                    staff: document.getElementById('staff').value, 
+                    jobDetail: document.getElementById('jobDetail').value, 
+                    deadline: document.getElementById('deadline').value,
+                    isDaily: document.getElementById('isDaily').checked ? "true" : ""
+                };
                 if (!vals.jobType || !vals.name || !vals.staff) { Swal.showValidationMessage('กรุณากรอกข้อมูลสำคัญ'); return false; }
                 return { action: "insert", ...vals, files: selectedFiles.map(f => ({name: f.name, data: f.data})) };
             }
@@ -1057,6 +1090,10 @@
                     <div><label class="swal-label">เบอร์ติดต่อ</label><input type="text" id="swal-phone" class="swal-input-styled" value="${String(item[3]).replace(/^'/, '')}"></div>
                     <div><label class="swal-label">พนักงาน</label><select id="swal-staff" class="swal-input-styled">${['ศุภกฤต', 'นวพล', 'ปิยะพร', 'กรทักษ์'].map(s => `<option value="${s}" ${item[4] === s ? 'selected' : ''}>${s}</option>`).join('')}</select></div>
                     <div class="swal-field-full"><label class="swal-label">วันครบกำหนดงาน</label><input type="date" id="swal-deadline" class="swal-input-styled" value="${formatForInputDate(item[10])}"></div>
+                    <div class="swal-field-full" style="display:flex; align-items:center; gap:10px; background:#f5eeff; padding:10px; border-radius:14px; border:1px dashed var(--ios-purple);">
+                        <input type="checkbox" id="swal-isDaily" style="width:20px; height:20px; cursor:pointer;" ${item[12] === 'true' ? 'checked' : ''}>
+                        <label for="swal-isDaily" style="font-size:14px; font-weight:600; color:var(--ios-purple); cursor:pointer;">แสดงงานนี้ทุกวัน (Infinity Mode)</label>
+                    </div>
                     <div class="swal-field-full"><label class="swal-label">รายละเอียด</label><textarea id="swal-jobDetail" class="swal-input-styled" style="height:160px;">${item[6] || ''}</textarea></div>
                     <div class="swal-field-full">
                         <label class="swal-label">จัดการไฟล์แนบ (ลบไฟล์เดิม/เพิ่มไฟล์ใหม่) (รูปภาพ, PDF, Word, Excel) **ได้สูงสุด 3 ไฟล์**</label>
@@ -1080,6 +1117,7 @@
                     jobDetail: document.getElementById('swal-jobDetail').value, 
                     jobType: document.getElementById('swal-jobType').value, 
                     deadline: document.getElementById('swal-deadline').value,
+                    isDaily: document.getElementById('swal-isDaily').checked ? "true" : "",
                     existingFiles: existingFiles, 
                     files: selectedFiles.map(f => ({name: f.name, data: f.data})) 
                 };
