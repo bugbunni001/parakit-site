@@ -210,7 +210,7 @@
             align-items: center;
             gap: 10px;
             flex-grow: 1;
-            max-width: 600px; /* ขยายความกว้างเพื่อให้พอดีกับปฏิทิน */
+            max-width: 600px; 
         }
 
         .date-filter-wrapper {
@@ -327,7 +327,6 @@
         
         .btn-pin:hover:not(.active) { background: #ffe6c2; transform: translateY(-2px); }
 
-        /* Pagination Styles */
         .pagination-container {
             display: flex;
             justify-content: center;
@@ -433,7 +432,6 @@
         .detail-view-item { background: #f9f9f9; padding: 12px 15px; border-radius: 14px; border: 1.5px solid #f0f0f5; }
         .detail-view-item .val { font-size: 15px; font-weight: 600; color: var(--text-main); display: block; }
 
-        /* File list styles */
         .file-list { margin-top: 10px; display: flex; flex-direction: column; gap: 5px; }
         .file-item {
             display: flex; justify-content: space-between; align-items: center;
@@ -442,9 +440,17 @@
         }
         .file-item .remove-file { color: var(--ios-red); cursor: pointer; font-size: 16px; padding-left: 10px; }
         
-        /* Edit specific file styles */
         .existing-file-item { background: #f0f9ff; border-color: #bae6fd; }
         .existing-file-item i.fa-trash-can { color: var(--ios-red); }
+
+        .recurring-badge {
+            background: #eef2ff; color: #4f46e5;
+            padding: 2px 8px; border-radius: 6px;
+            font-size: 10px; font-weight: 600;
+            display: inline-flex; align-items: center; gap: 4px;
+            border: 1px solid rgba(79, 70, 229, 0.2);
+            margin-top: 4px;
+        }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
     </style>
@@ -479,7 +485,6 @@
                 <i class="fa-solid fa-calendar-days"></i>
                 <input type="date" id="dateFilter" class="date-filter-input" onchange="filterByDate()" title="กรองตามวันครบกำหนด">
             </div>
-            
             <div class="search-wrapper">
                 <i class="fa-solid fa-magnifying-glass"></i>
                 <input type="text" id="searchInput" class="search-input" placeholder="ค้นหาข้อมูล..." onkeyup="filterData()">
@@ -498,7 +503,7 @@
                     <th width="160">ประเภทงาน</th>
                     <th>รหัสสมาชิก</th>
                     <th>ชื่อลูกค้า / เบอร์</th>
-                    <th width="300">รายละเอียด</th> 
+                    <th width="300">รายละเอียด</th>
                     <th>พนักงาน</th>
                     <th>เอกสาร</th>
                     <th width="180">จัดการ</th>
@@ -511,28 +516,22 @@
     </div>
 
     <div id="pagination" class="pagination-container"></div>
-    
+
     <p style="margin-top:30px; font-size:13px; color:rgba(0,0,0,0.5); font-weight: 500;">
         <i class="fa-solid fa-copyright"></i> 2026 Copyright by <strong>Angerina Frog</strong>
     </p>
 </div>
 
 <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwziOiDQPqldE_1TkFRfXQU8-H0Bb4UwTehx7ZUmbEaJrpGT8h062-3wr9dxV2ZcTLP/exec';
-
-    const jobTypes = [
-        "MGM ปรับลด", "ยกเลิกบริการ (ปกติ)", "ยกเลิกบริการ (5P)", "MNP",
-        "เปลี่ยนรายเดือนเป็นเติมเงิน", "เปลี่ยนโปรโมชั่น", "Add ส่วนลด",
-        "Add เน็ตเพิ่ม", "ระงับสัญญาณชั่วคราวTOL", "ส่งเรื่องตรวจสอบ"
-    ];
-
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxFPeO80O0Y03f9Ek7GePrpPDRA8zlLUaTj0W2YjOTAfASprJSASQzK9IA6xzbtdPF1/exec';
+    const jobTypes = [ "MGM ปรับลด", "ยกเลิกบริการ (ปกติ)", "ยกเลิกบริการ (5P)", "MNP", "เปลี่ยนรายเดือนเป็นเติมเงิน", "เปลี่ยนโปรโมชั่น", "Add ส่วนลด", "Add เน็ตเพิ่ม", "ระงับสัญญาณชั่วคราวTOL", "ส่งเรื่องตรวจสอบ" ];
+    
     let fullData = [];
     let filteredData = [];
     let currentPage = 1;
     const itemsPerPage = 10;
-    
-    let selectedFiles = []; // For newly picked files
-    let existingFiles = []; // For files already on server
+    let selectedFiles = [];
+    let existingFiles = [];
 
     const dragBtn = document.getElementById('floatingMenuBtn');
     const sideFloat = document.getElementById('sidebarFloat');
@@ -540,9 +539,7 @@
     let isDragging = false;
     let startX, startY, shiftX, shiftY;
 
-    function generateReportId() {
-        return Math.floor(1000000000 + Math.random() * 9000000000).toString();
-    }
+    function generateReportId() { return Math.floor(1000000000 + Math.random() * 9000000000).toString(); }
 
     function loadButtonPosition() {
         const savedLeft = localStorage.getItem('floatBtnLeft');
@@ -554,8 +551,7 @@
     }
 
     dragBtn.onpointerdown = function(e) {
-        isDragging = false;
-        startX = e.clientX; startY = e.clientY;
+        isDragging = false; startX = e.clientX; startY = e.clientY;
         const rect = dragBtn.getBoundingClientRect();
         shiftX = e.clientX - rect.left; shiftY = e.clientY - rect.top;
         dragBtn.setPointerCapture(e.pointerId);
@@ -564,517 +560,452 @@
     };
 
     function onPointerMove(e) {
-        if (!isDragging && (Math.abs(e.clientX - startX) > 5 || Math.abs(e.clientY - startY) > 5)) isDragging = true;
+        if (!isDragging && (Math.abs(e.clientX - startX) > 5 || Math.abs(e.clientY - startY) > 5)) { isDragging = true; }
         if (isDragging) {
-            let newX = e.clientX - shiftX; let newY = e.clientY - shiftY;
-            newX = Math.max(0, Math.min(newX, window.innerWidth - dragBtn.offsetWidth));
-            newY = Math.max(0, Math.min(newY, window.innerHeight - dragBtn.offsetHeight));
-            dragBtn.style.left = newX + 'px'; dragBtn.style.top = newY + 'px';
+            let left = e.clientX - shiftX; let top = e.clientY - shiftY;
+            left = Math.max(0, Math.min(window.innerWidth - dragBtn.offsetWidth, left));
+            top = Math.max(0, Math.min(window.innerHeight - dragBtn.offsetHeight, top));
+            dragBtn.style.left = left + 'px'; dragBtn.style.top = top + 'px';
         }
     }
 
     function onPointerUp(e) {
         document.removeEventListener('pointermove', onPointerMove);
         document.removeEventListener('pointerup', onPointerUp);
-        dragBtn.releasePointerCapture(e.pointerId);
         if (isDragging) {
             localStorage.setItem('floatBtnLeft', dragBtn.offsetLeft);
             localStorage.setItem('floatBtnTop', dragBtn.offsetTop);
         } else { toggleSidebarFloat(); }
-        isDragging = false;
     }
 
     function toggleSidebarFloat() {
-        const btnRect = dragBtn.getBoundingClientRect();
-        const sidebarWidth = 280;
-        let top = btnRect.bottom + 10;
-        let left = btnRect.left;
-        if (left + sidebarWidth > window.innerWidth) left = window.innerWidth - sidebarWidth - 15;
-        if (top + 400 > window.innerHeight) { top = btnRect.top - 410; if (top < 10) top = 10; }
-        sideFloat.style.top = top + 'px'; sideFloat.style.left = left + 'px';
-        sideFloat.style.transformOrigin = `${btnRect.left - left + 20}px ${btnRect.top > top ? 'bottom' : 'top'}`;
-        const isActive = sideFloat.classList.toggle('active');
-        sideOverlay.classList.toggle('active', isActive);
-        if (isActive && !sideFloat.innerHTML) loadSidebarContent();
-    }
-
-    function closeSidebarFloat() {
-        sideFloat.classList.remove('active');
-        sideOverlay.classList.remove('active');
-    }
-
-    function loadSidebarContent() {
-        fetch('sidebar.html')
-            .then(res => res.text())
-            .then(data => {
-                sideFloat.innerHTML = `<div class="sidebar-header">เมนูนำทาง</div>` + data;
-                ['credit', 'branch', 'sales'].forEach(id => {
-                    if (localStorage.getItem('menu-' + id) === 'true') {
-                        const el = sideFloat.querySelector('#menu-' + id);
-                        if (el) el.classList.add('open');
-                    }
-                });
-            }).catch(err => console.log("Sidebar load failed"));
-    }
-
-    window.toggleDrop = function(btn, id) {
-        const item = btn.parentElement;
-        const isOpen = item.classList.toggle("open");
-        if (id) localStorage.setItem('menu-' + id, isOpen);
-    }
-
-    function fixDate(dateVal) {
-        if (!dateVal || dateVal === "-") return "-";
-        const d = new Date(dateVal);
-        return isNaN(d) ? dateVal : `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
-    }
-
-    function formatForInputDate(dateVal) {
-        if (!dateVal) return "";
-        const d = new Date(dateVal);
-        if (isNaN(d)) return "";
-        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-    }
-
-    window.onscroll = function() {
-        const btn = document.getElementById("btn-back-to-top");
-        if (document.body.scrollTop > 200 || document.documentElement.scrollTop > 200) btn.classList.add("show");
-        else btn.classList.remove("show");
-    };
-
-    function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
-
-    function updateStats(data) {
-        const statsCon = document.getElementById('statsContainer');
-        const counts = {};
-        let processingCount = 0;
-        let pinnedCount = 0;
-        let deadlineCount = 0;
-        const todayStr = formatForInputDate(new Date());
-        jobTypes.forEach(t => counts[t] = 0);
-        data.forEach(row => {
-            const type = row[8] || "ทั่วไป";
-            if(counts[type] !== undefined) counts[type]++;
-            if(row[7] === "true" || row[7] === true) pinnedCount++;
-            if(row[9] === "true" || row[9] === true) processingCount++;
-            const deadline = formatForInputDate(row[10]);
-            if(deadline === todayStr) deadlineCount++;
-        });
-        let cardsHtml = `
-            <div class="stat-card-long" onclick="filterByDeadline(this)">
-                <div class="info">
-                    <span class="title">งานที่ครบกำหนด(วันนี้)</span>
-                    <span class="date-label">${fixDate(new Date())}</span>
-                </div>
-                <div class="count-val">${deadlineCount} รายการ</div>
-            </div>
-            <div class="stat-card active" onclick="filterByType('ทั้งหมด', this)">
-                <span class="count">${data.length}</span>
-                <span class="label">ทั้งหมด</span>
-            </div>
-            <div class="stat-card pinned-stat" onclick="filterByPinned(this)">
-                <span class="count">${pinnedCount}</span>
-                <span class="label">ปักหมุด</span>
-            </div>
-            <div class="stat-card processing-stat" onclick="filterByProcessing(this)">
-                <span class="count">${processingCount}</span>
-                <span class="label">กำลังดำเนินการ</span>
-            </div>
-        `;
-        jobTypes.forEach(type => {
-            cardsHtml += `<div class="stat-card" onclick="filterByType('${type}', this)"><span class="count">${counts[type]}</span><span class="label">${type}</span></div>`;
-        });
-        statsCon.innerHTML = cardsHtml;
-    }
-
-    function filterByDeadline(el) {
-        document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
-        const todayStr = fixDate(new Date());
-        document.getElementById('dateFilter').value = formatForInputDate(new Date()); // อัปเดตช่องปฏิทินด้วย
-        filteredData = fullData.filter(row => fixDate(row[10]) === todayStr);
-        currentPage = 1;
-        renderTable();
-    }
-
-    function filterByPinned(el) {
-        document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
-        el.classList.add('active');
-        filteredData = fullData.filter(row => (row[7] === "true" || row[7] === true));
-        currentPage = 1;
-        renderTable();
-    }
-
-    function filterByProcessing(el) {
-        document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
-        el.classList.add('active');
-        filteredData = fullData.filter(row => (row[9] === "true" || row[9] === true));
-        currentPage = 1;
-        renderTable();
-    }
-
-    function filterByType(type, el) {
-        document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
-        el.classList.add('active');
-        document.getElementById('searchInput').value = (type === 'ทั้งหมด') ? '' : type;
-        filterData();
-    }
-
-    // ฟังก์ชันใหม่: กรองตามวันที่ครบกำหนดจากช่องปฏิทิน
-    function filterByDate() {
-        const selectedDate = document.getElementById('dateFilter').value;
-        if (!selectedDate) {
-            filteredData = [...fullData];
-        } else {
-            filteredData = fullData.filter(row => {
-                const rowDeadline = formatForInputDate(row[10]);
-                return rowDeadline === selectedDate;
-            });
+        if (sideFloat.classList.contains('active')) { closeSidebarFloat(); } 
+        else {
+            const rect = dragBtn.getBoundingClientRect();
+            sideFloat.style.left = (rect.left + rect.width + 10 > window.innerWidth - 300) ? (rect.left - 290) + 'px' : (rect.left + rect.width + 10) + 'px';
+            sideFloat.style.top = Math.min(rect.top, window.innerHeight - sideFloat.offsetHeight - 20) + 'px';
+            sideFloat.classList.add('active'); sideOverlay.classList.add('active');
         }
-        currentPage = 1;
-        renderTable();
     }
 
-    function filterData() {
-        const filter = document.getElementById('searchInput').value.toLowerCase();
-        const dateFilter = document.getElementById('dateFilter').value;
-        
-        filteredData = fullData.filter(row => {
-            const matchesSearch = row.join(' ').toLowerCase().includes(filter);
-            const matchesDate = !dateFilter || formatForInputDate(row[10]) === dateFilter;
-            return matchesSearch && matchesDate;
+    function closeSidebarFloat() { sideFloat.classList.remove('active'); sideOverlay.classList.remove('active'); }
+
+    function updateSidebar() {
+        const categories = [...new Set(fullData.map(item => item[8] || 'อื่นๆ'))];
+        let html = '<div class="sidebar-header">ประเภทงาน</div><div class="menu">';
+        html += `<a href="#" onclick="filterByType('all'); return false;"><i class="fa-solid fa-list-ul"></i>&nbsp; ทั้งหมด</a>`;
+        categories.forEach(cat => {
+            html += `<a href="#" onclick="filterByType('${cat}'); return false;"><i class="fa-solid fa-tag"></i>&nbsp; ${cat}</a>`;
         });
-        
-        currentPage = 1;
-        renderTable();
+        html += '</div>';
+        sideFloat.innerHTML = html;
     }
 
-    async function loadData(manual = false) {
-        const tableBody = document.getElementById('dataTable');
-        const refreshBtn = document.querySelector('.fa-rotate-right');
-        const scrollPos = window.scrollY;
-        const currentSearch = document.getElementById('searchInput').value;
-        const currentDate = document.getElementById('dateFilter').value;
+    function filterByType(type) {
+        filteredData = (type === 'all') ? [...fullData] : fullData.filter(item => item[8] === type);
+        currentPage = 1; renderTable(); closeSidebarFloat();
+    }
 
-        if(refreshBtn) refreshBtn.classList.add('fa-spin');
+    async function loadData(showLoader = false) {
+        if (showLoader) Swal.fire({title: 'กำลังโหลด...', didOpen: () => Swal.showLoading()});
         try {
-            const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: "read"}) });
-            const data = await res.json();
-            fullData = data.sort((a, b) => {
-                const pinA = (a[7] === "true" || a[7] === true);
-                const pinB = (b[7] === "true" || b[7] === true);
-                if (pinA && !pinB) return -1;
-                if (!pinA && pinB) return 1;
+            const resp = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: 'read'}) });
+            fullData = await resp.json();
+            fullData.sort((a, b) => {
+                if (a[7] === "true" && b[7] !== "true") return -1;
+                if (a[7] !== "true" && b[7] === "true") return 1;
                 return new Date(b[0]) - new Date(a[0]);
             });
-            
-            if (manual) {
-                document.getElementById('dateFilter').value = ""; // ล้างวันที่เมื่อรีเฟรชมือ
-                document.getElementById('searchInput').value = "";
-                filteredData = [...fullData];
-            } else {
-                filterData(); // ใช้ filterData เพื่อรวมการกรองทั้งสองอย่าง
-            }
-
-            updateStats(fullData);
+            filteredData = [...fullData];
             renderTable();
-            if (!manual) window.scrollTo(0, scrollPos);
-        } catch (e) { tableBody.innerHTML = '<tr><td colspan="8">โหลดข้อมูลไม่สำเร็จ</td></tr>'; }
-        finally { if(refreshBtn) refreshBtn.classList.remove('fa-spin'); }
+            updateStats();
+            updateSidebar();
+            if (showLoader) Swal.close();
+        } catch (e) { console.error(e); }
+    }
+
+    function updateStats() {
+        const todayStr = new Date().toISOString().split('T')[0];
+        
+        // กรองงานวันนี้: วันที่ตรงกัน OR เป็นงานวนลูป
+        const todayJobs = fullData.filter(item => item[10] === todayStr || item[12] === "true");
+        const pendingJobs = fullData.filter(item => !item[9]);
+        const processingJobs = fullData.filter(item => item[9] === "true");
+        const pinnedJobs = fullData.filter(item => item[7] === "true");
+
+        document.getElementById('statsContainer').innerHTML = `
+            <div class="stat-card-long" onclick="filterByToday()">
+                <div class="info">
+                    <span class="title">งานที่ครบกำหนด (วันนี้)</span>
+                    <span class="date-label">${new Date().toLocaleDateString('th-TH', {day:'numeric', month:'long'})}</span>
+                </div>
+                <div class="count-val">${todayJobs.length}</div>
+            </div>
+            <div class="stat-card" onclick="filterByPending()">
+                <span class="count">${pendingJobs.length}</span>
+                <span class="label">รอดำเนินการ</span>
+            </div>
+            <div class="stat-card processing-stat" onclick="filterByProcessing()">
+                <span class="count">${processingJobs.length}</span>
+                <span class="label">กำลังดำเนินการ</span>
+            </div>
+            <div class="stat-card pinned-stat" onclick="filterByPinned()">
+                <span class="count">${pinnedJobs.length}</span>
+                <span class="label">ปักหมุดไว้</span>
+            </div>
+        `;
+    }
+
+    function filterByToday() {
+        const todayStr = new Date().toISOString().split('T')[0];
+        filteredData = fullData.filter(item => item[10] === todayStr || item[12] === "true");
+        currentPage = 1; renderTable();
+    }
+    function filterByPending() { filteredData = fullData.filter(item => !item[9]); currentPage = 1; renderTable(); }
+    function filterByProcessing() { filteredData = fullData.filter(item => item[9] === "true"); currentPage = 1; renderTable(); }
+    function filterByPinned() { filteredData = fullData.filter(item => item[7] === "true"); currentPage = 1; renderTable(); }
+    function filterByDate() {
+        const dateVal = document.getElementById('dateFilter').value;
+        if (!dateVal) { filteredData = [...fullData]; } 
+        else { filteredData = fullData.filter(item => item[10] === dateVal); }
+        currentPage = 1; renderTable();
+    }
+    function filterData() {
+        const query = document.getElementById('searchInput').value.toLowerCase();
+        filteredData = fullData.filter(item => 
+            String(item[1]).toLowerCase().includes(query) || 
+            String(item[2]).toLowerCase().includes(query) ||
+            String(item[3]).toLowerCase().includes(query) ||
+            String(item[4]).toLowerCase().includes(query) ||
+            String(item[6]).toLowerCase().includes(query)
+        );
+        currentPage = 1; renderTable();
     }
 
     function renderTable() {
-        const tableBody = document.getElementById('dataTable');
-        tableBody.innerHTML = '';
-        if (filteredData.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:50px; color:#888;">ไม่พบข้อมูล</td></tr>';
-            renderPagination(0); return;
+        const tbody = document.getElementById('dataTable');
+        const start = (currentPage - 1) * itemsPerPage;
+        const pageData = filteredData.slice(start, start + itemsPerPage);
+        const todayStr = new Date().toISOString().split('T')[0];
+
+        if (pageData.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:50px; color:#888;">ไม่พบข้อมูล</td></tr>';
+            renderPagination(); return;
         }
-        const startIndex = (currentPage - 1) * itemsPerPage;
-        const endIndex = startIndex + itemsPerPage;
-        const paginatedItems = filteredData.slice(startIndex, endIndex);
-        paginatedItems.forEach(row => {
-            const tr = document.createElement('tr');
-            const isPinned = (row[7] === "true" || row[7] === true);
-            const isProcessing = (row[9] === "true" || row[9] === true);
-            const reportId = row[11] || "-";
-            const rowJson = encodeURIComponent(JSON.stringify(row));
-            const deadlineDate = fixDate(row[10]);
-            tr.setAttribute('data-deadline', deadlineDate);
-            if (isPinned) tr.classList.add('pinned-row');
-            let filesHtml = '-';
-            if (row[5]) {
-                const urls = row[5].split(", ");
-                filesHtml = urls.map((u, i) => `<a href="${u}" target="_blank" style="color:var(--ios-blue); text-decoration:none; margin-right:5px;"><i class="fa-solid fa-file"></i> ${i+1}</a>`).join('');
-            }
-            tr.innerHTML = `
-                <td><strong>${fixDate(row[0])}</strong><span class="report-id-label">ID: ${reportId}</span></td>
-                <td><span class="job-type-badge">${row[8] || "ทั่วไป"}</span></td>
-                <td onclick="showFullDetail('${rowJson}')" style="cursor:pointer; font-weight:600; color:var(--ios-blue);">${String(row[1]).replace(/^'/, '')}</td>
-                <td onclick="showFullDetail('${rowJson}')" style="cursor:pointer;">${row[2]}<br><small style="color:#8e8e93">${String(row[3]).replace(/^'/, '')}</small></td>
-                <td onclick="showFullDetail('${rowJson}')" style="cursor:pointer;"><div style="max-width:300px; max-height:100px; overflow:hidden; white-space:normal; display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; color:#666; font-size:13px; line-height:1.4;">${row[6] || "-"}</div></td>
-                <td>${row[4]}</td>
-                <td>${filesHtml}</td>
-                <td>
-                    <div class="action-btns-container">
-                        <div class="action-btns">
-                            <button class="btn-pin ${isPinned ? 'active' : ''}" onclick="togglePin('${reportId}')" title="ปักหมุด"><i class="fa-solid fa-thumbtack"></i></button>
-                            <button class="btn-process ${isProcessing ? 'active' : ''}" onclick="toggleProcessing('${reportId}')" title="กำลังดำเนินการ"><i class="fa-solid fa-clock-rotate-left"></i></button>
-                            <button class="btn-edit" onclick="editData('${rowJson}')" title="แก้ไขข้อมูล"><i class="fa-solid fa-pen-to-square"></i></button>
-                            <button class="btn-delete" onclick="deleteData('${reportId}')" title="ลบรายการ"><i class="fa-solid fa-trash"></i></button>
+
+        tbody.innerHTML = pageData.map(item => {
+            const files = item[5] ? item[5].split(", ") : [];
+            const isPinned = (item[7] === "true" || item[7] === true);
+            const isProcessing = (item[9] === "true" || item[9] === true);
+            const isRecurring = (item[12] === "true" || item[12] === true);
+            
+            // ถ้าวนลูป ให้แสดงเป็นวันที่วันนี้ เพื่อให้เข้าใจว่าง่ายๆ
+            const displayDeadline = isRecurring ? todayStr : item[10];
+
+            return `
+                <tr class="${isPinned ? 'pinned-row' : ''}">
+                    <td>
+                        <div style="font-weight:600; color:var(--ios-blue);">${item[0]}</div>
+                        <span class="report-id-label">#${item[11]}</span>
+                        ${isRecurring ? '<span class="recurring-badge"><i class="fa-solid fa-arrows-rotate"></i> วนลูปรายวัน</span>' : ''}
+                    </td>
+                    <td><span class="job-type-badge">${item[8] || '-'}</span></td>
+                    <td style="font-weight:500;">${item[1]}</td>
+                    <td>
+                        <div style="font-weight:600;">${item[2]}</div>
+                        <div style="font-size:12px; color:var(--text-light);"><i class="fa-solid fa-phone" style="font-size:10px;"></i> ${item[3]}</div>
+                    </td>
+                    <td><div style="max-width:280px; font-size:13px; color:#444;">${item[6]}</div></td>
+                    <td><span style="background:#f0f0f5; padding:4px 10px; border-radius:8px; font-size:12px;">${item[4]}</span></td>
+                    <td>${files.length > 0 ? `<button onclick="viewFiles('${item[5]}')" style="background:none; border:none; color:var(--ios-blue); cursor:pointer;"><i class="fa-solid fa-file-lines"></i> ดูไฟล์ (${files.length})</button>` : '<span style="color:#ccc;">ไม่มีไฟล์</span>'}</td>
+                    <td>
+                        <div class="action-btns-container">
+                            ${displayDeadline === todayStr ? '<span class="deadline-label-small">ครบกำหนดวันนี้</span>' : `<span style="font-size:11px; color:#888;">ครบ: ${displayDeadline}</span>`}
+                            <div class="action-btns">
+                                <button class="btn-pin ${isPinned ? 'active' : ''}" onclick="togglePin('${item[11]}')" title="ปักหมุด"><i class="fa-solid fa-thumbtack"></i></button>
+                                <button class="btn-process ${isProcessing ? 'active' : ''}" onclick="toggleProcessing('${item[11]}')" title="กำลังดำเนินการ"><i class="fa-solid fa-spinner"></i></button>
+                                <button class="btn-edit" onclick="openEditModal('${item[11]}')" title="แก้ไข"><i class="fa-solid fa-pen-to-square"></i></button>
+                                <button class="btn-delete" onclick="deleteJob('${item[11]}')" title="ลบ"><i class="fa-solid fa-trash-can"></i></button>
+                            </div>
                         </div>
-                        ${deadlineDate !== "-" ? `<span class="deadline-label-small">ครบกำหนด : ${deadlineDate}</span>` : ''}
-                    </div>
-                </td>
+                    </td>
+                </tr>
             `;
-            tableBody.appendChild(tr);
-        });
-        renderPagination(filteredData.length);
+        }).join('');
+        renderPagination();
     }
 
-    function renderPagination(totalItems) {
-        const paginationCon = document.getElementById('pagination');
-        paginationCon.innerHTML = '';
-        const totalPages = Math.ceil(totalItems / itemsPerPage);
-        if (totalPages <= 1) return;
-        const prevBtn = document.createElement('button');
-        prevBtn.className = 'pagination-btn'; prevBtn.innerHTML = '<i class="fa-solid fa-chevron-left"></i>';
-        prevBtn.disabled = currentPage === 1;
-        prevBtn.onclick = () => { currentPage--; renderTable(); scrollToTop(); };
-        paginationCon.appendChild(prevBtn);
-        for (let i = 1; i <= totalPages; i++) {
-            const pageBtn = document.createElement('button');
-            pageBtn.className = `pagination-btn ${i === currentPage ? 'active' : ''}`;
-            pageBtn.innerText = i;
-            pageBtn.onclick = () => { currentPage = i; renderTable(); scrollToTop(); };
-            paginationCon.appendChild(pageBtn);
-        }
-        const nextBtn = document.createElement('button');
-        nextBtn.className = 'pagination-btn'; nextBtn.innerHTML = '<i class="fa-solid fa-chevron-right"></i>';
-        nextBtn.disabled = currentPage === totalPages;
-        nextBtn.onclick = () => { currentPage++; renderTable(); scrollToTop(); };
-        paginationCon.appendChild(nextBtn);
-    }
-
-    async function toggleProcessing(reportId) {
-        Swal.fire({title: 'กำลังดำเนินการ...', allowOutsideClick: false, allowEscapeKey: false, didOpen: () => Swal.showLoading()});
-        try { 
-            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "toggleProcessing", reportId: reportId }) }); 
-            Swal.close(); loadData(); 
-        } catch (err) { Swal.fire({title: 'Error', icon: 'error', allowOutsideClick: false}); }
-    }
-
-    async function togglePin(reportId) {
-        Swal.fire({title: 'กำลังดำเนินการ...', allowOutsideClick: false, allowEscapeKey: false, didOpen: () => Swal.showLoading()});
-        try { 
-            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "togglePin", reportId: reportId }) }); 
-            Swal.close(); loadData(); 
-        } catch (err) { Swal.fire({title: 'Error', icon: 'error', allowOutsideClick: false}); }
-    }
-
-    async function deleteData(reportId) {
-        const confirm = await Swal.fire({ 
-            title: 'ยืนยันการลบ?', text: "ID: " + reportId, icon: 'warning', 
-            showCancelButton: true, confirmButtonColor: '#FF3B30', confirmButtonText: 'ลบเลย',
-            allowOutsideClick: false, allowEscapeKey: false
-        });
-        if (confirm.isConfirmed) {
-            Swal.fire({title: 'กำลังลบ...', allowOutsideClick: false, allowEscapeKey: false, didOpen: () => Swal.showLoading()});
-            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: "delete", reportId: reportId}) });
-            Swal.fire({title: 'ลบแล้ว!', icon: 'success', timer: 1500, allowOutsideClick: false}); loadData();
-        }
-    }
-
-    window.showFullDetail = function(rowJson) {
-        const item = JSON.parse(decodeURIComponent(rowJson));
-        let filesDetail = '-';
-        if (item[5]) {
-            const urls = item[5].split(", ");
-            filesDetail = urls.map((u, i) => `<a href="${u}" target="_blank" style="color:var(--ios-blue); text-decoration:none; font-weight:600; margin-right:15px;"><i class="fa-solid fa-file"></i> ไฟล์ที่ ${i+1}</a>`).join('');
-        }
-        Swal.fire({
-            title: 'รายละเอียดรายการ',
-            customClass: { popup: 'swal-modal-custom' }, width: '700px',
-            allowOutsideClick: false, allowEscapeKey: false,
-            html: `
-                <div class="swal-form-container">
-                    <div class="swal-field-full"><label class="swal-label">Report ID</label><div class="detail-view-item"><span class="val">${item[11] || '-'}</span></div></div>
-                    <div class="swal-field-full"><label class="swal-label">ประเภทงาน</label><div class="detail-view-item"><span class="job-type-badge">${item[8] || 'ทั่วไป'}</span></div></div>
-                    <div><label class="swal-label">วันที่ดำเนินการ</label><div class="detail-view-item"><span class="val">${fixDate(item[0])}</span></div></div>
-                    <div><label class="swal-label">รหัสสมาชิก</label><div class="detail-view-item"><span class="val">${String(item[1]).replace(/^'/, '')}</span></div></div>
-                    <div class="swal-field-full"><label class="swal-label">ชื่อลูกค้า</label><div class="detail-view-item"><span class="val">${item[2]}</span></div></div>
-                    <div><label class="swal-label">เบอร์ติดต่อ</label><div class="detail-view-item"><span class="val">${String(item[3]).replace(/^'/, '')}</span></div></div>
-                    <div><label class="swal-label">พนักงาน</label><div class="detail-view-item"><span class="val">${item[4]}</span></div></div>
-                    <div><label class="swal-label">วันครบกำหนดงาน</label><div class="detail-view-item"><span class="val" style="color:var(--ios-red);">${fixDate(item[10])}</span></div></div>
-                    <div class="swal-field-full"><label class="swal-label">รายละเอียดเพิ่มเติม</label><div class="detail-view-item" style="min-height:160px;"><span class="val" style="font-weight:400; white-space:pre-wrap;">${item[6] || '-'}</span></div></div>
-                    <div class="swal-field-full" style="text-align:center; margin-top:10px;">${filesDetail}</div>
-                </div>
-            `,
-            showCancelButton: true, confirmButtonText: 'แก้ไขข้อมูล', confirmButtonColor: '#34C759', cancelButtonText: 'ปิด'
-        }).then((result) => { if (result.isConfirmed) editData(rowJson); });
-    }
-
-    // Function to handle file selection and update display
-    window.handleFileSelect = async function(event) {
-        const files = event.target.files;
-        for (let i = 0; i < files.length; i++) {
-            if (selectedFiles.length + existingFiles.length >= 5) { // Increased limit slightly for flexibility
-                Swal.showValidationMessage('แนบไฟล์รวมได้สูงสุด 5 ไฟล์เท่านั้น'); break; 
+    function renderPagination() {
+        const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+        const container = document.getElementById('pagination');
+        if (totalPages <= 1) { container.innerHTML = ''; return; }
+        let html = `<button class="pagination-btn" onclick="changePage(${currentPage-1})" ${currentPage===1?'disabled':''}><i class="fa-solid fa-chevron-left"></i></button>`;
+        for (let i=1; i<=totalPages; i++) {
+            if (i===1 || i===totalPages || (i >= currentPage-1 && i <= currentPage+1)) {
+                html += `<button class="pagination-btn ${i===currentPage?'active':''}" onclick="changePage(${i})">${i}</button>`;
+            } else if (i === currentPage-2 || i === currentPage+2) {
+                html += `<span style="color:#ccc; padding:0 5px;">...</span>`;
             }
-            const file = files[i];
-            const reader = new FileReader();
-            const filePromise = new Promise(resolve => {
-                reader.onload = () => resolve({ name: file.name, data: reader.result, id: Date.now() + Math.random() });
-                reader.readAsDataURL(file);
-            });
-            const fileObj = await filePromise;
-            selectedFiles.push(fileObj);
         }
-        event.target.value = "";
-        renderSelectedFiles();
-    };
-
-    window.removeFile = function(id) {
-        selectedFiles = selectedFiles.filter(f => f.id !== id);
-        renderSelectedFiles();
-    };
-    
-    // Function to remove existing file from current list
-    window.removeExistingFile = function(url) {
-        existingFiles = existingFiles.filter(u => u !== url);
-        renderSelectedFiles();
-    };
-
-    function renderSelectedFiles() {
-        const fileListDiv = document.getElementById('selectedFileList');
-        if (!fileListDiv) return;
-        
-        let html = '';
-        
-        // Show existing files (from server)
-        existingFiles.forEach((url, idx) => {
-            html += `
-                <div class="file-item existing-file-item">
-                    <span onclick="window.open('${url}', '_blank')" style="cursor:pointer; color:var(--ios-blue); text-decoration:underline;">
-                        <i class="fa-solid fa-cloud"></i> ไฟล์เดิม ${idx + 1}
-                    </span>
-                    <span class="remove-file" onclick="removeExistingFile('${url}')" title="ลบไฟล์เดิมออกจากระบบ">
-                        <i class="fa-solid fa-trash-can"></i>
-                    </span>
-                </div>
-            `;
-        });
-        
-        // Show newly selected files (local)
-        selectedFiles.forEach(file => {
-            html += `
-                <div class="file-item">
-                    <span><i class="fa-solid fa-file"></i> ${file.name}</span>
-                    <span class="remove-file" onclick="removeFile(${file.id})"><i class="fa-solid fa-circle-xmark"></i></span>
-                </div>
-            `;
-        });
-        
-        fileListDiv.innerHTML = html;
+        html += `<button class="pagination-btn" onclick="changePage(${currentPage+1})" ${currentPage===totalPages?'disabled':''}><i class="fa-solid fa-chevron-right"></i></button>`;
+        container.innerHTML = html;
     }
+    function changePage(p) { currentPage = p; renderTable(); window.scrollTo({top:0, behavior:'smooth'}); }
 
-    window.openAddJobModal = function() {
+    function openAddJobModal() {
         selectedFiles = [];
-        existingFiles = []; // Clear
-        let typeOptions = `<option value="">-- เลือกประเภทงาน --</option>`;
-        jobTypes.forEach(t => { typeOptions += `<option value="${t}">${t}</option>`; });
-        const newId = generateReportId();
+        const today = new Date().toISOString().split('T')[0];
         Swal.fire({
-            title: 'บันทึกงานใหม่ (ID: ' + newId + ')',
-            customClass: { popup: 'swal-modal-custom' }, width: '700px',
-            allowOutsideClick: false, allowEscapeKey: false,
+            title: 'เพิ่มรายการงานใหม่',
             html: `
                 <div class="swal-form-container">
-                    <div class="swal-field-full"><label class="swal-label">ประเภทงาน</label><select id="jobType" class="swal-input-styled">${typeOptions}</select></div>
-                    <div><label class="swal-label">วันที่ดำเนินการ</label><input type="date" id="date" class="swal-input-styled" value="${new Date().toISOString().split('T')[0]}"></div>
-                    <div><label class="swal-label">หมายเลขสมาชิก</label><input type="text" id="memberId" class="swal-input-styled" placeholder="TMH/TOL/TVS"></div>
-                    <div class="swal-field-full"><label class="swal-label">ชื่อลูกค้า</label><input type="text" id="name" class="swal-input-styled"></div>
-                    <div><label class="swal-label">เบอร์ติดต่อ</label><input type="text" id="phone" class="swal-input-styled" placeholder="0XXXXXXXXX"></div>
-                    <div><label class="swal-label">พนักงาน</label><select id="staff" class="swal-input-styled"><option value="">-- เลือก --</option><option value="ศุภกฤต">ศุภกฤต</option><option value="นวพล">นวพล</option><option value="ปิยะพร">ปิยะพร</option><option value="กรทักษ์">กรทักษ์</option></select></div>
-                    <div class="swal-field-full"><label class="swal-label">วันครบกำหนดงาน</label><input type="date" id="deadline" class="swal-input-styled"></div>
-                    <div class="swal-field-full"><label class="swal-label">รายละเอียด</label><textarea id="jobDetail" class="swal-input-styled" style="height:160px;"></textarea></div>
                     <div class="swal-field-full">
-                        <label class="swal-label">แนบไฟล์ (รูปภาพ, PDF, Word, Excel) **แนบได้สูงสุด 3 ไฟล์** </label>
-                        <input type="file" id="file" class="swal-input-styled" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" onchange="handleFileSelect(event)" multiple>
-                        <div id="selectedFileList" class="file-list"></div>
+                        <label class="swal-label">ประเภทงาน</label>
+                        <select id="swal-jobType" class="swal-input-styled">
+                            ${jobTypes.map(t => `<option value="${t}">${t}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="swal-label">รหัสสมาชิก</label>
+                        <input id="swal-memberId" class="swal-input-styled" placeholder="เช่น 12345">
+                    </div>
+                    <div>
+                        <label class="swal-label">ชื่อลูกค้า</label>
+                        <input id="swal-name" class="swal-input-styled" placeholder="ชื่อ-นามสกุล">
+                    </div>
+                    <div>
+                        <label class="swal-label">เบอร์โทรศัพท์</label>
+                        <input id="swal-phone" class="swal-input-styled" placeholder="08x-xxxxxxx">
+                    </div>
+                    <div>
+                        <label class="swal-label">พนักงานผู้รับผิดชอบ</label>
+                        <input id="swal-staff" class="swal-input-styled" placeholder="ระบุชื่อพนักงาน">
+                    </div>
+                    <div>
+                        <label class="swal-label">วันที่ครบกำหนด</label>
+                        <input type="date" id="swal-deadline" class="swal-input-styled" value="${today}">
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px; padding-top: 25px;">
+                        <input type="checkbox" id="swal-isRecurring" style="width:20px; height:20px; cursor:pointer;" onchange="handleRecurringChange(this)">
+                        <label for="swal-isRecurring" style="font-size:14px; font-weight:600; color:var(--ios-blue); cursor:pointer;">วนลูปงานทุกวัน</label>
+                    </div>
+                    <div class="swal-field-full">
+                        <label class="swal-label">รายละเอียดงาน</label>
+                        <textarea id="swal-jobDetail" class="swal-input-styled" style="height:80px;" placeholder="ระบุรายละเอียด..."></textarea>
+                    </div>
+                    <div class="swal-field-full">
+                        <label class="swal-label">อัปโหลดเอกสาร (เลือกได้หลายไฟล์)</label>
+                        <input type="file" id="swal-files" class="swal-input-styled" multiple onchange="handleFileSelect(event)">
+                        <div id="swal-fileList" class="file-list"></div>
                     </div>
                 </div>
             `,
-            showCancelButton: true, confirmButtonText: 'บันทึกข้อมูล', preConfirm: async () => {
-                const vals = { reportId: newId, jobType: document.getElementById('jobType').value, date: document.getElementById('date').value, memberId: "'" + document.getElementById('memberId').value, name: document.getElementById('name').value, phone: "'" + document.getElementById('phone').value, staff: document.getElementById('staff').value, jobDetail: document.getElementById('jobDetail').value, deadline: document.getElementById('deadline').value };
-                if (!vals.jobType || !vals.name || !vals.staff) { Swal.showValidationMessage('กรุณากรอกข้อมูลสำคัญ'); return false; }
-                return { action: "insert", ...vals, files: selectedFiles.map(f => ({name: f.name, data: f.data})) };
+            customClass: { popup: 'swal-modal-custom' },
+            showCancelButton: true,
+            confirmButtonText: 'บันทึกข้อมูล',
+            cancelButtonText: 'ยกเลิก',
+            preConfirm: () => {
+                const isRecurring = document.getElementById('swal-isRecurring').checked;
+                return {
+                    action: "insert",
+                    reportId: generateReportId(),
+                    date: new Date().toLocaleDateString('th-TH'),
+                    memberId: "'" + document.getElementById('swal-memberId').value,
+                    name: document.getElementById('swal-name').value,
+                    phone: "'" + document.getElementById('swal-phone').value,
+                    staff: document.getElementById('swal-staff').value,
+                    jobDetail: document.getElementById('swal-jobDetail').value,
+                    jobType: document.getElementById('swal-jobType').value,
+                    deadline: document.getElementById('swal-deadline').value,
+                    isRecurring: isRecurring ? "true" : "", // บันทึกลงคอลัมน์ M
+                    files: selectedFiles.map(f => ({name: f.name, data: f.data}))
+                };
             }
         }).then(async (result) => {
             if (result.isConfirmed) {
-                Swal.fire({title: 'กำลังบันทึก...', allowOutsideClick: false, allowEscapeKey: false, didOpen: () => Swal.showLoading()});
+                Swal.fire({title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
                 await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(result.value) });
-                Swal.fire({title: 'สำเร็จ', icon: 'success', timer: 1500, allowOutsideClick: false}); loadData();
+                Swal.fire({title: 'สำเร็จ', icon: 'success', timer: 1500}); loadData();
             }
         });
     }
 
-    // Update editData to support file deletion
-    window.editData = function(rowJson) {
-        const item = JSON.parse(decodeURIComponent(rowJson));
-        selectedFiles = []; 
-        existingFiles = item[5] ? item[5].split(", ") : []; // Load server files
-        
-        let typeOptions = `<option value="">-- เลือกประเภทงาน --</option>`;
-        jobTypes.forEach(t => { typeOptions += `<option value="${t}" ${item[8] === t ? 'selected' : ''}>${t}</option>`; });
-        
+    function handleRecurringChange(checkbox) {
+        const deadlineInput = document.getElementById('swal-deadline');
+        if (checkbox.checked) {
+            deadlineInput.value = new Date().toISOString().split('T')[0];
+            deadlineInput.readOnly = true;
+            deadlineInput.style.opacity = "0.6";
+        } else {
+            deadlineInput.readOnly = false;
+            deadlineInput.style.opacity = "1";
+        }
+    }
+
+    function handleFileSelect(e) {
+        const files = e.target.files;
+        for (let file of files) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                selectedFiles.push({ name: file.name, data: event.target.result });
+                renderSelectedFiles();
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    function renderSelectedFiles() {
+        const list = document.getElementById('swal-fileList');
+        list.innerHTML = selectedFiles.map((f, i) => `
+            <div class="file-item">
+                <span><i class="fa-solid fa-file"></i> ${f.name}</span>
+                <i class="fa-solid fa-circle-xmark remove-file" onclick="removeSelectedFile(${i})"></i>
+            </div>
+        `).join('');
+    }
+    function removeSelectedFile(i) { selectedFiles.splice(i, 1); renderSelectedFiles(); }
+
+    function openEditModal(reportId) {
+        const item = fullData.find(d => String(d[11]) === String(reportId));
+        if (!item) return;
+        selectedFiles = [];
+        existingFiles = item[5] ? item[5].split(", ") : [];
+        const isRecur = (item[12] === "true" || item[12] === true);
+
         Swal.fire({
-            title: 'แก้ไขข้อมูล: ' + (item[11] || ''),
-            customClass: { popup: 'swal-modal-custom' }, width: '700px',
-            allowOutsideClick: false, allowEscapeKey: false,
+            title: 'แก้ไขข้อมูลงาน',
             html: `
                 <div class="swal-form-container">
-                    <div class="swal-field-full"><label class="swal-label">ประเภทงาน</label><select id="swal-jobType" class="swal-input-styled">${typeOptions}</select></div>
-                    <div><label class="swal-label">วันที่</label><input type="date" id="swal-date" class="swal-input-styled" value="${formatForInputDate(item[0])}"></div>
-                    <div><label class="swal-label">รหัสสมาชิก</label><input type="text" id="swal-memberId" class="swal-input-styled" value="${String(item[1]).replace(/^'/, '')}"></div>
-                    <div class="swal-field-full"><label class="swal-label">ชื่อลูกค้า</label><input type="text" id="swal-name" class="swal-input-styled" value="${item[2]}"></div>
-                    <div><label class="swal-label">เบอร์ติดต่อ</label><input type="text" id="swal-phone" class="swal-input-styled" value="${String(item[3]).replace(/^'/, '')}"></div>
-                    <div><label class="swal-label">พนักงาน</label><select id="swal-staff" class="swal-input-styled">${['ศุภกฤต', 'นวพล', 'ปิยะพร', 'กรทักษ์'].map(s => `<option value="${s}" ${item[4] === s ? 'selected' : ''}>${s}</option>`).join('')}</select></div>
-                    <div class="swal-field-full"><label class="swal-label">วันครบกำหนดงาน</label><input type="date" id="swal-deadline" class="swal-input-styled" value="${formatForInputDate(item[10])}"></div>
-                    <div class="swal-field-full"><label class="swal-label">รายละเอียด</label><textarea id="swal-jobDetail" class="swal-input-styled" style="height:160px;">${item[6] || ''}</textarea></div>
                     <div class="swal-field-full">
-                        <label class="swal-label">จัดการไฟล์แนบ (ลบไฟล์เดิม/เพิ่มไฟล์ใหม่) (รูปภาพ, PDF, Word, Excel) **ได้สูงสุด 3 ไฟล์**</label>
-                        <input type="file" id="file" class="swal-input-styled" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" onchange="handleFileSelect(event)" multiple>
-                        <div id="selectedFileList" class="file-list"></div>
-                        <p style="font-size:11px; color:var(--ios-red); margin-top:5px;">* กดไอคอนถังขยะเพื่อลบไฟล์เดิมออกจากเซิร์ฟเวอร์ถาวรเมื่อกดบันทึก</p>
+                        <label class="swal-label">ประเภทงาน</label>
+                        <select id="swal-jobType" class="swal-input-styled">
+                            ${jobTypes.map(t => `<option value="${t}" ${t===item[8]?'selected':''}>${t}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="swal-label">รหัสสมาชิก</label>
+                        <input id="swal-memberId" class="swal-input-styled" value="${item[1].replace(/'/g, '')}">
+                    </div>
+                    <div>
+                        <label class="swal-label">ชื่อลูกค้า</label>
+                        <input id="swal-name" class="swal-input-styled" value="${item[2]}">
+                    </div>
+                    <div>
+                        <label class="swal-label">เบอร์โทรศัพท์</label>
+                        <input id="swal-phone" class="swal-input-styled" value="${item[3].replace(/'/g, '')}">
+                    </div>
+                    <div>
+                        <label class="swal-label">พนักงาน</label>
+                        <input id="swal-staff" class="swal-input-styled" value="${item[4]}">
+                    </div>
+                    <div>
+                        <label class="swal-label">วันที่ครบกำหนด</label>
+                        <input type="date" id="swal-deadline" class="swal-input-styled" value="${item[10]}" ${isRecur ? 'readonly style="opacity:0.6"' : ''}>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px; padding-top: 25px;">
+                        <input type="checkbox" id="swal-isRecurring" style="width:20px; height:20px; cursor:pointer;" onchange="handleRecurringChange(this)" ${isRecur ? 'checked' : ''}>
+                        <label for="swal-isRecurring" style="font-size:14px; font-weight:600; color:var(--ios-blue); cursor:pointer;">วนลูปงานทุกวัน</label>
+                    </div>
+                    <div class="swal-field-full">
+                        <label class="swal-label">รายละเอียด</label>
+                        <textarea id="swal-jobDetail" class="swal-input-styled" style="height:80px;">${item[6]}</textarea>
+                    </div>
+                    <div class="swal-field-full">
+                        <label class="swal-label">ไฟล์เดิมในระบบ (คลิกเพื่อลบ)</label>
+                        <div id="existing-files" class="file-list">
+                            ${existingFiles.map((url, i) => {
+                                const fileName = url.split('/').pop().split('?')[0] || 'File '+ (i+1);
+                                return `<div class="file-item existing-file-item">
+                                            <a href="${url}" target="_blank"><i class="fa-solid fa-link"></i> ${fileName}</a>
+                                            <i class="fa-solid fa-trash-can" onclick="removeExistingFile(${i})"></i>
+                                        </div>`;
+                            }).join('')}
+                        </div>
+                    </div>
+                    <div class="swal-field-full" style="margin-top:10px;">
+                        <label class="swal-label">เพิ่มไฟล์ใหม่</label>
+                        <input type="file" id="swal-files" class="swal-input-styled" multiple onchange="handleFileSelect(event)">
+                        <div id="swal-fileList" class="file-list"></div>
                     </div>
                 </div>
             `,
-            didOpen: () => { renderSelectedFiles(); },
-            showCancelButton: true, confirmButtonText: 'บันทึกการแก้ไข', confirmButtonColor: '#007aff',
+            customClass: { popup: 'swal-modal-custom' },
+            showCancelButton: true,
+            confirmButtonText: 'อัปเดตข้อมูล',
             preConfirm: () => {
-                return { 
-                    action: "update", 
-                    reportId: item[11], 
-                    date: document.getElementById('swal-date').value, 
-                    memberId: "'" + document.getElementById('swal-memberId').value, 
-                    name: document.getElementById('swal-name').value, 
-                    phone: "'" + document.getElementById('swal-phone').value, 
-                    staff: document.getElementById('swal-staff').value, 
-                    jobDetail: document.getElementById('swal-jobDetail').value, 
-                    jobType: document.getElementById('swal-jobType').value, 
+                const isRecurring = document.getElementById('swal-isRecurring').checked;
+                return {
+                    action: "update",
+                    reportId: item[11],
+                    date: item[0],
+                    memberId: "'" + document.getElementById('swal-memberId').value,
+                    name: document.getElementById('swal-name').value,
+                    phone: "'" + document.getElementById('swal-phone').value,
+                    staff: document.getElementById('swal-staff').value,
+                    jobDetail: document.getElementById('swal-jobDetail').value,
+                    jobType: document.getElementById('swal-jobType').value,
                     deadline: document.getElementById('swal-deadline').value,
-                    existingFiles: existingFiles, // Send back the list of files to KEEP
+                    isRecurring: isRecurring ? "true" : "", 
+                    existingFiles: existingFiles,
                     files: selectedFiles.map(f => ({name: f.name, data: f.data})) 
                 };
             }
         }).then(async (result) => {
             if (result.isConfirmed) {
-                Swal.fire({title: 'กำลังอัพเดท...', allowOutsideClick: false, allowEscapeKey: false, didOpen: () => Swal.showLoading()});
+                Swal.fire({title: 'กำลังอัพเดท...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
                 await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(result.value) });
-                Swal.fire({title: 'สำเร็จ', icon: 'success', timer: 1500, allowOutsideClick: false}); loadData();
+                Swal.fire({title: 'สำเร็จ', icon: 'success', timer: 1500}); loadData();
             }
         });
     }
+
+    window.removeExistingFile = function(i) {
+        existingFiles.splice(i, 1);
+        const container = document.getElementById('existing-files');
+        container.innerHTML = existingFiles.map((url, idx) => {
+            const fileName = url.split('/').pop().split('?')[0] || 'File '+ (idx+1);
+            return `<div class="file-item existing-file-item">
+                        <a href="${url}" target="_blank"><i class="fa-solid fa-link"></i> ${fileName}</a>
+                        <i class="fa-solid fa-trash-can" onclick="removeExistingFile(${idx})"></i>
+                    </div>`;
+        }).join('');
+    };
+
+    async function togglePin(id) {
+        await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: 'togglePin', reportId: id}) });
+        loadData();
+    }
+    async function toggleProcessing(id) {
+        await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: 'toggleProcessing', reportId: id}) });
+        loadData();
+    }
+    function deleteJob(id) {
+        Swal.fire({
+            title: 'ยืนยันการลบ?', text: "ข้อมูลและไฟล์แนบจะถูกลบถาวร!", icon: 'warning',
+            showCancelButton: true, confirmButtonColor: '#FF3B30', confirmButtonText: 'ลบเลย', cancelButtonText: 'ยกเลิก'
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                Swal.fire({title: 'กำลังลบ...', didOpen: () => Swal.showLoading()});
+                await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: 'delete', reportId: id}) });
+                Swal.fire({title: 'ลบสำเร็จ', icon: 'success', timer: 1500}); loadData();
+            }
+        });
+    }
+
+    function viewFiles(urlsStr) {
+        const urls = urlsStr.split(", ");
+        Swal.fire({
+            title: 'ไฟล์แนบทั้งหมด',
+            html: `<div class="file-list">${urls.map(url => `<div class="file-item"><a href="${url}" target="_blank" style="text-decoration:none; color:var(--ios-blue); font-weight:600;"><i class="fa-solid fa-download"></i> คลิกเพื่อเปิดไฟล์</a></div>`).join('')}</div>`,
+            showCloseButton: true, showConfirmButton: false
+        });
+    }
+
+    window.onscroll = () => {
+        const btn = document.getElementById('btn-back-to-top');
+        if (window.pageYOffset > 300) btn.classList.add('show'); else btn.classList.remove('show');
+    };
+    function scrollToTop() { window.scrollTo({top: 0, behavior: 'smooth'}); }
 
     window.onload = () => { loadButtonPosition(); loadData(); };
 </script>
