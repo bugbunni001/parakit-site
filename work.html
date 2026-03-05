@@ -210,8 +210,22 @@
             align-items: center;
             gap: 10px;
             flex-grow: 1;
-            max-width: 410px;
+            max-width: 600px; /* ขยายความกว้างเพื่อให้พอดีกับปฏิทิน */
         }
+
+        .date-filter-wrapper {
+            position: relative;
+            min-width: 160px;
+        }
+        .date-filter-wrapper i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--ios-blue); pointer-events: none; }
+        .date-filter-input {
+            width: 100%; padding: 14px 15px 14px 42px; border-radius: 18px; 
+            border: 1px solid var(--glass-border); background: rgba(255, 255, 255, 0.8);
+            outline: none; transition: 0.3s; font-size: 14px; color: var(--text-main);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+            cursor: pointer;
+        }
+        .date-filter-input:focus { border-color: var(--ios-blue); background: white; }
 
         .search-wrapper { 
             flex-grow: 1; position: relative; 
@@ -461,6 +475,11 @@
             <i class="fa-solid fa-plus-circle"></i> เพิ่มรายการใหม่
         </button>
         <div class="search-area-wrapper">
+            <div class="date-filter-wrapper">
+                <i class="fa-solid fa-calendar-days"></i>
+                <input type="date" id="dateFilter" class="date-filter-input" onchange="filterByDate()" title="กรองตามวันครบกำหนด">
+            </div>
+            
             <div class="search-wrapper">
                 <i class="fa-solid fa-magnifying-glass"></i>
                 <input type="text" id="searchInput" class="search-input" placeholder="ค้นหาข้อมูล..." onkeyup="filterData()">
@@ -671,6 +690,7 @@
     function filterByDeadline(el) {
         document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
         const todayStr = fixDate(new Date());
+        document.getElementById('dateFilter').value = formatForInputDate(new Date()); // อัปเดตช่องปฏิทินด้วย
         filteredData = fullData.filter(row => fixDate(row[10]) === todayStr);
         currentPage = 1;
         renderTable();
@@ -699,10 +719,31 @@
         filterData();
     }
 
+    // ฟังก์ชันใหม่: กรองตามวันที่ครบกำหนดจากช่องปฏิทิน
+    function filterByDate() {
+        const selectedDate = document.getElementById('dateFilter').value;
+        if (!selectedDate) {
+            filteredData = [...fullData];
+        } else {
+            filteredData = fullData.filter(row => {
+                const rowDeadline = formatForInputDate(row[10]);
+                return rowDeadline === selectedDate;
+            });
+        }
+        currentPage = 1;
+        renderTable();
+    }
+
     function filterData() {
         const filter = document.getElementById('searchInput').value.toLowerCase();
-        if (!filter) { filteredData = [...fullData]; } 
-        else { filteredData = fullData.filter(row => row.join(' ').toLowerCase().includes(filter)); }
+        const dateFilter = document.getElementById('dateFilter').value;
+        
+        filteredData = fullData.filter(row => {
+            const matchesSearch = row.join(' ').toLowerCase().includes(filter);
+            const matchesDate = !dateFilter || formatForInputDate(row[10]) === dateFilter;
+            return matchesSearch && matchesDate;
+        });
+        
         currentPage = 1;
         renderTable();
     }
@@ -712,6 +753,8 @@
         const refreshBtn = document.querySelector('.fa-rotate-right');
         const scrollPos = window.scrollY;
         const currentSearch = document.getElementById('searchInput').value;
+        const currentDate = document.getElementById('dateFilter').value;
+
         if(refreshBtn) refreshBtn.classList.add('fa-spin');
         try {
             const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: "read"}) });
@@ -723,12 +766,17 @@
                 if (!pinA && pinB) return 1;
                 return new Date(b[0]) - new Date(a[0]);
             });
-            filteredData = [...fullData];
+            
+            if (manual) {
+                document.getElementById('dateFilter').value = ""; // ล้างวันที่เมื่อรีเฟรชมือ
+                document.getElementById('searchInput').value = "";
+                filteredData = [...fullData];
+            } else {
+                filterData(); // ใช้ filterData เพื่อรวมการกรองทั้งสองอย่าง
+            }
+
             updateStats(fullData);
-            if (!manual && currentSearch) {
-                document.getElementById('searchInput').value = currentSearch;
-                filterData();
-            } else { renderTable(); }
+            renderTable();
             if (!manual) window.scrollTo(0, scrollPos);
         } catch (e) { tableBody.innerHTML = '<tr><td colspan="8">โหลดข้อมูลไม่สำเร็จ</td></tr>'; }
         finally { if(refreshBtn) refreshBtn.classList.remove('fa-spin'); }
