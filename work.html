@@ -132,7 +132,7 @@
         }
 
         .stat-card-long {
-            grid-column: 1 / -1;
+            grid-column: span 2; /* ปรับให้ขยาย 2 ช่อง */
             background: linear-gradient(90deg, #5856d6, #007aff);
             color: white;
             padding: 15px 25px;
@@ -145,11 +145,12 @@
             box-shadow: 0 4px 15px rgba(88, 86, 214, 0.3);
             margin-bottom: 10px;
         }
+        .stat-card-long.daily-card { background: linear-gradient(90deg, #8e5aff, #5856d6); box-shadow: 0 4px 15px rgba(142, 90, 255, 0.3); }
         .stat-card-long:hover { transform: scale(1.01); filter: brightness(1.1); }
         .stat-card-long .info { display: flex; flex-direction: column; }
         .stat-card-long .title { font-size: 14px; font-weight: 600; }
-        .stat-card-long .date-label { font-size: 20px; opacity: 0.9; }
-        .stat-card-long .count-val { font-size: 28px; font-weight: 700; }
+        .stat-card-long .date-label { font-size: 18px; opacity: 0.9; }
+        .stat-card-long .count-val { font-size: 24px; font-weight: 700; }
 
         .stat-card {
             padding: 15px 10px;
@@ -679,6 +680,7 @@
         let processingCount = 0;
         let pinnedCount = 0;
         let deadlineCount = 0;
+        let dailyCount = 0;
         const todayStr = formatForInputDate(new Date());
         jobTypes.forEach(t => counts[t] = 0);
         data.forEach(row => {
@@ -689,15 +691,24 @@
             
             const deadline = formatForInputDate(row[10]);
             const isDaily = (row[12] === "true" || row[12] === true);
-            if(isDaily || deadline === todayStr) deadlineCount++;
+            
+            if(isDaily) dailyCount++;
+            if(!isDaily && deadline === todayStr) deadlineCount++;
         });
         let cardsHtml = `
             <div class="stat-card-long" onclick="filterByDeadline(this)">
                 <div class="info">
-                    <span class="title">งานที่ครบกำหนด(วันนี้) + งานทุกวัน</span>
+                    <span class="title">งานที่ครบกำหนด (วันนี้)</span>
                     <span class="date-label">${fixDate(new Date())}</span>
                 </div>
                 <div class="count-val">${deadlineCount} รายการ</div>
+            </div>
+            <div class="stat-card-long daily-card" onclick="filterByDaily(this)">
+                <div class="info">
+                    <span class="title">งานทุกวัน (Infinity Mode)</span>
+                    <span class="date-label">งานประจำ/ต่อเนื่อง</span>
+                </div>
+                <div class="count-val">${dailyCount} รายการ</div>
             </div>
             <div class="stat-card active" onclick="filterByType('ทั้งหมด', this)">
                 <span class="count">${data.length}</span>
@@ -720,8 +731,15 @@
 
     function filterByDeadline(el) {
         document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
-        const todayStr = fixDate(new Date());
-        filteredData = fullData.filter(row => fixDate(row[10]) === todayStr || (row[12] === "true" || row[12] === true));
+        const todayStr = formatForInputDate(new Date());
+        filteredData = fullData.filter(row => formatForInputDate(row[10]) === todayStr && row[12] !== "true" && row[12] !== true);
+        currentPage = 1;
+        renderTable();
+    }
+
+    function filterByDaily(el) {
+        document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
+        filteredData = fullData.filter(row => (row[12] === "true" || row[12] === true));
         currentPage = 1;
         renderTable();
     }
@@ -1104,7 +1122,7 @@
                         <label class="swal-label">จัดการไฟล์แนบ (ลบไฟล์เดิม/เพิ่มไฟล์ใหม่) (รูปภาพ, PDF, Word, Excel) **ได้สูงสุด 3 ไฟล์**</label>
                         <input type="file" id="file" class="swal-input-styled" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" onchange="handleFileSelect(event)" multiple>
                         <div id="selectedFileList" class="file-list"></div>
-                        <p style="font-size:11px; color:var(--ios-red); margin-top:5px;">* กดไอคอนถังขยะเพื่อลบไฟล์เดิมออกจากเซิร์ฟเวอร์ถาวรเมื่อกดบันทึก</p>
+                        <p style="font-size:11px; color:var(--ios-red); margin-top:5px;">* กดไอคอนถังขยะเพื่อลบไฟล์เดิมออกจากระบบถาวรเมื่อกดบันทึก</p>
                     </div>
                 </div>
             `,
