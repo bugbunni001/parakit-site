@@ -689,7 +689,6 @@
             
             const deadline = formatForInputDate(row[10]);
             const isDaily = (row[12] === "true" || row[12] === true);
-            // หากเป็นงานทุกวัน หรือ เป็นงานที่ตรงกับวันนี้ ให้นับเข้าแถบยาว
             if(isDaily || deadline === todayStr) deadlineCount++;
         });
         let cardsHtml = `
@@ -722,7 +721,6 @@
     function filterByDeadline(el) {
         document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
         const todayStr = fixDate(new Date());
-        // งานที่แสดงทุกวัน (row[12]) จะแสดงในหน้านี้ด้วยเสมอ
         filteredData = fullData.filter(row => fixDate(row[10]) === todayStr || (row[12] === "true" || row[12] === true));
         currentPage = 1;
         renderTable();
@@ -1029,7 +1027,7 @@
                     <div><label class="swal-label">วันที่ดำเนินการ</label><input type="date" id="date" class="swal-input-styled" value="${new Date().toISOString().split('T')[0]}"></div>
                     <div><label class="swal-label">หมายเลขสมาชิก</label><input type="text" id="memberId" class="swal-input-styled" placeholder="TMH/TOL/TVS"></div>
                     <div class="swal-field-full"><label class="swal-label">ชื่อลูกค้า</label><input type="text" id="name" class="swal-input-styled"></div>
-                    <div><label class="swal-label">เบอร์ติดต่อ</label><input type="text" id="phone" class="swal-input-styled" placeholder="0XXXXXXXXX"></div>
+                    <div><label class="swal-label">เบอร์ติดต่อ</label><input type="text" id="phone" class="swal-input-styled" placeholder="0XXXXXXXXX" maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '')"></div>
                     <div><label class="swal-label">พนักงาน</label><select id="staff" class="swal-input-styled"><option value="">-- เลือก --</option><option value="ศุภกฤต">ศุภกฤต</option><option value="นวพล">นวพล</option><option value="ปิยะพร">ปิยะพร</option><option value="กรทักษ์">กรทักษ์</option></select></div>
                     <div class="swal-field-full"><label class="swal-label">วันครบกำหนดงาน</label><input type="date" id="deadline" class="swal-input-styled"></div>
                     <div class="swal-field-full" style="display:flex; align-items:center; gap:10px; background:#f5eeff; padding:10px; border-radius:14px; border:1px dashed var(--ios-purple);">
@@ -1045,19 +1043,26 @@
                 </div>
             `,
             showCancelButton: true, confirmButtonText: 'บันทึกข้อมูล', preConfirm: async () => {
+                const memberIdVal = document.getElementById('memberId').value.trim();
+                const phoneVal = document.getElementById('phone').value.trim();
+                
+                if (!memberIdVal) { Swal.showValidationMessage('กรุณา กรอกหมายเลขสมาชิก TOL TMH TVS'); return false; }
+                if (!phoneVal) { Swal.showValidationMessage('กรุณากรอกเบอร์ติดต่อลูกค้า'); return false; }
+                if (phoneVal.length !== 10) { Swal.showValidationMessage('เบอร์ติดต่อต้องเป็นตัวเลข 10 ตัวเท่านั้น'); return false; }
+
                 const vals = { 
                     reportId: newId, 
                     jobType: document.getElementById('jobType').value, 
                     date: document.getElementById('date').value, 
-                    memberId: "'" + document.getElementById('memberId').value, 
+                    memberId: "'" + memberIdVal, 
                     name: document.getElementById('name').value, 
-                    phone: "'" + document.getElementById('phone').value, 
+                    phone: "'" + phoneVal, 
                     staff: document.getElementById('staff').value, 
                     jobDetail: document.getElementById('jobDetail').value, 
                     deadline: document.getElementById('deadline').value,
                     isDaily: document.getElementById('isDaily').checked ? "true" : ""
                 };
-                if (!vals.jobType || !vals.name || !vals.staff) { Swal.showValidationMessage('กรุณากรอกข้อมูลสำคัญ'); return false; }
+                if (!vals.jobType || !vals.name || !vals.staff) { Swal.showValidationMessage('กรุณากรอกข้อมูลสำคัญ (ประเภทงาน/ชื่อลูกค้า/พนักงาน)'); return false; }
                 return { action: "insert", ...vals, files: selectedFiles.map(f => ({name: f.name, data: f.data})) };
             }
         }).then(async (result) => {
@@ -1087,7 +1092,7 @@
                     <div><label class="swal-label">วันที่</label><input type="date" id="swal-date" class="swal-input-styled" value="${formatForInputDate(item[0])}"></div>
                     <div><label class="swal-label">รหัสสมาชิก</label><input type="text" id="swal-memberId" class="swal-input-styled" value="${String(item[1]).replace(/^'/, '')}"></div>
                     <div class="swal-field-full"><label class="swal-label">ชื่อลูกค้า</label><input type="text" id="swal-name" class="swal-input-styled" value="${item[2]}"></div>
-                    <div><label class="swal-label">เบอร์ติดต่อ</label><input type="text" id="swal-phone" class="swal-input-styled" value="${String(item[3]).replace(/^'/, '')}"></div>
+                    <div><label class="swal-label">เบอร์ติดต่อ</label><input type="text" id="swal-phone" class="swal-input-styled" value="${String(item[3]).replace(/^'/, '')}" maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '')"></div>
                     <div><label class="swal-label">พนักงาน</label><select id="swal-staff" class="swal-input-styled">${['ศุภกฤต', 'นวพล', 'ปิยะพร', 'กรทักษ์'].map(s => `<option value="${s}" ${item[4] === s ? 'selected' : ''}>${s}</option>`).join('')}</select></div>
                     <div class="swal-field-full"><label class="swal-label">วันครบกำหนดงาน</label><input type="date" id="swal-deadline" class="swal-input-styled" value="${formatForInputDate(item[10])}"></div>
                     <div class="swal-field-full" style="display:flex; align-items:center; gap:10px; background:#f5eeff; padding:10px; border-radius:14px; border:1px dashed var(--ios-purple);">
@@ -1106,13 +1111,20 @@
             didOpen: () => { renderSelectedFiles(); },
             showCancelButton: true, confirmButtonText: 'บันทึกการแก้ไข', confirmButtonColor: '#007aff',
             preConfirm: () => {
+                const memberIdVal = document.getElementById('swal-memberId').value.trim();
+                const phoneVal = document.getElementById('swal-phone').value.trim();
+
+                if (!memberIdVal) { Swal.showValidationMessage('กรุณา กรอกหมายเลขสมาชิก TOL TMH TVS'); return false; }
+                if (!phoneVal) { Swal.showValidationMessage('กรุณากรอกเบอร์ติดต่อลูกค้า'); return false; }
+                if (phoneVal.length !== 10) { Swal.showValidationMessage('เบอร์ติดต่อต้องเป็นตัวเลข 10 ตัวเท่านั้น'); return false; }
+
                 return { 
                     action: "update", 
                     reportId: item[11], 
                     date: document.getElementById('swal-date').value, 
-                    memberId: "'" + document.getElementById('swal-memberId').value, 
+                    memberId: "'" + memberIdVal, 
                     name: document.getElementById('swal-name').value, 
-                    phone: "'" + document.getElementById('swal-phone').value, 
+                    phone: "'" + phoneVal, 
                     staff: document.getElementById('swal-staff').value, 
                     jobDetail: document.getElementById('swal-jobDetail').value, 
                     jobType: document.getElementById('swal-jobType').value, 
