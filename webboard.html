@@ -5,11 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PK Webboard - Parakit-site</title>
     <link rel="icon" type="image/png" href="favicon.png">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&family=Sarabun:wght@300;400;700&display=swap" rel="stylesheet">
+    
     <script src="https://cdn.tailwindcss.com"></script>
+    
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;700&display=swap');
-        body { font-family: 'Sarabun', sans-serif; background-color: #f8fafc; }
+        :root {
+            --ios-blue: #007aff;
+            --sidebar-dark: rgba(28, 28, 30, 0.96);
+            --transition-bounce: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        /* ===== GLOBAL SETUP ===== */
+        body { font-family: 'Sarabun', 'Kanit', sans-serif; background-color: #f8fafc; }
         
+        /* Webboard Styles */
         .post-card { height: 400px; display: flex; flex-direction: column; transition: all 0.3s ease; }
         .post-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px -10px rgba(0,0,0,0.1); }
         
@@ -25,9 +38,86 @@
         .modal-active { display: flex !important; opacity: 1 !important; }
         .line-clamp-2 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
         .line-clamp-3 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
+
+        /* ===== FLOATING MENU SYSTEM (From Memory) ===== */
+        #floatingMenuBtn {
+            position: fixed;
+            top: 80px; /* ปรับให้ไม่ทับ Nav */
+            left: 20px;
+            width: 50px;
+            height: 50px;
+            background: var(--ios-blue);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: move;
+            z-index: 2100;
+            box-shadow: 0 4px 15px rgba(0, 122, 255, 0.4);
+            border: none;
+            touch-action: none;
+            font-family: 'Kanit', sans-serif !important;
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.3);
+            z-index: 2000;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+            backdrop-filter: blur(2px);
+        }
+        .sidebar-overlay.active { display: block; opacity: 1; }
+
+        .sidebar-float {
+            position: fixed;
+            width: 280px;
+            max-height: 75vh;
+            background: var(--sidebar-dark);
+            border-radius: 24px;
+            overflow-y: auto;
+            z-index: 2001;
+            opacity: 0;
+            visibility: hidden;
+            transform: scale(0.8) translateY(10px);
+            transition: opacity 0.3s, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.1);
+            font-family: 'Kanit', sans-serif !important;
+        }
+        .sidebar-float.active {
+            opacity: 1;
+            visibility: visible;
+            transform: scale(1) translateY(0);
+        }
+
+        /* Sidebar Content Styles */
+        .sidebar-float .sidebar-header { padding: 20px; font-size: 17px; font-weight: 600; color: #fff; border-bottom: 0.5px solid rgba(255,255,255,0.1); }
+        .sidebar-float .menu { padding: 8px 0; }
+        .sidebar-float .menu a, .sidebar-float .drop-btn { 
+            width: 100%; padding: 12px 20px; background: none; border: none; 
+            color: #ebebf5; text-align: left; font-size: 14px; cursor: pointer; 
+            display: flex; align-items: center; text-decoration: none; transition: 0.2s;
+        }
+        .sidebar-float .menu a:hover, .sidebar-float .drop-btn:hover { background: rgba(255,255,255,0.1); }
+        .sidebar-float .sub { display: none; background: rgba(0,0,0,0.2); }
+        .sidebar-float .item.open .sub { display: block; }
+        .sidebar-float .sub a { padding-left: 45px; font-size: 13px; color: #8e8e93; }
+
+        /* Icon styling inside sidebar */
+        .sidebar-float i { margin-right: 10px; }
     </style>
 </head>
 <body>
+
+    <button id="floatingMenuBtn">เมนู</button>
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebarFloat()"></div>
+    <aside class="sidebar-float" id="sidebarFloat"></aside>
 
     <nav class="bg-white shadow-sm border-b sticky top-0 z-40 p-4">
         <div class="max-w-6xl mx-auto flex justify-between items-center">
@@ -81,6 +171,7 @@
     </div>
 
     <script>
+        /* --- Webboard Logic --- */
         const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzWuwy18RtC9BqaYOI8DYXJakZBsXQZ3SgnjXcD5GHJ6tbnUJ7ojQxPKaA7AzhKCird/exec';
         let allPosts = [];
 
@@ -102,22 +193,18 @@
                 container.innerHTML = '<div class="col-span-full text-center py-20 text-slate-400">ยังไม่มีกระทู้ในขณะนี้</div>';
                 return;
             }
-
             container.innerHTML = '';
             const sorted = allPosts.sort((a, b) => {
                 if (a.isPinned !== b.isPinned) return b.isPinned ? -1 : 1;
                 return new Date(b.Timestamp) - new Date(a.Timestamp);
             });
-
             sorted.forEach(post => {
                 const title = post.title || 'ไม่มีหัวข้อ';
                 const content = post.content || 'ไม่มีรายละเอียด';
                 const date = post.Timestamp ? new Date(post.Timestamp).toLocaleString('th-TH', { dateStyle: 'medium' }) : 'ไม่ระบุวันที่';
-
                 const card = document.createElement('div');
                 card.className = `post-card bg-white rounded-3xl border-2 overflow-hidden cursor-pointer ${post.isPinned ? 'border-yellow-400 ring-4 ring-yellow-50' : 'border-white shadow-sm'}`;
                 card.onclick = () => openViewModal(post.postId);
-                
                 card.innerHTML = `
                     <div class="h-44 bg-slate-200 overflow-hidden relative">
                         ${post.imageUrl ? `<img src="${post.imageUrl}" class="w-full h-full object-cover">` : `<div class="w-full h-full flex items-center justify-center text-slate-400 text-xs">ไม่มีรูปภาพ</div>`}
@@ -143,7 +230,6 @@
             const modal = document.getElementById('viewModal');
             const content = document.getElementById('viewContent');
             const date = new Date(post.Timestamp).toLocaleString('th-TH', { dateStyle: 'long', timeStyle: 'short' });
-
             content.innerHTML = `
                 <div class="flex justify-between items-center mb-6">
                     <span class="bg-slate-100 px-4 py-1 rounded-full text-xs font-bold text-slate-500 uppercase">กระทู้ #${post.postId}</span>
@@ -156,7 +242,6 @@
                 </div>
                 ${post.imageUrl ? `<img src="${post.imageUrl}" class="w-full rounded-2xl mb-8 shadow-md">` : ''}
                 <div class="text-slate-700 leading-relaxed whitespace-pre-wrap text-lg mb-10 border-l-4 border-blue-500 pl-6">${post.content}</div>
-                
                 <div class="flex flex-wrap gap-3 pt-6 border-t">
                     <button onclick="togglePin('${post.postId}')" class="flex-1 min-w-[140px] px-6 py-3 bg-yellow-50 text-yellow-700 rounded-xl font-bold transition-all hover:bg-yellow-100 hover:scale-105 active:scale-95 flex items-center justify-center">📍 ปักหมุด</button>
                     <button onclick="openEditModal('${post.postId}')" class="flex-1 min-w-[140px] px-6 py-3 bg-blue-600 text-white rounded-xl font-bold shadow-lg transition-all hover:bg-blue-700 hover:scale-105 active:scale-95 flex items-center justify-center">✎ แก้ไขข้อมูล</button>
@@ -202,10 +287,8 @@
             const title = document.getElementById('postSubject').value;
             const content = document.getElementById('postContent').value;
             const fileInput = document.getElementById('postImage');
-
             if (!title || !content) return alert("กรุณาใส่หัวข้อและรายละเอียด");
             btn.disabled = true; btn.innerText = "กำลังบันทึก...";
-
             let imageData = null;
             if (fileInput.files.length > 0) {
                 imageData = await new Promise(resolve => {
@@ -214,7 +297,6 @@
                     reader.readAsDataURL(fileInput.files[0]);
                 });
             }
-
             const payload = {
                 action: editId ? 'update' : 'add',
                 postId: editId || 'PK' + Math.random().toString().substring(2, 8),
@@ -222,9 +304,8 @@
                 image: imageData?.base64,
                 imageType: imageData?.type
             };
-
             try {
-                const response = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
+                await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
                 closeModal('postModal');
                 fetchPosts();
             } catch (e) { alert("เกิดข้อผิดพลาด"); }
@@ -244,10 +325,107 @@
             fetchPosts();
         }
 
-        window.onload = fetchPosts;
-    </script>
-</body>
-</html>
+        /* --- FLOATING SIDEBAR LOGIC (From Memory) --- */
+        const dragBtn = document.getElementById('floatingMenuBtn');
+        const sideFloat = document.getElementById('sidebarFloat');
+        const sideOverlay = document.getElementById('sidebarOverlay');
+        let isDragging = false;
+        let startX, startY, shiftX, shiftY;
 
+        function loadButtonPosition() {
+            const savedLeft = localStorage.getItem('floatBtnLeft');
+            const savedTop = localStorage.getItem('floatBtnTop');
+            if (savedLeft && savedTop) {
+                dragBtn.style.left = savedLeft + 'px';
+                dragBtn.style.top = savedTop + 'px';
+            }
+        }
+
+        dragBtn.onpointerdown = function(e) {
+            isDragging = false;
+            startX = e.clientX; startY = e.clientY;
+            const rect = dragBtn.getBoundingClientRect();
+            shiftX = e.clientX - rect.left;
+            shiftY = e.clientY - rect.top;
+            dragBtn.setPointerCapture(e.pointerId);
+            document.addEventListener('pointermove', onPointerMove);
+            document.addEventListener('pointerup', onPointerUp);
+        };
+
+        function onPointerMove(e) {
+            if (!isDragging && (Math.abs(e.clientX - startX) > 5 || Math.abs(e.clientY - startY) > 5)) {
+                isDragging = true;
+            }
+            if (isDragging) {
+                let newX = e.clientX - shiftX;
+                let newY = e.clientY - shiftY;
+                newX = Math.max(0, Math.min(newX, window.innerWidth - dragBtn.offsetWidth));
+                newY = Math.max(0, Math.min(newY, window.innerHeight - dragBtn.offsetHeight));
+                dragBtn.style.left = newX + 'px';
+                dragBtn.style.top = newY + 'px';
+            }
+        }
+
+        function onPointerUp(e) {
+            document.removeEventListener('pointermove', onPointerMove);
+            document.removeEventListener('pointerup', onPointerUp);
+            dragBtn.releasePointerCapture(e.pointerId);
+            if (isDragging) {
+                localStorage.setItem('floatBtnLeft', dragBtn.offsetLeft);
+                localStorage.setItem('floatBtnTop', dragBtn.offsetTop);
+            } else {
+                toggleSidebarFloat();
+            }
+            isDragging = false;
+        }
+
+        function toggleSidebarFloat() {
+            const btnRect = dragBtn.getBoundingClientRect();
+            const sidebarWidth = 280;
+            let top = btnRect.bottom + 10;
+            let left = btnRect.left;
+            if (left + sidebarWidth > window.innerWidth) left = window.innerWidth - sidebarWidth - 15;
+            if (top + 400 > window.innerHeight) {
+                top = btnRect.top - 410;
+                if (top < 10) top = 10;
+            }
+            sideFloat.style.top = top + 'px';
+            sideFloat.style.left = left + 'px';
+            sideFloat.style.transformOrigin = `${btnRect.left - left + 20}px ${btnRect.top > top ? 'bottom' : 'top'}`;
+            const isActive = sideFloat.classList.toggle('active');
+            sideOverlay.classList.toggle('active', isActive);
+            if (isActive && !sideFloat.innerHTML) loadSidebarContent();
+        }
+
+        function closeSidebarFloat() {
+            sideFloat.classList.remove('active');
+            sideOverlay.classList.remove('active');
+        }
+
+        function loadSidebarContent() {
+            fetch('sidebar.html')
+                .then(res => res.text())
+                .then(data => {
+                    sideFloat.innerHTML = `<div class="sidebar-header">เมนูนำทาง</div>` + data;
+                    ['credit', 'branch', 'sales'].forEach(id => {
+                        if (localStorage.getItem('menu-' + id) === 'true') {
+                            const el = sideFloat.querySelector('#menu-' + id);
+                            if (el) el.classList.add('open');
+                        }
+                    });
+                });
+        }
+
+        window.toggleDrop = function(btn, id) {
+            const item = btn.parentElement;
+            const isOpen = item.classList.toggle("open");
+            if (id) localStorage.setItem('menu-' + id, isOpen);
+        }
+
+        window.onload = () => {
+            fetchPosts();
+            loadButtonPosition();
+        };
+    </script>
 </body>
 </html>
