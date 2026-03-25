@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PK Webboard - Parakit-site</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;700&display=swap');
+        body { font-family: 'Sarabun', sans-serif; background-color: #f8fafc; }
+        
+        .post-card { height: 400px; display: flex; flex-direction: column; transition: all 0.3s ease; }
+        .post-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px -10px rgba(0,0,0,0.1); }
+        
+        .loader-ring {
+            width: 60px; height: 60px;
+            border: 5px solid #e2e8f0; border-top: 5px solid #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        #postModal, #viewModal { display: none; opacity: 0; transition: opacity 0.3s ease; }
+        .modal-active { display: flex !important; opacity: 1 !important; }
+        .line-clamp-2 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+        .line-clamp-3 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
+    </style>
+</head>
+<body>
+
+    <nav class="bg-white shadow-sm border-b sticky top-0 z-40 p-4">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-black text-blue-600 tracking-tight">PK <span class="text-slate-800">BOARD</span></h1>
+            <button onclick="openModal('add')" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-full font-bold shadow-lg transition-all active:scale-95 hover:shadow-blue-200">
+                + สร้างกระทู้
+            </button>
+        </div>
+    </nav>
+
+    <main class="max-w-6xl mx-auto p-4 mt-8">
+        <div id="postContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div id="loadingUI" class="col-span-full flex flex-col items-center py-32">
+                <div class="loader-ring"></div>
+                <p class="mt-4 text-slate-500 font-medium animate-pulse">กำลังดึงข้อมูลล่าสุด...</p>
+            </div>
+        </div>
+    </main>
+
+    <div id="postModal" class="fixed inset-0 z-[60] items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+        <div class="bg-white p-8 rounded-3xl w-full max-w-2xl shadow-2xl transform transition-all">
+            <h2 id="modalTitle" class="text-2xl font-bold mb-6 text-slate-800 border-b pb-4">ตั้งกระทู้ใหม่</h2>
+            <input type="hidden" id="editPostId">
+            <input type="hidden" id="existingFileId">
+            <div class="space-y-5">
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-1">หัวข้อกระทู้</label>
+                    <input type="text" id="postSubject" placeholder="พิมพ์ชื่อเรื่องที่นี่..." class="w-full border border-slate-200 p-4 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-1">รายละเอียด</label>
+                    <textarea id="postContent" placeholder="เขียนรายละเอียดเนื้อหาของคุณ..." class="w-full border border-slate-200 p-4 rounded-2xl h-64 focus:ring-2 focus:ring-blue-500 outline-none transition-all resize-none"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-1">รูปภาพประกอบ</label>
+                    <input type="file" id="postImage" accept="image/*" class="w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-6 file:rounded-full file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-all cursor-pointer">
+                    <p id="editImageNote" class="text-xs text-orange-500 mt-2 hidden">💡 มีรูปเดิมอยู่แล้ว หากเลือกไฟล์ใหม่จะถูกแทนที่</p>
+                </div>
+            </div>
+            <div class="flex justify-end gap-4 mt-8">
+                <button onclick="closeModal('postModal')" class="px-6 py-3 font-bold text-slate-400 hover:text-slate-600 transition-colors">ยกเลิก</button>
+                <button id="saveBtn" onclick="submitPost()" class="bg-blue-600 text-white px-10 py-3 rounded-2xl font-bold shadow-lg hover:bg-blue-700 active:scale-95 transition-all">บันทึกข้อมูล</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="viewModal" class="fixed inset-0 z-50 items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div id="viewContent" class="p-8"></div>
+        </div>
+    </div>
+
+    <script>
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzWuwy18RtC9BqaYOI8DYXJakZBsXQZ3SgnjXcD5GHJ6tbnUJ7ojQxPKaA7AzhKCird/exec';
+        let allPosts = [];
+
+        async function fetchPosts() {
+            try {
+                const res = await fetch(`${WEB_APP_URL}?action=getList`);
+                const data = await res.json();
+                allPosts = data;
+                renderPosts();
+            } catch (e) {
+                console.error("Error:", e);
+                document.getElementById('postContainer').innerHTML = '<div class="col-span-full text-center py-20 text-red-400">ไม่สามารถโหลดข้อมูลได้ กรุณาลองใหม่อีกครั้ง</div>';
+            }
+        }
+
+        function renderPosts() {
+            const container = document.getElementById('postContainer');
+            if (!allPosts || allPosts.length === 0) {
+                container.innerHTML = '<div class="col-span-full text-center py-20 text-slate-400">ยังไม่มีกระทู้ในขณะนี้</div>';
+                return;
+            }
+
+            container.innerHTML = '';
+            const sorted = allPosts.sort((a, b) => {
+                if (a.isPinned !== b.isPinned) return b.isPinned ? -1 : 1;
+                return new Date(b.Timestamp) - new Date(a.Timestamp);
+            });
+
+            sorted.forEach(post => {
+                const title = post.title || 'ไม่มีหัวข้อ';
+                const content = post.content || 'ไม่มีรายละเอียด';
+                const date = post.Timestamp ? new Date(post.Timestamp).toLocaleString('th-TH', { dateStyle: 'medium' }) : 'ไม่ระบุวันที่';
+
+                const card = document.createElement('div');
+                card.className = `post-card bg-white rounded-3xl border-2 overflow-hidden cursor-pointer ${post.isPinned ? 'border-yellow-400 ring-4 ring-yellow-50' : 'border-white shadow-sm'}`;
+                card.onclick = () => openViewModal(post.postId);
+                
+                card.innerHTML = `
+                    <div class="h-44 bg-slate-200 overflow-hidden relative">
+                        ${post.imageUrl ? `<img src="${post.imageUrl}" class="w-full h-full object-cover">` : `<div class="w-full h-full flex items-center justify-center text-slate-400 text-xs">ไม่มีรูปภาพ</div>`}
+                        ${post.isPinned ? '<span class="absolute top-3 left-3 bg-yellow-400 text-white text-[10px] px-2 py-1 rounded font-bold shadow-sm">ปักหมุด</span>' : ''}
+                    </div>
+                    <div class="p-5 flex-grow flex flex-col">
+                        <span class="text-[10px] text-slate-400 font-bold mb-1 uppercase tracking-tighter">#${post.postId}</span>
+                        <h3 class="text-lg font-bold text-slate-800 mb-2 line-clamp-2">${title}</h3>
+                        <p class="text-slate-500 text-sm line-clamp-3 mb-4">${content}</p>
+                        <div class="mt-auto pt-3 border-t flex justify-between items-center text-[10px] text-slate-400">
+                            <span>📅 ${date}</span>
+                            <span class="text-blue-600 font-bold">อ่านต่อ...</span>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function openViewModal(id) {
+            const post = allPosts.find(p => p.postId == id);
+            if(!post) return;
+            const modal = document.getElementById('viewModal');
+            const content = document.getElementById('viewContent');
+            const date = new Date(post.Timestamp).toLocaleString('th-TH', { dateStyle: 'long', timeStyle: 'short' });
+
+            content.innerHTML = `
+                <div class="flex justify-between items-center mb-6">
+                    <span class="bg-slate-100 px-4 py-1 rounded-full text-xs font-bold text-slate-500 uppercase">กระทู้ #${post.postId}</span>
+                    <button onclick="closeModal('viewModal')" class="text-slate-400 hover:text-slate-600 transition-colors font-bold">✕ ปิดหน้าต่าง</button>
+                </div>
+                <h2 class="text-3xl font-black text-slate-800 mb-4 leading-tight">${post.title}</h2>
+                <div class="text-slate-400 text-xs mb-6 flex items-center">
+                    <span class="mr-4">📅 โพสต์เมื่อ: ${date}</span>
+                    ${post.isPinned ? '<span class="text-yellow-600 font-bold">📌 ปักหมุดอยู่</span>' : ''}
+                </div>
+                ${post.imageUrl ? `<img src="${post.imageUrl}" class="w-full rounded-2xl mb-8 shadow-md">` : ''}
+                <div class="text-slate-700 leading-relaxed whitespace-pre-wrap text-lg mb-10 border-l-4 border-blue-500 pl-6">${post.content}</div>
+                
+                <div class="flex flex-wrap gap-3 pt-6 border-t">
+                    <button onclick="togglePin('${post.postId}')" class="flex-1 min-w-[140px] px-6 py-3 bg-yellow-50 text-yellow-700 rounded-xl font-bold transition-all hover:bg-yellow-100 hover:scale-105 active:scale-95 flex items-center justify-center">📍 ปักหมุด</button>
+                    <button onclick="openEditModal('${post.postId}')" class="flex-1 min-w-[140px] px-6 py-3 bg-blue-600 text-white rounded-xl font-bold shadow-lg transition-all hover:bg-blue-700 hover:scale-105 active:scale-95 flex items-center justify-center">✎ แก้ไขข้อมูล</button>
+                    <button onclick="deletePost('${post.postId}', '${post.fileId}')" class="flex-1 min-w-[140px] px-6 py-3 bg-red-50 text-red-600 rounded-xl font-bold transition-all hover:bg-red-100 hover:scale-105 active:scale-95 flex items-center justify-center">🗑 ลบกระทู้</button>
+                </div>
+            `;
+            modal.classList.add('modal-active');
+        }
+
+        function openModal(mode) {
+            document.getElementById('postModal').classList.add('modal-active');
+            if(mode === 'add') {
+                document.getElementById('modalTitle').innerText = 'สร้างกระทู้ใหม่';
+                document.getElementById('editPostId').value = '';
+                document.getElementById('existingFileId').value = '';
+                document.getElementById('postSubject').value = '';
+                document.getElementById('postContent').value = '';
+                document.getElementById('editImageNote').classList.add('hidden');
+            }
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('modal-active');
+            if(id === 'postModal') document.getElementById('postImage').value = '';
+        }
+
+        function openEditModal(id) {
+            const post = allPosts.find(p => p.postId == id);
+            if(!post) return;
+            closeModal('viewModal');
+            openModal('edit');
+            document.getElementById('modalTitle').innerText = 'แก้ไขกระทู้';
+            document.getElementById('editPostId').value = post.postId;
+            document.getElementById('existingFileId').value = post.fileId || '';
+            document.getElementById('postSubject').value = post.title;
+            document.getElementById('postContent').value = post.content;
+            document.getElementById('editImageNote').classList.remove('hidden');
+        }
+
+        async function submitPost() {
+            const btn = document.getElementById('saveBtn');
+            const editId = document.getElementById('editPostId').value;
+            const title = document.getElementById('postSubject').value;
+            const content = document.getElementById('postContent').value;
+            const fileInput = document.getElementById('postImage');
+
+            if (!title || !content) return alert("กรุณาใส่หัวข้อและรายละเอียด");
+            btn.disabled = true; btn.innerText = "กำลังบันทึก...";
+
+            let imageData = null;
+            if (fileInput.files.length > 0) {
+                imageData = await new Promise(resolve => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve({ base64: reader.result, type: fileInput.files[0].type });
+                    reader.readAsDataURL(fileInput.files[0]);
+                });
+            }
+
+            const payload = {
+                action: editId ? 'update' : 'add',
+                postId: editId || 'PK' + Math.random().toString().substring(2, 8),
+                title, content,
+                image: imageData?.base64,
+                imageType: imageData?.type
+            };
+
+            try {
+                const response = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
+                closeModal('postModal');
+                fetchPosts();
+            } catch (e) { alert("เกิดข้อผิดพลาด"); }
+            finally { btn.disabled = false; btn.innerText = "บันทึก"; }
+        }
+
+        async function deletePost(id, fileId) {
+            if (!confirm("ลบกระทู้นี้?")) return;
+            closeModal('viewModal');
+            await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'delete', id: id, fileId: fileId }) });
+            fetchPosts();
+        }
+
+        async function togglePin(id) {
+            await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'togglePin', id: id }) });
+            closeModal('viewModal');
+            fetchPosts();
+        }
+
+        window.onload = fetchPosts;
+    </script>
+</body>
+</html>
+
+</body>
+</html>
