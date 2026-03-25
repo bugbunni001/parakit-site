@@ -11,6 +11,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <style>
         :root {
@@ -25,7 +27,6 @@
             background-color: #f8fafc; 
         }
         
-        /* Force Font on all elements */
         * { font-family: 'Kanit', sans-serif !important; }
 
         /* Webboard Styles */
@@ -40,65 +41,46 @@
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        #postModal, #viewModal { display: none; opacity: 0; transition: opacity 0.3s ease; }
+        #postModal, #viewModal { display: none; opacity: 0; transition: opacity 0.3s ease; z-index: 3000; }
         .modal-active { display: flex !important; opacity: 1 !important; }
         .line-clamp-2 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
         .line-clamp-3 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
 
+        /* Custom SweetAlert Style to match iOS/Modern look */
+        .swal2-popup { border-radius: 24px !important; padding: 2rem !important; }
+        .swal2-styled.swal2-confirm { border-radius: 12px !important; padding: 12px 30px !important; }
+        .swal2-styled.swal2-cancel { border-radius: 12px !important; }
+        
+        /* แก้ไขให้ SweetAlert2 อยู่หน้าสุดเสมอ */
+        .swal2-container {
+            z-index: 9999 !important;
+        }
+
         /* ===== FLOATING MENU SYSTEM ===== */
         #floatingMenuBtn {
-            position: fixed;
-            top: 80px;
-            left: 20px;
-            width: 50px;
-            height: 50px;
-            background: var(--ios-blue);
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: move;
-            z-index: 2100;
-            box-shadow: 0 4px 15px rgba(0, 122, 255, 0.4);
-            border: none;
-            touch-action: none;
+            position: fixed; top: 80px; left: 20px; width: 50px; height: 50px;
+            background: var(--ios-blue); color: white; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px; font-weight: 500; cursor: move; z-index: 2100;
+            box-shadow: 0 4px 15px rgba(0, 122, 255, 0.4); border: none; touch-action: none;
         }
 
         .sidebar-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.3);
-            z-index: 2000;
-            display: none;
-            opacity: 0;
-            transition: opacity 0.3s;
+            position: fixed; inset: 0; background: rgba(0,0,0,0.3);
+            z-index: 2000; display: none; opacity: 0; transition: opacity 0.3s;
             backdrop-filter: blur(2px);
         }
         .sidebar-overlay.active { display: block; opacity: 1; }
 
         .sidebar-float {
-            position: fixed;
-            width: 280px;
-            max-height: 75vh;
-            background: var(--sidebar-dark);
-            border-radius: 24px;
-            overflow-y: auto;
-            z-index: 2001;
-            opacity: 0;
-            visibility: hidden;
+            position: fixed; width: 280px; max-height: 75vh;
+            background: var(--sidebar-dark); border-radius: 24px;
+            overflow-y: auto; z-index: 2001; opacity: 0; visibility: hidden;
             transform: scale(0.8) translateY(10px);
             transition: opacity 0.3s, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1);
         }
-        .sidebar-float.active {
-            opacity: 1;
-            visibility: visible;
-            transform: scale(1) translateY(0);
-        }
+        .sidebar-float.active { opacity: 1; visibility: visible; transform: scale(1) translateY(0); }
 
         .sidebar-float .sidebar-header { padding: 20px; font-size: 17px; font-weight: 600; color: #fff; border-bottom: 0.5px solid rgba(255,255,255,0.1); }
         .sidebar-float .menu { padding: 8px 0; }
@@ -138,11 +120,13 @@
         </div>
     </main>
 
-    <div id="postModal" class="fixed inset-0 z-[60] items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-        <div class="bg-white p-8 rounded-3xl w-full max-w-2xl shadow-2xl transform transition-all">
+    <div id="postModal" class="fixed inset-0 items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+        <div class="bg-white p-8 rounded-3xl w-full max-w-2xl shadow-2xl transform transition-all overflow-y-auto max-h-[95vh]">
             <h2 id="modalTitle" class="text-2xl font-bold mb-6 text-slate-800 border-b pb-4">ตั้งกระทู้ใหม่</h2>
             <input type="hidden" id="editPostId">
             <input type="hidden" id="existingFileId">
+            <input type="hidden" id="deleteOldImageFlag" value="false">
+            
             <div class="space-y-5">
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-1">หัวข้อกระทู้</label>
@@ -150,14 +134,27 @@
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-1">รายละเอียด</label>
-                    <textarea id="postContent" placeholder="เขียนรายละเอียดเนื้อหาของคุณ..." class="w-full border border-slate-200 p-4 rounded-2xl h-64 focus:ring-2 focus:ring-blue-500 outline-none transition-all resize-none"></textarea>
+                    <textarea id="postContent" placeholder="เขียนรายละเอียดเนื้อหาของคุณ..." class="w-full border border-slate-200 p-4 rounded-2xl h-48 focus:ring-2 focus:ring-blue-500 outline-none transition-all resize-none"></textarea>
                 </div>
-                <div>
+                
+                <div id="imageSection">
                     <label class="block text-sm font-medium text-slate-700 mb-1">รูปภาพประกอบ</label>
-                    <input type="file" id="postImage" accept="image/*" class="w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-6 file:rounded-full file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-all cursor-pointer">
-                    <p id="editImageNote" class="text-xs text-orange-500 mt-2 hidden">💡 มีรูปเดิมอยู่แล้ว หากเลือกไฟล์ใหม่จะถูกแทนที่</p>
+                    
+                    <div id="currentImageWrapper" class="hidden mb-4 p-3 border rounded-2xl bg-slate-50 relative">
+                        <p class="text-xs text-slate-500 mb-2">รูปภาพปัจจุบัน:</p>
+                        <img id="previewOldImage" src="" class="h-32 rounded-lg object-cover mb-2">
+                        <button onclick="removeCurrentImage()" class="text-red-500 text-sm font-medium hover:underline">
+                            <i class="fa-solid fa-trash-can mr-1"></i> ลบรูปภาพปัจจุบันเพื่อแนบรูปใหม่
+                        </button>
+                    </div>
+
+                    <div id="fileInputWrapper">
+                        <input type="file" id="postImage" accept="image/*" class="w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-6 file:rounded-full file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-all cursor-pointer">
+                        <p id="editImageNote" class="text-xs text-blue-500 mt-2 hidden">💡 แนบรูปภาพประกอบกระทู้</p>
+                    </div>
                 </div>
             </div>
+
             <div class="flex justify-end gap-4 mt-8">
                 <button onclick="closeModal('postModal')" class="px-6 py-3 font-medium text-slate-400 hover:text-slate-600 transition-colors">ยกเลิก</button>
                 <button id="saveBtn" onclick="submitPost()" class="bg-blue-600 text-white px-10 py-3 rounded-2xl font-medium shadow-lg hover:bg-blue-700 active:scale-95 transition-all">บันทึกข้อมูล</button>
@@ -165,16 +162,33 @@
         </div>
     </div>
 
-    <div id="viewModal" class="fixed inset-0 z-50 items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+    <div id="viewModal" class="fixed inset-0 items-center justify-center bg-black/60 backdrop-blur-sm p-4">
         <div class="bg-white rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
             <div id="viewContent" class="p-8"></div>
         </div>
     </div>
 
     <script>
-        /* --- Webboard Logic --- */
         const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzWuwy18RtC9BqaYOI8DYXJakZBsXQZ3SgnjXcD5GHJ6tbnUJ7ojQxPKaA7AzhKCird/exec';
         let allPosts = [];
+
+        // Helper function for SweetAlert Popups
+        const toast = {
+            error: (msg) => Swal.fire({ icon: 'error', title: 'แจ้งเตือน', text: msg, confirmButtonColor: '#3b82f6' }),
+            success: (msg) => Swal.fire({ icon: 'success', title: 'สำเร็จ', text: msg, timer: 1500, showConfirmButton: false }),
+            loading: (msg) => Swal.fire({ title: msg, allowOutsideClick: false, didOpen: () => Swal.showLoading() }),
+            confirm: (msg, btnText = 'ยืนยัน') => Swal.fire({
+                title: 'ยืนยันการทำรายการ',
+                text: msg,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3b82f6',
+                cancelButtonColor: '#94a3b8',
+                confirmButtonText: btnText,
+                cancelButtonText: 'ยกเลิก',
+                reverseButtons: true
+            })
+        };
 
         async function fetchPosts() {
             try {
@@ -254,19 +268,28 @@
 
         function openModal(mode) {
             document.getElementById('postModal').classList.add('modal-active');
+            resetModalFields();
             if(mode === 'add') {
                 document.getElementById('modalTitle').innerText = 'สร้างกระทู้ใหม่';
                 document.getElementById('editPostId').value = '';
-                document.getElementById('existingFileId').value = '';
-                document.getElementById('postSubject').value = '';
-                document.getElementById('postContent').value = '';
-                document.getElementById('editImageNote').classList.add('hidden');
             }
+            // Focus on title
+            setTimeout(() => document.getElementById('postSubject').focus(), 100);
+        }
+
+        function resetModalFields() {
+            document.getElementById('postSubject').value = '';
+            document.getElementById('postContent').value = '';
+            document.getElementById('postImage').value = '';
+            document.getElementById('existingFileId').value = '';
+            document.getElementById('deleteOldImageFlag').value = 'false';
+            document.getElementById('currentImageWrapper').classList.add('hidden');
+            document.getElementById('fileInputWrapper').classList.remove('hidden');
+            document.getElementById('editImageNote').classList.add('hidden');
         }
 
         function closeModal(id) {
             document.getElementById(id).classList.remove('modal-active');
-            if(id === 'postModal') document.getElementById('postImage').value = '';
         }
 
         function openEditModal(id) {
@@ -274,22 +297,47 @@
             if(!post) return;
             closeModal('viewModal');
             openModal('edit');
+            
             document.getElementById('modalTitle').innerText = 'แก้ไขกระทู้';
             document.getElementById('editPostId').value = post.postId;
-            document.getElementById('existingFileId').value = post.fileId || '';
             document.getElementById('postSubject').value = post.title;
             document.getElementById('postContent').value = post.content;
-            document.getElementById('editImageNote').classList.remove('hidden');
+            document.getElementById('existingFileId').value = post.fileId || '';
+            
+            if (post.imageUrl) {
+                document.getElementById('previewOldImage').src = post.imageUrl;
+                document.getElementById('currentImageWrapper').classList.remove('hidden');
+                document.getElementById('fileInputWrapper').classList.add('hidden');
+            } else {
+                document.getElementById('editImageNote').classList.remove('hidden');
+            }
+        }
+
+        async function removeCurrentImage() {
+            const res = await toast.confirm("ยืนยันการลบรูปภาพเดิม? (คุณต้องกดบันทึกเพื่อให้การลบมีผล)", "ลบรูปภาพ");
+            if(res.isConfirmed) {
+                document.getElementById('currentImageWrapper').classList.add('hidden');
+                document.getElementById('fileInputWrapper').classList.remove('hidden');
+                document.getElementById('deleteOldImageFlag').value = 'true';
+            }
         }
 
         async function submitPost() {
             const btn = document.getElementById('saveBtn');
             const editId = document.getElementById('editPostId').value;
-            const title = document.getElementById('postSubject').value;
-            const content = document.getElementById('postContent').value;
+            const title = document.getElementById('postSubject').value.trim();
+            const content = document.getElementById('postContent').value.trim();
             const fileInput = document.getElementById('postImage');
-            if (!title || !content) return alert("กรุณาใส่หัวข้อและรายละเอียด");
-            btn.disabled = true; btn.innerText = "กำลังบันทึก...";
+            const deleteOldImage = document.getElementById('deleteOldImageFlag').value === 'true';
+            const existingFileId = document.getElementById('existingFileId').value;
+
+            if (!title || !content) {
+                return toast.error("กรุณาใส่หัวข้อและรายละเอียด");
+            }
+            
+            btn.disabled = true; 
+            toast.loading("กำลังบันทึกข้อมูล...");
+
             let imageData = null;
             if (fileInput.files.length > 0) {
                 imageData = await new Promise(resolve => {
@@ -298,31 +346,46 @@
                     reader.readAsDataURL(fileInput.files[0]);
                 });
             }
+
             const payload = {
                 action: editId ? 'update' : 'add',
                 postId: editId || 'PK' + Math.random().toString().substring(2, 8),
-                title, content,
+                title, 
+                content,
                 image: imageData?.base64,
-                imageType: imageData?.type
+                imageType: imageData?.type,
+                deleteOldImage: deleteOldImage,
+                existingFileId: existingFileId
             };
+
             try {
                 await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
                 closeModal('postModal');
+                toast.success("บันทึกข้อมูลสำเร็จ");
                 fetchPosts();
-            } catch (e) { alert("เกิดข้อผิดพลาด"); }
-            finally { btn.disabled = false; btn.innerText = "บันทึก"; }
+            } catch (e) { 
+                toast.error("เกิดข้อผิดพลาดในการเชื่อมต่อ"); 
+            } finally { 
+                btn.disabled = false; 
+            }
         }
 
         async function deletePost(id, fileId) {
-            if (!confirm("ลบกระทู้นี้?")) return;
-            closeModal('viewModal');
-            await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'delete', id: id, fileId: fileId }) });
-            fetchPosts();
+            const res = await toast.confirm("คุณต้องการลบกระทู้นี้ใช่หรือไม่? ข้อมูลจะหายถาวร", "ลบกระทู้");
+            if (res.isConfirmed) {
+                closeModal('viewModal');
+                toast.loading("กำลังลบ...");
+                await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'delete', id: id, fileId: fileId }) });
+                toast.success("ลบสำเร็จ");
+                fetchPosts();
+            }
         }
 
         async function togglePin(id) {
+            toast.loading("กำลังดำเนินการ...");
             await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'togglePin', id: id }) });
             closeModal('viewModal');
+            Swal.close();
             fetchPosts();
         }
 
@@ -422,6 +485,21 @@
             const isOpen = item.classList.toggle("open");
             if (id) localStorage.setItem('menu-' + id, isOpen);
         }
+
+        // Support Enter Key to submit
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                // If Modal is open and focus is in input/textarea
+                const activeModal = document.querySelector('#postModal.modal-active');
+                if (activeModal && (e.target.id === 'postSubject' || e.target.id === 'postContent')) {
+                    // Preven default only if not in textarea or use Ctrl+Enter for textarea
+                    if (e.target.id === 'postSubject') {
+                        e.preventDefault();
+                        submitPost();
+                    }
+                }
+            }
+        });
 
         window.onload = () => {
             fetchPosts();
