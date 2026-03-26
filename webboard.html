@@ -29,9 +29,27 @@
         
         * { font-family: 'Kanit', sans-serif !important; }
 
-        /* Webboard Styles */
-        .post-card { height: 400px; display: flex; flex-direction: column; transition: all 0.3s ease; }
-        .post-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px -10px rgba(0,0,0,0.1); }
+        /* Webboard Styles & Motion */
+        #postContainer {
+            display: grid;
+            transition: all 0.5s ease-in-out;
+        }
+
+        .post-card { 
+            height: 400px; 
+            display: flex; 
+            flex-direction: column; 
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            animation: slideIn 0.5s ease forwards;
+            opacity: 0;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .post-card:hover { transform: translateY(-8px); box-shadow: 0 20px 40px -12px rgba(0,0,0,0.12); }
         
         .loader-ring {
             width: 60px; height: 60px;
@@ -46,15 +64,10 @@
         .line-clamp-2 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
         .line-clamp-3 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
 
-        /* Custom SweetAlert Style to match iOS/Modern look */
         .swal2-popup { border-radius: 24px !important; padding: 2rem !important; }
         .swal2-styled.swal2-confirm { border-radius: 12px !important; padding: 12px 30px !important; }
         .swal2-styled.swal2-cancel { border-radius: 12px !important; }
-        
-        /* แก้ไขให้ SweetAlert2 อยู่หน้าสุดเสมอ */
-        .swal2-container {
-            z-index: 9999 !important;
-        }
+        .swal2-container { z-index: 9999 !important; }
 
         /* ===== FLOATING MENU SYSTEM ===== */
         #floatingMenuBtn {
@@ -172,7 +185,6 @@
         const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzWuwy18RtC9BqaYOI8DYXJakZBsXQZ3SgnjXcD5GHJ6tbnUJ7ojQxPKaA7AzhKCird/exec';
         let allPosts = [];
 
-        // Helper function for SweetAlert Popups
         const toast = {
             error: (msg) => Swal.fire({ icon: 'error', title: 'แจ้งเตือน', text: msg, confirmButtonColor: '#3b82f6' }),
             success: (msg) => Swal.fire({ icon: 'success', title: 'สำเร็จ', text: msg, timer: 1500, showConfirmButton: false }),
@@ -209,21 +221,33 @@
                 return;
             }
             container.innerHTML = '';
-            const sorted = allPosts.sort((a, b) => {
-                if (a.isPinned !== b.isPinned) return b.isPinned ? -1 : 1;
+            
+            // --- แก้ไข Logic การจัดเรียง: ปักหมุด (isPinned) มาก่อนเสมอ ตามด้วย Timestamp ---
+            const sorted = [...allPosts].sort((a, b) => {
+                const pinA = a.isPinned === true || a.isPinned === 'true';
+                const pinB = b.isPinned === true || b.isPinned === 'true';
+                
+                if (pinA !== pinB) return pinA ? -1 : 1;
                 return new Date(b.Timestamp) - new Date(a.Timestamp);
             });
-            sorted.forEach(post => {
+
+            sorted.forEach((post, index) => {
                 const title = post.title || 'ไม่มีหัวข้อ';
                 const content = post.content || 'ไม่มีรายละเอียด';
                 const date = post.Timestamp ? new Date(post.Timestamp).toLocaleString('th-TH', { dateStyle: 'medium' }) : 'ไม่ระบุวันที่';
+                const isPinned = post.isPinned === true || post.isPinned === 'true';
+                
                 const card = document.createElement('div');
-                card.className = `post-card bg-white rounded-3xl border-2 overflow-hidden cursor-pointer ${post.isPinned ? 'border-yellow-400 ring-4 ring-yellow-50' : 'border-white shadow-sm'}`;
+                card.className = `post-card bg-white rounded-3xl border-2 overflow-hidden cursor-pointer ${isPinned ? 'border-yellow-400 ring-4 ring-yellow-50' : 'border-white shadow-sm'}`;
+                
+                // ใส่ Delay การแสดงผลทีละใบเพื่อให้ดูมี Motion
+                card.style.animationDelay = `${index * 0.05}s`;
+                
                 card.onclick = () => openViewModal(post.postId);
                 card.innerHTML = `
                     <div class="h-44 bg-slate-200 overflow-hidden relative">
                         ${post.imageUrl ? `<img src="${post.imageUrl}" class="w-full h-full object-cover">` : `<div class="w-full h-full flex items-center justify-center text-slate-400 text-xs">ไม่มีรูปภาพ</div>`}
-                        ${post.isPinned ? '<span class="absolute top-3 left-3 bg-yellow-400 text-white text-[10px] px-2 py-1 rounded font-bold shadow-sm">ปักหมุด</span>' : ''}
+                        ${isPinned ? '<span class="absolute top-3 left-3 bg-yellow-400 text-white text-[10px] px-2 py-1 rounded font-bold shadow-sm animate-bounce"><i class="fa-solid fa-thumbtack mr-1"></i> ปักหมุด</span>' : ''}
                     </div>
                     <div class="p-5 flex-grow flex flex-col">
                         <span class="text-[10px] text-slate-400 font-medium mb-1 uppercase tracking-tighter">#${post.postId}</span>
@@ -244,7 +268,9 @@
             if(!post) return;
             const modal = document.getElementById('viewModal');
             const content = document.getElementById('viewContent');
+            const isPinned = post.isPinned === true || post.isPinned === 'true';
             const date = new Date(post.Timestamp).toLocaleString('th-TH', { dateStyle: 'long', timeStyle: 'short' });
+            
             content.innerHTML = `
                 <div class="flex justify-between items-center mb-6">
                     <span class="bg-slate-100 px-4 py-1 rounded-full text-xs font-bold text-slate-500 uppercase">กระทู้ #${post.postId}</span>
@@ -253,12 +279,14 @@
                 <h2 class="text-3xl font-bold text-slate-800 mb-4 leading-tight">${post.title}</h2>
                 <div class="text-slate-400 text-xs mb-6 flex items-center">
                     <span class="mr-4 font-light">📅 โพสต์เมื่อ: ${date}</span>
-                    ${post.isPinned ? '<span class="text-yellow-600 font-bold">📌 ปักหมุดอยู่</span>' : ''}
+                    ${isPinned ? '<span class="text-yellow-600 font-bold">📌 ปักหมุดอยู่</span>' : ''}
                 </div>
                 ${post.imageUrl ? `<img src="${post.imageUrl}" class="w-full rounded-2xl mb-8 shadow-md">` : ''}
                 <div class="text-slate-700 leading-relaxed whitespace-pre-wrap text-lg mb-10 border-l-4 border-blue-500 pl-6 font-light">${post.content}</div>
                 <div class="flex flex-wrap gap-3 pt-6 border-t">
-                    <button onclick="togglePin('${post.postId}')" class="flex-1 min-w-[140px] px-6 py-3 bg-yellow-50 text-yellow-700 rounded-xl font-medium transition-all hover:bg-yellow-100 hover:scale-105 active:scale-95 flex items-center justify-center">📍 ปักหมุด</button>
+                    <button onclick="togglePin('${post.postId}')" class="flex-1 min-w-[140px] px-6 py-3 bg-yellow-50 text-yellow-700 rounded-xl font-medium transition-all hover:bg-yellow-100 hover:scale-105 active:scale-95 flex items-center justify-center">
+                        <i class="fa-solid fa-thumbtack mr-2"></i> ${isPinned ? 'เลิกปักหมุด' : 'ปักหมุด'}
+                    </button>
                     <button onclick="openEditModal('${post.postId}')" class="flex-1 min-w-[140px] px-6 py-3 bg-blue-600 text-white rounded-xl font-medium shadow-lg transition-all hover:bg-blue-700 hover:scale-105 active:scale-95 flex items-center justify-center">✎ แก้ไขข้อมูล</button>
                     <button onclick="deletePost('${post.postId}', '${post.fileId}')" class="flex-1 min-w-[140px] px-6 py-3 bg-red-50 text-red-600 rounded-xl font-medium transition-all hover:bg-red-100 hover:scale-105 active:scale-95 flex items-center justify-center">🗑 ลบกระทู้</button>
                 </div>
@@ -273,7 +301,6 @@
                 document.getElementById('modalTitle').innerText = 'สร้างกระทู้ใหม่';
                 document.getElementById('editPostId').value = '';
             }
-            // Focus on title
             setTimeout(() => document.getElementById('postSubject').focus(), 100);
         }
 
@@ -383,10 +410,15 @@
 
         async function togglePin(id) {
             toast.loading("กำลังดำเนินการ...");
-            await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'togglePin', id: id }) });
-            closeModal('viewModal');
-            Swal.close();
-            fetchPosts();
+            try {
+                await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'togglePin', id: id }) });
+                closeModal('viewModal');
+                // แสดงความสำเร็จแล้วโหลดข้อมูลใหม่เพื่อให้เห็น Motion การขยับ
+                await fetchPosts();
+                Swal.close();
+            } catch (e) {
+                toast.error("ไม่สามารถดำเนินการได้");
+            }
         }
 
         /* --- FLOATING SIDEBAR LOGIC --- */
@@ -486,13 +518,10 @@
             if (id) localStorage.setItem('menu-' + id, isOpen);
         }
 
-        // Support Enter Key to submit
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
-                // If Modal is open and focus is in input/textarea
                 const activeModal = document.querySelector('#postModal.modal-active');
                 if (activeModal && (e.target.id === 'postSubject' || e.target.id === 'postContent')) {
-                    // Preven default only if not in textarea or use Ctrl+Enter for textarea
                     if (e.target.id === 'postSubject') {
                         e.preventDefault();
                         submitPost();
