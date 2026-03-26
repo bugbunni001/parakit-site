@@ -104,12 +104,7 @@
             scrollbar-width: thin;
             scrollbar-color: rgba(255,255,255,0.2) transparent;
         }
-        .sidebar-float.active {
-            opacity: 1;
-            visibility: visible;
-            transform: scale(1) translateY(0);
-        }
-
+        .sidebar-float.active { opacity: 1; visibility: visible; transform: scale(1) translateY(0); }
         .sidebar-float .sidebar-header { padding: 20px; font-size: 17px; font-weight: 600; color: #fff; border-bottom: 0.5px solid rgba(255,255,255,0.1); }
         .sidebar-float .menu { padding: 8px 0; }
         .sidebar-float .menu a, .sidebar-float .drop-btn { 
@@ -132,7 +127,7 @@
         }
 
         .stat-card-long {
-            grid-column: span 2; /* ปรับให้ขยาย 2 ช่อง */
+            grid-column: span 2;
             background: linear-gradient(90deg, #5856d6, #007aff);
             color: white;
             padding: 15px 25px;
@@ -252,9 +247,7 @@
         }
         .date-filter-input:focus { border-color: var(--ios-blue); background: white; }
 
-        .search-wrapper { 
-            flex-grow: 1; position: relative; 
-        }
+        .search-wrapper { flex-grow: 1; position: relative; }
         .search-wrapper i { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: var(--ios-blue); }
         .search-input { 
             width: 100%; padding: 14px 20px 14px 48px; border-radius: 18px; 
@@ -431,18 +424,9 @@
             text-decoration: none;
         }
 
-        .btn-float:hover {
-            background: white;
-            transform: scale(1.1);
-            box-shadow: 0 6px 20px rgba(0,122,255,0.2);
-        }
+        .btn-float:hover { background: white; transform: scale(1.1); box-shadow: 0 6px 20px rgba(0,122,255,0.2); }
 
-        #btn-back-to-top {
-            opacity: 0;
-            visibility: hidden;
-            transform: translateY(20px);
-        }
-
+        #btn-back-to-top { opacity: 0; visibility: hidden; transform: translateY(20px); }
         #btn-back-to-top.show { opacity: 1; visibility: visible; transform: translateY(0); }
 
         .swal2-container { z-index: 9999 !important; }
@@ -502,10 +486,10 @@
         </button>
         <div class="search-area-wrapper">
             <div class="date-filter-wrapper">
-                <button class="btn-clear-date" onclick="loadData(true)" title="ล้างค่าวันที่และรีเฟรช">ล้างวันที่</button>
+                <button class="btn-clear-date" onclick="clearDateFilter()" title="ล้างค่าวันที่">ล้างวันที่</button>
                 <div class="date-input-container">
                     <i class="fa-solid fa-calendar-days"></i>
-                    <input type="date" id="dateFilter" class="date-filter-input" onchange="filterByDate()" title="กรองตามวันครบกำหนด">
+                    <input type="date" id="dateFilter" class="date-filter-input" onchange="filterData()" title="กรองตามวันครบกำหนด">
                 </div>
             </div>
             
@@ -547,6 +531,7 @@
 </div>
 
 <script>
+    // URL สำหรับเรียก Google Apps Script (ตรวจสอบให้แน่ใจว่าได้เผยแพร่เป็น 'ทุกคน')
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx9BIQFr6xoyubOnxZ-ZmyFQNVrqGSkSQnWmdxpuXN7mPvB4DG54eedrnL4-mhrel3y/exec';
 
     const jobTypes = [
@@ -654,7 +639,7 @@
     }
 
     function fixDate(dateVal) {
-        if (!dateVal || dateVal === "-") return "-";
+        if (!dateVal || dateVal === "-" || dateVal === "") return "-";
         const d = new Date(dateVal);
         return isNaN(d) ? dateVal : `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
     }
@@ -688,10 +673,8 @@
             if(counts[type] !== undefined) counts[type]++;
             if(row[7] === "true" || row[7] === true) pinnedCount++;
             if(row[9] === "true" || row[9] === true) processingCount++;
-            
             const deadline = formatForInputDate(row[10]);
             const isDaily = (row[12] === "true" || row[12] === true);
-            
             if(isDaily) dailyCount++;
             if(!isDaily && deadline === todayStr) deadlineCount++;
         });
@@ -735,31 +718,27 @@
         document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
         const todayStr = formatForInputDate(new Date());
         filteredData = fullData.filter(row => formatForInputDate(row[10]) === todayStr && row[12] !== "true" && row[12] !== true);
-        currentPage = 1;
-        renderTable();
+        currentPage = 1; renderTable();
     }
 
     function filterByDaily(el) {
         document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
         filteredData = fullData.filter(row => (row[12] === "true" || row[12] === true));
-        currentPage = 1;
-        renderTable();
+        currentPage = 1; renderTable();
     }
 
     function filterByPinned(el) {
         document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
         el.classList.add('active');
         filteredData = fullData.filter(row => (row[7] === "true" || row[7] === true));
-        currentPage = 1;
-        renderTable();
+        currentPage = 1; renderTable();
     }
 
     function filterByProcessing(el) {
         document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
         el.classList.add('active');
         filteredData = fullData.filter(row => (row[9] === "true" || row[9] === true));
-        currentPage = 1;
-        renderTable();
+        currentPage = 1; renderTable();
     }
 
     function filterByType(type, el) {
@@ -769,40 +748,25 @@
         filterData();
     }
 
-    function filterByDate() {
-        const selectedDate = document.getElementById('dateFilter').value;
-        if (!selectedDate) {
-            filteredData = [...fullData];
-        } else {
-            filteredData = fullData.filter(row => {
-                const rowDeadline = formatForInputDate(row[10]);
-                const isDaily = (row[12] === "true" || row[12] === true);
-                return rowDeadline === selectedDate || isDaily;
-            });
-        }
-        currentPage = 1;
-        renderTable();
+    function clearDateFilter() {
+        document.getElementById('dateFilter').value = "";
+        filterData();
     }
 
     function filterData() {
         const filter = document.getElementById('searchInput').value.toLowerCase();
         const dateFilter = document.getElementById('dateFilter').value;
-        
         filteredData = fullData.filter(row => {
             const matchesSearch = row.join(' ').toLowerCase().includes(filter);
             const matchesDate = !dateFilter || formatForInputDate(row[10]) === dateFilter || (row[12] === "true" || row[12] === true);
             return matchesSearch && matchesDate;
         });
-        
-        currentPage = 1;
-        renderTable();
+        currentPage = 1; renderTable();
     }
 
     async function loadData(manual = false) {
         const tableBody = document.getElementById('dataTable');
         const refreshBtn = document.querySelector('.fa-rotate-right');
-        const scrollPos = window.scrollY;
-
         if(refreshBtn) refreshBtn.classList.add('fa-spin');
         try {
             const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: "read"}) });
@@ -814,20 +778,14 @@
                 if (!pinA && pinB) return 1;
                 return new Date(b[0]) - new Date(a[0]);
             });
-            
-            if (manual) {
-                document.getElementById('dateFilter').value = ""; 
-                document.getElementById('searchInput').value = "";
-                filteredData = [...fullData];
-            } else {
-                filterData(); 
-            }
-
+            filterData();
             updateStats(fullData);
-            renderTable();
-            if (!manual) window.scrollTo(0, scrollPos);
-        } catch (e) { tableBody.innerHTML = '<tr><td colspan="8">โหลดข้อมูลไม่สำเร็จ</td></tr>'; }
-        finally { if(refreshBtn) refreshBtn.classList.remove('fa-spin'); }
+        } catch (e) { 
+            console.error("Load failed:", e);
+            tableBody.innerHTML = '<tr><td colspan="8" style="text-align:center;">โหลดข้อมูลไม่สำเร็จ กรุณารีเฟรชหน้าจอ</td></tr>'; 
+        } finally { 
+            if(refreshBtn) refreshBtn.classList.remove('fa-spin'); 
+        }
     }
 
     function renderTable() {
@@ -848,7 +806,6 @@
             const reportId = row[11] || "-";
             const rowJson = encodeURIComponent(JSON.stringify(row));
             const deadlineDate = fixDate(row[10]);
-            tr.setAttribute('data-deadline', deadlineDate);
             if (isPinned) tr.classList.add('pinned-row');
             let filesHtml = '-';
             if (row[5]) {
@@ -858,10 +815,10 @@
             tr.innerHTML = `
                 <td><strong>${fixDate(row[0])}</strong><span class="report-id-label">ID: ${reportId}</span></td>
                 <td><span class="job-type-badge">${row[8] || "ทั่วไป"}</span></td>
-                <td onclick="showFullDetail('${rowJson}')" style="cursor:pointer; font-weight:600; color:var(--ios-blue);">${String(row[1]).replace(/^'/, '')}</td>
-                <td onclick="showFullDetail('${rowJson}')" style="cursor:pointer;">${row[2]}<br><small style="color:#8e8e93">${String(row[3]).replace(/^'/, '')}</small></td>
+                <td onclick="showFullDetail('${rowJson}')" style="cursor:pointer; font-weight:600; color:var(--ios-blue);">${String(row[1]||'').replace(/^'/, '')}</td>
+                <td onclick="showFullDetail('${rowJson}')" style="cursor:pointer;">${row[2]||''}<br><small style="color:#8e8e93">${String(row[3]||'').replace(/^'/, '')}</small></td>
                 <td onclick="showFullDetail('${rowJson}')" style="cursor:pointer;"><div style="max-width:300px; max-height:100px; overflow:hidden; white-space:normal; display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; color:#666; font-size:13px; line-height:1.4;">${row[6] || "-"}</div></td>
-                <td>${row[4]}</td>
+                <td>${row[4]||''}</td>
                 <td>${filesHtml}</td>
                 <td>
                     <div class="action-btns-container">
@@ -905,40 +862,58 @@
         paginationCon.appendChild(nextBtn);
     }
 
+    // --- Optimized Actions (Real-time Feel) ---
+
     async function toggleProcessing(reportId) {
-        Swal.fire({title: 'กำลังดำเนินการ...', allowOutsideClick: false, allowEscapeKey: false, didOpen: () => Swal.showLoading()});
+        const idx = fullData.findIndex(r => r[11] == reportId);
+        if(idx !== -1) {
+            fullData[idx][9] = !(fullData[idx][9] === "true" || fullData[idx][9] === true);
+            filterData(); updateStats(fullData); 
+        }
         try { 
             await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "toggleProcessing", reportId: reportId }) }); 
-            Swal.close(); loadData(); 
-        } catch (err) { Swal.fire({title: 'Error', icon: 'error', allowOutsideClick: false}); }
+        } catch (e) { loadData(); }
     }
 
     async function togglePin(reportId) {
-        Swal.fire({title: 'กำลังดำเนินการ...', allowOutsideClick: false, allowEscapeKey: false, didOpen: () => Swal.showLoading()});
+        const idx = fullData.findIndex(r => r[11] == reportId);
+        if(idx !== -1) {
+            fullData[idx][7] = !(fullData[idx][7] === "true" || fullData[idx][7] === true);
+            fullData.sort((a, b) => {
+                const pinA = (a[7] === "true" || a[7] === true);
+                const pinB = (b[7] === "true" || b[7] === true);
+                if (pinA && !pinB) return -1;
+                if (!pinA && pinB) return 1;
+                return new Date(b[0]) - new Date(a[0]);
+            });
+            filterData(); updateStats(fullData);
+        }
         try { 
             await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "togglePin", reportId: reportId }) }); 
-            Swal.close(); loadData(); 
-        } catch (err) { Swal.fire({title: 'Error', icon: 'error', allowOutsideClick: false}); }
+        } catch (e) { loadData(); }
     }
 
     async function toggleDaily(reportId) {
-        Swal.fire({title: 'กำลังดำเนินการ...', allowOutsideClick: false, allowEscapeKey: false, didOpen: () => Swal.showLoading()});
+        const idx = fullData.findIndex(r => r[11] == reportId);
+        if(idx !== -1) {
+            fullData[idx][12] = !(fullData[idx][12] === "true" || fullData[idx][12] === true);
+            filterData(); updateStats(fullData);
+        }
         try { 
             await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "toggleDaily", reportId: reportId }) }); 
-            Swal.close(); loadData(); 
-        } catch (err) { Swal.fire({title: 'Error', icon: 'error', allowOutsideClick: false}); }
+        } catch (e) { loadData(); }
     }
 
     async function deleteData(reportId) {
         const confirm = await Swal.fire({ 
             title: 'ยืนยันการลบ?', text: "ID: " + reportId, icon: 'warning', 
             showCancelButton: true, confirmButtonColor: '#FF3B30', confirmButtonText: 'ลบเลย',
-            allowOutsideClick: false, allowEscapeKey: false
+            allowOutsideClick: false
         });
         if (confirm.isConfirmed) {
-            Swal.fire({title: 'กำลังลบ...', allowOutsideClick: false, allowEscapeKey: false, didOpen: () => Swal.showLoading()});
-            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: "delete", reportId: reportId}) });
-            Swal.fire({title: 'ลบแล้ว!', icon: 'success', timer: 1500, allowOutsideClick: false}); loadData();
+            fullData = fullData.filter(r => r[11] != reportId);
+            filterData(); updateStats(fullData);
+            fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: "delete", reportId: reportId}) });
         }
     }
 
@@ -952,16 +927,15 @@
         Swal.fire({
             title: 'รายละเอียดรายการ',
             customClass: { popup: 'swal-modal-custom' }, width: '700px',
-            allowOutsideClick: false, allowEscapeKey: false,
             html: `
                 <div class="swal-form-container">
                     <div class="swal-field-full"><label class="swal-label">Report ID</label><div class="detail-view-item"><span class="val">${item[11] || '-'}</span></div></div>
                     <div class="swal-field-full"><label class="swal-label">ประเภทงาน</label><div class="detail-view-item"><span class="job-type-badge">${item[8] || 'ทั่วไป'}</span> ${item[12] === 'true' ? '<span class="job-type-badge" style="background:var(--ios-purple); color:white;">แสดงทุกวัน</span>' : ''}</div></div>
                     <div><label class="swal-label">วันที่ดำเนินการ</label><div class="detail-view-item"><span class="val">${fixDate(item[0])}</span></div></div>
-                    <div><label class="swal-label">รหัสสมาชิก</label><div class="detail-view-item"><span class="val">${String(item[1]).replace(/^'/, '')}</span></div></div>
-                    <div class="swal-field-full"><label class="swal-label">ชื่อลูกค้า</label><div class="detail-view-item"><span class="val">${item[2]}</span></div></div>
-                    <div><label class="swal-label">เบอร์ติดต่อ</label><div class="detail-view-item"><span class="val">${String(item[3]).replace(/^'/, '')}</span></div></div>
-                    <div><label class="swal-label">พนักงาน</label><div class="detail-view-item"><span class="val">${item[4]}</span></div></div>
+                    <div><label class="swal-label">รหัสสมาชิก</label><div class="detail-view-item"><span class="val">${String(item[1]||'').replace(/^'/, '')}</span></div></div>
+                    <div class="swal-field-full"><label class="swal-label">ชื่อลูกค้า</label><div class="detail-view-item"><span class="val">${item[2]||''}</span></div></div>
+                    <div><label class="swal-label">เบอร์ติดต่อ</label><div class="detail-view-item"><span class="val">${String(item[3]||'').replace(/^'/, '')}</span></div></div>
+                    <div><label class="swal-label">พนักงาน</label><div class="detail-view-item"><span class="val">${item[4]||''}</span></div></div>
                     <div><label class="swal-label">วันครบกำหนดงาน</label><div class="detail-view-item"><span class="val" style="color:var(--ios-red);">${fixDate(item[10])}</span></div></div>
                     <div class="swal-field-full"><label class="swal-label">รายละเอียดเพิ่มเติม</label><div class="detail-view-item" style="min-height:160px;"><span class="val" style="font-weight:400; white-space:pre-wrap;">${item[6] || '-'}</span></div></div>
                     <div class="swal-field-full" style="text-align:center; margin-top:10px;">${filesDetail}</div>
@@ -974,9 +948,7 @@
     window.handleFileSelect = async function(event) {
         const files = event.target.files;
         for (let i = 0; i < files.length; i++) {
-            if (selectedFiles.length + existingFiles.length >= 5) { 
-                Swal.showValidationMessage('แนบไฟล์รวมได้สูงสุด 5 ไฟล์เท่านั้น'); break; 
-            }
+            if (selectedFiles.length + existingFiles.length >= 5) { break; }
             const file = files[i];
             const reader = new FileReader();
             const filePromise = new Promise(resolve => {
@@ -986,68 +958,46 @@
             const fileObj = await filePromise;
             selectedFiles.push(fileObj);
         }
-        event.target.value = "";
-        renderSelectedFiles();
+        event.target.value = ""; renderSelectedFiles();
     };
 
     window.removeFile = function(id) {
-        selectedFiles = selectedFiles.filter(f => f.id !== id);
-        renderSelectedFiles();
+        selectedFiles = selectedFiles.filter(f => f.id !== id); renderSelectedFiles();
     };
     
     window.removeExistingFile = function(url) {
-        existingFiles = existingFiles.filter(u => u !== url);
-        renderSelectedFiles();
+        existingFiles = existingFiles.filter(u => u !== url); renderSelectedFiles();
     };
 
     function renderSelectedFiles() {
         const fileListDiv = document.getElementById('selectedFileList');
         if (!fileListDiv) return;
-        
         let html = '';
-        
         existingFiles.forEach((url, idx) => {
-            html += `
-                <div class="file-item existing-file-item">
-                    <span onclick="window.open('${url}', '_blank')" style="cursor:pointer; color:var(--ios-blue); text-decoration:underline;">
-                        <i class="fa-solid fa-cloud"></i> ไฟล์เดิม ${idx + 1}
-                    </span>
-                    <span class="remove-file" onclick="removeExistingFile('${url}')" title="ลบไฟล์เดิมออกจากระบบ">
-                        <i class="fa-solid fa-trash-can"></i>
-                    </span>
-                </div>
-            `;
+            html += `<div class="file-item existing-file-item"><span onclick="window.open('${url}', '_blank')" style="cursor:pointer; color:var(--ios-blue); text-decoration:underline;"><i class="fa-solid fa-cloud"></i> ไฟล์เดิม ${idx + 1}</span><span class="remove-file" onclick="removeExistingFile('${url}')"><i class="fa-solid fa-trash-can"></i></span></div>`;
         });
-        
         selectedFiles.forEach(file => {
-            html += `
-                <div class="file-item">
-                    <span><i class="fa-solid fa-file"></i> ${file.name}</span>
-                    <span class="remove-file" onclick="removeFile(${file.id})"><i class="fa-solid fa-circle-xmark"></i></span>
-                </div>
-            `;
+            html += `<div class="file-item"><span><i class="fa-solid fa-file"></i> ${file.name}</span><span class="remove-file" onclick="removeFile(${file.id})"><i class="fa-solid fa-circle-xmark"></i></span></div>`;
         });
-        
         fileListDiv.innerHTML = html;
     }
 
     window.openAddJobModal = function() {
-        selectedFiles = [];
-        existingFiles = []; 
+        selectedFiles = []; existingFiles = []; 
         let typeOptions = `<option value="">-- เลือกประเภทงาน --</option>`;
         jobTypes.forEach(t => { typeOptions += `<option value="${t}">${t}</option>`; });
         const newId = generateReportId();
         Swal.fire({
             title: 'บันทึกงานใหม่ (ID: ' + newId + ')',
             customClass: { popup: 'swal-modal-custom' }, width: '700px',
-            allowOutsideClick: false, allowEscapeKey: false,
+            allowOutsideClick: false,
             html: `
                 <div class="swal-form-container">
                     <div class="swal-field-full"><label class="swal-label">ประเภทงาน</label><select id="jobType" class="swal-input-styled">${typeOptions}</select></div>
                     <div><label class="swal-label">วันที่ดำเนินการ</label><input type="date" id="date" class="swal-input-styled" value="${new Date().toISOString().split('T')[0]}"></div>
                     <div><label class="swal-label">หมายเลขสมาชิก</label><input type="text" id="memberId" class="swal-input-styled" placeholder="TMH/TOL/TVS"></div>
                     <div class="swal-field-full"><label class="swal-label">ชื่อลูกค้า</label><input type="text" id="name" class="swal-input-styled"></div>
-                    <div><label class="swal-label">เบอร์ติดต่อ</label><input type="text" id="phone" class="swal-input-styled" placeholder="0XXXXXXXXX" maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '')"></div>
+                    <div><label class="swal-label">เบอร์ติดต่อ</label><input type="text" id="phone" class="swal-input-styled" placeholder="0XXXXXXXXX" maxlength="10"></div>
                     <div><label class="swal-label">พนักงาน</label><select id="staff" class="swal-input-styled"><option value="">-- เลือก --</option><option value="ศุภกฤต">ศุภกฤต</option><option value="นวพล">นวพล</option><option value="ปิยะพร">ปิยะพร</option><option value="กรทักษ์">กรทักษ์</option></select></div>
                     <div class="swal-field-full"><label class="swal-label">วันครบกำหนดงาน</label><input type="date" id="deadline" class="swal-input-styled"></div>
                     <div class="swal-field-full" style="display:flex; align-items:center; gap:10px; background:#f5eeff; padding:10px; border-radius:14px; border:1px dashed var(--ios-purple);">
@@ -1056,8 +1006,8 @@
                     </div>
                     <div class="swal-field-full"><label class="swal-label">รายละเอียด</label><textarea id="jobDetail" class="swal-input-styled" style="height:160px;"></textarea></div>
                     <div class="swal-field-full">
-                        <label class="swal-label">แนบไฟล์ (รูปภาพ, PDF, Word, Excel) **แนบได้สูงสุด 3 ไฟล์** </label>
-                        <input type="file" id="file" class="swal-input-styled" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" onchange="handleFileSelect(event)" multiple>
+                        <label class="swal-label">แนบไฟล์ (สูงสุด 5 ไฟล์รวม)</label>
+                        <input type="file" id="file" class="swal-input-styled" onchange="handleFileSelect(event)" multiple>
                         <div id="selectedFileList" class="file-list"></div>
                     </div>
                 </div>
@@ -1065,54 +1015,59 @@
             showCancelButton: true, confirmButtonText: 'บันทึกข้อมูล', preConfirm: async () => {
                 const memberIdVal = document.getElementById('memberId').value.trim();
                 const phoneVal = document.getElementById('phone').value.trim();
-                
-                if (!memberIdVal) { Swal.showValidationMessage('กรุณา กรอกหมายเลขสมาชิก TOL TMH TVS'); return false; }
-                if (!phoneVal) { Swal.showValidationMessage('กรุณากรอกเบอร์ติดต่อลูกค้า'); return false; }
-                if (phoneVal.length !== 10) { Swal.showValidationMessage('เบอร์ติดต่อต้องเป็นตัวเลข 10 ตัวเท่านั้น'); return false; }
-
-                const vals = { 
-                    reportId: newId, 
-                    jobType: document.getElementById('jobType').value, 
-                    date: document.getElementById('date').value, 
-                    memberId: "'" + memberIdVal, 
-                    name: document.getElementById('name').value, 
-                    phone: "'" + phoneVal, 
-                    staff: document.getElementById('staff').value, 
-                    jobDetail: document.getElementById('jobDetail').value, 
-                    deadline: document.getElementById('deadline').value,
-                    isDaily: document.getElementById('isDaily').checked ? "true" : ""
+                if (!memberIdVal || !phoneVal) { Swal.showValidationMessage('กรุณากรอกข้อมูลให้ครบถ้วน'); return false; }
+                return { 
+                    action: "insert", reportId: newId, 
+                    jobType: document.getElementById('jobType').value, date: document.getElementById('date').value, 
+                    memberId: "'" + memberIdVal, name: document.getElementById('name').value, phone: "'" + phoneVal, 
+                    staff: document.getElementById('staff').value, jobDetail: document.getElementById('jobDetail').value, 
+                    deadline: document.getElementById('deadline').value, isDaily: document.getElementById('isDaily').checked ? "true" : "",
+                    files: selectedFiles.map(f => ({name: f.name, data: f.data})) 
                 };
-                if (!vals.jobType || !vals.name || !vals.staff) { Swal.showValidationMessage('กรุณากรอกข้อมูลสำคัญ (ประเภทงาน/ชื่อลูกค้า/พนักงาน)'); return false; }
-                return { action: "insert", ...vals, files: selectedFiles.map(f => ({name: f.name, data: f.data})) };
             }
         }).then(async (result) => {
             if (result.isConfirmed) {
-                Swal.fire({title: 'กำลังบันทึก...', allowOutsideClick: false, allowEscapeKey: false, didOpen: () => Swal.showLoading()});
-                await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(result.value) });
-                Swal.fire({title: 'สำเร็จ', icon: 'success', timer: 1500, allowOutsideClick: false}); loadData();
+                Swal.fire({title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
+                try {
+                    const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(result.value) });
+                    const serverResponse = await res.json();
+                    
+                    if(serverResponse.status === "success") {
+                        const newRow = [
+                            result.value.date, result.value.memberId, result.value.name, result.value.phone, 
+                            result.value.staff, serverResponse.fileUrls || "", result.value.jobDetail, false, 
+                            result.value.jobType, false, result.value.deadline, result.value.reportId, result.value.isDaily
+                        ];
+                        fullData.unshift(newRow);
+                        filterData(); updateStats(fullData);
+                        Swal.fire({title: 'สำเร็จ', icon: 'success', timer: 1000, showConfirmButton: false});
+                    } else { throw new Error('Server Error'); }
+                } catch (e) {
+                    console.error("Save error:", e);
+                    loadData(); // รีโหลดถ้าเกิดข้อผิดพลาด
+                    Swal.close();
+                }
             }
         });
     }
 
     window.editData = function(rowJson) {
         const item = JSON.parse(decodeURIComponent(rowJson));
-        selectedFiles = []; 
-        existingFiles = item[5] ? item[5].split(", ") : []; 
-        
+        selectedFiles = []; existingFiles = item[5] ? item[5].split(", ") : []; 
         let typeOptions = `<option value="">-- เลือกประเภทงาน --</option>`;
         jobTypes.forEach(t => { typeOptions += `<option value="${t}" ${item[8] === t ? 'selected' : ''}>${t}</option>`; });
         
         Swal.fire({
             title: 'แก้ไขข้อมูล: ' + (item[11] || ''),
             customClass: { popup: 'swal-modal-custom' }, width: '700px',
-            allowOutsideClick: false, allowEscapeKey: false,
+            allowOutsideClick: false,
             html: `
                 <div class="swal-form-container">
                     <div class="swal-field-full"><label class="swal-label">ประเภทงาน</label><select id="swal-jobType" class="swal-input-styled">${typeOptions}</select></div>
                     <div><label class="swal-label">วันที่</label><input type="date" id="swal-date" class="swal-input-styled" value="${formatForInputDate(item[0])}"></div>
-                    <div><label class="swal-label">รหัสสมาชิก</label><input type="text" id="swal-memberId" class="swal-input-styled" value="${String(item[1]).replace(/^'/, '')}"></div>
-                    <div class="swal-field-full"><label class="swal-label">ชื่อลูกค้า</label><input type="text" id="swal-name" class="swal-input-styled" value="${item[2]}"></div>
-                    <div><label class="swal-label">เบอร์ติดต่อ</label><input type="text" id="swal-phone" class="swal-input-styled" value="${String(item[3]).replace(/^'/, '')}" maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '')"></div>
+                    <div><label class="swal-label">รหัสสมาชิก</label><input type="text" id="swal-memberId" class="swal-input-styled" value="${String(item[1]||'').replace(/^'/, '')}"></div>
+                    <div class="swal-field-full"><label class="swal-label">ชื่อลูกค้า</label><input type="text" id="swal-name" class="swal-input-styled" value="${item[2]||''}"></div>
+                    <div><label class="swal-label">เบอร์ติดต่อ</label><input type="text" id="swal-phone" class="swal-input-styled" value="${String(item[3]||'').replace(/^'/, '')}" maxlength="10"></div>
                     <div><label class="swal-label">พนักงาน</label><select id="swal-staff" class="swal-input-styled">${['ศุภกฤต', 'นวพล', 'ปิยะพร', 'กรทักษ์'].map(s => `<option value="${s}" ${item[4] === s ? 'selected' : ''}>${s}</option>`).join('')}</select></div>
                     <div class="swal-field-full"><label class="swal-label">วันครบกำหนดงาน</label><input type="date" id="swal-deadline" class="swal-input-styled" value="${formatForInputDate(item[10])}"></div>
                     <div class="swal-field-full" style="display:flex; align-items:center; gap:10px; background:#f5eeff; padding:10px; border-radius:14px; border:1px dashed var(--ios-purple);">
@@ -1121,44 +1076,49 @@
                     </div>
                     <div class="swal-field-full"><label class="swal-label">รายละเอียด</label><textarea id="swal-jobDetail" class="swal-input-styled" style="height:160px;">${item[6] || ''}</textarea></div>
                     <div class="swal-field-full">
-                        <label class="swal-label">จัดการไฟล์แนบ (ลบไฟล์เดิม/เพิ่มไฟล์ใหม่) (รูปภาพ, PDF, Word, Excel) **ได้สูงสุด 3 ไฟล์**</label>
-                        <input type="file" id="file" class="swal-input-styled" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" onchange="handleFileSelect(event)" multiple>
+                        <label class="swal-label">จัดการไฟล์แนบ</label>
+                        <input type="file" id="file" class="swal-input-styled" onchange="handleFileSelect(event)" multiple>
                         <div id="selectedFileList" class="file-list"></div>
-                        <p style="font-size:11px; color:var(--ios-red); margin-top:5px;">* กดไอคอนถังขยะเพื่อลบไฟล์เดิมออกจากระบบถาวรเมื่อกดบันทึก</p>
                     </div>
                 </div>
             `,
-            didOpen: () => { renderSelectedFiles(); },
-            showCancelButton: true, confirmButtonText: 'บันทึกการแก้ไข', confirmButtonColor: '#007aff',
+            didOpen: () => renderSelectedFiles(),
+            showCancelButton: true, confirmButtonText: 'บันทึกการแก้ไข',
             preConfirm: () => {
-                const memberIdVal = document.getElementById('swal-memberId').value.trim();
-                const phoneVal = document.getElementById('swal-phone').value.trim();
-
-                if (!memberIdVal) { Swal.showValidationMessage('กรุณา กรอกหมายเลขสมาชิก TOL TMH TVS'); return false; }
-                if (!phoneVal) { Swal.showValidationMessage('กรุณากรอกเบอร์ติดต่อลูกค้า'); return false; }
-                if (phoneVal.length !== 10) { Swal.showValidationMessage('เบอร์ติดต่อต้องเป็นตัวเลข 10 ตัวเท่านั้น'); return false; }
-
                 return { 
-                    action: "update", 
-                    reportId: item[11], 
-                    date: document.getElementById('swal-date').value, 
-                    memberId: "'" + memberIdVal, 
-                    name: document.getElementById('swal-name').value, 
-                    phone: "'" + phoneVal, 
-                    staff: document.getElementById('swal-staff').value, 
-                    jobDetail: document.getElementById('swal-jobDetail').value, 
-                    jobType: document.getElementById('swal-jobType').value, 
-                    deadline: document.getElementById('swal-deadline').value,
+                    action: "update", reportId: item[11], date: document.getElementById('swal-date').value, 
+                    memberId: "'" + document.getElementById('swal-memberId').value, 
+                    name: document.getElementById('swal-name').value, phone: "'" + document.getElementById('swal-phone').value, 
+                    staff: document.getElementById('swal-staff').value, jobDetail: document.getElementById('swal-jobDetail').value, 
+                    jobType: document.getElementById('swal-jobType').value, deadline: document.getElementById('swal-deadline').value,
                     isDaily: document.getElementById('swal-isDaily').checked ? "true" : "",
-                    existingFiles: existingFiles, 
-                    files: selectedFiles.map(f => ({name: f.name, data: f.data})) 
+                    existingFiles: existingFiles, files: selectedFiles.map(f => ({name: f.name, data: f.data})) 
                 };
             }
         }).then(async (result) => {
             if (result.isConfirmed) {
-                Swal.fire({title: 'กำลังอัพเดท...', allowOutsideClick: false, allowEscapeKey: false, didOpen: () => Swal.showLoading()});
-                await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(result.value) });
-                Swal.fire({title: 'สำเร็จ', icon: 'success', timer: 1500, allowOutsideClick: false}); loadData();
+                Swal.fire({title: 'กำลังอัพเดท...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
+                try {
+                    const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(result.value) });
+                    const serverResponse = await res.json();
+                    
+                    if(serverResponse.status === "success") {
+                        const idx = fullData.findIndex(r => r[11] == result.value.reportId);
+                        if(idx !== -1) {
+                            fullData[idx] = [
+                                result.value.date, result.value.memberId, result.value.name, result.value.phone, 
+                                result.value.staff, serverResponse.fileUrls || "", result.value.jobDetail, item[7], 
+                                result.value.jobType, item[9], result.value.deadline, result.value.reportId, result.value.isDaily
+                            ];
+                        }
+                        filterData(); updateStats(fullData);
+                        Swal.fire({title: 'สำเร็จ', icon: 'success', timer: 1000, showConfirmButton: false});
+                    } else { throw new Error('Server Error'); }
+                } catch (e) {
+                    console.error("Update error:", e);
+                    loadData();
+                    Swal.close();
+                }
             }
         });
     }
