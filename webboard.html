@@ -32,6 +32,8 @@
             background-color: #f8fafc; 
             /* ปรับขนาดเว็บลง 5% */
             zoom: 0.95; 
+            -moz-transform: scale(0.95);
+            -moz-transform-origin: top center;
         }
         
         * { font-family: 'Kanit', sans-serif !important; }
@@ -113,8 +115,6 @@
             border: none;
             touch-action: none;
             transition: transform 0.2s, opacity 0.2s;
-            /* แก้คืนขนาดให้เท่าเดิม (1 / 0.95 ≈ 1.0526) */
-            zoom: 1.0526; 
         }
         #floatingMenuBtn:active { transform: scale(0.9); }
 
@@ -146,8 +146,6 @@
             border: 1px solid rgba(255,255,255,0.1);
             scrollbar-width: thin;
             scrollbar-color: rgba(255,255,255,0.2) transparent;
-            /* แก้คืนขนาดให้เท่าเดิม */
-            zoom: 1.0526;
         }
         .sidebar-float.active {
             opacity: 1;
@@ -155,7 +153,6 @@
             transform: scale(1) translateY(0);
         }
 
-        /* Sidebar Content Styles */
         .sidebar-float .sidebar-header { padding: 20px; font-size: 17px; font-weight: 600; color: #fff; border-bottom: 0.5px solid rgba(255,255,255,0.1); }
         .sidebar-float .menu { padding: 8px 0; }
         .sidebar-float .menu a, .sidebar-float .drop-btn { 
@@ -189,7 +186,7 @@
 
     <nav class="bg-white shadow-sm border-b sticky top-0 z-40 p-4">
         <div class="max-w-6xl mx-auto flex justify-between items-center">
-            <h1 class="text-2xl font-normal text-blue-600 tracking-tight"> <span class="text-slate-800">เว็บบอร์ดข้อมูลสำคัญ</span></h1>
+            <h1 class="text-2xl font-black text-blue-600 tracking-tight">เว็บบอร์ด <span class="text-slate-800">ข้อมูลสำคัญ</span></h1>
             <button onclick="openModal('add')" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-full font-medium shadow-lg transition-all active:scale-95 flex items-center">
                 <i data-lucide="plus-circle" class="mr-2"></i>สร้างกระทู้
             </button>
@@ -488,9 +485,8 @@
             startY = e.clientY;
             
             const rect = dragBtn.getBoundingClientRect();
-            // ปรับ shift ให้เหมาะสมกับ Zoom
-            shiftX = (e.clientX - rect.left);
-            shiftY = (e.clientY - rect.top);
+            shiftX = e.clientX - rect.left;
+            shiftY = e.clientY - rect.top;
 
             dragBtn.setPointerCapture(e.pointerId);
             document.addEventListener('pointermove', onPointerMove);
@@ -503,9 +499,8 @@
             }
 
             if (isDragging) {
-                // คำนวณตำแหน่งโดยหารด้วย Zoom เพื่อให้การลากตรงกับเมาส์
-                let newX = (e.clientX - shiftX) / 0.95;
-                let newY = (e.clientY - shiftY) / 0.95;
+                let newX = e.clientX - shiftX;
+                let newY = e.clientY - shiftY;
                 
                 newX = Math.max(0, Math.min(newX, window.innerWidth - dragBtn.offsetWidth));
                 newY = Math.max(0, Math.min(newY, window.innerHeight - dragBtn.offsetHeight));
@@ -533,23 +528,22 @@
             const btnRect = dragBtn.getBoundingClientRect();
             const sidebarWidth = 280;
             
-            // ปรับตำแหน่งการแสดงผล Sidebar ให้สอดคล้องกับ Zoom
-            let top = (btnRect.bottom / 0.95) + 10;
-            let left = (btnRect.left / 0.95);
+            let top = btnRect.bottom + 10;
+            let left = btnRect.left;
 
             if (left + sidebarWidth > window.innerWidth) {
                 left = window.innerWidth - sidebarWidth - 15;
             }
             
             if (top + 400 > window.innerHeight) {
-                top = (btnRect.top / 0.95) - 410;
+                top = btnRect.top - 410;
                 if (top < 10) top = 10;
             }
 
             sideFloat.style.top = top + 'px';
             sideFloat.style.left = left + 'px';
             
-            sideFloat.style.transformOrigin = `${(btnRect.left / 0.95) - left + 20}px ${(btnRect.top / 0.95) > top ? 'bottom' : 'top'}`;
+            sideFloat.style.transformOrigin = `${btnRect.left - left + 20}px ${btnRect.top > top ? 'bottom' : 'top'}`;
 
             const isActive = sideFloat.classList.toggle('active');
             sideOverlay.classList.toggle('active', isActive);
