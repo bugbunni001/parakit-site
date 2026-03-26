@@ -19,6 +19,7 @@
         :root {
             --ios-blue: #007aff;
             --sidebar-dark: rgba(28, 28, 30, 0.96);
+            --transition-bounce: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
         body { 
@@ -28,13 +29,29 @@
         
         * { font-family: 'Kanit', sans-serif !important; }
 
-        /* การตั้งค่า Icon เบื้องต้น */
-        .material-symbols-outlined {
+        /* Icon Helper */
+        .mi { 
+            font-family: 'Material Symbols Outlined';
+            font-weight: normal;
+            font-style: normal;
+            font-size: 24px;
+            line-height: 1;
+            letter-spacing: normal;
+            text-transform: none;
+            display: inline-block;
+            white-space: nowrap;
+            word-wrap: normal;
+            direction: ltr;
+            -webkit-font-smoothing: antialiased;
             vertical-align: middle;
-            font-size: 20px;
         }
 
         /* Webboard Styles & Motion */
+        #postContainer {
+            display: grid;
+            transition: all 0.5s ease-in-out;
+        }
+
         .post-card { 
             height: 400px; 
             display: flex; 
@@ -64,39 +81,47 @@
         .line-clamp-2 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
         .line-clamp-3 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
 
-        /* Lightbox - ขยายรูปภาพ */
+        .swal2-popup { border-radius: 24px !important; padding: 2rem !important; }
+        .swal2-styled.swal2-confirm { border-radius: 12px !important; padding: 12px 30px !important; }
+        .swal2-styled.swal2-cancel { border-radius: 12px !important; }
+        .swal2-container { z-index: 9999 !important; }
+
+        /* Image Lightbox */
         #imageOverlay {
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.95);
+            background: rgba(0,0,0,0.9);
             z-index: 5000;
             align-items: center;
             justify-content: center;
+            padding: 20px;
             cursor: zoom-out;
         }
         #imageOverlay img {
             max-width: 95%;
             max-height: 90vh;
-            border-radius: 8px;
+            border-radius: 12px;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
             transform: scale(0.9);
-            transition: 0.3s;
+            transition: transform 0.3s ease;
         }
         #imageOverlay.active { display: flex; }
         #imageOverlay.active img { transform: scale(1); }
-        .close-img-btn {
+        .close-image-btn {
             position: absolute; top: 20px; right: 20px;
-            color: white; background: rgba(255,255,255,0.1);
-            width: 45px; height: 45px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 30px; cursor: pointer;
+            width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;
+            background: rgba(255,255,255,0.1); border-radius: 50%;
         }
 
-        /* FLOATING MENU */
+        /* FLOATING MENU SYSTEM */
         #floatingMenuBtn {
             position: fixed; top: 80px; left: 20px; width: 50px; height: 50px;
             background: var(--ios-blue); color: white; border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            z-index: 2100; box-shadow: 0 4px 15px rgba(0, 122, 255, 0.4); border: none; touch-action: none;
+            cursor: move; z-index: 2100;
+            box-shadow: 0 4px 15px rgba(0, 122, 255, 0.4); border: none; touch-action: none;
         }
 
         .sidebar-overlay {
@@ -115,34 +140,37 @@
             box-shadow: 0 20px 50px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1);
         }
         .sidebar-float.active { opacity: 1; visibility: visible; transform: scale(1) translateY(0); }
+
         .sidebar-float .sidebar-header { padding: 20px; font-size: 17px; font-weight: 600; color: #fff; border-bottom: 0.5px solid rgba(255,255,255,0.1); }
+        .sidebar-float .menu { padding: 8px 0; }
         .sidebar-float .menu a, .sidebar-float .drop-btn { 
-            width: 100%; padding: 12px 20px; color: #ebebf5; text-align: left; font-size: 14px; 
-            display: flex; align-items: center; transition: 0.2s;
+            width: 100%; padding: 12px 20px; background: none; border: none; 
+            color: #ebebf5; text-align: left; font-size: 14px; cursor: pointer; 
+            display: flex; align-items: center; text-decoration: none; transition: 0.2s;
         }
         .sidebar-float .menu a:hover, .sidebar-float .drop-btn:hover { background: rgba(255,255,255,0.1); }
         .sidebar-float .sub { display: none; background: rgba(0,0,0,0.2); }
         .sidebar-float .item.open .sub { display: block; }
         .sidebar-float .sub a { padding-left: 45px; font-size: 13px; color: #8e8e93; }
-        .sidebar-float .material-symbols-outlined { margin-right: 12px; font-size: 20px; }
+        .sidebar-float span.mi { margin-right: 12px; font-size: 20px; }
     </style>
 </head>
 <body>
 
-    <div id="imageOverlay" onclick="this.classList.remove('active')">
-        <div class="close-img-btn"><span class="material-symbols-outlined">close</span></div>
-        <img id="expandedImg" src="">
+    <div id="imageOverlay" onclick="closeImage()">
+        <span class="close-image-btn"><span class="mi">close</span></span>
+        <img id="expandedImg" src="" alt="ขยายรูปภาพ">
     </div>
 
-    <button id="floatingMenuBtn"><span class="material-symbols-outlined">menu</span></button>
+    <button id="floatingMenuBtn"><span class="mi">menu</span></button>
     <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebarFloat()"></div>
     <aside class="sidebar-float" id="sidebarFloat"></aside>
 
     <nav class="bg-white shadow-sm border-b sticky top-0 z-40 p-4">
         <div class="max-w-6xl mx-auto flex justify-between items-center">
             <h1 class="text-2xl font-black text-blue-600 tracking-tight">เว็บบอร์ด <span class="text-slate-800">ข้อมูลสำคัญ</span></h1>
-            <button onclick="openModal('add')" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-full font-medium shadow-lg transition-all active:scale-95 flex items-center gap-2">
-                <span class="material-symbols-outlined">add_circle</span> สร้างกระทู้
+            <button onclick="openModal('add')" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-full font-medium shadow-lg transition-all active:scale-95 hover:shadow-blue-200 flex items-center">
+                <span class="mi mr-2">add_circle</span>สร้างกระทู้
             </button>
         </div>
     </nav>
@@ -166,30 +194,34 @@
             <div class="space-y-5">
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-1">หัวข้อกระทู้</label>
-                    <input type="text" id="postSubject" placeholder="พิมพ์ชื่อเรื่อง..." class="w-full border border-slate-200 p-4 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+                    <input type="text" id="postSubject" placeholder="พิมพ์ชื่อเรื่องที่นี่..." class="w-full border border-slate-200 p-4 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none transition-all">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-1">รายละเอียด</label>
-                    <textarea id="postContent" placeholder="เขียนรายละเอียด..." class="w-full border border-slate-200 p-4 rounded-2xl h-48 focus:ring-2 focus:ring-blue-500 outline-none transition-all resize-none"></textarea>
+                    <textarea id="postContent" placeholder="เขียนรายละเอียดเนื้อหาของคุณ..." class="w-full border border-slate-200 p-4 rounded-2xl h-48 focus:ring-2 focus:ring-blue-500 outline-none transition-all resize-none"></textarea>
                 </div>
                 
                 <div id="imageSection">
                     <label class="block text-sm font-medium text-slate-700 mb-1">รูปภาพประกอบ</label>
+                    
                     <div id="currentImageWrapper" class="hidden mb-4 p-3 border rounded-2xl bg-slate-50 relative">
+                        <p class="text-xs text-slate-500 mb-2">รูปภาพปัจจุบัน:</p>
                         <img id="previewOldImage" src="" class="h-32 rounded-lg object-cover mb-2">
-                        <button onclick="removeCurrentImage()" class="text-red-500 text-sm font-medium flex items-center gap-1">
-                            <span class="material-symbols-outlined text-sm">delete</span> ลบรูปเดิมเพื่อเปลี่ยนใหม่
+                        <button onclick="removeCurrentImage()" class="text-red-500 text-sm font-medium hover:underline flex items-center">
+                            <span class="mi text-sm mr-1">delete</span> ลบรูปภาพปัจจุบันเพื่อแนบรูปใหม่
                         </button>
                     </div>
+
                     <div id="fileInputWrapper">
-                        <input type="file" id="postImage" accept="image/*" class="w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-6 file:rounded-full file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer">
+                        <input type="file" id="postImage" accept="image/*" class="w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-6 file:rounded-full file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-all cursor-pointer">
+                        <p id="editImageNote" class="text-xs text-blue-500 mt-2 hidden">💡 แนบรูปภาพประกอบกระทู้</p>
                     </div>
                 </div>
             </div>
 
             <div class="flex justify-end gap-4 mt-8">
-                <button onclick="closeModal('postModal')" class="px-6 py-3 font-medium text-slate-400">ยกเลิก</button>
-                <button id="saveBtn" onclick="submitPost()" class="bg-blue-600 text-white px-10 py-3 rounded-2xl font-medium shadow-lg hover:bg-blue-700 transition-all">บันทึกข้อมูล</button>
+                <button onclick="closeModal('postModal')" class="px-6 py-3 font-medium text-slate-400 hover:text-slate-600 transition-colors">ยกเลิก</button>
+                <button id="saveBtn" onclick="submitPost()" class="bg-blue-600 text-white px-10 py-3 rounded-2xl font-medium shadow-lg hover:bg-blue-700 active:scale-95 transition-all">บันทึกข้อมูล</button>
             </div>
         </div>
     </div>
@@ -209,9 +241,15 @@
             success: (msg) => Swal.fire({ icon: 'success', title: 'สำเร็จ', text: msg, timer: 1500, showConfirmButton: false }),
             loading: (msg) => Swal.fire({ title: msg, allowOutsideClick: false, didOpen: () => Swal.showLoading() }),
             confirm: (msg, btnText = 'ยืนยัน') => Swal.fire({
-                title: 'ยืนยันการทำรายการ', text: msg, icon: 'warning', showCancelButton: true,
-                confirmButtonColor: '#3b82f6', cancelButtonColor: '#94a3b8', confirmButtonText: btnText,
-                cancelButtonText: 'ยกเลิก', reverseButtons: true
+                title: 'ยืนยันการทำรายการ',
+                text: msg,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3b82f6',
+                cancelButtonColor: '#94a3b8',
+                confirmButtonText: btnText,
+                cancelButtonText: 'ยกเลิก',
+                reverseButtons: true
             })
         };
 
@@ -222,14 +260,15 @@
                 allPosts = data;
                 renderPosts();
             } catch (e) {
-                document.getElementById('postContainer').innerHTML = '<div class="col-span-full text-center py-20 text-red-400">โหลดข้อมูลไม่สำเร็จ</div>';
+                console.error("Error:", e);
+                document.getElementById('postContainer').innerHTML = '<div class="col-span-full text-center py-20 text-red-400">ไม่สามารถโหลดข้อมูลได้ กรุณาลองใหม่อีกครั้ง</div>';
             }
         }
 
         function renderPosts() {
             const container = document.getElementById('postContainer');
             if (!allPosts || allPosts.length === 0) {
-                container.innerHTML = '<div class="col-span-full text-center py-20 text-slate-400">ยังไม่มีกระทู้</div>';
+                container.innerHTML = '<div class="col-span-full text-center py-20 text-slate-400">ยังไม่มีกระทู้ในขณะนี้</div>';
                 return;
             }
             container.innerHTML = '';
@@ -242,25 +281,28 @@
             });
 
             sorted.forEach((post, index) => {
+                const title = post.title || 'ไม่มีหัวข้อ';
+                const content = post.content || 'ไม่มีรายละเอียด';
                 const date = post.Timestamp ? new Date(post.Timestamp).toLocaleString('th-TH', { dateStyle: 'medium' }) : 'ไม่ระบุวันที่';
                 const isPinned = post.isPinned === true || post.isPinned === 'true';
                 
                 const card = document.createElement('div');
                 card.className = `post-card bg-white rounded-3xl border-2 overflow-hidden cursor-pointer ${isPinned ? 'border-yellow-400 ring-4 ring-yellow-50' : 'border-white shadow-sm'}`;
                 card.style.animationDelay = `${index * 0.05}s`;
+                
                 card.onclick = () => openViewModal(post.postId);
                 card.innerHTML = `
                     <div class="h-44 bg-slate-200 overflow-hidden relative">
                         ${post.imageUrl ? `<img src="${post.imageUrl}" class="w-full h-full object-cover">` : `<div class="w-full h-full flex items-center justify-center text-slate-400 text-xs">ไม่มีรูปภาพ</div>`}
-                        ${isPinned ? '<span class="absolute top-3 left-3 bg-yellow-400 text-white text-[11px] px-2.5 py-1 rounded-lg font-bold flex items-center gap-1 shadow-sm animate-bounce"><span class="material-symbols-outlined" style="font-size:14px">push_pin</span> ปักหมุด</span>' : ''}
+                        ${isPinned ? '<span class="absolute top-3 left-3 bg-yellow-400 text-white text-[10px] px-2 py-1 rounded font-bold shadow-sm flex items-center"><span class="mi text-sm mr-1">push_pin</span> ปักหมุด</span>' : ''}
                     </div>
                     <div class="p-5 flex-grow flex flex-col">
                         <span class="text-[10px] text-slate-400 font-medium mb-1 uppercase tracking-tighter">#${post.postId}</span>
-                        <h3 class="text-lg font-bold text-slate-800 mb-2 line-clamp-2">${post.title}</h3>
-                        <p class="text-slate-500 text-sm line-clamp-3 mb-4 font-light">${post.content}</p>
-                        <div class="mt-auto pt-3 border-t flex justify-between items-center text-[11px] text-slate-400">
-                            <span class="flex items-center gap-1"><span class="material-symbols-outlined" style="font-size:14px">calendar_month</span> ${date}</span>
-                            <span class="text-blue-600 font-bold">อ่านต่อ</span>
+                        <h3 class="text-lg font-bold text-slate-800 mb-2 line-clamp-2">${title}</h3>
+                        <p class="text-slate-500 text-sm line-clamp-3 mb-4 font-light">${content}</p>
+                        <div class="mt-auto pt-3 border-t flex justify-between items-center text-[10px] text-slate-400">
+                            <span class="flex items-center"><span class="mi text-xs mr-1">calendar_today</span> ${date}</span>
+                            <span class="text-blue-600 font-bold">อ่านต่อ...</span>
                         </div>
                     </div>
                 `;
@@ -271,40 +313,49 @@
         function openViewModal(id) {
             const post = allPosts.find(p => p.postId == id);
             if(!post) return;
+            const modal = document.getElementById('viewModal');
+            const content = document.getElementById('viewContent');
             const isPinned = post.isPinned === true || post.isPinned === 'true';
             const date = new Date(post.Timestamp).toLocaleString('th-TH', { dateStyle: 'long', timeStyle: 'short' });
             
-            document.getElementById('viewContent').innerHTML = `
+            content.innerHTML = `
                 <div class="flex justify-between items-center mb-6">
                     <span class="bg-slate-100 px-4 py-1 rounded-full text-xs font-bold text-slate-500 uppercase">กระทู้ #${post.postId}</span>
-                    <button onclick="closeModal('viewModal')" class="text-slate-400 hover:text-slate-600 flex items-center gap-1">✕ ปิด</button>
+                    <button onclick="closeModal('viewModal')" class="text-slate-400 hover:text-slate-600 transition-colors font-medium flex items-center">
+                        <span class="mi mr-1">close</span> ปิดหน้าต่าง
+                    </button>
                 </div>
                 <h2 class="text-3xl font-bold text-slate-800 mb-4 leading-tight">${post.title}</h2>
-                <div class="text-slate-400 text-xs mb-6 flex items-center gap-4">
-                    <span class="flex items-center gap-1"><span class="material-symbols-outlined" style="font-size:14px">schedule</span> ${date}</span>
-                    ${isPinned ? '<span class="text-yellow-600 font-bold flex items-center gap-1"><span class="material-symbols-outlined" style="font-size:14px">push_pin</span> ปักหมุดอยู่</span>' : ''}
+                <div class="text-slate-400 text-xs mb-6 flex items-center">
+                    <span class="mr-4 font-light flex items-center"><span class="mi text-xs mr-1">schedule</span> โพสต์เมื่อ: ${date}</span>
+                    ${isPinned ? '<span class="text-yellow-600 font-bold flex items-center"><span class="mi text-xs mr-1">push_pin</span> ปักหมุดอยู่</span>' : ''}
                 </div>
-                ${post.imageUrl ? `<img src="${post.imageUrl}" onclick="showFullImage(this.src)" class="w-full rounded-2xl mb-8 shadow-md cursor-zoom-in hover:opacity-90 transition-all">` : ''}
+                ${post.imageUrl ? `<img src="${post.imageUrl}" onclick="expandImage(this.src)" class="w-full rounded-2xl mb-8 shadow-md cursor-zoom-in hover:opacity-95 transition-opacity">` : ''}
                 <div class="text-slate-700 leading-relaxed whitespace-pre-wrap text-lg mb-10 border-l-4 border-blue-500 pl-6 font-light">${post.content}</div>
                 <div class="flex flex-wrap gap-3 pt-6 border-t">
-                    <button onclick="togglePin('${post.postId}')" class="flex-1 min-w-[140px] px-6 py-3 bg-yellow-50 text-yellow-700 rounded-xl font-medium flex items-center justify-center gap-2">
-                        <span class="material-symbols-outlined">${isPinned ? 'keep_off' : 'push_pin'}</span> ${isPinned ? 'เลิกปักหมุด' : 'ปักหมุด'}
+                    <button onclick="togglePin('${post.postId}')" class="flex-1 min-w-[140px] px-4 py-3 bg-yellow-50 text-yellow-700 rounded-xl font-medium transition-all hover:bg-yellow-100 hover:scale-105 active:scale-95 flex items-center justify-center">
+                        <span class="mi mr-2 text-xl">push_pin</span> ${isPinned ? 'เลิกปักหมุด' : 'ปักหมุด'}
                     </button>
-                    <button onclick="openEditModal('${post.postId}')" class="flex-1 min-w-[140px] px-6 py-3 bg-blue-600 text-white rounded-xl font-medium flex items-center justify-center gap-2 shadow-lg">
-                        <span class="material-symbols-outlined">edit</span> แก้ไข
+                    <button onclick="openEditModal('${post.postId}')" class="flex-1 min-w-[140px] px-4 py-3 bg-blue-600 text-white rounded-xl font-medium shadow-lg transition-all hover:bg-blue-700 hover:scale-105 active:scale-95 flex items-center justify-center">
+                        <span class="mi mr-2 text-xl">edit</span>แก้ไข
                     </button>
-                    <button onclick="deletePost('${post.postId}', '${post.fileId}')" class="flex-1 min-w-[140px] px-6 py-3 bg-red-50 text-red-600 rounded-xl font-medium flex items-center justify-center gap-2">
-                        <span class="material-symbols-outlined">delete</span> ลบ
+                    <button onclick="deletePost('${post.postId}', '${post.fileId}')" class="flex-1 min-w-[140px] px-4 py-3 bg-red-50 text-red-600 rounded-xl font-medium transition-all hover:bg-red-100 hover:scale-105 active:scale-95 flex items-center justify-center">
+                        <span class="mi mr-2 text-xl">delete</span>ลบ
                     </button>
                 </div>
             `;
-            document.getElementById('viewModal').classList.add('modal-active');
+            modal.classList.add('modal-active');
         }
 
-        // ฟังก์ชันขยายภาพ
-        function showFullImage(src) {
-            document.getElementById('expandedImg').src = src;
-            document.getElementById('imageOverlay').classList.add('active');
+        function expandImage(src) {
+            const overlay = document.getElementById('imageOverlay');
+            const img = document.getElementById('expandedImg');
+            img.src = src;
+            overlay.classList.add('active');
+        }
+
+        function closeImage() {
+            document.getElementById('imageOverlay').classList.remove('active');
         }
 
         function openModal(mode) {
@@ -314,6 +365,7 @@
                 document.getElementById('modalTitle').innerText = 'สร้างกระทู้ใหม่';
                 document.getElementById('editPostId').value = '';
             }
+            setTimeout(() => document.getElementById('postSubject').focus(), 100);
         }
 
         function resetModalFields() {
@@ -324,29 +376,36 @@
             document.getElementById('deleteOldImageFlag').value = 'false';
             document.getElementById('currentImageWrapper').classList.add('hidden');
             document.getElementById('fileInputWrapper').classList.remove('hidden');
+            document.getElementById('editImageNote').classList.add('hidden');
         }
 
-        function closeModal(id) { document.getElementById(id).classList.remove('modal-active'); }
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('modal-active');
+        }
 
         function openEditModal(id) {
             const post = allPosts.find(p => p.postId == id);
             if(!post) return;
             closeModal('viewModal');
             openModal('edit');
+            
             document.getElementById('modalTitle').innerText = 'แก้ไขกระทู้';
             document.getElementById('editPostId').value = post.postId;
             document.getElementById('postSubject').value = post.title;
             document.getElementById('postContent').value = post.content;
             document.getElementById('existingFileId').value = post.fileId || '';
+            
             if (post.imageUrl) {
                 document.getElementById('previewOldImage').src = post.imageUrl;
                 document.getElementById('currentImageWrapper').classList.remove('hidden');
                 document.getElementById('fileInputWrapper').classList.add('hidden');
+            } else {
+                document.getElementById('editImageNote').classList.remove('hidden');
             }
         }
 
         async function removeCurrentImage() {
-            const res = await toast.confirm("ยืนยันการลบรูปภาพเดิม?", "ลบรูปภาพ");
+            const res = await toast.confirm("ยืนยันการลบรูปภาพเดิม? (คุณต้องกดบันทึกเพื่อให้การลบมีผล)", "ลบรูปภาพ");
             if(res.isConfirmed) {
                 document.getElementById('currentImageWrapper').classList.add('hidden');
                 document.getElementById('fileInputWrapper').classList.remove('hidden');
@@ -360,10 +419,15 @@
             const title = document.getElementById('postSubject').value.trim();
             const content = document.getElementById('postContent').value.trim();
             const fileInput = document.getElementById('postImage');
+            const deleteOldImage = document.getElementById('deleteOldImageFlag').value === 'true';
+            const existingFileId = document.getElementById('existingFileId').value;
 
-            if (!title || !content) return toast.error("กรุณากรอกข้อมูลให้ครบ");
+            if (!title || !content) {
+                return toast.error("กรุณาใส่หัวข้อและรายละเอียด");
+            }
             
-            btn.disabled = true; toast.loading("กำลังบันทึก...");
+            btn.disabled = true; 
+            toast.loading("กำลังบันทึกข้อมูล...");
 
             let imageData = null;
             if (fileInput.files.length > 0) {
@@ -377,24 +441,28 @@
             const payload = {
                 action: editId ? 'update' : 'add',
                 postId: editId || 'PK' + Math.random().toString().substring(2, 8),
-                title, content,
+                title, 
+                content,
                 image: imageData?.base64,
                 imageType: imageData?.type,
-                deleteOldImage: document.getElementById('deleteOldImageFlag').value === 'true',
-                existingFileId: document.getElementById('existingFileId').value
+                deleteOldImage: deleteOldImage,
+                existingFileId: existingFileId
             };
 
             try {
                 await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
                 closeModal('postModal');
-                toast.success("สำเร็จ");
+                toast.success("บันทึกข้อมูลสำเร็จ");
                 fetchPosts();
-            } catch (e) { toast.error("เกิดข้อผิดพลาด"); }
-            finally { btn.disabled = false; }
+            } catch (e) { 
+                toast.error("เกิดข้อผิดพลาดในการเชื่อมต่อ"); 
+            } finally { 
+                btn.disabled = false; 
+            }
         }
 
         async function deletePost(id, fileId) {
-            const res = await toast.confirm("ต้องการลบกระทู้นี้ใช่หรือไม่?");
+            const res = await toast.confirm("คุณต้องการลบกระทู้นี้ใช่หรือไม่? ข้อมูลจะหายถาวร", "ลบกระทู้");
             if (res.isConfirmed) {
                 closeModal('viewModal');
                 toast.loading("กำลังลบ...");
@@ -411,32 +479,47 @@
                 closeModal('viewModal');
                 await fetchPosts();
                 Swal.close();
-            } catch (e) { toast.error("ล้มเหลว"); }
+            } catch (e) {
+                toast.error("ไม่สามารถดำเนินการได้");
+            }
         }
 
-        /* FLOATING SIDEBAR LOGIC (เหมือนเดิม) */
+        /* --- FLOATING SIDEBAR LOGIC --- */
         const dragBtn = document.getElementById('floatingMenuBtn');
         const sideFloat = document.getElementById('sidebarFloat');
         const sideOverlay = document.getElementById('sidebarOverlay');
         let isDragging = false;
         let startX, startY, shiftX, shiftY;
 
+        function loadButtonPosition() {
+            const savedLeft = localStorage.getItem('floatBtnLeft');
+            const savedTop = localStorage.getItem('floatBtnTop');
+            if (savedLeft && savedTop) {
+                dragBtn.style.left = savedLeft + 'px';
+                dragBtn.style.top = savedTop + 'px';
+            }
+        }
+
         dragBtn.onpointerdown = function(e) {
-            isDragging = false; startX = e.clientX; startY = e.clientY;
+            isDragging = false;
+            startX = e.clientX; startY = e.clientY;
             const rect = dragBtn.getBoundingClientRect();
-            shiftX = e.clientX - rect.left; shiftY = e.clientY - rect.top;
+            shiftX = e.clientX - rect.left;
+            shiftY = e.clientY - rect.top;
             dragBtn.setPointerCapture(e.pointerId);
             document.addEventListener('pointermove', onPointerMove);
             document.addEventListener('pointerup', onPointerUp);
         };
 
         function onPointerMove(e) {
-            if (!isDragging && (Math.abs(e.clientX - startX) > 5 || Math.abs(e.clientY - startY) > 5)) isDragging = true;
+            if (!isDragging && (Math.abs(e.clientX - startX) > 5 || Math.abs(e.clientY - startY) > 5)) {
+                isDragging = true;
+            }
             if (isDragging) {
                 let newX = e.clientX - shiftX;
                 let newY = e.clientY - shiftY;
-                newX = Math.max(0, Math.min(newX, window.innerWidth - 50));
-                newY = Math.max(0, Math.min(newY, window.innerHeight - 50));
+                newX = Math.max(0, Math.min(newX, window.innerWidth - dragBtn.offsetWidth));
+                newY = Math.max(0, Math.min(newY, window.innerHeight - dragBtn.offsetHeight));
                 dragBtn.style.left = newX + 'px';
                 dragBtn.style.top = newY + 'px';
             }
@@ -445,17 +528,29 @@
         function onPointerUp(e) {
             document.removeEventListener('pointermove', onPointerMove);
             document.removeEventListener('pointerup', onPointerUp);
+            dragBtn.releasePointerCapture(e.pointerId);
             if (isDragging) {
                 localStorage.setItem('floatBtnLeft', dragBtn.offsetLeft);
                 localStorage.setItem('floatBtnTop', dragBtn.offsetTop);
-            } else toggleSidebarFloat();
+            } else {
+                toggleSidebarFloat();
+            }
             isDragging = false;
         }
 
         function toggleSidebarFloat() {
             const btnRect = dragBtn.getBoundingClientRect();
-            sideFloat.style.top = (btnRect.bottom + 10) + 'px';
-            sideFloat.style.left = Math.min(btnRect.left, window.innerWidth - 295) + 'px';
+            const sidebarWidth = 280;
+            let top = btnRect.bottom + 10;
+            let left = btnRect.left;
+            if (left + sidebarWidth > window.innerWidth) left = window.innerWidth - sidebarWidth - 15;
+            if (top + 400 > window.innerHeight) {
+                top = btnRect.top - 410;
+                if (top < 10) top = 10;
+            }
+            sideFloat.style.top = top + 'px';
+            sideFloat.style.left = left + 'px';
+            sideFloat.style.transformOrigin = `${btnRect.left - left + 20}px ${btnRect.top > top ? 'bottom' : 'top'}`;
             const isActive = sideFloat.classList.toggle('active');
             sideOverlay.classList.toggle('active', isActive);
             if (isActive && !sideFloat.innerHTML) loadSidebarContent();
@@ -467,23 +562,54 @@
         }
 
         function loadSidebarContent() {
-            fetch('sidebar.html').then(res => res.text()).then(data => {
-                sideFloat.innerHTML = `<div class="sidebar-header">เมนูนำทาง</div>` + data;
-            });
+            // ในการใช้งานจริง sidebar.html ของคุณต้องเปลี่ยนจาก <i class="fa..."> เป็น <span class="mi">icon_name</span>
+            fetch('sidebar.html')
+                .then(res => res.text())
+                .then(data => {
+                    // กรองข้อมูลเบื้องต้นเพื่อเปลี่ยนไอคอนใน sidebar อัตโนมัติ (ถ้ามีแท็ก <i>)
+                    let cleanedData = data.replace(/<i class="[^"]*fa-([^"\s]*)[^"]*"><\/i>/g, (match, iconName) => {
+                        // แมปชื่อไอคอนที่พบบ่อย (สามารถเพิ่มเองได้)
+                        const iconMap = { 'plus': 'add', 'trash': 'delete', 'home': 'home', 'user': 'person', 'gear': 'settings', 'bars': 'menu' };
+                        const newIcon = iconMap[iconName] || 'label';
+                        return `<span class="mi">${newIcon}</span>`;
+                    });
+                    
+                    sideFloat.innerHTML = `<div class="sidebar-header">เมนูนำทาง</div>` + cleanedData;
+                    ['credit', 'branch', 'sales'].forEach(id => {
+                        if (localStorage.getItem('menu-' + id) === 'true') {
+                            const el = sideFloat.querySelector('#menu-' + id);
+                            if (el) el.classList.add('open');
+                        }
+                    });
+                });
         }
 
         window.toggleDrop = function(btn, id) {
-            btn.parentElement.classList.toggle("open");
+            const item = btn.parentElement;
+            const isOpen = item.classList.toggle("open");
+            if (id) localStorage.setItem('menu-' + id, isOpen);
         }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeImage();
+                closeModal('postModal');
+                closeModal('viewModal');
+            }
+            if (e.key === 'Enter') {
+                const activeModal = document.querySelector('#postModal.modal-active');
+                if (activeModal && (e.target.id === 'postSubject' || e.target.id === 'postContent')) {
+                    if (e.target.id === 'postSubject') {
+                        e.preventDefault();
+                        submitPost();
+                    }
+                }
+            }
+        });
 
         window.onload = () => {
             fetchPosts();
-            const savedLeft = localStorage.getItem('floatBtnLeft');
-            const savedTop = localStorage.getItem('floatBtnTop');
-            if (savedLeft && savedTop) {
-                dragBtn.style.left = savedLeft + 'px';
-                dragBtn.style.top = savedTop + 'px';
-            }
+            loadButtonPosition();
         };
     </script>
 </body>
