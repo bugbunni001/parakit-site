@@ -11,6 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
     
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
     
     <style>
         :root {
@@ -18,7 +19,7 @@
             --ios-bg: #f2f2f7;
             --glass-white: rgba(255, 255, 255, 0.75);
             --glass-border: rgba(255, 255, 255, 0.5);
-            --sidebar-dark: rgba(28, 28, 30, 0.96); /* ปรับตาม index.html */
+            --sidebar-dark: rgba(28, 28, 30, 0.96); 
             --text-main: #1c1c1e;
             --text-light: #8e8e93;
             --transition-swift: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -41,7 +42,7 @@
             overflow-x: hidden;
         }
 
-        /* ===== Header Navbar (Updated to match style) ===== */
+        /* ===== Header Navbar ===== */
         .top-header {
             position: fixed;
             top: 0; left: 0; right: 0;
@@ -55,7 +56,7 @@
             border-bottom: 0.5px solid rgba(0,0,0,0.1);
         }
 
-        /* ===== Floating Draggable Button (From index.html) ===== */
+        /* ===== Floating Draggable Button ===== */
         #floatingMenuBtn {
             position: fixed;
             top: 10px;
@@ -68,7 +69,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
+            font-size: 14px;
             cursor: move;
             z-index: 2100;
             box-shadow: 0 4px 15px rgba(0, 122, 255, 0.4);
@@ -78,7 +79,7 @@
         }
         #floatingMenuBtn:active { transform: scale(0.9); }
 
-        /* ===== Floating Sidebar (From index.html) ===== */
+        /* ===== Floating Sidebar ===== */
         .sidebar-overlay {
             position: fixed;
             inset: 0;
@@ -113,7 +114,6 @@
             transform: scale(1) translateY(0);
         }
 
-        /* Sidebar Content Styles */
         .sidebar-float .sidebar-header { padding: 20px; font-size: 17px; font-weight: 600; color: #fff; border-bottom: 0.5px solid rgba(255,255,255,0.1); }
         .sidebar-float .menu { padding: 8px 0; }
         .sidebar-float .menu a, .sidebar-float .drop-btn { 
@@ -126,7 +126,7 @@
         .sidebar-float .item.open .sub { display: block; }
         .sidebar-float .sub a { padding-left: 45px; font-size: 13px; color: #8e8e93; }
 
-        /* ===== Original Content Area & Logic Styles (UNTOUCHED) ===== */
+        /* ===== Content Area ===== */
         .content-area { 
             padding: 80px 15px 40px; 
             max-width: 1200px;
@@ -135,6 +135,10 @@
         }
         .glass { background: var(--glass-white); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border-radius: 24px; border: 1px solid var(--glass-border); box-shadow: 0 15px 35px rgba(0,0,0,0.05); }
         .calendar-wrapper { overflow: hidden; border-radius: 24px; background: white; }
+        
+        select { transition: var(--transition-swift); }
+        select:hover { transform: translateY(-1px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); filter: brightness(1.02); }
+
         .day-cell { height: 100px; background: rgba(255, 255, 255, 0.6); border-right: 1px solid rgba(0,0,0,0.03); border-bottom: 1px solid rgba(0,0,0,0.03); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; overflow-y: auto; padding: 4px; position: relative; }
         .day-cell:hover { background: rgba(255, 255, 255, 0.95); transform: scale(1.01); z-index: 10; box-shadow: 0 10px 25px rgba(0,0,0,0.08); border-radius: 8px; }
         @media(min-width: 1024px) { .day-cell { height: 125px; padding: 6px; } }
@@ -142,30 +146,49 @@
         .cell-content { display: flex; flex-direction: column; gap: 2px; align-items: flex-start; width: 100%; }
         .date-number { font-size: 0.95rem; font-weight: 600; color: #1d1d1f; min-width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; margin-bottom: 2px; transition: all 0.2s; }
         .current-day .date-number { background: #0071e3; color: white; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,113,227,0.3); }
+        
         .emp-row { display: flex; align-items: center; gap: 4px; width: 100%; padding: 2px 4px; background: rgba(0,0,0,0.03); border-radius: 6px; margin-bottom: 2px; transition: background 0.2s; }
+        .emp-row:hover { background: rgba(0,0,0,0.06); }
+        
         .status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
         .emp-name-label { font-size: 10px; font-weight: 500; color: #1c1c1e; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .status-abbr { font-size: 9px; font-weight: 700; color: #8e8e93; display: inline; }
         @media(min-width: 768px) { .status-dot { width: 11px; height: 11px; } .emp-name-label { font-size: 13px; } .status-abbr { font-size: 11px; } .emp-row { gap: 6px; padding: 3px 6px; } }
+        
         .st-Work { background: #34c759; box-shadow: 0 0 6px rgba(52, 199, 89, 0.4); } 
         .st-V { background: #ff3b30; box-shadow: 0 0 6px rgba(255, 59, 48, 0.4); }      
         .st-SICK { background: #8e8e93; }  
         .st-EVENT { background: #FFD60A; } 
         .st-PH { background: #ff9500; }     
         .st-H { background: #af52de; }     
-        .st-LA { background: #1c1c1e; box-shadow: 0 0 6px rgba(0, 0, 0, 0.4); } /* ลาไม่รับค่าจ้าง */
+        .st-LA { background: #1c1c1e; box-shadow: 0 0 6px rgba(0, 0, 0, 0.4); }
+        
         #toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-150px); z-index: 5000; width: 90%; max-width: 350px; transition: transform 0.5s cubic-bezier(0.18, 0.89, 0.32, 1.28); }
         #toast.show { transform: translateX(-50%) translateY(0); }
         #loading { position: fixed; inset: 0; background: rgba(245,245,247,0.8); backdrop-filter: blur(15px); z-index: 9999; display: none; justify-content: center; align-items: center; }
-        .btn-edit-mode { padding: 8px 16px; border-radius: 14px; font-weight: 600; font-size: 14px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; gap: 6px; }
+        
+        .btn-edit-mode { padding: 8px 16px; border-radius: 14px; font-weight: 600; font-size: 14px; transition: var(--transition-bounce); display: flex; align-items: center; gap: 6px; cursor: pointer; }
         .mode-locked { background: #f2f2f7; color: #8e8e93; border: 1px solid #d1d1d6; }
+        .mode-locked:hover { background: #e5e5ea; color: #1c1c1e; transform: scale(1.05); }
         .mode-unlocked { background: #34c759; color: white; border: 1px solid #34c759; box-shadow: 0 4px 12px rgba(52, 199, 89, 0.3); }
-        .summary-card { background: white; border-radius: 20px; padding: 12px; border: 1px solid rgba(0,0,0,0.05); transition: transform 0.2s; }
-        .summary-card:hover { transform: translateY(-3px); }
-        .stat-badge { font-size: 11px; padding: 2px 8px; border-radius: 8px; font-weight: 600; }
+        .mode-unlocked:hover { transform: scale(1.05); filter: brightness(1.1); }
+        .btn-edit-mode:active { transform: scale(0.95); }
+
+        .summary-card { background: white; border-radius: 20px; padding: 12px; border: 1px solid rgba(0,0,0,0.05); transition: var(--transition-bounce); }
+        .summary-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.08); }
+        .stat-badge { font-size: 11px; padding: 2px 8px; border-radius: 8px; font-weight: 600; transition: 0.2s; }
+        .stat-badge:hover { filter: contrast(1.2); transform: scale(1.1); }
+
+        .modal-btn { transition: var(--transition-bounce); cursor: pointer; }
+        .modal-btn:hover { transform: scale(1.02); filter: brightness(1.05); }
+        .modal-btn:active { transform: scale(0.98); }
+
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
         .shake { animation: shake 0.2s ease-in-out 0s 2; }
+        
+        .lucide { width: 18px; height: 18px; transition: transform 0.3s ease; }
+        button:hover .lucide { transform: rotate(15deg); }
     </style>
 </head>
 <body>
@@ -175,6 +198,7 @@
 </header>
 
 <button id="floatingMenuBtn" title="ลากเพื่อย้าย">เมนู</button>
+
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebarFloat()"></div>
 <aside class="sidebar-float" id="sidebarFloat"></aside>
 
@@ -204,7 +228,7 @@
                 <select id="ySel" class="flex-1 sm:flex-none p-2.5 px-4 rounded-xl border-none shadow-md bg-white/90 font-semibold text-sm outline-none cursor-pointer"></select>
                 
                 <button id="btnEditMode" onclick="toggleEditMode()" class="w-full sm:w-auto btn-edit-mode mode-locked justify-center">
-                    <span id="lockIcon">🔒</span>
+                    <span id="lockIcon"><i data-lucide="lock" class="w-4 h-4"></i></span>
                     <span id="lockText">แก้ไข</span>
                 </button>
             </div>
@@ -272,7 +296,7 @@
 <div id="passwordModal" class="fixed inset-0 bg-black/40 hidden flex justify-center items-center p-4 backdrop-blur-md z-[5000]">
     <div id="passBox" class="bg-white/80 backdrop-blur-2xl rounded-[30px] p-8 w-full max-w-sm shadow-2xl border border-white/50 text-center">
         <div class="mb-6">
-            <div class="w-14 h-14 bg-blue-500 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-4 shadow-lg">🔐</div>
+            <div class="w-14 h-14 bg-blue-500 rounded-2xl flex items-center justify-center text-white mx-auto mb-4 shadow-lg"><i data-lucide="shield-check" class="w-8 h-8"></i></div>
             <h2 class="text-xl font-bold text-gray-800">กรุณาใส่รหัสผ่าน</h2>
         </div>
         <input type="password" id="passInput" inputmode="numeric" placeholder="••••" class="w-full text-center text-2xl tracking-widest p-3 bg-white/50 rounded-xl border border-gray-200 outline-none mb-6">
@@ -296,7 +320,7 @@
 </div>
 
 <script>
-    // --- Config & Original Logic (UNTOUCHED) ---
+    // --- Config & Database Logic ---
     const URL = "https://script.google.com/macros/s/AKfycbwqlWkhMFrhiTvySSSwPt7sd0aLJyW9I6g4HlnmdgX7l8SI0yBAKEEAZEKvT0fOr2VzqA/exec"; 
     let db = [];
     let selDate = "";
@@ -310,7 +334,7 @@
         { id: "3838", name: "จิดาภา" }
     ];
 
-    // --- Floating Sidebar Logic (1:1 from index.html) ---
+    // --- Floating Sidebar Logic (1:1 From Memory) ---
     const dragBtn = document.getElementById('floatingMenuBtn');
     const sideFloat = document.getElementById('sidebarFloat');
     const sideOverlay = document.getElementById('sidebarOverlay');
@@ -404,7 +428,7 @@
         if (id) localStorage.setItem('menu-' + id, isOpen);
     }
 
-    // --- Original Logic (UNTOUCHED) ---
+    // --- Main Logic (Calendar & Database) ---
     async function init() {
         loadButtonPosition();
         const mS = document.getElementById('mSel');
@@ -414,10 +438,14 @@
         mS.value = new Date().getMonth();
         yS.value = new Date().getFullYear();
         mS.onchange = yS.onchange = () => render();
+        
+        // Motion: Enter Key for Password
         document.getElementById('passInput').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') checkPassword();
         });
+        
         await refreshData();
+        lucide.createIcons();
     }
 
     async function refreshData() {
@@ -483,8 +511,16 @@
     }
     function updateEditUI() {
         const btn = document.getElementById('btnEditMode'), icon = document.getElementById('lockIcon'), text = document.getElementById('lockText');
-        if (isEditMode) { btn.classList.replace('mode-locked', 'mode-unlocked'); icon.innerText = "🔓"; text.innerText = "กำลังแก้ไข"; }
-        else { btn.classList.replace('mode-unlocked', 'mode-locked'); icon.innerText = "🔒"; text.innerText = "แก้ไข"; }
+        if (isEditMode) { 
+            btn.classList.replace('mode-locked', 'mode-unlocked'); 
+            icon.innerHTML = '<i data-lucide="lock-open" class="w-4 h-4"></i>'; 
+            text.innerText = "กำลังแก้ไข"; 
+        } else { 
+            btn.classList.replace('mode-unlocked', 'mode-locked'); 
+            icon.innerHTML = '<i data-lucide="lock" class="w-4 h-4"></i>'; 
+            text.innerText = "แก้ไข"; 
+        }
+        lucide.createIcons();
     }
     function openModal(d) {
         selDate = d; const [y, m, day] = d.split('-');
@@ -495,8 +531,9 @@
         else { document.getElementById('editForm').classList.add('hidden'); document.getElementById('btnCloseView').classList.remove('hidden'); }
         if(records.length > 0) {
             records.forEach(r => {
-                list.innerHTML += `<div class="flex justify-between items-center bg-white p-3.5 rounded-2xl border border-gray-100 shadow-sm"><div class="flex items-center gap-3"><div class="w-3.5 h-3.5 rounded-full st-${r.status}"></div><p class="font-medium text-gray-700 text-sm">${r.empName} <span class="text-xs text-gray-400">(${r.status})</span></p></div>${isEditMode ? `<button onclick="deleteEntry('${r.date}', '${r.empId}')" class="text-red-500 bg-red-50 p-2 rounded-xl">🗑️</button>` : ''}</div>`;
+                list.innerHTML += `<div class="flex justify-between items-center bg-white p-3.5 rounded-2xl border border-gray-100 shadow-sm"><div class="flex items-center gap-3"><div class="w-3.5 h-3.5 rounded-full st-${r.status}"></div><p class="font-medium text-gray-700 text-sm">${r.empName} <span class="text-xs text-gray-400">(${r.status})</span></p></div>${isEditMode ? `<button onclick="deleteEntry('${r.date}', '${r.empId}')" class="text-red-500 bg-red-50 p-2 rounded-xl flex items-center justify-center modal-btn"><i data-lucide="trash-2" class="w-4 h-4"></i></button>` : ''}</div>`;
             });
+            lucide.createIcons();
         } else { list.innerHTML = `<div class="py-10 text-center text-gray-300 font-light italic text-sm">ไม่มีข้อมูลการหยุด</div>`; }
         document.getElementById('modal').classList.remove('hidden');
     }
@@ -527,8 +564,11 @@
     function showLoad(v) { document.getElementById('loading').style.display = v ? 'flex' : 'none'; }
     function showToast(msg, type = 'success') {
         const toast = document.getElementById('toast');
+        const iconContainer = document.getElementById('toastIcon');
         document.getElementById('toastMsg').innerText = msg;
-        document.getElementById('toastIcon').innerText = type === 'success' ? '✅' : '⚠️';
+        if(type === 'success') { iconContainer.innerHTML = '<i data-lucide="check-circle" class="text-green-500 w-5 h-5"></i>'; } 
+        else { iconContainer.innerHTML = '<i data-lucide="alert-triangle" class="text-amber-500 w-5 h-5"></i>'; }
+        lucide.createIcons();
         toast.classList.add('show');
         setTimeout(() => toast.classList.remove('show'), 3000);
     }
