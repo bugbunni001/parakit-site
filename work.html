@@ -248,9 +248,37 @@
         .date-filter-input:focus { border-color: var(--ios-blue); background: white; }
 
         .search-wrapper { flex-grow: 1; position: relative; }
-        .search-wrapper i { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: var(--ios-blue); }
+        .search-wrapper i.fa-magnifying-glass { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: var(--ios-blue); }
+        
+        /* New Styles for Clear Search Button */
+        .btn-clear-search {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #eee;
+            border: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            color: #999;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            transition: 0.2s;
+            opacity: 0;
+            visibility: hidden;
+        }
+        .search-input:not(:placeholder-shown) + .btn-clear-search {
+            opacity: 1;
+            visibility: visible;
+        }
+        .btn-clear-search:hover { background: #ddd; color: var(--ios-red); }
+
         .search-input { 
-            width: 100%; padding: 14px 20px 14px 48px; border-radius: 18px; 
+            width: 100%; padding: 14px 45px 14px 48px; border-radius: 18px; 
             border: 1px solid var(--glass-border); background: rgba(255, 255, 255, 0.8);
             outline: none; transition: 0.3s; font-size: 15px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.03);
@@ -496,6 +524,9 @@
             <div class="search-wrapper">
                 <i class="fa-solid fa-magnifying-glass"></i>
                 <input type="text" id="searchInput" class="search-input" placeholder="ค้นหาข้อมูล..." onkeyup="filterData()">
+                <button id="clearSearchBtn" class="btn-clear-search" onclick="clearSearch()" title="ล้างการค้นหา">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
             </div>
             <button class="btn-refresh-inline" onclick="loadData(true)" title="รีเฟรชข้อมูล">
                 <i class="fa-solid fa-rotate-right"></i>
@@ -531,7 +562,6 @@
 </div>
 
 <script>
-    // URL สำหรับเรียก Google Apps Script (ตรวจสอบให้แน่ใจว่าได้เผยแพร่เป็น 'ทุกคน')
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwRXnzueRZLbMona1dXF1cU8nrn-0t6OCEt-DmV90G5lP0QWxuz04nBTzsAX_yNhUI4/exec';
 
     const jobTypes = [
@@ -753,6 +783,14 @@
         filterData();
     }
 
+    // New Clear Search Function
+    function clearSearch() {
+        const searchInput = document.getElementById('searchInput');
+        searchInput.value = "";
+        searchInput.focus();
+        filterData();
+    }
+
     function filterData() {
         const filter = document.getElementById('searchInput').value.toLowerCase();
         const dateFilter = document.getElementById('dateFilter').value;
@@ -861,8 +899,6 @@
         nextBtn.onclick = () => { currentPage++; renderTable(); scrollToTop(); };
         paginationCon.appendChild(nextBtn);
     }
-
-    // --- Optimized Actions (Real-time Feel) ---
 
     async function toggleProcessing(reportId) {
         const idx = fullData.findIndex(r => r[11] == reportId);
@@ -1044,7 +1080,7 @@
                     } else { throw new Error('Server Error'); }
                 } catch (e) {
                     console.error("Save error:", e);
-                    loadData(); // รีโหลดถ้าเกิดข้อผิดพลาด
+                    loadData(); 
                     Swal.close();
                 }
             }
