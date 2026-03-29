@@ -257,22 +257,8 @@
         button:hover .lucide { transform: rotate(15deg); }
 
         /* ตกแต่งปุ่มบันทึกภาพ */
-        .btn-capture { 
-            background: #ffffff; 
-            color: #007aff; 
-            border: 1.5px solid #007aff; 
-            padding: 8px 16px; 
-            border-radius: 14px; 
-            font-weight: 600; 
-            font-size: 14px; 
-            transition: var(--transition-bounce); 
-            display: flex; 
-            align-items: center; 
-            gap: 6px; 
-            cursor: pointer; 
-            box-shadow: 0 4px 10px rgba(0,122,255,0.1);
-        }
-        .btn-capture:hover { background: #007aff; color: white; transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,122,255,0.2); }
+        .btn-capture { background: #f2f2f7; color: #1c1c1e; border: 1px solid #d1d1d6; padding: 8px 16px; border-radius: 14px; font-weight: 600; font-size: 14px; transition: var(--transition-bounce); display: flex; align-items: center; gap: 6px; cursor: pointer; }
+        .btn-capture:hover { background: #007aff; color: white; border-color: #007aff; transform: scale(1.05); }
         .btn-capture:active { transform: scale(0.95); }
     </style>
 </head>
@@ -297,7 +283,7 @@
 <div id="loading">
     <div class="flex flex-col items-center">
         <div class="animate-spin rounded-full h-10 w-10 border-t-4 border-b-4 border-blue-500 mb-4"></div>
-        <p class="text-blue-500 font-semibold text-[17px]" id="loadingText">กำลังซิงค์ข้อมูล...</p>
+        <p class="text-blue-500 font-semibold text-[17]">กำลังซิงค์ข้อมูล...</p>
     </div>
 </div>
 
@@ -313,7 +299,7 @@
                 <select id="ySel" class="flex-1 sm:flex-none p-2.5 px-4 rounded-xl border-none shadow-md bg-white/90 font-semibold text-sm outline-none cursor-pointer"></select>
                 
                 <button onclick="captureCalendar()" class="w-full sm:w-auto btn-capture justify-center">
-                    <i data-lucide="camera" class="w-4 h-4"></i>
+                    <i data-lucide="image" class="w-4 h-4"></i>
                     <span>บันทึกภาพปฏิทิน</span>
                 </button>
 
@@ -640,10 +626,7 @@
         document.getElementById('confirmOk').onclick = () => { showLoad(true); callback(); document.getElementById('confirmModal').classList.add('hidden'); };
         document.getElementById('confirmCancel').onclick = () => document.getElementById('confirmModal').classList.add('hidden');
     }
-    function showLoad(v, text = "กำลังซิงค์ข้อมูล...") { 
-        document.getElementById('loadingText').innerText = text;
-        document.getElementById('loading').style.display = v ? 'flex' : 'none'; 
-    }
+    function showLoad(v) { document.getElementById('loading').style.display = v ? 'flex' : 'none'; }
     function showToast(msg, type = 'success') {
         const toast = document.getElementById('toast');
         const iconContainer = document.getElementById('toastIcon');
@@ -655,70 +638,70 @@
         setTimeout(() => toast.classList.remove('show'), 3000);
     }
 
-    /**
-     * ฟังก์ชันบันทึกภาพหน้าจอแบบแก้ไขปัญหาตัวหนังสือซ้อน/หน้าขาว
-     */
+    // ฟังก์ชันบันทึกภาพเวอร์ชันแก้ปัญหาตัวหนังสือขาดครึ่งและหน้าขาวแบบสมบูรณ์
     async function captureCalendar() {
-        showLoad(true, "กำลังสร้างรูปภาพ...");
-        const captureArea = document.getElementById('captureArea');
-        const mName = document.getElementById('mSel').options[document.getElementById('mSel').selectedIndex].text;
-        const yName = document.getElementById('ySel').options[document.getElementById('ySel').selectedIndex].text;
+        showLoad(true);
+        
+        // เลื่อนหน้าจอไปบนสุดก่อนแคป เพื่อป้องกัน html2canvas ตัดภาพแหว่ง (สำคัญมาก)
+        window.scrollTo(0, 0);
 
+        const element = document.getElementById('captureArea');
+        const m = document.getElementById('mSel').options[document.getElementById('mSel').selectedIndex].text;
+        const y = document.getElementById('ySel').options[document.getElementById('ySel').selectedIndex].text;
+        
         try {
-            const canvas = await html2canvas(captureArea, {
+            const canvas = await html2canvas(element, {
                 scale: 3, // ความละเอียดสูง
                 useCORS: true,
                 backgroundColor: "#f2f2f7",
-                logging: false,
+                scrollY: 0, // บังคับตำแหน่งการเรนเดอร์แกน Y เพื่อป้องกันภาพตัดแหว่ง
                 onclone: (clonedDoc) => {
-                    // 1. เปลี่ยน Dropdown ให้กลายเป็นข้อความธรรมดา (ป้องกัน dropdown ว่างเปล่าในรูป)
+                    // 1. แปลง Dropdown (select) เป็นข้อความ (span) เพื่อให้เห็นเดือน/ปี ในรูป ไม่เป็นช่องว่าง
                     const selects = clonedDoc.querySelectorAll('select');
                     selects.forEach(sel => {
                         const val = sel.options[sel.selectedIndex].text;
                         const span = clonedDoc.createElement('span');
                         span.innerText = val;
-                        span.style.padding = '8px 15px';
-                        span.style.background = 'white';
-                        span.style.borderRadius = '10px';
-                        span.style.fontWeight = 'bold';
-                        span.style.fontSize = '14px';
-                        span.style.boxShadow = '0 2px 5px rgba(0,0,0,0.1)';
+                        span.className = sel.className; 
+                        span.style.display = 'inline-block';
+                        span.style.padding = '8px 16px';
                         sel.parentNode.replaceChild(span, sel);
                     });
 
-                    // 2. ซ่อนปุ่มต่างๆ ในรูปภาพ
-                    const buttons = clonedDoc.querySelectorAll('button');
-                    buttons.forEach(btn => btn.style.display = 'none');
+                    // 2. ซ่อนปุ่มต่างๆ ไม่ให้รกในรูปภาพ
+                    const btnCapture = clonedDoc.querySelector('.btn-capture');
+                    if(btnCapture) btnCapture.style.display = 'none';
+                    const btnEdit = clonedDoc.querySelector('.btn-edit-mode');
+                    if(btnEdit) btnEdit.style.display = 'none';
 
-                    // 3. ปรับแต่งชื่อพนักงานให้ไม่โดนตัดคำและไม่ซ้อนกัน
+                    // 3. ปิดเอฟเฟกต์ Glass Blur ป้องกันหน้าขาว/ดำ ในมือถือบางรุ่น
+                    const glassArea = clonedDoc.getElementById('captureArea');
+                    if (glassArea) {
+                        glassArea.style.overflow = 'visible'; // ป้องกันการตัดแหว่ง
+                        glassArea.style.backdropFilter = 'none';
+                        glassArea.style.webkitBackdropFilter = 'none';
+                        glassArea.style.background = 'rgba(255, 255, 255, 0.95)';
+                    }
+
+                    // 4. แก้ปัญหาตัวหนังสือขาดครึ่ง โดยบังคับแสดงผลเฉพาะตอนอยู่ในรูปภาพ
                     const labels = clonedDoc.querySelectorAll('.emp-name-label');
                     labels.forEach(l => {
-                        l.style.whiteSpace = 'nowrap';
-                        l.style.overflow = 'visible';
-                        l.style.textOverflow = 'clip';
-                        l.style.fontSize = '10px'; // ปรับขนาดเล็กน้อยให้พอดี
-                        l.style.width = 'auto';
-                        l.style.maxWidth = 'none';
-                    });
-
-                    // 4. ปิดเอฟเฟกต์ Glass Blur (สาเหตุหลักของอาการหน้าขาว/ดำ ใน html2canvas)
-                    const glassElements = clonedDoc.querySelectorAll('.glass');
-                    glassElements.forEach(el => {
-                        el.style.backdropFilter = 'none';
-                        el.style.webkitBackdropFilter = 'none';
-                        el.style.background = 'rgba(255, 255, 255, 0.95)';
+                        l.style.display = 'inline-block'; 
+                        l.style.overflow = 'visible'; // ทับการซ่อน (hidden) เฉพาะตอนถ่ายภาพ เพื่อให้เห็นเต็มบรรทัด
+                        l.style.lineHeight = 'normal';
+                        l.style.paddingBottom = '2px';
                     });
                 }
             });
-
+            
             const link = document.createElement('a');
-            link.download = `ตารางวันหยุด_${mName}_${yName}.png`;
+            link.download = `ตารางวันหยุด_${m}_${y}.png`;
             link.href = canvas.toDataURL("image/png", 1.0);
             link.click();
-            showToast("บันทึกรูปภาพเรียบร้อย");
-        } catch (err) {
-            console.error(err);
-            showToast("ไม่สามารถสร้างรูปภาพได้", "error");
+            showToast("บันทึกรูปภาพสำเร็จ");
+        } catch (error) {
+            console.error(error);
+            showToast("เกิดข้อผิดพลาดในการบันทึกภาพ", "error");
         }
         showLoad(false);
     }
