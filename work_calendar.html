@@ -139,8 +139,9 @@
         select { transition: var(--transition-swift); }
         select:hover { transform: translateY(-1px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); filter: brightness(1.02); }
 
+        /* แก้ไขส่วนความสูงช่องปฏิทินให้ยืดหยุ่น */
         .day-cell { 
-            min-height: 95px; 
+            min-height: 90px; 
             height: auto; 
             background: rgba(255, 255, 255, 0.6); 
             border-right: 1px solid rgba(0,0,0,0.03); 
@@ -161,6 +162,7 @@
         }
 
         .day-cell:hover { background: rgba(255, 255, 255, 0.95); transform: scale(1.01); z-index: 10; box-shadow: 0 10px 25px rgba(0,0,0,0.08); border-radius: 8px; }
+        
         .day-header { font-size: 0.75rem; font-weight: 600; color: #8e8e93; padding: 10px 0; background: rgba(255, 255, 255, 0.8); border-bottom: 1px solid rgba(0,0,0,0.05); }
         
         .cell-content { 
@@ -198,27 +200,23 @@
             border-radius: 4px; 
             margin-bottom: 2px; 
             transition: background 0.2s;
-            overflow: visible; /* ให้เห็นชื่อเต็ม */
         }
         .emp-row:hover { background: rgba(0,0,0,0.06); }
         
         .status-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-        
-        /* แก้ไขส่วนการแสดงชื่อให้ไม่ถูกตัด */
         .emp-name-label { 
-    font-size: 9px; 
-    font-weight: 500; 
-    color: #1c1c1e; 
-    white-space: normal; 
-    word-break: break-word; 
-    line-height: 1.1;
-    display: block; 
-}
-        .status-abbr { font-size: 8px; font-weight: 700; color: #8e8e93; display: inline-block; margin-left: 2px; }
+            font-size: 9px; 
+            font-weight: 500; 
+            color: #1c1c1e; 
+            white-space: nowrap; 
+            overflow: hidden; 
+            text-overflow: ellipsis; 
+        }
+        .status-abbr { font-size: 8px; font-weight: 700; color: #8e8e93; }
         
         @media(min-width: 768px) { 
             .status-dot { width: 10px; height: 10px; } 
-            .emp-name-label { font-size: 13px; line-height: 1.2; } 
+            .emp-name-label { font-size: 13px; } 
             .status-abbr { font-size: 11px; } 
             .emp-row { gap: 6px; padding: 3px 6px; border-radius: 6px; } 
         }
@@ -231,20 +229,10 @@
         .st-H { background: #af52de; }     
         .st-LA { background: #1c1c1e; box-shadow: 0 0 6px rgba(0, 0, 0, 0.4); }
         
-        /* แก้ไข Toast ให้อยู่ด้านบนสุด */
-        #toast { 
-            position: fixed; 
-            top: 20px; 
-            left: 50%; 
-            transform: translateX(-50%) translateY(-150px); 
-            z-index: 9999; 
-            width: 90%; 
-            max-width: 350px; 
-            transition: transform 0.5s cubic-bezier(0.18, 0.89, 0.32, 1.28); 
-        }
+        /* แก้ไข toast ให้อยู่บนสุดเสมอ */
+        #toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-150px); z-index: 9999; width: 90%; max-width: 350px; transition: transform 0.5s cubic-bezier(0.18, 0.89, 0.32, 1.28); }
         #toast.show { transform: translateX(-50%) translateY(0); }
-        
-        #loading { position: fixed; inset: 0; background: rgba(245,245,247,0.8); backdrop-filter: blur(15px); z-index: 9000; display: none; justify-content: center; align-items: center; }
+        #loading { position: fixed; inset: 0; background: rgba(245,245,247,0.8); backdrop-filter: blur(15px); z-index: 9998; display: none; justify-content: center; align-items: center; }
         
         .btn-edit-mode { padding: 8px 16px; border-radius: 14px; font-weight: 600; font-size: 14px; transition: var(--transition-bounce); display: flex; align-items: center; gap: 6px; cursor: pointer; }
         .mode-locked { background: #f2f2f7; color: #8e8e93; border: 1px solid #d1d1d6; }
@@ -372,24 +360,21 @@
     </div>
 </div>
 
-<div id="passwordModal" class="fixed inset-0 bg-black/40 hidden flex justify-center items-center p-4 backdrop-blur-md z-[8000]">
-    <div id="passBox" class="bg-white/90 backdrop-blur-2xl rounded-[24px] p-6 w-full max-w-[320px] shadow-2xl border border-white/50 text-center">
-        <div class="mb-4">
-            <div class="w-12 h-12 bg-blue-500 rounded-2xl flex items-center justify-center text-white mx-auto mb-3 shadow-lg">
-                <i data-lucide="shield-check" class="w-6 h-6"></i>
-            </div>
-            <h2 class="text-lg font-bold text-gray-800">ยืนยันตัวตน</h2>
-            <p class="text-xs text-gray-500 mt-1">กรุณาใส่รหัสผ่านเพื่อแก้ไข</p>
+<div id="passwordModal" class="fixed inset-0 bg-black/40 hidden flex justify-center items-center p-4 backdrop-blur-md z-[5000]">
+    <div id="passBox" class="bg-white/80 backdrop-blur-2xl rounded-[30px] p-8 w-full max-w-[320px] shadow-2xl border border-white/50 text-center">
+        <div class="mb-6">
+            <div class="w-14 h-14 bg-blue-500 rounded-2xl flex items-center justify-center text-white mx-auto mb-4 shadow-lg"><i data-lucide="shield-check" class="w-8 h-8"></i></div>
+            <h2 class="text-xl font-bold text-gray-800">กรุณาใส่รหัสผ่าน</h2>
         </div>
-        <input type="password" id="passInput" inputmode="numeric" placeholder="••••" class="w-full text-center text-xl tracking-[0.5em] p-2.5 bg-white/50 rounded-xl border border-gray-200 outline-none mb-5 focus:ring-2 focus:ring-blue-500/20 transition-all">
-        <div class="flex gap-2">
-            <button onclick="closePassModal()" class="modal-btn flex-1 py-2.5 bg-gray-200/50 rounded-xl font-semibold text-gray-600 text-sm">ยกเลิก</button>
-            <button onclick="checkPassword()" class="modal-btn flex-1 py-2.5 bg-blue-600 text-white rounded-xl font-semibold shadow-lg text-sm">ตกลง</button>
+        <input type="password" id="passInput" inputmode="numeric" placeholder="••••" class="w-full text-center text-2xl tracking-widest p-3 bg-white/50 rounded-xl border border-gray-200 outline-none mb-6">
+        <div class="flex gap-3">
+            <button onclick="closePassModal()" class="modal-btn flex-1 py-3 bg-gray-200/50 rounded-xl font-semibold text-gray-600">ยกเลิก</button>
+            <button onclick="checkPassword()" class="modal-btn flex-1 py-3 bg-blue-600 text-white rounded-xl font-semibold shadow-lg">ตกลง</button>
         </div>
     </div>
 </div>
 
-<div id="confirmModal" class="fixed inset-0 bg-black/40 hidden flex flex-col justify-end p-4 backdrop-blur-sm z-[8500]">
+<div id="confirmModal" class="fixed inset-0 bg-black/40 hidden flex flex-col justify-end p-4 backdrop-blur-sm z-[6000]">
     <div class="max-w-md mx-auto w-full">
         <div class="bg-white/90 rounded-2xl overflow-hidden mb-3">
             <div class="p-5 text-center border-bottom border-gray-100">
