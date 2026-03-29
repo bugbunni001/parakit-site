@@ -12,6 +12,7 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     
     <style>
         :root {
@@ -139,7 +140,6 @@
         select { transition: var(--transition-swift); }
         select:hover { transform: translateY(-1px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); filter: brightness(1.02); }
 
-        /* แก้ไขส่วนความสูงช่องปฏิทินให้ยืดหยุ่น */
         .day-cell { 
             min-height: 90px; 
             height: auto; 
@@ -204,15 +204,14 @@
         .emp-row:hover { background: rgba(0,0,0,0.06); }
         
         .status-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-        
         .emp-name-label { 
-    font-size: 8px; 
-    font-weight: 600; 
-    color: #1c1c1e; 
-    white-space: normal; 
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-}
+            font-size: 9px; 
+            font-weight: 500; 
+            color: #1c1c1e; 
+            white-space: nowrap; 
+            overflow: hidden; 
+            text-overflow: ellipsis; 
+        }
         .status-abbr { font-size: 8px; font-weight: 700; color: #8e8e93; }
         
         @media(min-width: 768px) { 
@@ -230,7 +229,6 @@
         .st-H { background: #af52de; }     
         .st-LA { background: #1c1c1e; box-shadow: 0 0 6px rgba(0, 0, 0, 0.4); }
         
-        /* แก้ไข toast ให้อยู่บนสุดเสมอ */
         #toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-150px); z-index: 9999; width: 90%; max-width: 350px; transition: transform 0.5s cubic-bezier(0.18, 0.89, 0.32, 1.28); }
         #toast.show { transform: translateX(-50%) translateY(0); }
         #loading { position: fixed; inset: 0; background: rgba(245,245,247,0.8); backdrop-filter: blur(15px); z-index: 9998; display: none; justify-content: center; align-items: center; }
@@ -257,6 +255,25 @@
         
         .lucide { width: 18px; height: 18px; transition: transform 0.3s ease; }
         button:hover .lucide { transform: rotate(15deg); }
+
+        /* ตกแต่งปุ่มบันทึกภาพ */
+        .btn-capture { 
+            background: #ffffff; 
+            color: #007aff; 
+            border: 1.5px solid #007aff; 
+            padding: 8px 16px; 
+            border-radius: 14px; 
+            font-weight: 600; 
+            font-size: 14px; 
+            transition: var(--transition-bounce); 
+            display: flex; 
+            align-items: center; 
+            gap: 6px; 
+            cursor: pointer; 
+            box-shadow: 0 4px 10px rgba(0,122,255,0.1);
+        }
+        .btn-capture:hover { background: #007aff; color: white; transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,122,255,0.2); }
+        .btn-capture:active { transform: scale(0.95); }
     </style>
 </head>
 <body>
@@ -280,12 +297,12 @@
 <div id="loading">
     <div class="flex flex-col items-center">
         <div class="animate-spin rounded-full h-10 w-10 border-t-4 border-b-4 border-blue-500 mb-4"></div>
-        <p class="text-blue-500 font-semibold text-[17px]">กำลังซิงค์ข้อมูล...</p>
+        <p class="text-blue-500 font-semibold text-[17px]" id="loadingText">กำลังซิงค์ข้อมูล...</p>
     </div>
 </div>
 
 <main class="content-area">
-    <div class="glass shadow-2xl overflow-hidden mb-8">
+    <div id="captureArea" class="glass shadow-2xl overflow-hidden mb-8">
         <div class="p-5 sm:p-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4" style="background: var(--header-gradient); border-bottom: 1px solid rgba(255,255,255,0.3);">
             <div>
                 <h1 class="text-2xl sm:text-3xl font-semibold text-white drop-shadow-sm">ตารางวันหยุด</h1>
@@ -295,6 +312,11 @@
                 <select id="mSel" class="flex-1 sm:flex-none p-2.5 px-4 rounded-xl border-none shadow-md bg-white/90 font-semibold text-sm outline-none cursor-pointer"></select>
                 <select id="ySel" class="flex-1 sm:flex-none p-2.5 px-4 rounded-xl border-none shadow-md bg-white/90 font-semibold text-sm outline-none cursor-pointer"></select>
                 
+                <button onclick="captureCalendar()" class="w-full sm:w-auto btn-capture justify-center">
+                    <i data-lucide="camera" class="w-4 h-4"></i>
+                    <span>บันทึกภาพปฏิทิน</span>
+                </button>
+
                 <button id="btnEditMode" onclick="toggleEditMode()" class="w-full sm:w-auto btn-edit-mode mode-locked justify-center">
                     <span id="lockIcon"><i data-lucide="lock" class="w-4 h-4"></i></span>
                     <span id="lockText">แก้ไข</span>
@@ -388,7 +410,6 @@
 </div>
 
 <script>
-    // --- Config & Database Logic ---
     const URL = "https://script.google.com/macros/s/AKfycbwqlWkhMFrhiTvySSSwPt7sd0aLJyW9I6g4HlnmdgX7l8SI0yBAKEEAZEKvT0fOr2VzqA/exec"; 
     let db = [];
     let selDate = "";
@@ -402,7 +423,6 @@
         { id: "3838", name: "จิดาภา" }
     ];
 
-    // --- Floating Sidebar Logic ---
     const dragBtn = document.getElementById('floatingMenuBtn');
     const sideFloat = document.getElementById('sidebarFloat');
     const sideOverlay = document.getElementById('sidebarOverlay');
@@ -496,7 +516,6 @@
         if (id) localStorage.setItem('menu-' + id, isOpen);
     }
 
-    // --- Main Logic ---
     async function init() {
         loadButtonPosition();
         const mS = document.getElementById('mSel');
@@ -578,15 +597,8 @@
     }
     function updateEditUI() {
         const btn = document.getElementById('btnEditMode'), icon = document.getElementById('lockIcon'), text = document.getElementById('lockText');
-        if (isEditMode) { 
-            btn.classList.replace('mode-locked', 'mode-unlocked'); 
-            icon.innerHTML = '<i data-lucide="lock-open" class="w-4 h-4"></i>'; 
-            text.innerText = "กำลังแก้ไข"; 
-        } else { 
-            btn.classList.replace('mode-unlocked', 'mode-locked'); 
-            icon.innerHTML = '<i data-lucide="lock" class="w-4 h-4"></i>'; 
-            text.innerText = "แก้ไข"; 
-        }
+        if (isEditMode) { btn.classList.replace('mode-locked', 'mode-unlocked'); icon.innerHTML = '<i data-lucide="lock-open" class="w-4 h-4"></i>'; text.innerText = "กำลังแก้ไข"; } 
+        else { btn.classList.replace('mode-unlocked', 'mode-locked'); icon.innerHTML = '<i data-lucide="lock" class="w-4 h-4"></i>'; text.innerText = "แก้ไข"; }
         lucide.createIcons();
     }
     function openModal(d) {
@@ -628,7 +640,10 @@
         document.getElementById('confirmOk').onclick = () => { showLoad(true); callback(); document.getElementById('confirmModal').classList.add('hidden'); };
         document.getElementById('confirmCancel').onclick = () => document.getElementById('confirmModal').classList.add('hidden');
     }
-    function showLoad(v) { document.getElementById('loading').style.display = v ? 'flex' : 'none'; }
+    function showLoad(v, text = "กำลังซิงค์ข้อมูล...") { 
+        document.getElementById('loadingText').innerText = text;
+        document.getElementById('loading').style.display = v ? 'flex' : 'none'; 
+    }
     function showToast(msg, type = 'success') {
         const toast = document.getElementById('toast');
         const iconContainer = document.getElementById('toastIcon');
@@ -638,6 +653,74 @@
         lucide.createIcons();
         toast.classList.add('show');
         setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    /**
+     * ฟังก์ชันบันทึกภาพหน้าจอแบบแก้ไขปัญหาตัวหนังสือซ้อน/หน้าขาว
+     */
+    async function captureCalendar() {
+        showLoad(true, "กำลังสร้างรูปภาพ...");
+        const captureArea = document.getElementById('captureArea');
+        const mName = document.getElementById('mSel').options[document.getElementById('mSel').selectedIndex].text;
+        const yName = document.getElementById('ySel').options[document.getElementById('ySel').selectedIndex].text;
+
+        try {
+            const canvas = await html2canvas(captureArea, {
+                scale: 3, // ความละเอียดสูง
+                useCORS: true,
+                backgroundColor: "#f2f2f7",
+                logging: false,
+                onclone: (clonedDoc) => {
+                    // 1. เปลี่ยน Dropdown ให้กลายเป็นข้อความธรรมดา (ป้องกัน dropdown ว่างเปล่าในรูป)
+                    const selects = clonedDoc.querySelectorAll('select');
+                    selects.forEach(sel => {
+                        const val = sel.options[sel.selectedIndex].text;
+                        const span = clonedDoc.createElement('span');
+                        span.innerText = val;
+                        span.style.padding = '8px 15px';
+                        span.style.background = 'white';
+                        span.style.borderRadius = '10px';
+                        span.style.fontWeight = 'bold';
+                        span.style.fontSize = '14px';
+                        span.style.boxShadow = '0 2px 5px rgba(0,0,0,0.1)';
+                        sel.parentNode.replaceChild(span, sel);
+                    });
+
+                    // 2. ซ่อนปุ่มต่างๆ ในรูปภาพ
+                    const buttons = clonedDoc.querySelectorAll('button');
+                    buttons.forEach(btn => btn.style.display = 'none');
+
+                    // 3. ปรับแต่งชื่อพนักงานให้ไม่โดนตัดคำและไม่ซ้อนกัน
+                    const labels = clonedDoc.querySelectorAll('.emp-name-label');
+                    labels.forEach(l => {
+                        l.style.whiteSpace = 'nowrap';
+                        l.style.overflow = 'visible';
+                        l.style.textOverflow = 'clip';
+                        l.style.fontSize = '10px'; // ปรับขนาดเล็กน้อยให้พอดี
+                        l.style.width = 'auto';
+                        l.style.maxWidth = 'none';
+                    });
+
+                    // 4. ปิดเอฟเฟกต์ Glass Blur (สาเหตุหลักของอาการหน้าขาว/ดำ ใน html2canvas)
+                    const glassElements = clonedDoc.querySelectorAll('.glass');
+                    glassElements.forEach(el => {
+                        el.style.backdropFilter = 'none';
+                        el.style.webkitBackdropFilter = 'none';
+                        el.style.background = 'rgba(255, 255, 255, 0.95)';
+                    });
+                }
+            });
+
+            const link = document.createElement('a');
+            link.download = `ตารางวันหยุด_${mName}_${yName}.png`;
+            link.href = canvas.toDataURL("image/png", 1.0);
+            link.click();
+            showToast("บันทึกรูปภาพเรียบร้อย");
+        } catch (err) {
+            console.error(err);
+            showToast("ไม่สามารถสร้างรูปภาพได้", "error");
+        }
+        showLoad(false);
     }
 
     init();
