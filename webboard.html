@@ -30,7 +30,6 @@
         body { 
             font-family: 'Kanit', sans-serif; 
             background-color: #f8fafc; 
-            /* ปรับขนาดเว็บลง 5% */
             zoom: 0.95; 
         }
         
@@ -113,7 +112,6 @@
             border: none;
             touch-action: none;
             transition: transform 0.2s, opacity 0.2s;
-            /* แก้คืนขนาดให้เท่าเดิม (1 / 0.95 ≈ 1.0526) */
             zoom: 1.0526; 
         }
         #floatingMenuBtn:active { transform: scale(0.9); }
@@ -146,7 +144,6 @@
             border: 1px solid rgba(255,255,255,0.1);
             scrollbar-width: thin;
             scrollbar-color: rgba(255,255,255,0.2) transparent;
-            /* แก้คืนขนาดให้เท่าเดิม */
             zoom: 1.0526;
         }
         .sidebar-float.active {
@@ -155,7 +152,6 @@
             transform: scale(1) translateY(0);
         }
 
-        /* Sidebar Content Styles */
         .sidebar-float .sidebar-header { padding: 20px; font-size: 17px; font-weight: 600; color: #fff; border-bottom: 0.5px solid rgba(255,255,255,0.1); }
         .sidebar-float .menu { padding: 8px 0; }
         .sidebar-float .menu a, .sidebar-float .drop-btn { 
@@ -174,6 +170,10 @@
             justify-content: center; padding: 20px; text-align: center;
             color: white; font-weight: bold; font-size: 1.1rem; line-height: 1.4;
         }
+
+        /* ปรับแต่งลิงก์ในเนื้อหา */
+        .content-link { color: #2563eb; text-decoration: underline; word-break: break-all; }
+        .content-link:hover { color: #1d4ed8; }
     </style>
 </head>
 <body>
@@ -206,32 +206,56 @@
     </main>
 
     <div id="postModal">
-        <div class="bg-white p-8 rounded-3xl w-full max-w-2xl shadow-2xl transform transition-all overflow-y-auto max-h-[95vh] mx-4">
-            <h2 id="modalTitle" class="text-2xl font-bold mb-6 text-slate-800 border-b pb-4">ตั้งกระทู้ใหม่</h2>
-            <input type="hidden" id="editPostId"><input type="hidden" id="existingFileId"><input type="hidden" id="deleteOldImageFlag" value="false">
-            <div class="space-y-5">
+        <div class="bg-white p-10 rounded-[40px] w-full max-w-[700px] shadow-2xl transform transition-all overflow-y-auto max-h-[95vh] mx-4 border border-slate-100">
+            <h2 id="modalTitle" class="text-[32px] font-bold mb-8 text-slate-800 tracking-tight">สร้างกระทู้ใหม่</h2>
+            
+            <input type="hidden" id="editPostId">
+            <input type="hidden" id="existingFileId">
+            <input type="hidden" id="deleteOldImageFlag" value="false">
+            
+            <div class="space-y-8">
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">หัวข้อกระทู้</label>
-                    <input type="text" id="postSubject" placeholder="พิมพ์ชื่อเรื่องที่นี่..." class="w-full border border-slate-200 p-4 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none">
+                    <label class="block text-[16px] font-bold text-slate-800 mb-3">หัวข้อกระทู้</label>
+                    <input type="text" id="postSubject" placeholder="พิมพ์ชื่อเรื่องที่นี่..." 
+                        class="w-full border border-slate-200 p-5 rounded-2xl bg-white text-[16px] placeholder:text-slate-300 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all">
                 </div>
+                
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">รายละเอียด</label>
-                    <textarea id="postContent" placeholder="เขียนรายละเอียดเนื้อหาของคุณ..." class="w-full border border-slate-200 p-4 rounded-2xl h-48 focus:ring-2 focus:ring-blue-500 outline-none resize-none"></textarea>
+                    <label class="block text-[16px] font-bold text-slate-800 mb-3">รายละเอียด (รองรับการใส่ลิงก์)</label>
+                    <textarea id="postContent" placeholder="เขียนรายละเอียดเนื้อหาของคุณ... ลิงก์จะถูกเปลี่ยนเป็นคลิกได้โดยอัตโนมัติ" 
+                        class="w-full border border-slate-200 p-5 rounded-2xl h-56 bg-white text-[16px] placeholder:text-slate-300 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none resize-none transition-all"></textarea>
                 </div>
-                <div id="imageSection">
-                    <label class="block text-sm font-medium text-slate-700 mb-1">รูปภาพประกอบ</label>
-                    <div id="currentImageWrapper" class="hidden mb-4 p-3 border rounded-2xl bg-slate-50">
-                        <img id="previewOldImage" src="" class="h-32 rounded-lg object-cover mb-2">
-                        <button onclick="removeCurrentImage()" class="text-red-500 text-sm font-medium flex items-center"><i data-lucide="trash-2" class="w-4 h-4 mr-1"></i> ลบรูปภาพเดิม</button>
+
+                <div id="imageSection" class="p-6 border-2 border-dashed border-slate-200 rounded-[30px] bg-slate-50/50">
+                    <div class="flex items-center gap-2 mb-4 text-slate-800 font-bold">
+                        <i data-lucide="image" class="w-5 h-5 text-blue-500"></i>
+                        <span>แถบจัดการรูปภาพประกอบ</span>
                     </div>
-                    <div id="fileInputWrapper">
-                        <input type="file" id="postImage" accept="image/*" class="w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-6 file:rounded-full file:border-0 file:bg-blue-50 file:text-blue-700 cursor-pointer">
+                    
+                    <div id="currentImageWrapper" class="hidden mb-4 p-4 border rounded-2xl bg-white shadow-sm">
+                        <img id="previewOldImage" src="" class="h-32 rounded-lg object-cover mb-3">
+                        <button onclick="removeCurrentImage()" class="text-red-500 text-sm font-medium flex items-center hover:bg-red-50 p-2 rounded-lg transition-colors">
+                            <i data-lucide="trash-2" class="w-4 h-4 mr-2"></i> ลบรูปภาพเดิม
+                        </button>
+                    </div>
+
+                    <div id="fileInputWrapper" class="space-y-3">
+                        <p class="text-xs text-slate-400 font-medium">เลือกไฟล์ใหม่:</p>
+                        <div class="flex items-center gap-4">
+                            <label class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3.5 rounded-full font-bold cursor-pointer transition-all active:scale-95 shadow-md">
+                                Choose File
+                                <input type="file" id="postImage" accept="image/*" class="hidden" onchange="updateFileName(this)">
+                            </label>
+                            <span id="fileNameDisplay" class="text-slate-400 text-sm">No file chosen</span>
+                        </div>
+                        <p class="text-[11px] text-slate-400 mt-2">* รองรับไฟล์รูปภาพเท่านั้น</p>
                     </div>
                 </div>
             </div>
-            <div class="flex justify-end gap-4 mt-8">
-                <button onclick="closeModal('postModal')" class="px-6 py-3 font-medium text-slate-400">ยกเลิก</button>
-                <button id="saveBtn" onclick="submitPost()" class="bg-blue-600 text-white px-10 py-3 rounded-2xl font-medium shadow-lg active:scale-95">บันทึกข้อมูล</button>
+
+            <div class="flex justify-end items-center gap-8 mt-12">
+                <button onclick="closeModal('postModal')" class="text-[18px] font-bold text-slate-400 hover:text-slate-600 transition-colors">ยกเลิก</button>
+                <button id="saveBtn" onclick="submitPost()" class="bg-blue-600 hover:bg-blue-700 text-white px-12 py-4 rounded-[20px] text-[18px] font-bold shadow-xl shadow-blue-500/20 active:scale-95 transition-all">บันทึกข้อมูล</button>
             </div>
         </div>
     </div>
@@ -246,6 +270,14 @@
         const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzWuwy18RtC9BqaYOI8DYXJakZBsXQZ3SgnjXcD5GHJ6tbnUJ7ojQxPKaA7AzhKCird/exec';
         let allPosts = [];
 
+        // ฟังก์ชันแปลงข้อความ URL เป็น HTML Link
+        function linkify(text) {
+            const urlPattern = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
+            return text.replace(urlPattern, function(url) {
+                return `<a href="${url}" target="_blank" class="content-link">${url}</a>`;
+            });
+        }
+
         const toast = {
             error: (msg) => Swal.fire({ icon: 'error', title: 'แจ้งเตือน', text: msg, confirmButtonColor: '#3b82f6' }),
             success: (msg) => Swal.fire({ icon: 'success', title: 'สำเร็จ', text: msg, timer: 1500, showConfirmButton: false }),
@@ -255,6 +287,11 @@
                 confirmButtonColor: '#3b82f6', cancelButtonColor: '#94a3b8', confirmButtonText: btnText, cancelButtonText: 'ยกเลิก', reverseButtons: true
             })
         };
+
+        function updateFileName(input) {
+            const display = document.getElementById('fileNameDisplay');
+            display.textContent = input.files.length > 0 ? input.files[0].name : "No file chosen";
+        }
 
         async function fetchPosts() {
             try {
@@ -324,6 +361,9 @@
             const isPinned = post.isPinned === true || post.isPinned === 'true';
             const date = new Date(post.Timestamp).toLocaleString('th-TH', { dateStyle: 'long', timeStyle: 'short' });
             
+            // ใช้ linkify เพื่อเปลี่ยน URL เป็นคลิกได้
+            const linkifiedContent = linkify(post.content || '');
+
             const modalCover = post.imageUrl 
                 ? `<img src="${post.imageUrl}" onclick="expandImage(this.src)" class="w-full rounded-2xl mb-8 shadow-md cursor-zoom-in hover:opacity-95 transition-opacity">` 
                 : `<div class="fallback-cover rounded-2xl h-48 mb-8 text-2xl"><span>${post.title}</span></div>`;
@@ -339,7 +379,7 @@
                     ${isPinned ? '<span class="text-yellow-600 font-bold flex items-center"><i data-lucide="pin" class="w-3 h-3 mr-1"></i> ปักหมุด</span>' : ''}
                 </div>
                 ${modalCover}
-                <div class="text-slate-700 leading-relaxed whitespace-pre-wrap text-lg mb-10 border-l-4 border-blue-500 pl-6 font-light">${post.content}</div>
+                <div class="text-slate-700 leading-relaxed whitespace-pre-wrap text-lg mb-10 border-l-4 border-blue-500 pl-6 font-light">${linkifiedContent}</div>
                 <div class="flex flex-wrap gap-3 pt-6 border-t">
                     <button onclick="togglePin('${post.postId}')" class="flex-1 min-w-[140px] px-4 py-3 bg-yellow-50 text-yellow-700 rounded-xl font-medium transition-all hover:scale-105 active:scale-95 flex items-center justify-center"><i data-lucide="pin" class="mr-2"></i> ${isPinned ? 'เลิกปักหมุด' : 'ปักหมุด'}</button>
                     <button onclick="openEditModal('${post.postId}')" class="flex-1 min-w-[140px] px-4 py-3 bg-blue-600 text-white rounded-xl font-medium shadow-lg transition-all hover:scale-105 active:scale-95 flex items-center justify-center"><i data-lucide="edit-3" class="mr-2"></i>แก้ไข</button>
@@ -373,6 +413,7 @@
             document.getElementById('postSubject').value = '';
             document.getElementById('postContent').value = '';
             document.getElementById('postImage').value = '';
+            document.getElementById('fileNameDisplay').textContent = "No file chosen";
             document.getElementById('existingFileId').value = '';
             document.getElementById('deleteOldImageFlag').value = 'false';
             document.getElementById('currentImageWrapper').classList.add('hidden');
@@ -488,7 +529,6 @@
             startY = e.clientY;
             
             const rect = dragBtn.getBoundingClientRect();
-            // ปรับ shift ให้เหมาะสมกับ Zoom
             shiftX = (e.clientX - rect.left);
             shiftY = (e.clientY - rect.top);
 
@@ -503,7 +543,6 @@
             }
 
             if (isDragging) {
-                // คำนวณตำแหน่งโดยหารด้วย Zoom เพื่อให้การลากตรงกับเมาส์
                 let newX = (e.clientX - shiftX) / 0.95;
                 let newY = (e.clientY - shiftY) / 0.95;
                 
@@ -533,7 +572,6 @@
             const btnRect = dragBtn.getBoundingClientRect();
             const sidebarWidth = 280;
             
-            // ปรับตำแหน่งการแสดงผล Sidebar ให้สอดคล้องกับ Zoom
             let top = (btnRect.bottom / 0.95) + 10;
             let left = (btnRect.left / 0.95);
 
