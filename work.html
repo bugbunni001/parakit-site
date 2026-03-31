@@ -220,7 +220,7 @@
         .date-input-container { position: relative; flex-grow: 1; }
         .date-input-container i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--ios-blue); pointer-events: none; }
         
-        .btn-clear-date {
+        .btn-clear-all {
             background: #fff0f0;
             color: var(--ios-red);
             border: 1px solid rgba(255, 59, 48, 0.2);
@@ -236,7 +236,7 @@
             align-items: center;
             justify-content: center;
         }
-        .btn-clear-date:hover { background: var(--ios-red); color: white; transform: scale(1.05); }
+        .btn-clear-all:hover { background: var(--ios-red); color: white; transform: scale(1.05); }
 
         .date-filter-input {
             width: 100%; padding: 14px 15px 14px 42px; border-radius: 18px; 
@@ -250,7 +250,6 @@
         .search-wrapper { flex-grow: 1; position: relative; }
         .search-wrapper i.fa-magnifying-glass { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: var(--ios-blue); }
         
-        /* New Styles for Clear Search Button */
         .btn-clear-search {
             position: absolute;
             right: 12px;
@@ -514,7 +513,7 @@
         </button>
         <div class="search-area-wrapper">
             <div class="date-filter-wrapper">
-                <button class="btn-clear-date" onclick="clearDateFilter()" title="ล้างค่าวันที่">ล้างวันที่</button>
+                <button class="btn-clear-all" onclick="clearAllFilters()" title="ล้างข้อมูลทั้งหมด">ล้างข้อมูล</button>
                 <div class="date-input-container">
                     <i class="fa-solid fa-calendar-days"></i>
                     <input type="date" id="dateFilter" class="date-filter-input" onchange="filterData()" title="กรองตามวันครบกำหนด">
@@ -562,7 +561,7 @@
 </div>
 
 <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwRXnzueRZLbMona1dXF1cU8nrn-0t6OCEt-DmV90G5lP0QWxuz04nBTzsAX_yNhUI4/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwk3sTLvTvHEc0WHmwb0Lhu00aODTW1274nwcA5H800nnQdgTqMzgN4E2xrEv4rsz-3/exec';
 
     const jobTypes = [
         "MGM ปรับลด", "ยกเลิกบริการ (ปกติ)", "ยกเลิกบริการ (5P)", "MNP",
@@ -773,17 +772,17 @@
 
     function filterByType(type, el) {
         document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
-        el.classList.add('active');
+        if(el) el.classList.add('active');
         document.getElementById('searchInput').value = (type === 'ทั้งหมด') ? '' : type;
         filterData();
     }
 
-    function clearDateFilter() {
+    function clearAllFilters() {
         document.getElementById('dateFilter').value = "";
+        document.getElementById('searchInput').value = "";
         filterData();
     }
 
-    // New Clear Search Function
     function clearSearch() {
         const searchInput = document.getElementById('searchInput');
         searchInput.value = "";
@@ -795,7 +794,8 @@
         const filter = document.getElementById('searchInput').value.toLowerCase();
         const dateFilter = document.getElementById('dateFilter').value;
         filteredData = fullData.filter(row => {
-            const matchesSearch = row.join(' ').toLowerCase().includes(filter);
+            const rowStr = row.join(' ').toLowerCase();
+            const matchesSearch = rowStr.includes(filter);
             const matchesDate = !dateFilter || formatForInputDate(row[10]) === dateFilter || (row[12] === "true" || row[12] === true);
             return matchesSearch && matchesDate;
         });
@@ -841,23 +841,39 @@
             const isPinned = (row[7] === "true" || row[7] === true);
             const isProcessing = (row[9] === "true" || row[9] === true);
             const isDaily = (row[12] === "true" || row[12] === true);
+            const rawPass = row[13] ? String(row[13]).replace(/^'/, '') : "";
+            const hasPassword = rawPass.trim() !== ""; 
+            
             const reportId = row[11] || "-";
             const rowJson = encodeURIComponent(JSON.stringify(row));
             const deadlineDate = fixDate(row[10]);
             if (isPinned) tr.classList.add('pinned-row');
+            
+            const blurStyle = hasPassword ? 'filter: blur(5px); user-select: none; opacity: 0.6; display: inline-block;' : '';
+            const lockIcon = hasPassword ? '<i class="fa-solid fa-lock" style="color:var(--ios-red); margin-right:6px;" title="ติดรหัสผ่าน"></i>' : '';
+            
             let filesHtml = '-';
-            if (row[5]) {
+            if (hasPassword && row[5]) {
+                filesHtml = '<span style="color:var(--ios-red); font-size:12px; font-weight:600;"><i class="fa-solid fa-lock"></i> ล็อคไฟล์</span>';
+            } else if (row[5]) {
                 const urls = row[5].split(", ");
                 filesHtml = urls.map((u, i) => `<a href="${u}" target="_blank" style="color:var(--ios-blue); text-decoration:none; margin-right:5px;"><i class="fa-solid fa-file"></i> ${i+1}</a>`).join('');
             }
+            
             tr.innerHTML = `
                 <td><strong>${fixDate(row[0])}</strong><span class="report-id-label">ID: ${reportId}</span></td>
                 <td><span class="job-type-badge">${row[8] || "ทั่วไป"}</span></td>
-                <td onclick="showFullDetail('${rowJson}')" style="cursor:pointer; font-weight:600; color:var(--ios-blue);">${String(row[1]||'').replace(/^'/, '')}</td>
-                <td onclick="showFullDetail('${rowJson}')" style="cursor:pointer;">${row[2]||''}<br><small style="color:#8e8e93">${String(row[3]||'').replace(/^'/, '')}</small></td>
-                <td onclick="showFullDetail('${rowJson}')" style="cursor:pointer;"><div style="max-width:300px; max-height:100px; overflow:hidden; white-space:normal; display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; color:#666; font-size:13px; line-height:1.4;">${row[6] || "-"}</div></td>
+                <td onclick="checkPasswordAndShow('${rowJson}')" style="cursor:pointer; font-weight:600; color:var(--ios-blue);">
+                    ${lockIcon}<span style="${blurStyle}">${String(row[1]||'').replace(/^'/, '')}</span>
+                </td>
+                <td onclick="checkPasswordAndShow('${rowJson}')" style="cursor:pointer;">
+                    <span style="${blurStyle}">${row[2]||''}<br><small style="color:#8e8e93">${String(row[3]||'').replace(/^'/, '')}</small></span>
+                </td>
+                <td onclick="checkPasswordAndShow('${rowJson}')" style="cursor:pointer;">
+                    <div style="max-width:300px; max-height:100px; overflow:hidden; white-space:normal; display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; color:#666; font-size:13px; line-height:1.4; ${blurStyle}">${row[6] || "-"}</div>
+                </td>
                 <td>${row[4]||''}</td>
-                <td>${filesHtml}</td>
+                <td onclick="checkPasswordAndShow('${rowJson}')" style="cursor:${hasPassword ? 'pointer' : 'default'};">${filesHtml}</td>
                 <td>
                     <div class="action-btns-container">
                         <div class="action-btns">
@@ -953,6 +969,36 @@
         }
     }
 
+    window.checkPasswordAndShow = function(rowJson) {
+        const item = JSON.parse(decodeURIComponent(rowJson));
+        const pass = item[13] ? String(item[13]).replace(/^'/, '').trim() : "";
+        
+        if (pass) {
+            Swal.fire({
+                title: '<i class="fa-solid fa-lock" style="color:var(--ios-red);"></i> ติดรหัสผ่าน',
+                text: 'กรุณากรอกรหัสผ่านเพื่อดูรายละเอียดข้อมูลนี้',
+                input: 'password',
+                inputPlaceholder: 'ใส่รหัสผ่าน...',
+                customClass: { popup: 'swal-modal-custom' },
+                showCancelButton: true,
+                confirmButtonText: 'ยืนยัน',
+                cancelButtonText: 'ยกเลิก',
+                inputAttributes: {
+                    autocapitalize: 'off',
+                    autocorrect: 'off'
+                },
+                inputValidator: (value) => {
+                    if (!value) return 'กรุณากรอกรหัสผ่าน!';
+                    if (value !== pass) return 'รหัสผ่านไม่ถูกต้อง!';
+                }
+            }).then((result) => {
+                if (result.isConfirmed) showFullDetail(rowJson);
+            });
+        } else {
+            showFullDetail(rowJson);
+        }
+    }
+
     window.showFullDetail = function(rowJson) {
         const item = JSON.parse(decodeURIComponent(rowJson));
         let filesDetail = '-';
@@ -1024,7 +1070,7 @@
         jobTypes.forEach(t => { typeOptions += `<option value="${t}">${t}</option>`; });
         const newId = generateReportId();
         Swal.fire({
-            title: 'บันทึกงานใหม่ (ID: ' + newId + ')',
+            title: 'บันทึก... ID: ' + newId,
             customClass: { popup: 'swal-modal-custom' }, width: '700px',
             allowOutsideClick: false,
             html: `
@@ -1035,14 +1081,21 @@
                     <div class="swal-field-full"><label class="swal-label">ชื่อลูกค้า</label><input type="text" id="name" class="swal-input-styled"></div>
                     <div><label class="swal-label">เบอร์ติดต่อ</label><input type="text" id="phone" class="swal-input-styled" placeholder="0XXXXXXXXX" maxlength="10"></div>
                     <div><label class="swal-label">พนักงาน</label><select id="staff" class="swal-input-styled"><option value="">-- เลือก --</option><option value="ศุภกฤต">ศุภกฤต</option><option value="นวพล">นวพล</option><option value="ปิยะพร">ปิยะพร</option><option value="กรทักษ์">กรทักษ์</option></select></div>
-                    <div class="swal-field-full"><label class="swal-label">วันครบกำหนดงาน</label><input type="date" id="deadline" class="swal-input-styled"></div>
+                    
+                    <div><label class="swal-label">วันครบกำหนดงาน</label><input type="date" id="deadline" class="swal-input-styled"></div>
+                    <div>
+                        <label class="swal-label" style="color:var(--ios-red);"><i class="fa-solid fa-lock"></i> รหัสผ่านล็อคงาน</label>
+                        <input type="text" id="jobPassword" class="swal-input-styled" placeholder="กำหนดรหัสผ่าน">
+                    </div>
+
                     <div class="swal-field-full" style="display:flex; align-items:center; gap:10px; background:#f5eeff; padding:10px; border-radius:14px; border:1px dashed var(--ios-purple);">
                         <input type="checkbox" id="isDaily" style="width:20px; height:20px; cursor:pointer;">
                         <label for="isDaily" style="font-size:14px; font-weight:600; color:var(--ios-purple); cursor:pointer;">แสดงงานนี้ทุกวัน (Infinity Mode)</label>
                     </div>
+
                     <div class="swal-field-full"><label class="swal-label">รายละเอียด</label><textarea id="jobDetail" class="swal-input-styled" style="height:160px;"></textarea></div>
                     <div class="swal-field-full">
-                        <label class="swal-label">แนบไฟล์ (สูงสุด 5 ไฟล์รวม)</label>
+                        <label class="swal-label">แนบไฟล์</label>
                         <input type="file" id="file" class="swal-input-styled" onchange="handleFileSelect(event)" multiple>
                         <div id="selectedFileList" class="file-list"></div>
                     </div>
@@ -1058,6 +1111,7 @@
                     memberId: "'" + memberIdVal, name: document.getElementById('name').value, phone: "'" + phoneVal, 
                     staff: document.getElementById('staff').value, jobDetail: document.getElementById('jobDetail').value, 
                     deadline: document.getElementById('deadline').value, isDaily: document.getElementById('isDaily').checked ? "true" : "",
+                    password: "'" + document.getElementById('jobPassword').value,
                     files: selectedFiles.map(f => ({name: f.name, data: f.data})) 
                 };
             }
@@ -1067,27 +1121,49 @@
                 try {
                     const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(result.value) });
                     const serverResponse = await res.json();
-                    
                     if(serverResponse.status === "success") {
-                        const newRow = [
-                            result.value.date, result.value.memberId, result.value.name, result.value.phone, 
-                            result.value.staff, serverResponse.fileUrls || "", result.value.jobDetail, false, 
-                            result.value.jobType, false, result.value.deadline, result.value.reportId, result.value.isDaily
-                        ];
-                        fullData.unshift(newRow);
-                        filterData(); updateStats(fullData);
-                        Swal.fire({title: 'สำเร็จ', icon: 'success', timer: 1000, showConfirmButton: false});
+                        Swal.fire({title: 'สำเร็จ', icon: 'success', timer: 1000, showConfirmButton: false}).then(() => {
+                            // อัปเดตข้อมูลแบบไม่ต้องรีโหลดทั้งหน้า
+                            currentPage = 1;
+                            loadData(true);
+                        });
                     } else { throw new Error('Server Error'); }
                 } catch (e) {
                     console.error("Save error:", e);
-                    loadData(); 
-                    Swal.close();
+                    Swal.fire('ผิดพลาด', 'ไม่สามารถบันทึกได้', 'error');
                 }
             }
         });
     }
 
     window.editData = function(rowJson) {
+        const item = JSON.parse(decodeURIComponent(rowJson));
+        const rawPass = item[13] ? String(item[13]).replace(/^'/, '') : "";
+        const pass = rawPass.trim();
+
+        if (pass) {
+            Swal.fire({
+                title: '<i class="fa-solid fa-lock" style="color:var(--ios-red);"></i> ติดรหัสผ่าน',
+                text: 'กรุณากรอกรหัสผ่านเพื่อเข้าสู่โหมดแก้ไขข้อมูล',
+                input: 'password',
+                inputPlaceholder: 'ใส่รหัสผ่าน...',
+                customClass: { popup: 'swal-modal-custom' },
+                showCancelButton: true,
+                confirmButtonText: 'ยืนยัน',
+                cancelButtonText: 'ยกเลิก',
+                inputValidator: (value) => {
+                    if (!value) return 'กรุณากรอกรหัสผ่าน!';
+                    if (value !== pass) return 'รหัสผ่านไม่ถูกต้อง!';
+                }
+            }).then((result) => {
+                if (result.isConfirmed) proceedToEdit(rowJson);
+            });
+        } else {
+            proceedToEdit(rowJson);
+        }
+    }
+
+    function proceedToEdit(rowJson) {
         const item = JSON.parse(decodeURIComponent(rowJson));
         selectedFiles = []; existingFiles = item[5] ? item[5].split(", ") : []; 
         let typeOptions = `<option value="">-- เลือกประเภทงาน --</option>`;
@@ -1105,11 +1181,18 @@
                     <div class="swal-field-full"><label class="swal-label">ชื่อลูกค้า</label><input type="text" id="swal-name" class="swal-input-styled" value="${item[2]||''}"></div>
                     <div><label class="swal-label">เบอร์ติดต่อ</label><input type="text" id="swal-phone" class="swal-input-styled" value="${String(item[3]||'').replace(/^'/, '')}" maxlength="10"></div>
                     <div><label class="swal-label">พนักงาน</label><select id="swal-staff" class="swal-input-styled">${['ศุภกฤต', 'นวพล', 'ปิยะพร', 'กรทักษ์'].map(s => `<option value="${s}" ${item[4] === s ? 'selected' : ''}>${s}</option>`).join('')}</select></div>
-                    <div class="swal-field-full"><label class="swal-label">วันครบกำหนดงาน</label><input type="date" id="swal-deadline" class="swal-input-styled" value="${formatForInputDate(item[10])}"></div>
+                    
+                    <div><label class="swal-label">วันครบกำหนดงาน</label><input type="date" id="swal-deadline" class="swal-input-styled" value="${formatForInputDate(item[10])}"></div>
+                    <div>
+                        <label class="swal-label" style="color:var(--ios-red);"><i class="fa-solid fa-lock"></i> รหัสผ่านล็อคงาน</label>
+                        <input type="text" id="swal-jobPassword" class="swal-input-styled" value="${String(item[13]||'').replace(/^'/, '')}" placeholder="กำหนดรหัสผ่าน">
+                    </div>
+
                     <div class="swal-field-full" style="display:flex; align-items:center; gap:10px; background:#f5eeff; padding:10px; border-radius:14px; border:1px dashed var(--ios-purple);">
                         <input type="checkbox" id="swal-isDaily" style="width:20px; height:20px; cursor:pointer;" ${item[12] === 'true' ? 'checked' : ''}>
                         <label for="swal-isDaily" style="font-size:14px; font-weight:600; color:var(--ios-purple); cursor:pointer;">แสดงงานนี้ทุกวัน (Infinity Mode)</label>
                     </div>
+
                     <div class="swal-field-full"><label class="swal-label">รายละเอียด</label><textarea id="swal-jobDetail" class="swal-input-styled" style="height:160px;">${item[6] || ''}</textarea></div>
                     <div class="swal-field-full">
                         <label class="swal-label">จัดการไฟล์แนบ</label>
@@ -1128,6 +1211,7 @@
                     staff: document.getElementById('swal-staff').value, jobDetail: document.getElementById('swal-jobDetail').value, 
                     jobType: document.getElementById('swal-jobType').value, deadline: document.getElementById('swal-deadline').value,
                     isDaily: document.getElementById('swal-isDaily').checked ? "true" : "",
+                    password: "'" + document.getElementById('swal-jobPassword').value,
                     existingFiles: existingFiles, files: selectedFiles.map(f => ({name: f.name, data: f.data})) 
                 };
             }
@@ -1137,23 +1221,20 @@
                 try {
                     const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(result.value) });
                     const serverResponse = await res.json();
-                    
                     if(serverResponse.status === "success") {
-                        const idx = fullData.findIndex(r => r[11] == result.value.reportId);
-                        if(idx !== -1) {
-                            fullData[idx] = [
-                                result.value.date, result.value.memberId, result.value.name, result.value.phone, 
-                                result.value.staff, serverResponse.fileUrls || "", result.value.jobDetail, item[7], 
-                                result.value.jobType, item[9], result.value.deadline, result.value.reportId, result.value.isDaily
-                            ];
-                        }
-                        filterData(); updateStats(fullData);
-                        Swal.fire({title: 'สำเร็จ', icon: 'success', timer: 1000, showConfirmButton: false});
+                        Swal.fire({title: 'สำเร็จ', icon: 'success', timer: 1000, showConfirmButton: false}).then(() => {
+                            // อัปเดตข้อมูลแบบไม่ต้องรีโหลดทั้งหน้า
+                            const newType = result.value.jobType;
+                            if(newType) {
+                                document.getElementById('searchInput').value = newType;
+                            }
+                            currentPage = 1;
+                            loadData(true);
+                        });
                     } else { throw new Error('Server Error'); }
                 } catch (e) {
                     console.error("Update error:", e);
-                    loadData();
-                    Swal.close();
+                    Swal.fire('ผิดพลาด', 'ไม่สามารถอัพเดทได้', 'error');
                 }
             }
         });
