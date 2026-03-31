@@ -15,18 +15,22 @@
         :root {
             --ios-blue: #007aff;
             --ios-green: #34c759;
+            --ios-red: #ff3b30;
+            --ios-orange: #ff9500;
             --ios-bg: #f2f2f7;
             --glass-white: rgba(255, 255, 255, 0.7);
-            --glass-border: rgba(255, 255, 255, 0.4);
+            --glass-bg: rgba(255, 255, 255, 0.75);
+            --glass-border: rgba(255, 255, 255, 0.5);
             --sidebar-dark: rgba(28, 28, 30, 0.96);
             --text-main: #1c1c1e;
             --text-light: #8e8e93;
-            --transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            --text-muted: #8e8e93;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             --transition-swift: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             --transition-bounce: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
-        * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
+        * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; -webkit-tap-highlight-color: transparent; }
         
         body { 
             margin: 0; 
@@ -41,6 +45,79 @@
             overflow-x: hidden;
         }
 
+        /* ===== OPTIMIZED FLOATING SIDEBAR (UPDATED) ===== */
+        #floatingMenuBtn {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            width: auto; 
+            height: 42px;
+            padding: 0 20px;
+            background: var(--ios-blue);
+            color: white;
+            border-radius: 21px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 500;
+            cursor: move;
+            z-index: 2100;
+            box-shadow: 0 8px 20px rgba(0, 122, 255, 0.3);
+            border: 1px solid rgba(255,255,255,0.2);
+            touch-action: none;
+            will-change: transform;
+            transition: transform 0.2s, opacity 0.2s;
+        }
+
+        #floatingMenuBtn:active { transform: scale(0.92); }
+
+        .sidebar-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.3);
+            z-index: 2000;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+        }
+        .sidebar-overlay.active { display: block; opacity: 1; }
+
+        .sidebar-float {
+            position: fixed;
+            width: 280px;
+            max-height: 70vh;
+            background: var(--sidebar-dark);
+            border-radius: 20px;
+            overflow-y: auto;
+            z-index: 2001;
+            opacity: 0;
+            visibility: hidden;
+            transform: scale(0.9) translateY(10px);
+            transition: opacity 0.25s ease, transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.1);
+            will-change: transform, opacity;
+            scrollbar-width: none;
+        }
+        .sidebar-float::-webkit-scrollbar { display: none; }
+        .sidebar-float.active { opacity: 1; visibility: visible; transform: scale(1) translateY(0); }
+
+        .sidebar-float .sidebar-header { padding: 20px; font-size: 17px; font-weight: 600; color: #fff; border-bottom: 0.5px solid rgba(255,255,255,0.1); }
+        .sidebar-float .menu { padding: 8px 0; }
+        .sidebar-float .menu a, .sidebar-float .drop-btn { 
+            width: 100%; padding: 12px 20px; background: none; border: none; 
+            color: #ebebf5; text-align: left; font-size: 14px; cursor: pointer; 
+            display: flex; align-items: center; text-decoration: none; transition: 0.2s;
+        }
+        .sidebar-float .menu a:hover, .sidebar-float .drop-btn:hover { background: rgba(255,255,255,0.1); }
+        .sidebar-float .sub { display: none; background: rgba(0,0,0,0.2); }
+        .sidebar-float .item.open .sub { display: block; }
+        .sidebar-float .sub a { padding-left: 45px; font-size: 13px; color: #8e8e93; }
+
+        /* ===== MAIN CONTENT STYLES ===== */
         .top-header {
             position: fixed;
             top: 0; left: 0; right: 0;
@@ -50,79 +127,9 @@
             z-index: 1000;
             display: flex;
             align-items: center;
-            padding: 0 20px 0 75px; 
+            padding: 0 20px 0 100px; 
             border-bottom: 0.5px solid rgba(0,0,0,0.1);
         }
-
-        #floatingMenuBtn {
-            position: fixed;
-            top: 10px;
-            left: 15px;
-            width: 45px;
-            height: 45px;
-            background: var(--ios-blue);
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            cursor: move;
-            z-index: 2100;
-            box-shadow: 0 4px 15px rgba(0, 122, 255, 0.4);
-            border: none;
-            touch-action: none;
-            transition: transform 0.2s, opacity 0.2s;
-            font-weight: 500;
-        }
-
-        #sidebarOverlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.3);
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
-            z-index: 2000;
-            display: none;
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-        #sidebarOverlay.active { display: block; opacity: 1; }
-
-        #sidebarFloat {
-            position: fixed;
-            width: 280px;
-            max-height: 70vh;
-            background: var(--sidebar-dark);
-            border-radius: 24px;
-            overflow-y: auto;
-            z-index: 2001;
-            opacity: 0;
-            visibility: hidden;
-            transform: scale(0.8) translateY(10px);
-            transition: opacity 0.3s, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-            border: 1px solid rgba(255,255,255,0.1);
-            padding: 8px 0;
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-        }
-        #sidebarFloat::-webkit-scrollbar { display: none; }
-        #sidebarFloat.active { opacity: 1; visibility: visible; transform: scale(1) translateY(0); }
-
-        .sidebar-header { padding: 15px 20px; font-size: 17px; font-weight: 600; color: #fff; border-bottom: 0.5px solid rgba(255,255,255,0.1); margin-bottom: 10px; }
-        .sidebar-float .menu-item { margin: 4px 10px; border-radius: 12px; overflow: hidden; transition: var(--transition-swift); }
-        .sidebar-float .menu-link, .sidebar-float .drop-btn {
-            width: 100%; padding: 12px 16px; background: none; border: none;
-            color: #ebebf5; text-align: left; font-size: 15px; cursor: pointer;
-            display: flex; align-items: center; text-decoration: none; gap: 12px;
-        }
-        .sidebar-float .menu-link:hover, .sidebar-float .drop-btn:hover { background: rgba(255,255,255,0.1); }
-        .sidebar-float .submenu { display: none; background: rgba(0,0,0,0.2); padding: 4px 0; }
-        .sidebar-float .menu-item.open .submenu { display: block; }
-        .sidebar-float .menu-item.open .bi-chevron-right { transform: rotate(90deg); }
-        .sidebar-float .bi-chevron-right { margin-left: auto; font-size: 12px; transition: transform 0.3s; }
-        .sidebar-float .submenu a { padding: 10px 16px 10px 48px; font-size: 14px; color: #8e8e93; display: block; text-decoration: none; }
 
         .content { padding: 80px 15px 40px; display: flex; justify-content: center; animation: fadeIn 0.6s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
@@ -200,9 +207,9 @@
     <div style="font-weight: 700; font-size: 1.25rem; color: var(--text-main); letter-spacing: -0.8px;">ลงข้อมูลสินเชื่อ</div>
 </header>
 
-<button id="floatingMenuBtn">เมนู</button>
-<div id="sidebarOverlay" onclick="closeSidebarFloat()"></div>
-<aside id="sidebarFloat"></aside>
+<button id="floatingMenuBtn" title="ลากเพื่อย้าย">เมนู</button>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebarFloat()"></div>
+<aside class="sidebar-float" id="sidebarFloat"></aside>
 
 <div class="content">
     <div class="box">
@@ -299,6 +306,7 @@
 <script>
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwUxvcC65qEJLAFNcHVerHXAnKddXsRu_zhMRmI1LzKtbQ1WP9MoAhKdfmcSt35Wm-RTQ/exec";
 
+    /* ===== JS FOR FLOATING SIDEBAR (UPDATED) ===== */
     const dragBtn = document.getElementById('floatingMenuBtn');
     const sideFloat = document.getElementById('sidebarFloat');
     const sideOverlay = document.getElementById('sidebarOverlay');
@@ -308,69 +316,80 @@
     function loadButtonPosition() {
         const savedLeft = localStorage.getItem('floatBtnLeft');
         const savedTop = localStorage.getItem('floatBtnTop');
-        if (savedLeft && savedTop) { 
-            dragBtn.style.left = savedLeft + 'px'; 
-            dragBtn.style.top = savedTop + 'px'; 
+        if (savedLeft && savedTop) {
+            dragBtn.style.left = savedLeft + 'px';
+            dragBtn.style.top = savedTop + 'px';
         }
     }
 
-    dragBtn.onpointerdown = function(e) {
+    dragBtn.addEventListener('pointerdown', (e) => {
         isDragging = false;
         startX = e.clientX; startY = e.clientY;
         const rect = dragBtn.getBoundingClientRect();
-        shiftX = e.clientX - rect.left; shiftY = e.clientY - rect.top;
+        shiftX = e.clientX - rect.left;
+        shiftY = e.clientY - rect.top;
         dragBtn.setPointerCapture(e.pointerId);
-        document.addEventListener('pointermove', onPointerMove);
-        document.addEventListener('pointerup', onPointerUp);
-    };
+        
+        const moveHandler = (ev) => {
+            if (!isDragging && (Math.abs(ev.clientX - startX) > 5 || Math.abs(ev.clientY - startY) > 5)) isDragging = true;
+            if (isDragging) {
+                let x = ev.clientX - shiftX;
+                let y = ev.clientY - shiftY;
+                x = Math.max(0, Math.min(x, window.innerWidth - dragBtn.offsetWidth));
+                y = Math.max(0, Math.min(y, window.innerHeight - dragBtn.offsetHeight));
+                dragBtn.style.left = x + 'px';
+                dragBtn.style.top = y + 'px';
+            }
+        };
 
-    function onPointerMove(e) {
-        if (!isDragging && (Math.abs(e.clientX - startX) > 5 || Math.abs(e.clientY - startY) > 5)) isDragging = true;
-        if (isDragging) {
-            let newX = e.clientX - shiftX; let newY = e.clientY - shiftY;
-            newX = Math.max(0, Math.min(newX, window.innerWidth - dragBtn.offsetWidth));
-            newY = Math.max(0, Math.min(newY, window.innerHeight - dragBtn.offsetHeight));
-            dragBtn.style.left = newX + 'px'; dragBtn.style.top = newY + 'px';
-        }
-    }
+        const upHandler = (ev) => {
+            document.removeEventListener('pointermove', moveHandler);
+            document.removeEventListener('pointerup', upHandler);
+            dragBtn.releasePointerCapture(ev.pointerId);
+            if (isDragging) {
+                localStorage.setItem('floatBtnLeft', dragBtn.offsetLeft);
+                localStorage.setItem('floatBtnTop', dragBtn.offsetTop);
+            } else { toggleSidebarFloat(); }
+            isDragging = false;
+        };
 
-    function onPointerUp(e) {
-        document.removeEventListener('pointermove', onPointerMove);
-        document.removeEventListener('pointerup', onPointerUp);
-        dragBtn.releasePointerCapture(e.pointerId);
-        if (isDragging) {
-            localStorage.setItem('floatBtnLeft', dragBtn.offsetLeft);
-            localStorage.setItem('floatBtnTop', dragBtn.offsetTop);
-        } else { toggleSidebarFloat(); }
-        isDragging = false;
-    }
+        document.addEventListener('pointermove', moveHandler, { passive: true });
+        document.addEventListener('pointerup', upHandler);
+    });
 
     function toggleSidebarFloat() {
         const btnRect = dragBtn.getBoundingClientRect();
-        const sidebarWidth = 280;
         let top = btnRect.bottom + 10;
         let left = btnRect.left;
-        if (left + sidebarWidth > window.innerWidth) left = window.innerWidth - sidebarWidth - 15;
-        if (top + (window.innerHeight * 0.7) > window.innerHeight) top = btnRect.top - sideFloat.offsetHeight - 10;
+        if (left + 280 > window.innerWidth) left = window.innerWidth - 295;
+        if (top + 400 > window.innerHeight) top = Math.max(10, btnRect.top - 410);
         
-        sideFloat.style.top = top + 'px'; sideFloat.style.left = left + 'px';
+        sideFloat.style.top = top + 'px';
+        sideFloat.style.left = left + 'px';
         const isActive = sideFloat.classList.toggle('active');
         sideOverlay.classList.toggle('active', isActive);
         if (isActive && !sideFloat.innerHTML) loadSidebarContent();
     }
 
-    function closeSidebarFloat() { sideFloat.classList.remove('active'); sideOverlay.classList.remove('active'); }
+    function closeSidebarFloat() {
+        sideFloat.classList.remove('active');
+        sideOverlay.classList.remove('active');
+    }
 
     function loadSidebarContent() {
-        fetch('sidebar.html').then(res => res.text()).then(data => {
-            sideFloat.innerHTML = `<div class="sidebar-header">เมนูนำทาง</div>` + data;
-            document.querySelectorAll('.menu-item').forEach(item => {
-                const id = item.querySelector('.drop-btn')?.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
-                if (id && localStorage.getItem('menu-' + id) === 'true') {
-                    item.classList.add('open');
-                }
-            });
-        }).catch(() => { sideFloat.innerHTML = `<div style="padding:20px; color:white;">ไม่พบไฟล์ sidebar.html</div>`; });
+        fetch('sidebar.html')
+            .then(res => res.text())
+            .then(data => {
+                sideFloat.innerHTML = `<div class="sidebar-header">เมนูนำทาง</div>` + data;
+                // โหลดสถานะการเปิดเมนูย่อย
+                ['credit', 'branch', 'sales'].forEach(id => {
+                    if (localStorage.getItem('menu-' + id) === 'true') {
+                        const el = sideFloat.querySelector('#menu-' + id);
+                        if (el) el.classList.add('open');
+                    }
+                });
+            })
+            .catch(() => { sideFloat.innerHTML = `<div style="padding:20px; color:white;">ไม่พบไฟล์ sidebar.html</div>`; });
     }
 
     window.toggleDrop = function(btn, id) {
@@ -379,6 +398,7 @@
         if (id) localStorage.setItem('menu-' + id, isOpen);
     }
 
+    /* ===== JS FOR LOAN FORM FUNCTIONS (REMAINS SAME) ===== */
     document.getElementById('date').value = new Date().toISOString().split("T")[0];
 
     function toggleReason() {
@@ -474,7 +494,10 @@
     }
 
     function closePopup() { document.getElementById("popup").classList.remove("show"); }
-    window.onload = loadButtonPosition;
+    
+    window.onload = () => {
+        loadButtonPosition();
+    };
 </script>
 </body>
 </html>
