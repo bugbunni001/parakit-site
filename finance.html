@@ -54,7 +54,6 @@
             border-bottom: 0.5px solid rgba(0,0,0,0.1);
         }
 
-        /* --- Floating Menu Button Styles (จดจำจาก index.html) --- */
         #floatingMenuBtn {
             position: fixed;
             top: 10px;
@@ -67,7 +66,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 14px; /* ปรับขนาดฟอนต์สำหรับคำว่า เมนู */
+            font-size: 14px;
             cursor: move;
             z-index: 2100;
             box-shadow: 0 4px 15px rgba(0, 122, 255, 0.4);
@@ -105,14 +104,12 @@
             box-shadow: 0 20px 50px rgba(0,0,0,0.5);
             border: 1px solid rgba(255,255,255,0.1);
             padding: 8px 0;
-            /* ซ่อน Scrollbar */
             scrollbar-width: none;
             -ms-overflow-style: none;
         }
         #sidebarFloat::-webkit-scrollbar { display: none; }
         #sidebarFloat.active { opacity: 1; visibility: visible; transform: scale(1) translateY(0); }
 
-        /* สไตล์เนื้อหาภายใน Sidebar */
         .sidebar-header { padding: 15px 20px; font-size: 17px; font-weight: 600; color: #fff; border-bottom: 0.5px solid rgba(255,255,255,0.1); margin-bottom: 10px; }
         .sidebar-float .menu-item { margin: 4px 10px; border-radius: 12px; overflow: hidden; transition: var(--transition-swift); }
         .sidebar-float .menu-link, .sidebar-float .drop-btn {
@@ -126,8 +123,6 @@
         .sidebar-float .menu-item.open .bi-chevron-right { transform: rotate(90deg); }
         .sidebar-float .bi-chevron-right { margin-left: auto; font-size: 12px; transition: transform 0.3s; }
         .sidebar-float .submenu a { padding: 10px 16px 10px 48px; font-size: 14px; color: #8e8e93; display: block; text-decoration: none; }
-
-        /* --- จบส่วน Styles เมนู --- */
 
         .content { padding: 80px 15px 40px; display: flex; justify-content: center; animation: fadeIn 0.6s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
@@ -234,11 +229,19 @@
                     <option>80000207 TS LT Prachachuen</option>
                     <option>80002390 TS Terminal 21 Rama 3</option>
                     <option>80002425 Makro Sathorn</option>
+                    <option>80002456 Makro Bangbon</option>
                 </select>
             </div>
             <div class="form-row"><label>ชื่อพนักงาน</label><input type="text" id="staffName" required placeholder="ชื่อพนักงาน"></div>
             <div class="form-row"><label>ชื่อลูกค้า</label><input type="text" id="customerName" required placeholder="ชื่อ-นามสกุล ลูกค้า"></div>
-            <div class="form-row"><label>เบอร์โทรศัพท์ลูกค้า</label><input type="tel" id="customerPhone" required placeholder="08XXXXXXXX" pattern="[0-9]{10}"></div>
+            
+            <div class="form-row">
+                <label>เบอร์โทรศัพท์ลูกค้า</label>
+                <input type="tel" id="customerPhone" required placeholder="08XXXXXXXX" 
+                       oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);" 
+                       pattern="[0-9]{10}">
+            </div>
+
             <div class="form-row">
                 <label>ประเภทสินเชื่อ</label>
                 <select id="loanType" required>
@@ -296,7 +299,6 @@
 <script>
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwUxvcC65qEJLAFNcHVerHXAnKddXsRu_zhMRmI1LzKtbQ1WP9MoAhKdfmcSt35Wm-RTQ/exec";
 
-    // --- Floating Sidebar Logic (จดจำจาก index.html แบบ 1:1) ---
     const dragBtn = document.getElementById('floatingMenuBtn');
     const sideFloat = document.getElementById('sidebarFloat');
     const sideOverlay = document.getElementById('sidebarOverlay');
@@ -362,7 +364,6 @@
     function loadSidebarContent() {
         fetch('sidebar.html').then(res => res.text()).then(data => {
             sideFloat.innerHTML = `<div class="sidebar-header">เมนูนำทาง</div>` + data;
-            // เมื่อโหลดเสร็จ ให้ตรวจสอบค่าการกางเมนูที่บันทึกไว้
             document.querySelectorAll('.menu-item').forEach(item => {
                 const id = item.querySelector('.drop-btn')?.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
                 if (id && localStorage.getItem('menu-' + id) === 'true') {
@@ -372,16 +373,12 @@
         }).catch(() => { sideFloat.innerHTML = `<div style="padding:20px; color:white;">ไม่พบไฟล์ sidebar.html</div>`; });
     }
 
-    // ฟังก์ชัน toggleDrop จดจำค่าการกาง (แบบ index.html)
     window.toggleDrop = function(btn, id) {
         const item = btn.parentElement;
         const isOpen = item.classList.toggle("open");
         if (id) localStorage.setItem('menu-' + id, isOpen);
     }
 
-    // --- จบส่วน Script เมนู ---
-
-    // --- Form Logic ---
     document.getElementById('date').value = new Date().toISOString().split("T")[0];
 
     function toggleReason() {
@@ -416,7 +413,7 @@
         
         loading.style.display = "flex";
         btn.disabled = true;
-        btn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> กำลังส่ง...`;
+        btn.innerHTML = `กำลังส่ง...`;
 
         const file = document.getElementById('imageFile').files[0];
         const formData = {
