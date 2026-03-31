@@ -54,7 +54,7 @@
             border-bottom: 0.5px solid rgba(0,0,0,0.1);
         }
 
-        /* --- เริ่มต้นโค้ดเมนูที่จำไว้ --- */
+        /* --- Floating Menu Button Styles (จดจำจาก index.html) --- */
         #floatingMenuBtn {
             position: fixed;
             top: 10px;
@@ -67,13 +67,14 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px; /* ปรับขนาดฟอนต์ให้พอดีคำว่า เมนู */
+            font-size: 14px; /* ปรับขนาดฟอนต์สำหรับคำว่า เมนู */
             cursor: move;
             z-index: 2100;
             box-shadow: 0 4px 15px rgba(0, 122, 255, 0.4);
             border: none;
             touch-action: none;
             transition: transform 0.2s, opacity 0.2s;
+            font-weight: 500;
         }
 
         #sidebarOverlay {
@@ -101,23 +102,32 @@
             visibility: hidden;
             transform: scale(0.8) translateY(10px);
             transition: opacity 0.3s, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
             border: 1px solid rgba(255,255,255,0.1);
+            padding: 8px 0;
             /* ซ่อน Scrollbar */
-            scrollbar-width: none; 
+            scrollbar-width: none;
             -ms-overflow-style: none;
         }
         #sidebarFloat::-webkit-scrollbar { display: none; }
         #sidebarFloat.active { opacity: 1; visibility: visible; transform: scale(1) translateY(0); }
 
-        .sidebar-header { 
-            padding: 20px 24px; 
-            font-size: 17px; 
-            font-weight: 600; 
-            color: #fff; 
-            border-bottom: 0.5px solid rgba(255,255,255,0.1); 
+        /* สไตล์เนื้อหาภายใน Sidebar */
+        .sidebar-header { padding: 15px 20px; font-size: 17px; font-weight: 600; color: #fff; border-bottom: 0.5px solid rgba(255,255,255,0.1); margin-bottom: 10px; }
+        .sidebar-float .menu-item { margin: 4px 10px; border-radius: 12px; overflow: hidden; transition: var(--transition-swift); }
+        .sidebar-float .menu-link, .sidebar-float .drop-btn {
+            width: 100%; padding: 12px 16px; background: none; border: none;
+            color: #ebebf5; text-align: left; font-size: 15px; cursor: pointer;
+            display: flex; align-items: center; text-decoration: none; gap: 12px;
         }
-        /* --- สิ้นสุดโค้ดเมนูที่จำไว้ --- */
+        .sidebar-float .menu-link:hover, .sidebar-float .drop-btn:hover { background: rgba(255,255,255,0.1); }
+        .sidebar-float .submenu { display: none; background: rgba(0,0,0,0.2); padding: 4px 0; }
+        .sidebar-float .menu-item.open .submenu { display: block; }
+        .sidebar-float .menu-item.open .bi-chevron-right { transform: rotate(90deg); }
+        .sidebar-float .bi-chevron-right { margin-left: auto; font-size: 12px; transition: transform 0.3s; }
+        .sidebar-float .submenu a { padding: 10px 16px 10px 48px; font-size: 14px; color: #8e8e93; display: block; text-decoration: none; }
+
+        /* --- จบส่วน Styles เมนู --- */
 
         .content { padding: 80px 15px 40px; display: flex; justify-content: center; animation: fadeIn 0.6s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
@@ -196,7 +206,7 @@
 </header>
 
 <button id="floatingMenuBtn">เมนู</button>
-<div id="sidebarOverlay" onclick="toggleSidebarFloat()"></div>
+<div id="sidebarOverlay" onclick="closeSidebarFloat()"></div>
 <aside id="sidebarFloat"></aside>
 
 <div class="content">
@@ -286,7 +296,7 @@
 <script>
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwUxvcC65qEJLAFNcHVerHXAnKddXsRu_zhMRmI1LzKtbQ1WP9MoAhKdfmcSt35Wm-RTQ/exec";
 
-    /* --- Floating Menu JavaScript (1:1 จากที่จำไว้) --- */
+    // --- Floating Sidebar Logic (จดจำจาก index.html แบบ 1:1) ---
     const dragBtn = document.getElementById('floatingMenuBtn');
     const sideFloat = document.getElementById('sidebarFloat');
     const sideOverlay = document.getElementById('sidebarOverlay');
@@ -296,9 +306,9 @@
     function loadButtonPosition() {
         const savedLeft = localStorage.getItem('floatBtnLeft');
         const savedTop = localStorage.getItem('floatBtnTop');
-        if (savedLeft && savedTop) {
-            dragBtn.style.left = savedLeft + 'px';
-            dragBtn.style.top = savedTop + 'px';
+        if (savedLeft && savedTop) { 
+            dragBtn.style.left = savedLeft + 'px'; 
+            dragBtn.style.top = savedTop + 'px'; 
         }
     }
 
@@ -306,8 +316,7 @@
         isDragging = false;
         startX = e.clientX; startY = e.clientY;
         const rect = dragBtn.getBoundingClientRect();
-        shiftX = e.clientX - rect.left;
-        shiftY = e.clientY - rect.top;
+        shiftX = e.clientX - rect.left; shiftY = e.clientY - rect.top;
         dragBtn.setPointerCapture(e.pointerId);
         document.addEventListener('pointermove', onPointerMove);
         document.addEventListener('pointerup', onPointerUp);
@@ -316,12 +325,10 @@
     function onPointerMove(e) {
         if (!isDragging && (Math.abs(e.clientX - startX) > 5 || Math.abs(e.clientY - startY) > 5)) isDragging = true;
         if (isDragging) {
-            let newX = e.clientX - shiftX;
-            let newY = e.clientY - shiftY;
+            let newX = e.clientX - shiftX; let newY = e.clientY - shiftY;
             newX = Math.max(0, Math.min(newX, window.innerWidth - dragBtn.offsetWidth));
             newY = Math.max(0, Math.min(newY, window.innerHeight - dragBtn.offsetHeight));
-            dragBtn.style.left = newX + 'px';
-            dragBtn.style.top = newY + 'px';
+            dragBtn.style.left = newX + 'px'; dragBtn.style.top = newY + 'px';
         }
     }
 
@@ -332,9 +339,7 @@
         if (isDragging) {
             localStorage.setItem('floatBtnLeft', dragBtn.offsetLeft);
             localStorage.setItem('floatBtnTop', dragBtn.offsetTop);
-        } else {
-            toggleSidebarFloat();
-        }
+        } else { toggleSidebarFloat(); }
         isDragging = false;
     }
 
@@ -344,28 +349,39 @@
         let top = btnRect.bottom + 10;
         let left = btnRect.left;
         if (left + sidebarWidth > window.innerWidth) left = window.innerWidth - sidebarWidth - 15;
-        if (top + 400 > window.innerHeight) top = btnRect.top - 410; // ป้องกันเมนูทะลุขอบล่าง
+        if (top + (window.innerHeight * 0.7) > window.innerHeight) top = btnRect.top - sideFloat.offsetHeight - 10;
         
-        sideFloat.style.top = Math.max(10, top) + 'px';
-        sideFloat.style.left = left + 'px';
-        
+        sideFloat.style.top = top + 'px'; sideFloat.style.left = left + 'px';
         const isActive = sideFloat.classList.toggle('active');
         sideOverlay.classList.toggle('active', isActive);
         if (isActive && !sideFloat.innerHTML) loadSidebarContent();
     }
 
+    function closeSidebarFloat() { sideFloat.classList.remove('active'); sideOverlay.classList.remove('active'); }
+
     function loadSidebarContent() {
-        fetch('sidebar.html')
-            .then(res => res.text())
-            .then(data => {
-                sideFloat.innerHTML = `<div class="sidebar-header">เมนูนำทาง</div>` + data;
-            })
-            .catch(() => {
-                sideFloat.innerHTML = `<div style="padding:20px; color:white;">ไม่พบไฟล์ sidebar.html</div>`;
+        fetch('sidebar.html').then(res => res.text()).then(data => {
+            sideFloat.innerHTML = `<div class="sidebar-header">เมนูนำทาง</div>` + data;
+            // เมื่อโหลดเสร็จ ให้ตรวจสอบค่าการกางเมนูที่บันทึกไว้
+            document.querySelectorAll('.menu-item').forEach(item => {
+                const id = item.querySelector('.drop-btn')?.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
+                if (id && localStorage.getItem('menu-' + id) === 'true') {
+                    item.classList.add('open');
+                }
             });
+        }).catch(() => { sideFloat.innerHTML = `<div style="padding:20px; color:white;">ไม่พบไฟล์ sidebar.html</div>`; });
     }
 
-    /* --- Form Logic (โค้ดเดิมทั้งหมด) --- */
+    // ฟังก์ชัน toggleDrop จดจำค่าการกาง (แบบ index.html)
+    window.toggleDrop = function(btn, id) {
+        const item = btn.parentElement;
+        const isOpen = item.classList.toggle("open");
+        if (id) localStorage.setItem('menu-' + id, isOpen);
+    }
+
+    // --- จบส่วน Script เมนู ---
+
+    // --- Form Logic ---
     document.getElementById('date').value = new Date().toISOString().split("T")[0];
 
     function toggleReason() {
@@ -397,8 +413,10 @@
         e.preventDefault();
         const btn = document.getElementById('submitBtn');
         const loading = document.getElementById('loading');
+        
         loading.style.display = "flex";
         btn.disabled = true;
+        btn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> กำลังส่ง...`;
 
         const file = document.getElementById('imageFile').files[0];
         const formData = {
@@ -445,6 +463,7 @@
             document.getElementById('loading').style.display = "none";
             showPopup("ผิดพลาด: " + err.message, false);
             document.getElementById('submitBtn').disabled = false;
+            document.getElementById('submitBtn').innerHTML = `<i class="bi bi-floppy"></i> บันทึกข้อมูล`;
         });
     }
 
