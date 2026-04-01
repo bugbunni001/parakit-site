@@ -63,15 +63,11 @@
             transform: scale(0.8) translateY(10px);
             transition: opacity 0.3s, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
             box-shadow: 0 15px 40px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1);
-            
             scrollbar-width: none; 
             -ms-overflow-style: none;
         }
 
-        /* เพิ่มส่วนนี้ต่อท้ายคลาส .sidebar-float */
-        .sidebar-float::-webkit-scrollbar {
-            display: none;
-        }
+        .sidebar-float::-webkit-scrollbar { display: none; }
         .sidebar-float.active { opacity: 1; visibility: visible; transform: scale(1) translateY(0); }
         .sidebar-float .sidebar-header { padding: 20px; font-size: 17px; font-weight: 600; color: #fff; border-bottom: 0.5px solid rgba(255,255,255,0.1); }
         .sidebar-float .menu { padding: 8px 0; }
@@ -85,6 +81,21 @@
         .sidebar-float .item.open .sub { display: block; }
         .sidebar-float .sub a { padding-left: 45px; font-size: 13px; color: #8e8e93; }
 
+        /* ===== CATEGORY NAV ===== */
+        .category-nav {
+            display: flex; justify-content: center; gap: 12px; margin-bottom: 40px;
+        }
+        .cat-btn {
+            padding: 12px 25px; border-radius: 100px; border: 1px solid var(--glass-border);
+            background: var(--glass-card); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            cursor: pointer; font-weight: 500; transition: var(--transition-bounce);
+            color: var(--text-main); font-size: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        .cat-btn:hover { transform: translateY(-3px); background: #fff; box-shadow: 0 10px 25px rgba(0,0,0,0.08); }
+        .cat-btn.active { color: #fff; border-color: transparent; }
+        .cat-btn.regular.active { background: var(--ios-blue); box-shadow: 0 8px 20px rgba(0, 122, 255, 0.3); }
+        .cat-btn.silver.active { background: var(--gold-gradient); box-shadow: 0 8px 20px rgba(181, 141, 64, 0.3); }
+
         /* ===== MAIN CONTENT ===== */
         .main-content { 
             padding: 40px 20px; 
@@ -94,7 +105,7 @@
 
         .top-nav {
             display: flex; justify-content: flex-end; align-items: center;
-            margin-bottom: 40px; position: sticky; top: 20px; z-index: 100;
+            margin-bottom: 20px; position: sticky; top: 20px; z-index: 100;
         }
 
         .refresh-btn {
@@ -107,7 +118,7 @@
 
         .container { max-width: 1200px; margin: 0 auto; width: 100%; flex: 1; }
 
-        .header-banner { text-align: center; margin-bottom: 60px; }
+        .header-banner { text-align: center; margin-bottom: 40px; }
         .header-banner h1 { margin: 0; font-size: 3rem; font-weight: 600; letter-spacing: -1px; color: var(--text-main); }
         .header-banner p { color: var(--premium-gold); margin-top: 8px; font-weight: 400; font-size: 1.1rem; letter-spacing: 1px; }
 
@@ -207,6 +218,11 @@
             <h1>ระบบเลือกเบอร์เปิดใหม่</h1>
             <p>กรุณาเลือกเบอร์ที่เหมาะสมกับคุณ</p>
         </div>
+
+        <div class="category-nav">
+            <button class="cat-btn regular active" onclick="filterCategory('Regular', this)">Regular Numbers</button>
+            <button class="cat-btn silver" onclick="filterCategory('Silver', this)">Silver Numbers</button>
+        </div>
         
         <div id="loader" style="text-align: center; padding: 100px 0;">
             <div class="spinner"></div>
@@ -253,9 +269,11 @@
 
 <script>
 /* ==========================================
-    ✅ DATA & CONFIG (Original Logic Maintained)
+    ✅ DATA & CONFIG
    ========================================== */
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbylkr6WhEp7kpK8WkpZw6F7Rws0OglgqbWy3wQ-3IImG8Fwqaou9VmseZvuSdrxqg83WQ/exec";
+let allNumbers = [];
+let currentCategory = 'Regular';
 
 window.onload = () => {
     loadButtonPosition();
@@ -279,25 +297,49 @@ function fetchData() {
     fetch(WEB_APP_URL + "?action=getData")
       .then(res => res.json())
       .then(data => {
-        document.getElementById("loader").style.display = "none";
-        const list = document.getElementById("list");
-        list.innerHTML = "";
-        data.forEach(item => {
-            const formattedNumber = String(item.number).padStart(10, '0');
-            const div = document.createElement("div");
-            div.className = "item-card";
-            div.id = `row-${item.row}`;
-            div.innerHTML = `
-                <div class="phone-num" id="num-${item.row}">${formattedNumber}</div>
-                <div class="phone-detail">${item.detail || 'ผลรวมระดับพรีเมียม'}</div>
-                <button class="btn-use" id="btn-${item.row}" onclick="openModal(${item.row})">เลือกเบอร์นี้</button>
-            `;
-            list.appendChild(div);
-        });
+        allNumbers = data;
+        renderList();
       })
       .catch(err => {
           document.getElementById("loader").innerHTML = "<div style='color:#ff3b30'>❌ ระบบขัดข้อง ไม่สามารถโหลดข้อมูลได้</div>";
       });
+}
+
+function filterCategory(cat, btn) {
+    currentCategory = cat;
+    // UI Update for buttons
+    document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderList();
+}
+
+function renderList() {
+    document.getElementById("loader").style.display = "none";
+    const list = document.getElementById("list");
+    list.innerHTML = "";
+    
+    const filtered = allNumbers.filter(item => {
+        const detailText = (item.detail || "").toLowerCase();
+        return detailText.includes(currentCategory.toLowerCase());
+    });
+
+    if(filtered.length === 0) {
+        list.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 50px; color: var(--text-muted);">ไม่พบเบอร์ในหมวดหมู่ ${currentCategory}</div>`;
+        return;
+    }
+
+    filtered.forEach(item => {
+        const formattedNumber = String(item.number).padStart(10, '0');
+        const div = document.createElement("div");
+        div.className = "item-card";
+        div.id = `row-${item.row}`;
+        div.innerHTML = `
+            <div class="phone-num" id="num-${item.row}">${formattedNumber}</div>
+            <div class="phone-detail">${item.detail || 'ผลรวมระดับพรีเมียม'}</div>
+            <button class="btn-use" id="btn-${item.row}" onclick="openModal(${item.row})">เลือกเบอร์นี้</button>
+        `;
+        list.appendChild(div);
+    });
 }
 
 function openModal(r) {
@@ -316,9 +358,15 @@ function use(r, phoneNum) {
     fetch(WEB_APP_URL, { method: "POST", body: JSON.stringify({row: r}) })
     .then(() => {
         document.getElementById("loadingOverlay").style.display = "none";
-        document.getElementById(`row-${r}`).classList.add("is-used");
+        const targetCard = document.getElementById(`row-${r}`);
+        if(targetCard) targetCard.classList.add("is-used");
         const btn = document.getElementById(`btn-${r}`);
         if(btn) { btn.innerText = "จองแล้ว"; btn.disabled = true; }
+        
+        // Update local data state
+        const idx = allNumbers.findIndex(n => n.row == r);
+        if(idx !== -1) allNumbers[idx].isUsed = true; // simulation
+
         document.getElementById("successMessage").innerHTML = `เบอร์ <b>${phoneNum}</b> ถูกบันทึกข้อมูลการจองของท่านเรียบร้อยแล้วค่ะ`;
         document.getElementById("successOverlay").style.display = "flex";
     })
@@ -329,7 +377,7 @@ function use(r, phoneNum) {
 }
 
 /* ==========================================
-    ✅ FLOATING SIDEBAR LOGIC (1:1 Maintain)
+    ✅ FLOATING SIDEBAR LOGIC
    ========================================== */
 const dragBtn = document.getElementById('floatingMenuBtn');
 const sideFloat = document.getElementById('sidebarFloat');
