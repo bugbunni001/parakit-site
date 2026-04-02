@@ -292,16 +292,25 @@
             return bg ? `<div style="padding: 12px 18px; color: #fff; border-radius: 12px; margin: 18px 0 10px; font-weight: 600; font-size: 13px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 8px; background:${bg}"><i class="bi ${icon}"></i> <span>${r[0]}</span></div>` : `<div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(0,0,0,0.04); font-size: 14.5px;"><span>${r[0]}</span><span style="font-weight:600;">${r[1] || '0'}</span></div>`;
         }).join('');
 
-        // ส่วนที่แก้ไขเพิ่ม All Post และจัดลำดับใหม่
+        // ส่วนที่คำนวณ Runrate
+        const dateInput = document.getElementById('day').value;
+        const selectedDate = new Date(dateInput);
+        const currentDay = selectedDate.getDate();
+        const daysInMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0).getDate();
+
         const config = [
             {l:'New Post', v:data.actuals.np, b:'#0071e3', full: false}, 
             {l:'BDBC', v:data.actuals.bd, b:'#34c759', full: false},
-            {l:'All Post', v:data.actuals.allPost, b:'#5856d6', full: true}, // ช่องแนวยาวเต็มบรรทัด
+            {l:'All Post', v:data.actuals.allPost, b:'#5856d6', full: true}, 
             {l:'Apple', v:data.actuals.ap, b:'#ff9500', full: false}, 
             {l:'SmartPhone', v:data.actuals.sm, b:'#ff3b30', full: false}
         ];
 
-        document.getElementById('out-actual').innerHTML = config.map(i => `
+        document.getElementById('out-actual').innerHTML = config.map(i => {
+            // คำนวณ Runrate: (Achieved * จำนวนวันทั้งหมดในเดือน) / วันที่ปัจจุบัน
+            const runrate = ((parseFloat(i.v.ach) * daysInMonth) / currentDay).toFixed(2);
+            
+            return `
             <div class="stat-box" style="border-top:4px solid ${i.b}; ${i.full ? 'grid-column: 1 / -1;' : ''}">
                 <div style="display:flex;justify-content:space-between;align-items:flex-start;">
                     <div>
@@ -312,8 +321,13 @@
                         <div style="font-size:16px;"><span ${getCls(i.v.diff)}>Diff ${i.v.diff}</span></div>
                     </div>
                 </div>
-                <div style="font-size:16px;color:var(--primary-blue);font-weight:700;margin-top:16px;">Achieve: ${i.v.ach}%</div>
-            </div>`).join('');
+                <div style="font-size:16px; color:var(--primary-blue); font-weight:700; margin-top:16px; display:flex; gap:10px; align-items:center;">
+                    <span>Achieved: ${i.v.ach}%</span>
+                    <span style="color:#ccc; font-weight:300;">|</span>
+                    <span style="color:#5856d6;">Runrate: ${runrate}%</span>
+                </div>
+            </div>`;
+        }).join('');
 
         if(data.extraStats) document.getElementById('body-extra').innerHTML = data.extraStats.map(r => `<tr><td style="font-weight:600;">${r[0]}</td><td>${r[1]}</td><td style="font-weight:600;">${r[2]}</td></tr>`).join('');
     }
