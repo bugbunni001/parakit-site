@@ -224,6 +224,15 @@
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
+        /* Multi-Image Style */
+        .preview-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; margin-top: 15px; }
+        .preview-item { position: relative; aspect-ratio: 1; border-radius: 12px; overflow: hidden; border: 2px solid transparent; cursor: pointer; transition: all 0.2s; }
+        .preview-item.is-cover { border-color: var(--ios-blue); box-shadow: 0 0 10px rgba(0, 122, 255, 0.5); }
+        .preview-item img { width: 100%; height: 100%; object-fit: cover; }
+        .preview-item .cover-badge { position: absolute; top: 5px; left: 5px; background: var(--ios-blue); color: white; font-size: 8px; padding: 2px 6px; border-radius: 4px; display: none; }
+        .preview-item.is-cover .cover-badge { display: block; }
+        .preview-item .remove-img-btn { position: absolute; top: 5px; right: 5px; background: rgba(255,59,48,0.8); color: white; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; }
+
         @media (max-width: 768px) {
             .top-header { padding-left: 70px; }
             .service-grid { grid-template-columns: repeat(4, 1fr); gap: 15px 10px; }
@@ -432,18 +441,15 @@
             </div>
             <div id="imageSection" class="p-4 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50">
                 <label class="block text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
-                    <i class="bi bi-image text-blue-500"></i> แถบจัดการรูปภาพประกอบ
+                    <i class="bi bi-image text-blue-500"></i> แถบจัดการรูปภาพประกอบ (สูงสุด 10 รูป)
                 </label>
-                <div id="currentImageWrapper" class="hidden mb-4 p-3 border rounded-xl bg-white shadow-sm">
-                    <p class="text-[10px] text-slate-400 mb-2 uppercase font-bold">รูปภาพปัจจุบัน:</p>
-                    <img id="previewOldImage" src="" class="h-32 rounded-lg object-cover mb-2 border">
-                    <button onclick="removeCurrentImage()" class="text-red-500 text-sm font-medium flex items-center hover:bg-red-50 px-2 py-1 rounded transition-colors"><i class="bi bi-trash3-fill mr-1"></i> ลบรูปภาพเดิม</button>
-                </div>
+                
                 <div id="fileInputWrapper">
-                    <p class="text-[10px] text-slate-400 mb-2 uppercase font-bold">เลือกไฟล์ใหม่:</p>
-                    <input type="file" id="postImage" accept="image/*" class="w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-6 file:rounded-full file:border-0 file:bg-blue-600 file:text-white file:font-medium hover:file:bg-blue-700 cursor-pointer">
-                    <p class="text-[10px] text-slate-400 mt-2">* รองรับไฟล์รูปภาพเท่านั้น</p>
+                    <input type="file" id="postImage" accept="image/*" multiple onchange="handleImageSelect(event)" class="w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-6 file:rounded-full file:border-0 file:bg-blue-600 file:text-white file:font-medium hover:file:bg-blue-700 cursor-pointer">
+                    <p class="text-[10px] text-slate-400 mt-2">* เลือกรูปภาพและคลิกที่รูปเพื่อตั้งเป็นรูปหน้าปก</p>
                 </div>
+
+                <div id="imagePreviewGrid" class="preview-grid"></div>
             </div>
         </div>
         <div class="flex justify-end gap-4 mt-8">
@@ -476,6 +482,10 @@
     let allPosts = [];
     let currentPage = 1;
     const postsPerPage = 8;
+    
+    // ตัวแปรเก็บรูปภาพที่เลือก
+    let selectedImages = [];
+    let coverIndex = 0;
 
     const toast = {
         error: (msg) => Swal.fire({ icon: 'error', title: 'แจ้งเตือน', text: msg, confirmButtonColor: '#3b82f6' }),
@@ -487,7 +497,6 @@
         })
     };
 
-    // ฟังก์ชันแปลง URL เป็นลิงก์คลิกได้
     function linkify(text) {
         const urlPattern = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
         return text.replace(urlPattern, function(url) {
@@ -581,8 +590,6 @@
         const contentDiv = document.getElementById('viewContent');
         const isPinned = post.isPinned === true || post.isPinned === 'true';
         const date = new Date(post.Timestamp).toLocaleString('th-TH', { dateStyle: 'long', timeStyle: 'short' });
-        
-        // แปลงข้อความรายละเอียดให้มีลิงก์
         const linkedContent = linkify(post.content || '');
 
         const modalCover = post.imageUrl 
@@ -617,6 +624,55 @@
     }
     function closeImage() { document.getElementById('imageOverlay').classList.remove('active'); }
 
+    // ฟังก์ชันจัดการการเลือกรูปภาพ (สูงสุด 10 รูป)
+    async function handleImageSelect(event) {
+        const files = Array.from(event.target.files);
+        if (selectedImages.length + files.length > 10) {
+            toast.error("คุณสามารถเลือกรูปภาพได้สูงสุด 10 รูป");
+            event.target.value = '';
+            return;
+        }
+
+        for (let file of files) {
+            const base64 = await new Promise(resolve => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.readAsDataURL(file);
+            });
+            selectedImages.push({ base64, type: file.type, name: file.name });
+        }
+        renderImagePreviews();
+    }
+
+    function renderImagePreviews() {
+        const grid = document.getElementById('imagePreviewGrid');
+        grid.innerHTML = '';
+        selectedImages.forEach((img, index) => {
+            const item = document.createElement('div');
+            item.className = `preview-item ${index === coverIndex ? 'is-cover' : ''}`;
+            item.onclick = () => setCover(index);
+            item.innerHTML = `
+                <img src="${img.base64}">
+                <div class="cover-badge">หน้าปก</div>
+                <button onclick="removeSelectedImg(event, ${index})" class="remove-img-btn"><i class="bi bi-x"></i></button>
+            `;
+            grid.appendChild(item);
+        });
+    }
+
+    function setCover(index) {
+        coverIndex = index;
+        renderImagePreviews();
+    }
+
+    function removeSelectedImg(event, index) {
+        event.stopPropagation();
+        selectedImages.splice(index, 1);
+        if (coverIndex >= selectedImages.length) coverIndex = 0;
+        renderImagePreviews();
+        document.getElementById('postImage').value = '';
+    }
+
     function openModal(mode) {
         document.getElementById('postModal').classList.add('modal-active');
         resetModalFields();
@@ -633,8 +689,9 @@
         document.getElementById('postImage').value = '';
         document.getElementById('existingFileId').value = '';
         document.getElementById('deleteOldImageFlag').value = 'false';
-        document.getElementById('currentImageWrapper').classList.add('hidden');
-        document.getElementById('fileInputWrapper').classList.remove('hidden');
+        document.getElementById('imagePreviewGrid').innerHTML = '';
+        selectedImages = [];
+        coverIndex = 0;
     }
 
     function closeModal(id) { document.getElementById(id).classList.remove('modal-active'); }
@@ -649,18 +706,12 @@
         document.getElementById('postSubject').value = post.title;
         document.getElementById('postContent').value = post.content;
         document.getElementById('existingFileId').value = post.fileId || '';
+        
+        // ถ้าเป็นโหมดแก้ไข ให้โหลดรูปเดิมมาแสดงเป็นพรีวิว (สมมติว่า backend ส่งรูปแบบ array มา)
         if (post.imageUrl) {
-            document.getElementById('previewOldImage').src = post.imageUrl;
-            document.getElementById('currentImageWrapper').classList.remove('hidden');
-            document.getElementById('fileInputWrapper').classList.remove('hidden'); // ยังให้เลือกไฟล์ใหม่ได้
-        }
-    }
-
-    async function removeCurrentImage() {
-        const res = await toast.confirm("ลบรูปภาพเดิมออก?", "ลบรูปภาพ");
-        if(res.isConfirmed) {
-            document.getElementById('currentImageWrapper').classList.add('hidden');
-            document.getElementById('deleteOldImageFlag').value = 'true';
+            selectedImages = [{ base64: post.imageUrl, type: 'image/jpeg', name: 'current_image' }];
+            coverIndex = 0;
+            renderImagePreviews();
         }
     }
 
@@ -669,35 +720,40 @@
         const editId = document.getElementById('editPostId').value;
         const title = document.getElementById('postSubject').value.trim();
         const content = document.getElementById('postContent').value.trim();
-        const fileInput = document.getElementById('postImage');
+        
         if (!title || !content) return toast.error("กรุณาใส่หัวข้อและรายละเอียด");
         
         btn.disabled = true; 
         toast.loading("กำลังบันทึก...");
 
-        let imageData = null;
-        if (fileInput.files.length > 0) {
-            imageData = await new Promise(resolve => {
-                const reader = new FileReader();
-                reader.onload = () => resolve({ base64: reader.result, type: fileInput.files[0].type });
-                reader.readAsDataURL(fileInput.files[0]);
-            });
-        }
-
+        // เตรียม payload โดยส่งรูปทั้งหมดและตำแหน่งรูปปก
         const payload = {
             action: editId ? 'update' : 'add',
             postId: editId || 'PK' + Math.random().toString().substring(2, 8),
-            title, content, image: imageData?.base64, imageType: imageData?.type,
+            title, 
+            content, 
+            images: selectedImages.map(img => img.base64), // ส่งเป็น array ของ base64
+            coverIndex: coverIndex,
             deleteOldImage: document.getElementById('deleteOldImageFlag').value === 'true',
             existingFileId: document.getElementById('existingFileId').value
         };
+
+        // หากมีรูปเดียวให้ส่งแบบโครงสร้างเดิมเพื่อความเข้ากันได้ (Optional)
+        if (selectedImages.length > 0) {
+            payload.image = selectedImages[coverIndex].base64;
+            payload.imageType = selectedImages[coverIndex].type;
+        }
 
         try {
             await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
             closeModal('postModal');
             toast.success("บันทึกข้อมูลสำเร็จ");
             fetchPosts();
-        } catch (e) { toast.error("เกิดข้อผิดพลาด"); } finally { btn.disabled = false; }
+        } catch (e) { 
+            toast.error("เกิดข้อผิดพลาด"); 
+        } finally { 
+            btn.disabled = false; 
+        }
     }
 
     async function deletePost(id, fileId) {
