@@ -341,6 +341,11 @@
     function renderData(s) {
         const [y, m, d_val] = $('targetDate').value.split('-'), fixedDate = `${d_val}/${m}/${y}`, d = s.daily;
         const getDiffCls = v => v < 0 ? 'up' : 'down';
+        
+        // คำนวณจำนวนวันทั้งหมดในเดือนนั้นๆ
+        const currentDay = parseInt(d_val);
+        const totalDaysInMonth = new Date(y, m, 0).getDate();
+
         $('dailyBody').innerHTML = `<tr><td style="font-weight:600">${fixedDate}</td><td>${formatNumber(d.np)}</td><td class="${getDiffCls(d.npD)}">${formatNumber(d.npD)}</td><td>${formatNumber(d.bd)}</td><td class="${getDiffCls(d.bdD)}">${formatNumber(d.bdD)}</td><td>${formatNumber(d.ap)}</td><td class="${getDiffCls(d.apD)}">${formatNumber(d.apD)}</td><td>${formatNumber(d.sm)}</td><td class="${getDiffCls(d.smD)}">${formatNumber(d.smD)}</td><td style="font-weight:700;">${formatNumber(d.totalP)}</td><td style="font-weight:700;">${formatNumber(d.totalD)}</td></tr>`;
         $('postpaySummaryBody').innerHTML = (s.summary || []).map(r => {
             const isSum = r[0].includes("รวมยอด");
@@ -355,24 +360,32 @@
         
         const act = s.actuals;
         if(act) {
-            // ปรับ cfgs ใหม่ให้มี All Post และกำหนดการแสดงผลแบบเต็มบรรทัด (full: true)
             const cfgs = [
                 { l: 'New Post', d: act.np, c: '#0071e3', full: false }, 
                 { l: 'BDBC', d: act.bd, c: '#34c759', full: false },
-                { l: 'All Post', d: act.allPost, c: '#5856d6', full: true }, // เพิ่ม All Post แบบแถวยาว
+                { l: 'All Post', d: act.allPost, c: '#5856d6', full: true },
                 { l: 'Apple', d: act.ap, c: '#ff9500', full: false }, 
                 { l: 'Smartphone', d: act.sm, c: '#ff3b30', full: false }
             ];
             
-            $('actualGrid').innerHTML = cfgs.map(i => `
+            $('actualGrid').innerHTML = cfgs.map(i => {
+                // คำนวณ Runrate: (Achieved / วันที่เลือก) * วันทั้งหมดในเดือน
+                const runrate = (i.d.ach / currentDay) * totalDaysInMonth;
+
+                return `
                 <div class="stat-box" style="border-top: 4px solid ${i.c}; ${i.full ? 'grid-column: 1 / -1;' : ''}">
                     <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                        <span style="font-size:14px; color:var(--text-light);">${i.l}</span>
+                        <span style="font-size:16px; color:var(--text-light);">${i.l}</span>
                         <span class="${getDiffCls(i.d.diff)}" style="font-size:16px;">Diff ${formatNumber(i.d.diff)}</span>
                     </div>
                     <div class="stat-val">${formatNumber(i.d.val)}</div>
-                    <div style="font-size:16px; color:var(--primary-blue); font-weight:600">Achieved: ${formatDecimalTwo(i.d.ach)}%</div>
-                </div>`).join('');
+                    <div style="font-size:16px; color:var(--primary-blue); font-weight:600">
+                        Achieved: ${formatDecimalTwo(i.d.ach)}% 
+                        <span style="margin: 0 5px; color: #ccc;">|</span> 
+                        Runrate: ${formatDecimalTwo(runrate)}%
+                    </div>
+                </div>`;
+            }).join('');
         }
     }
 </script>
