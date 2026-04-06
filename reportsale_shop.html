@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bootstrap-4/bootstrap-4.css" rel="stylesheet">
     <style>
         :root { 
             --ios-bg: #f8f9fb; 
@@ -53,7 +54,7 @@
         .main-wrapper { padding: 90px 15px 40px; display: flex; justify-content: center; width: 100%; }
         .content-container { width: 100%; max-width: 1300px; }
         .toolbar { background: var(--glass-bg); padding: 18px 25px; display: flex; align-items: center; justify-content: flex-end; gap: 12px; border-radius: 24px; border: 1px solid var(--glass-border); box-shadow: var(--card-shadow); margin-bottom: 25px; }
-        .modern-date { border: 1.5px solid #e5e5e7; border-radius: 14px; padding: 10px 15px; font-size: 15px; background: #fff; outline: none; transition: 0.2s; }
+        .modern-date { border: 1.5px solid #e5e5e7; border-radius: 14px; padding: 10px 15px; font-size: 15px; background: #fff; outline: none; transition: 0.2s; cursor: pointer; }
         .modern-date:hover { border-color: var(--primary-blue); }
         .btn-fetch { background: var(--primary-blue); color: #fff; border: none; padding: 12px 28px; border-radius: 14px; cursor: pointer; font-weight: 500; transition: 0.3s; box-shadow: 0 8px 20px rgba(0, 113, 227, 0.2); display: flex; align-items: center; gap: 8px; }
         .btn-fetch:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 12px 25px rgba(0, 113, 227, 0.3); opacity: 0.9; }
@@ -94,6 +95,19 @@
         #loader { display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.9); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(15px); }
         .spinner { width: 50px; height: 50px; border: 4px solid #f2f2f7; border-top: 4px solid var(--primary-blue); border-radius: 50%; animation: spin 1s infinite linear; }
         @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* --- AM Report Modern UX/UI --- */
+        #amReportContainer { display: none; max-width: 500px; margin: 0 auto; animation: slideUp 0.5s ease-out; }
+        .am-card { background: #fff; border-radius: 30px; padding: 35px; box-shadow: var(--card-shadow); border: 1px solid rgba(0,0,0,0.05); }
+        .am-preview-area { background: #f2f2f7; border-radius: 20px; padding: 25px; font-family: 'Courier New', Courier, monospace; color: #1c1c1e; line-height: 1.6; margin: 20px 0; border: 1px dashed #d1d1d6; position: relative; }
+        .am-preview-area::before { content: "TEXT PREVIEW"; position: absolute; top: -10px; left: 20px; background: var(--ios-blue); color: white; padding: 2px 10px; border-radius: 8px; font-size: 10px; font-family: 'Kanit'; }
+        .am-label-title { font-size: 22px; font-weight: 600; color: #1d1d1f; text-align: center; margin-bottom: 5px; }
+        .am-subtitle { text-align: center; color: var(--text-light); margin-bottom: 25px; font-size: 14px; }
+        .btn-copy-full { width: 100%; background: var(--ios-blue); color: white; border: none; padding: 16px; border-radius: 18px; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 10px 20px rgba(0,122,255,0.2); }
+        .btn-copy-full:hover { transform: translateY(-2px); box-shadow: 0 15px 25px rgba(0,122,255,0.3); }
+        
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
         footer { padding: 40px 20px; text-align: center; color: var(--text-light); font-size: 12px; }
     </style>
 </head>
@@ -107,33 +121,50 @@
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebarFloat()"></div>
 <aside class="sidebar-float" id="sidebarFloat"></aside>
 
-<div id="loader"><div class="spinner"></div><p style="margin-top:20px; font-weight: 500; color: var(--text-main);">กำลังดึงข้อมูลการขาย...</p></div>
+<div id="loader"><div class="spinner"></div><p style="margin-top:20px; font-weight: 500; color: var(--text-main);">กำลังดึงข้อมูล...</p></div>
 
 <div class="main-wrapper">
     <div class="content-container">
         <div class="toolbar">
-            <div style="display:flex; align-items:center; gap:10px; justify-content: space-between;">
-                <span style="color:var(--text-light); font-size: 14px; font-weight: 500;">ข้อมูลวันที่</span>
+            <div style="display:flex; align-items:center; gap:12px;">
+                <span style="color:var(--text-light); font-size: 14px; font-weight: 500;">วันที่</span>
                 <input type="date" id="targetDate" class="modern-date">
+                
+                <select id="fetchMode" class="modern-date">
+                    <option value="shop">ดึงยอดขายร้าน</option>
+                    <option value="am">ดึงรีพอร์ตสิ้นวันAM</option>
+                </select>
+
+                <button class="btn-fetch" onclick="fetchData()">
+                    <i class="bi bi-rocket-takeoff-fill"></i> ดึงข้อมูล
+                </button>
             </div>
-            <button class="btn-fetch" onclick="fetchData()">
-                <i class="bi bi-rocket-takeoff-fill"></i> ดึงข้อมูล
-            </button>
         </div>
 
         <div id="emptyState" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 400px; background: #fff; border-radius: 24px; box-shadow: var(--card-shadow); text-align: center; padding: 20px;">
             <div style="font-size: 60px; margin-bottom: 20px; color: var(--primary-blue); opacity: 0.8;">
                 <i class="bi bi-graph-up-arrow"></i>
             </div>
-            <p style="font-size: 1.2rem; font-weight: 400; color: var(--text-light);">รายงานยอดขาย Shop</p>
-            <p style="font-size: 0.9rem; color: #a1a1a6; margin-top: -10px;">กรุณาเลือกวันที่และกดปุ่มดึงข้อมูล</p>
+            <p style="font-size: 1.2rem; font-weight: 400; color: var(--text-light);">กรุณาเลือกวันที่และรูปแบบเพื่อดึงข้อมูล</p>
+        </div>
+
+        <div id="amReportContainer">
+            <div class="am-card">
+                <div class="am-label-title">รีพอร์ตสิ้นวัน AM</div>
+                <div class="am-subtitle">ตรวจสอบความถูกต้องก่อนกดคัดลอก</div>
+                
+                <div class="am-preview-area" id="amContentBody">
+                    </div>
+
+                <button class="btn-copy-full" onclick="copyAMToClipboard()">
+                    <i class="bi bi-clipboard2-check-fill"></i> คัดลอกข้อมูลทั้งหมด
+                </button>
+            </div>
         </div>
 
         <div id="realDashboard" style="display:none;">
             <div class="card">
-                <div class="card-header-bar bg-daily">
-                    <span><i class="bi bi-calendar-check"></i> ยอดขายรายวัน (SHOP)</span>
-                </div>
+                <div class="card-header-bar bg-daily"><span><i class="bi bi-calendar-check"></i> ยอดขายรายวัน (SHOP)</span></div>
                 <div class="table-responsive"><table class="table-luxury"><thead><tr><th>วันที่</th><th>New Post</th><th>Diff</th><th>BDBC</th><th>Diff</th><th>Apple</th><th>Diff</th><th>Smart</th><th>Diff</th><th>Total Post</th><th>Total Device</th></tr></thead><tbody id="dailyBody"></tbody></table></div>
             </div>
 
@@ -142,7 +173,7 @@
                     <span><i class="bi bi-cart-check-fill"></i> รายละเอียดการขาย</span>
                     <div style="display:flex; align-items:center; background: rgba(255,255,255,0.15); border-radius:12px; padding-left:10px;">
                         <i class="bi bi-search" style="font-size:14px; color:white; margin-right:0;"></i>
-                        <input type="text" id="webSearch" class="search-box" style="background:transparent;" placeholder="ค้นหาพนักงาน/ลูกค้า..." oninput="handleSearch()">
+                        <input type="text" id="webSearch" class="search-box" style="background:transparent;" placeholder="ค้นหา..." oninput="handleSearch()">
                     </div>
                 </div>
                 <div class="table-responsive"><table class="table-luxury"><thead><tr><th>วันที่</th><th>พนักงาน</th><th>ลูกค้า</th><th>Postpay</th><th>ยอด Post</th><th>Device</th><th>ยอด Device</th><th>เวลา</th><th>สินเชื่อ</th></tr></thead><tbody id="webBody"></tbody></table></div>
@@ -152,35 +183,25 @@
             <div class="grid-layout">
                 <div class="left-col">
                     <div class="card">
-                        <div class="card-header-bar bg-summary">
-                            <span><i class="bi bi-file-earmark-bar-graph"></i> รายละเอียดการขาย Postpay</span>
-                        </div>
+                        <div class="card-header-bar bg-summary"><span><i class="bi bi-file-earmark-bar-graph"></i> รายละเอียดการขาย Postpay</span></div>
                         <div class="table-responsive"><table class="table-luxury small-table"><thead><tr><th>หมวดหมู่</th><th>ยอดขาย (บาท)</th><th>จำนวน</th></tr></thead><tbody id="postpaySummaryBody"></tbody></table></div>
                     </div>
                     <div class="card">
-                        <div class="card-header-bar bg-actual">
-                            <span><i class="bi bi-trophy-fill"></i> ยอดขายสะสมทั้งเดือน</span>
-                        </div>
+                        <div class="card-header-bar bg-actual"><span><i class="bi bi-trophy-fill"></i> ยอดขายสะสมทั้งเดือน</span></div>
                         <div id="actualGrid" class="stat-grid"></div>
                     </div>
                     <div class="card">
-                        <div class="card-header-bar bg-brand">
-                            <span><i class="bi bi-phone-fill"></i> สรุปยอดขายตามแบรนด์</span>
-                        </div>
+                        <div class="card-header-bar bg-brand"><span><i class="bi bi-phone-fill"></i> สรุปยอดขายตามแบรนด์</span></div>
                         <div class="table-responsive"><table class="table-luxury small-table"><thead><tr><th>แบรนด์</th><th>ยอดรวม</th><th>จำนวนเครื่อง</th></tr></thead><tbody id="brandBody"></tbody></table></div>
                     </div>
                 </div>
                 <div class="right-col">
                     <div class="card">
-                        <div class="card-header-bar bg-focus">
-                            <span><i class="bi bi-bullseye"></i> Focus Point (KPI)</span>
-                        </div>
+                        <div class="card-header-bar bg-focus"><span><i class="bi bi-bullseye"></i> Focus Point (KPI)</span></div>
                         <div class="table-responsive"><table class="table-luxury small-table"><thead><tr><th>เป้าหมายหลัก</th><th style="text-align:right">ผลงานจริง</th></tr></thead><tbody id="focusBody"></tbody></table></div>
                     </div>
                     <div class="card">
-                        <div class="card-header-bar bg-target">
-                            <span><i class="bi bi-flag-fill"></i> เป้าหมายรายเดือน (Targets)</span>
-                        </div>
+                        <div class="card-header-bar bg-target"><span><i class="bi bi-flag-fill"></i> เป้าหมายรายเดือน (Targets)</span></div>
                         <div class="table-responsive"><table class="table-luxury small-table"><tbody id="targetBody"></tbody></table></div>
                     </div>
                 </div>
@@ -189,10 +210,21 @@
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbygI-IlmxYAd8ON56ZqBDXrRyYjjK6IbpknnSmyGHMWhQo2onEZXaGXg3HJIE4j5XRs/exec", DEFAULT_USER_NAME = "นวพล", itemsPerPage = 5;
-    let currentWebPage = 1, allWebData = [], filteredWebData = [];
+    const WEB_APP_URL_SHOP = "https://script.google.com/macros/s/AKfycbyZ093kEo9-UPEyEL2ndQrl9j2CrwqZGIqOUOFGUQ_h-mr7jOmTQlmhdM9XhE7epHY7/exec";
+    const WEB_APP_URL_AM = "https://script.google.com/macros/s/AKfycbzrHXC2wbOLld8Kahl7SxlqtbRrMsLU7HL31Sxe6pXmcekJxBsyW9VU_XDRf_iwg9EhZA/exec";
+    
+    const DEFAULT_USER_NAME = "นวพล", itemsPerPage = 5;
+    let currentWebPage = 1, allWebData = [], filteredWebData = [], currentAMData = null;
     const $ = id => document.getElementById(id);
+    
+    // จัดรูปแบบตัวเลขจำนวนเต็ม
+    const formatInt = val => { 
+        const n = Math.floor(parseFloat(val)); 
+        return isNaN(n) ? "0" : n.toLocaleString('th-TH'); 
+    };
     const formatNumber = val => { const n = Math.floor(parseFloat(val)); return isNaN(n) ? val : n.toLocaleString('th-TH'); };
     const formatDecimalTwo = val => { const n = parseFloat(val); return isNaN(n) ? val : n.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
 
@@ -201,6 +233,94 @@
         $('targetDate').value = new Date().toISOString().split('T')[0];
     });
 
+    async function fetchData() {
+        const dateInput = $('targetDate').value;
+        const mode = $('fetchMode').value;
+        if(!dateInput) return alert('กรุณาเลือกวันที่ก่อนครับ');
+        
+        $('loader').style.display = 'flex';
+        const [y, m, d_str] = dateInput.split('-');
+        const dayNum = parseInt(d_str);
+
+        try {
+            if (mode === 'am') {
+                const res = await fetch(`${WEB_APP_URL_AM}?action=getAMReport&day=${dayNum}&dateStr=${d_str}/${m}/${y}`).then(r => r.json());
+                currentAMData = res;
+                renderAMReport(res);
+                $('realDashboard').style.display = 'none';
+                $('amReportContainer').style.display = 'block';
+                $('emptyState').style.display = 'none';
+            } else {
+                const [salesRes, webRes] = await Promise.all([
+                    fetch(`${WEB_APP_URL_SHOP}?action=getSales&day=${dayNum}&name=${DEFAULT_USER_NAME}`).then(r => r.json()),
+                    fetch(`${WEB_APP_URL_SHOP}?action=getWebDetails&day=${dayNum}`).then(r => r.json())
+                ]);
+                allWebData = webRes.rows || [];
+                filteredWebData = [...allWebData];
+                renderData(salesRes);
+                renderWebTable();
+                $('amReportContainer').style.display = 'none';
+                $('realDashboard').style.display = 'block';
+                $('emptyState').style.display = 'none';
+            }
+        } catch (err) { 
+            alert('โหลดข้อมูลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง'); 
+        } finally { 
+            $('loader').style.display = 'none'; 
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    }
+
+    // --- ปรับปรุงการ Render AM ให้เป็นแบบ Text Preview เหมือน Line ---
+    function renderAMReport(data) {
+        const pct = (a, t) => t > 0 ? (a * 100 / t).toFixed(2) : "0.00";
+        const content = `สรุปยอดขายสิ้นวัน ประจำวันที่ ${data.dateStr}<br>` +
+                        `ชื่อสาขา TS BigC Prachauthit<br><br>` +
+                        `Target Day All : ${formatInt(data.targetAll)}<br>` +
+                        `Actual : ${formatInt(data.actualAll)} (${pct(data.actualAll, data.targetAll)}%)<br><br>` +
+                        `Apple Target : ${formatInt(data.targetApple)}<br>` +
+                        `Actual : ${formatInt(data.actualApple)} (${pct(data.actualApple, data.targetApple)}%)<br><br>` +
+                        `SMP Target : ${formatInt(data.targetSMP)}<br>` +
+                        `Actual : ${formatInt(data.actualSMP)} (${pct(data.actualSMP, data.targetSMP)}%)<br><br>` +
+                        `TMC : 0<br>` +
+                        `TSC+ : 0<br>` +
+                        `ACC all : 0`;
+        $('amContentBody').innerHTML = content;
+    }
+
+    // --- ฟังก์ชันคัดลอกข้อมูลพร้อม SweetAlert2 ---
+    function copyAMToClipboard() {
+        if(!currentAMData) return;
+        const d = currentAMData;
+        const pct = (a, t) => t > 0 ? (a * 100 / t).toFixed(2) : "0.00";
+        
+        // ข้อมูลที่จะ Copy (เอาทศนิยมออกในส่วนจำนวนเต็ม)
+        const textToCopy = `สรุปยอดขายสิ้นวัน ประจำวันที่ ${d.dateStr}\n` +
+                           `ชื่อสาขา TS BigC Prachauthit\n\n` +
+                           `Target Day All : ${Math.floor(d.targetAll)}\n` +
+                           `Actual : ${Math.floor(d.actualAll)} (${pct(d.actualAll, d.targetAll)}%)\n\n` +
+                           `Apple Target : ${Math.floor(d.targetApple)}\n` +
+                           `Actual : ${Math.floor(d.actualApple)} (${pct(d.actualApple, d.targetApple)}%)\n\n` +
+                           `SMP Target : ${Math.floor(d.targetSMP)}\n` +
+                           `Actual : ${Math.floor(d.actualSMP)} (${pct(d.actualSMP, d.targetSMP)}%)\n\n` +
+                           `TMC : 0\n` +
+                           `TSC+ : 0\n` +
+                           `ACC all : 0`;
+
+        navigator.clipboard.writeText(textToCopy).then(() => {
+            Swal.fire({
+                title: 'คัดลอกสำเร็จ!',
+                text: 'นำข้อมูลไปวางในกลุ่ม Line ได้เลย',
+                icon: 'success',
+                confirmButtonText: 'ตกลง (Enter)',
+                confirmButtonColor: '#007aff',
+                timer: 3000,
+                timerProgressBar: true
+            });
+        });
+    }
+
+    // --- ระบบ Sidebar & Dragging (เดิม) ---
     const dragBtn = $('floatingMenuBtn');
     const sideFloat = $('sidebarFloat');
     const sideOverlay = $('sidebarOverlay');
@@ -292,57 +412,10 @@
         if (id) localStorage.setItem('menu-' + id, isOpen);
     }
 
-    async function fetchData() {
-        const dateInput = $('targetDate').value;
-        if(!dateInput) return alert('กรุณาเลือกวันที่ก่อนครับ');
-        $('loader').style.display = 'flex';
-        const dayNum = new Date(dateInput).getDate();
-        try {
-            const [salesRes, webRes] = await Promise.all([
-                fetch(`${WEB_APP_URL}?action=getSales&day=${dayNum}&name=${DEFAULT_USER_NAME}`).then(r => r.json()),
-                fetch(`${WEB_APP_URL}?action=getWebDetails&day=${dayNum}`).then(r => r.json())
-            ]);
-            allWebData = webRes.rows || [];
-            filteredWebData = [...allWebData];
-            $('webSearch').value = '';
-            currentWebPage = 1;
-            renderData(salesRes);
-            renderWebTable();
-            $('emptyState').style.display = 'none';
-            $('realDashboard').style.display = 'block';
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        } catch (err) { alert('โหลดข้อมูลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง'); } 
-        finally { $('loader').style.display = 'none'; }
-    }
-
-    function handleSearch() {
-        const query = $('webSearch').value.toLowerCase().trim();
-        filteredWebData = query ? allWebData.filter(r => [1,2,3,5].some(i => r[i]?.toString().toLowerCase().includes(query))) : [...allWebData];
-        currentWebPage = 1; renderWebTable();
-    }
-
-    function renderWebTable() {
-        const [y, m, d] = $('targetDate').value.split('-'), fixedDate = `${d}/${m}/${y}`, start = (currentWebPage - 1) * itemsPerPage;
-        const paginatedData = filteredWebData.slice(start, start + itemsPerPage);
-        if (!paginatedData.length) {
-            $('webBody').innerHTML = `<tr><td colspan="9" style="text-align:center; padding:40px; color:var(--text-light);">ไม่พบข้อมูล</td></tr>`;
-            $('webPagination').style.display = 'none'; return;
-        }
-        $('webBody').innerHTML = paginatedData.map(r => `<tr><td>${fixedDate}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${formatNumber(r[4])}</td><td>${r[5]}</td><td>${formatNumber(r[6])}</td><td>${r[7]}</td><td>${r[8]}</td></tr>`).join('');
-        const totalPages = Math.ceil(filteredWebData.length / itemsPerPage);
-        if (totalPages > 1) {
-            $('webPagination').innerHTML = Array.from({length: totalPages}, (_, i) => `<button class="page-btn ${i+1 === currentWebPage ? 'active' : ''}" onclick="changeWebPage(${i+1})">${i+1}</button>`).join('');
-            $('webPagination').style.display = 'flex';
-        } else { $('webPagination').style.display = 'none'; }
-    }
-
-    window.changeWebPage = p => { currentWebPage = p; renderWebTable(); };
-
+    // --- ระบบ Render Shop Dashboard (เดิม) ---
     function renderData(s) {
         const [y, m, d_val] = $('targetDate').value.split('-'), fixedDate = `${d_val}/${m}/${y}`, d = s.daily;
         const getDiffCls = v => v < 0 ? 'up' : 'down';
-        
-        // คำนวณจำนวนวันทั้งหมดในเดือนนั้นๆ
         const currentDay = parseInt(d_val);
         const totalDaysInMonth = new Date(y, m, 0).getDate();
 
@@ -367,11 +440,8 @@
                 { l: 'Apple', d: act.ap, c: '#ff9500', full: false }, 
                 { l: 'Smartphone', d: act.sm, c: '#ff3b30', full: false }
             ];
-            
             $('actualGrid').innerHTML = cfgs.map(i => {
-                // คำนวณ Runrate: (Achieved / วันที่เลือก) * วันทั้งหมดในเดือน
                 const runrate = (i.d.ach / currentDay) * totalDaysInMonth;
-
                 return `
                 <div class="stat-box" style="border-top: 4px solid ${i.c}; ${i.full ? 'grid-column: 1 / -1;' : ''}">
                     <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
@@ -388,6 +458,28 @@
             }).join('');
         }
     }
+
+    function handleSearch() {
+        const query = $('webSearch').value.toLowerCase().trim();
+        filteredWebData = query ? allWebData.filter(r => [1,2,3,5].some(i => r[i]?.toString().toLowerCase().includes(query))) : [...allWebData];
+        currentWebPage = 1; renderWebTable();
+    }
+
+    function renderWebTable() {
+        const [y, m, d] = $('targetDate').value.split('-'), fixedDate = `${d}/${m}/${y}`, start = (currentWebPage - 1) * itemsPerPage;
+        const paginatedData = filteredWebData.slice(start, start + itemsPerPage);
+        if (!paginatedData.length) {
+            $('webBody').innerHTML = `<tr><td colspan="9" style="text-align:center; padding:40px; color:var(--text-light);">ไม่พบข้อมูล</td></tr>`;
+            $('webPagination').style.display = 'none'; return;
+        }
+        $('webBody').innerHTML = paginatedData.map(r => `<tr><td>${fixedDate}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${formatNumber(r[4])}</td><td>${r[5]}</td><td>${formatNumber(r[6])}</td><td>${r[7]}</td><td>${r[8]}</td></tr>`).join('');
+        const totalPages = Math.ceil(filteredWebData.length / itemsPerPage);
+        if (totalPages > 1) {
+            $('webPagination').innerHTML = Array.from({length: totalPages}, (_, i) => `<button class="page-btn ${i+1 === currentWebPage ? 'active' : ''}" onclick="changeWebPage(${i+1})">${i+1}</button>`).join('');
+            $('webPagination').style.display = 'flex';
+        } else { $('webPagination').style.display = 'none'; }
+    }
+    window.changeWebPage = p => { currentWebPage = p; renderWebTable(); };
 </script>
 <footer>© 2026 Copyright by Angerina Frog</footer>
 </body>
