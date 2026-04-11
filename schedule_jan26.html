@@ -3,311 +3,389 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ตารางงาน มกราคม 2026 - Parakit-site</title>
+    <title>เว็บลงยอด Retention - Parakit-Site</title>
     <link rel="icon" type="image/png" href="favicon.png">
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
-
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        :root {
-            --ios-blue: #007aff;
-            --ios-bg: #f2f2f7;
-            --glass-white: rgba(255, 255, 255, 0.7);
-            --glass-border: rgba(255, 255, 255, 0.5);
-            --sidebar-bg: #1e293b;
-            --sidebar-width: 260px;
-            --transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        /* ===== GLOBAL RESET ===== */
-        * { 
-            box-sizing: border-box; 
-            font-family: 'Kanit', sans-serif !important; 
+        :root { 
+            --ios-blue: #007aff; 
+            --ios-bg: #f2f2f7; 
+            --glass: rgba(255, 255, 255, 0.7); 
+            --sidebar-dark: rgba(28, 28, 30, 0.96); /* เพิ่มสีสำหรับเมนู */
         }
         
-        body {
-            margin: 0;
-            background-color: var(--ios-bg);
-            background-image: radial-gradient(at 0% 0%, rgba(0, 122, 255, 0.08) 0px, transparent 50%), 
-                              radial-gradient(at 100% 100%, rgba(255, 45, 85, 0.05) 0px, transparent 50%);
-            background-attachment: fixed;
-            padding-bottom: 80px;
-            color: #1c1c1e;
-            -webkit-font-smoothing: antialiased;
-            overflow-x: hidden;
-        }
+        body { font-family: 'Kanit', sans-serif; background-color: var(--ios-bg); min-height: 100vh; background-image: radial-gradient(at 0% 0%, rgba(0,122,255,0.05) 0px, transparent 50%); }
+        
+        .glass-card { background: var(--glass); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 24px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .card-motion:hover { transform: translateY(-5px); background: rgba(255, 255, 255, 0.85); box-shadow: 0 20px 40px rgba(0,0,0,0.05); }
+        
+        .ios-input { width: 100%; padding: 12px 16px; border-radius: 14px; border: 1px solid rgba(0,0,0,0.08); background: white; outline: none; transition: 0.2s; }
+        .ios-input:focus { border-color: var(--ios-blue); box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1); }
+        .btn-primary { background: var(--ios-blue); color: white; border-radius: 16px; transition: all 0.2s; }
+        .btn-primary:active { transform: scale(0.96); }
+        
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(8px); z-index: 1000; align-items: center; justify-content: center; animation: fadeIn 0.3s ease; }
+        .modal-active { display: flex; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* ===== SIDEBAR NAVIGATION (KEEP ORIGINAL DESIGN AS REQUESTED) ===== */
-        .top-toggle {
-            position: fixed;
-            top: 15px; left: 15px;
-            z-index: 1400;
-            width: 45px; height: 45px;
-            border-radius: 12px;
-            border: none;
-            background: var(--sidebar-bg);
-            color: #fff;
-            font-size: 20px;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        /* การปรับแต่ง Scrollbar */
+        .custom-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.1); border-radius: 10px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: rgba(0, 0, 0, 0.2); }
+        .custom-scroll { scrollbar-width: thin; scrollbar-color: rgba(0, 0, 0, 0.1) transparent; }
+
+        /* ===== CSS ปุ่มเมนูและ Sidebar (จำมาใส่เป๊ะๆ) ===== */
+        #floatingMenuBtn {
+            position: fixed; top: 10px; left: 15px; width: 45px; height: 45px;
+            background: var(--ios-blue); color: white; border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
+            font-size: 20px; cursor: move; z-index: 2100;
+            box-shadow: 0 4px 15px rgba(0, 122, 255, 0.4); border: none;
+            touch-action: none; transition: transform 0.2s, opacity 0.2s;
         }
+        #floatingMenuBtn:active { transform: scale(0.9); }
 
-        .sidebar {
-            position: fixed;
-            top: 0; left: 0;
-            width: var(--sidebar-width);
-            height: 100vh;
-            background: var(--sidebar-bg);
-            color: #fff;
-            overflow-y: auto;
-            transform: translateX(-260px);
-            transition: transform 0.3s ease;
-            z-index: 2000;
-            box-shadow: 4px 0 15px rgba(0,0,0,0.1);
-        }
-        .sidebar.show { transform: translateX(0); }
+        .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.2); z-index: 2000; display: none; opacity: 0; transition: opacity 0.3s; }
+        .sidebar-overlay.active { display: block; opacity: 1; }
 
-        .sidebar-header {
-            display: flex; align-items: center; gap: 12px;
-            padding: 25px 20px;
-            background: #0f172a;
-            font-weight: 600; font-size: 18px;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
+        .sidebar-float {
+            position: fixed; width: 280px; max-height: 70vh; background: var(--sidebar-dark); border-radius: 20px;
+            overflow-y: auto; z-index: 2001; opacity: 0; visibility: hidden;
+            transform: scale(0.8) translateY(10px); transition: opacity 0.3s, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1);
         }
-
-        .menu { display: flex; flex-direction: column; padding: 10px 0; }
-        .item { border-bottom: 1px solid rgba(255,255,255,.05); }
-
-        .menu a, .menu .drop-btn {
-            width: 100%; min-height: 55px; padding: 0 20px;
-            background: none; border: none; color: #cbd5e1;
-            text-align: left; font-size: 15px; cursor: pointer;
-            display: flex; align-items: center; text-decoration: none;
-            transition: all 0.3s ease; font-weight: 400;
+        .sidebar-float.active { opacity: 1; visibility: visible; transform: scale(1) translateY(0); }
+        .sidebar-float .sidebar-header { padding: 20px; font-size: 17px; font-weight: 600; color: #fff; border-bottom: 0.5px solid rgba(255,255,255,0.1); }
+        .sidebar-float .menu { padding: 8px 0; }
+        .sidebar-float .menu a, .sidebar-float .drop-btn { 
+            width: 100%; padding: 12px 20px; background: none; border: none; 
+            color: #ebebf5; text-align: left; font-size: 14px; cursor: pointer; 
+            display: flex; align-items: center; text-decoration: none; transition: 0.2s;
         }
-
-        .menu a:hover, .menu .drop-btn:hover { 
-            background: #334155; color: #fff; padding-left: 35px;
-        }
-
-        .arrow { margin-left: auto; font-size: 12px; transition: .3s; opacity: 0.5; }
-        .item.open .arrow { transform: rotate(90deg); }
-        .sub { display: none; background: #0f172a; }
-        .item.open .sub { display: block; }
-        .sub a { 
-            min-height: 48px; padding-left: 45px; font-size: 14px; color: #94a3b8; 
-            border-top: 1px solid rgba(255,255,255,.03); transition: all 0.3s ease;
-        }
-        .sub a:hover { padding-left: 55px; color: #5bbf8a; }
-
-        /* ===== MAIN CONTENT (iOS GLASSMORTPHISM) ===== */
-        .content {
-            padding: 60px 20px;
-            transition: margin-left .3s;
-            max-width: 100%;
-        }
-
-        @media(min-width:769px) {
-            .sidebar { transform: translateX(0); }
-            .content { margin-left: var(--sidebar-width); padding-top: 40px; }
-            .top-toggle { display: none; }
-        }
-
-        .box-container {
-            width: 100%;
-            max-width: 1100px;
-            margin: 0 auto;
-            background: var(--glass-white);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
-            padding: 40px 25px;
-            border-radius: 35px;
-            border: 1px solid var(--glass-border);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.05);
-            text-align: center;
-            animation: fadeIn 0.8s ease-out;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(15px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .header-section h3 {
-            color: #1c1c1e;
-            margin: 0;
-            font-size: 30px;
-            font-weight: 600;
-            letter-spacing: -0.8px;
-        }
-        .header-section p {
-            color: var(--ios-blue);
-            margin: 8px 0 35px 0;
-            font-size: 18px;
-            font-weight: 500;
-            background: rgba(0, 122, 255, 0.08);
-            display: inline-block;
-            padding: 5px 20px;
-            border-radius: 20px;
-        }
-
-        /* ===== ZOOM SYSTEM (iOS STYLE) ===== */
-        .zoom-controls { 
-            margin-bottom: 25px; 
-            display: flex; 
-            justify-content: center; 
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-        .zoom-controls button {
-            padding: 12px 22px;
-            font-size: 15px;
-            font-weight: 500;
-            cursor: pointer;
-            background: rgba(255, 255, 255, 0.8);
-            border: 1px solid var(--glass-border);
-            border-radius: 16px;
-            transition: var(--transition);
-            color: #1c1c1e;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.04);
-        }
-        .zoom-controls button:hover {
-            background: var(--ios-blue);
-            color: #fff;
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(0, 122, 255, 0.25);
-        }
-        .zoom-controls button:active { transform: scale(0.95); }
-
-        .zoom-wrapper {
-            width: 100%;
-            overflow: auto;
-            border: 1px solid var(--glass-border);
-            border-radius: 25px;
-            background: rgba(255, 255, 255, 0.3);
-            position: relative;
-            min-height: 450px;
-            scrollbar-width: thin;
-        }
-
-        .zoom-content {
-            transform-origin: top center;
-            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            display: inline-block;
-            min-width: 100%;
-            padding: 20px;
-        }
-
-        .zoom-content img {
-            max-width: 100%;
-            height: auto;
-            display: block;
-            margin: 0 auto;
-            border-radius: 15px;
-            box-shadow: 0 12px 45px rgba(0,0,0,0.12);
-        }
-
-        .overlay { 
-            position: fixed; 
-            inset: 0; 
-            background: rgba(0, 0, 0, 0.3); 
-            display: none; 
-            backdrop-filter: blur(5px);
-            z-index: 1500; 
-        }
-        .overlay.show { display: block; }
-
-       footer { 
-            width: 100%; text-align: center; padding: 25px; 
-            color: var(--text-light); font-size: 11px; 
-            border-top: 0.5px solid rgba(0,0,0,0.05); 
-            background: transparent; margin-top: 20px; 
-        }
+        .sidebar-float .menu a:hover, .sidebar-float .drop-btn:hover { background: rgba(255,255,255,0.1); }
+        .sidebar-float .sub { display: none; background: rgba(0,0,0,0.2); }
+        .sidebar-float .item.open .sub { display: block; }
+        .sidebar-float .sub a { padding-left: 45px; font-size: 13px; color: #8e8e93; }
+        .sidebar-float::-webkit-scrollbar { width: 4px; }
+        .sidebar-float::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
     </style>
 </head>
+<body class="p-6">
 
-<body>
+<button id="floatingMenuBtn" title="ลากเพื่อย้าย">เมนู</button>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebarFloat()"></div>
+<aside class="sidebar-float" id="sidebarFloat"></aside>
 
-<button class="top-toggle" onclick="toggleSidebar()">☰</button>
-<div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
-
-<aside class="sidebar" id="sidebar"></aside>
-
-<main class="content">
-    <div class="box-container">
-        <div class="header-section">
-            <h3>📅 ตารางงานประจำเดือน</h3>
-            <p>มกราคม 2026</p>
+<div class="max-w-4xl mx-auto mt-4">
+    <div class="flex items-center gap-5 mb-10">
+        <div class="w-16 h-16 bg-white shadow-sm rounded-2xl flex items-center justify-center text-blue-600 text-3xl shadow-lg">
+            <i class="bi bi-shield-check"></i>
         </div>
-        
-        <div class="zoom-controls">
-            <button onclick="zoomIn()"><span>➕</span> ขยาย</button>
-            <button onclick="zoomOut()"><span>➖</span> ย่อ</button>
-            <button onclick="resetZoom()"><span>🔄</span> รีเซ็ต</button>
+        <div>
+            <h1 class="text-3xl font-bold text-slate-800 tracking-tight">เว็บลงยอด Rention</h1>
         </div>
+    </div>
 
-        <div class="zoom-wrapper">
-            <div class="zoom-content" id="zoomContent">
-                <img src="https://i.postimg.cc/DyQJtk5n/Jan26.png" alt="Work Schedule January 2026">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <button onclick="openModal('saveModal')" class="glass-card card-motion p-10 flex flex-col items-center justify-center gap-5 group">
+            <div class="w-20 h-20 bg-blue-50 text-blue-600 rounded-3xl flex items-center justify-center text-4xl group-hover:scale-110 transition-transform shadow-sm">
+                <i class="bi bi-plus-lg"></i>
+            </div>
+            <span class="text-xl font-bold text-slate-700">+ ลงยอด Retention</span>
+        </button>
+
+        <button onclick="openModal('pullModal')" class="glass-card card-motion p-10 flex flex-col items-center justify-center gap-5 group">
+            <div class="w-20 h-20 bg-green-50 text-green-600 rounded-3xl flex items-center justify-center text-4xl group-hover:scale-110 transition-transform shadow-sm">
+                <i class="bi bi-file-earmark-bar-graph"></i>
+            </div>
+            <span class="text-xl font-bold text-slate-700">ดึงยอด Save</span>
+        </button>
+    </div>
+</div>
+
+<div id="saveModal" class="modal-overlay">
+    <div class="glass-card w-full max-w-lg p-8 mx-4 shadow-2xl bg-white/90">
+        <div class="flex justify-between items-center mb-8">
+            <h2 class="text-2xl font-bold text-slate-800">บันทึกยอด Retention</h2>
+            <button onclick="closeModal('saveModal')" class="text-slate-400 hover:text-red-500 transition-colors text-2xl"><i class="bi bi-x-circle-fill"></i></button>
+        </div>
+        <div class="space-y-5">
+            <div class="grid grid-cols-2 gap-4">
+                <div><label class="text-xs font-bold text-slate-400 ml-1">วันที่</label><input type="date" id="saveDate" class="ios-input mt-1"></div>
+                <div>
+                    <label class="text-xs font-bold text-slate-400 ml-1 uppercase">รหัสพนักงาน (8 หลัก)</label>
+                    <input type="number" id="staffId" class="ios-input mt-1" placeholder="8 หลัก" 
+                        oninput="if(this.value.length > 8) this.value = this.value.slice(0, 8);"
+                        onkeydown="if(event.key==='e' || event.key==='E' || event.key==='.' || event.key==='-') event.preventDefault();">
+                </div>
+            </div>
+            <div><label class="text-xs font-bold text-slate-400 ml-1 uppercase">เลือกสาขา</label><select id="saveBranch" class="ios-input mt-1"></select></div>
+            <div class="grid grid-cols-2 gap-4 border-t border-slate-200 pt-4 mt-2">
+                <div><label class="text-xs font-bold text-blue-500 ml-1">Save TOL</label><input type="number" id="sTOL" class="ios-input mt-1" value="0" onclick="this.select()"></div>
+                <div><label class="text-xs font-bold text-red-500 ml-1">Cancel TOL</label><input type="number" id="cTOL" class="ios-input mt-1" value="0" onclick="this.select()"></div>
+                <div><label class="text-xs font-bold text-blue-500 ml-1">Save TMH</label><input type="number" id="sTMH" class="ios-input mt-1" value="0" onclick="this.select()"></div>
+                <div><label class="text-xs font-bold text-red-500 ml-1">Cancel TMH</label><input type="number" id="cTMH" class="ios-input mt-1" value="0" onclick="this.select()"></div>
+            </div>
+            <button onclick="saveData()" class="w-full btn-primary py-4 font-bold text-lg mt-6 shadow-blue-200 shadow-lg flex justify-center items-center gap-2">
+                <i class="bi bi-save"></i> บันทึกข้อมูล (Enter)
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="pullModal" class="modal-overlay">
+    <div class="glass-card w-full max-w-md p-8 mx-4 shadow-2xl bg-white/90">
+        <div class="flex justify-between items-center mb-8">
+            <h2 class="text-2xl font-bold text-slate-800">ดึงข้อมูลสาขา</h2>
+            <button onclick="closeModal('pullModal')" class="text-slate-400 hover:text-red-500 transition-colors text-2xl"><i class="bi bi-x-circle-fill"></i></button>
+        </div>
+        <div class="space-y-5">
+            <div><label class="text-xs font-bold text-slate-400 ml-1 uppercase">วันที่</label><input type="date" id="pullDate" class="ios-input mt-1"></div>
+            <div><label class="text-xs font-bold text-slate-400 ml-1 uppercase">สาขา</label><select id="pullBranch" class="ios-input mt-1"></select></div>
+            <div><label class="text-xs font-bold text-slate-400 ml-1 uppercase">ช่วงเวลา</label>
+                <select id="pullTime" class="ios-input mt-1">
+                    <option value="14.00">14.00 (0.00 - 14.00)</option>
+                    <option value="16.00">16.00 (14.01 - 16.00)</option>
+                    <option value="20.00">20.00 (16.01 - 23.59)</option>
+                    <option value="รวมทั้งหมด">รวมทั้งหมด</option>
+                </select>
+            </div>
+            <button onclick="pullData()" class="w-full btn-primary py-4 font-bold text-lg mt-6 shadow-lg bg-emerald-500 flex justify-center items-center gap-2">
+                <i class="bi bi-cloud-arrow-down"></i> เรียกดูข้อมูล (Enter)
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="reportModal" class="modal-overlay">
+    <div class="glass-card w-full max-w-2xl p-8 mx-4 max-h-[90vh] overflow-y-auto custom-scroll shadow-2xl bg-white">
+        <div class="flex justify-between items-start mb-6 border-b border-slate-100 pb-5">
+            <div>
+                <h2 class="text-2xl font-bold text-slate-800" id="resBranch">-</h2>
+                <div class="flex items-center gap-3 mt-2 text-slate-500 text-sm font-medium">
+                    <span id="resDate"><i class="bi bi-calendar3 mr-1"></i> -</span>
+                    <span class="text-slate-300">|</span>
+                    <span id="resTime"><i class="bi bi-clock mr-1"></i> เวลา: -</span>
+                </div>
+            </div>
+            <button onclick="closeModal('reportModal')" class="text-slate-400 hover:text-red-500 transition-colors text-2xl"><i class="bi bi-x-circle-fill"></i></button>
+        </div>
+        <div id="resContent" class="space-y-4"></div>
+        <div class="grid grid-cols-2 gap-4 mt-8 pt-6 border-t border-dashed border-slate-300">
+            <div class="bg-blue-50/50 p-6 rounded-3xl text-center border border-blue-100 shadow-sm">
+                <p class="text-[11px] text-blue-500 font-bold uppercase tracking-widest mb-1">ยอดรวม Save</p>
+                <p id="sumS" class="text-4xl font-black text-blue-600">0</p>
+            </div>
+            <div class="bg-red-50/50 p-6 rounded-3xl text-center border border-red-100 shadow-sm">
+                <p class="text-[11px] text-red-500 font-bold uppercase tracking-widest mb-1">ยอดรวม Cancel</p>
+                <p id="sumC" class="text-4xl font-black text-red-600">0</p>
             </div>
         </div>
     </div>
-</main>
+</div>
 
 <script>
-    let scale = 1;
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbzU0ak1jENmUq3QNpxEX-mvJJjPeTWk5xMEeUkmdAfutn0l_7CNCc0220PC3kIxGuP33A/exec';
+    
+    const branches = [
+        "80000397 TS BC Pracha Uthit", "80000264 TS LT Rama 2", "80000022 TS BC Rama 2",
+        "80000530 TS LT Bang Yai", "80000215 TS JC Wanghin", "80000251 TS LT Rama 3",
+        "80000538 TS Robinson Samutprakan", "80000023 TS BC Bangplee", "80000263 TS LT Bangpoo",
+        "80000087 TS LT Srinakarin", "80002441 TS Lotus Bangkruai Sainoi", "80000284 TS BC Sapankhwai",
+        "80000086 TS LT Bangkapi", "80000207 TS LT Prachachuen", "80002390 TS Terminal 21 Rama 3"
+    ];
 
-    // --- SIDEBAR SYSTEM (ORIGINAL LOGIC) ---
-    function toggleSidebar() {
-        document.getElementById("sidebar").classList.toggle("show");
-        document.getElementById("overlay").classList.toggle("show");
+    window.onload = () => {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('saveDate').value = today;
+        document.getElementById('pullDate').value = today;
+        [document.getElementById('saveBranch'), document.getElementById('pullBranch')].forEach(el => {
+            branches.forEach(b => { let o = new Option(b, b); el.add(o); });
+        });
+
+        document.getElementById('saveModal').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') saveData();
+        });
+        document.getElementById('pullModal').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') pullData();
+        });
+
+        // เรียกโหลดตำแหน่งปุ่มเมนู
+        loadButtonPosition();
+    };
+
+    function openModal(id) { document.getElementById(id).classList.add('modal-active'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('modal-active'); }
+
+    async function saveData() {
+        const data = {
+            date: document.getElementById('saveDate').value,
+            branch: document.getElementById('saveBranch').value,
+            staffId: document.getElementById('staffId').value,
+            saveTol: document.getElementById('sTOL').value,
+            cancelTol: document.getElementById('cTOL').value,
+            saveTmh: document.getElementById('sTMH').value,
+            cancelTmh: document.getElementById('cTMH').value
+        };
+
+        if(data.staffId.length !== 8) return Swal.fire('ผิดพลาด', 'รหัสพนักงานต้องมี 8 หลัก', 'error');
+
+        Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        
+        try {
+            await fetch(GAS_URL, { 
+                method: 'POST', 
+                body: JSON.stringify({ action: 'save', data: data }),
+                mode: 'no-cors' 
+            });
+            setTimeout(() => {
+                Swal.fire('สำเร็จ', 'บันทึกยอด Retention เรียบร้อยแล้ว', 'success');
+                closeModal('saveModal');
+                document.getElementById('staffId').value = '';
+                document.getElementById('sTOL').value = '0';
+                document.getElementById('cTOL').value = '0';
+                document.getElementById('sTMH').value = '0';
+                document.getElementById('cTMH').value = '0';
+            }, 1000);
+        } catch(e) { Swal.fire('Error', 'การเชื่อมต่อผิดพลาด ไม่สามารถบันทึกได้', 'error'); }
+    }
+
+    async function pullData() {
+        const filter = {
+            date: document.getElementById('pullDate').value,
+            branch: document.getElementById('pullBranch').value,
+            time: document.getElementById('pullTime').value
+        };
+
+        Swal.fire({ title: 'กำลังดึงข้อมูล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+        try {
+            const res = await fetch(GAS_URL, { 
+                method: 'POST', 
+                body: JSON.stringify({ action: 'pull', data: filter }) 
+            });
+            const result = await res.json();
+            Swal.close();
+            
+            if(result.status === 'not_found' || !result.list || result.list.length === 0) {
+                return Swal.fire('ไม่พบข้อมูล', 'ไม่พบข้อมูลของสาขา ในช่วงเวลาดังกล่าว', 'info');
+            }
+
+            document.getElementById('resBranch').innerText = result.branch;
+            document.getElementById('resDate').innerHTML = `<i class="bi bi-calendar3 mr-1"></i> วันที่: ${result.date}`;
+            document.getElementById('resTime').innerHTML = `<i class="bi bi-clock mr-1"></i> เวลา: ${result.timeLabel}`;
+            document.getElementById('sumS').innerText = result.totalSave;
+            document.getElementById('sumC').innerText = result.totalCancel;
+
+            let html = '';
+            result.list.forEach(item => {
+                html += `
+                <div class="p-5 bg-slate-50/80 rounded-2xl border border-slate-100 flex flex-col sm:flex-row justify-between gap-4 transition hover:bg-white hover:shadow-md">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm text-blue-500"><i class="bi bi-person-badge"></i></div>
+                        <span class="font-bold text-slate-700 tracking-wide">ID: ${item.staffId}</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-x-8 gap-y-2 text-sm font-medium">
+                        <div class="flex justify-between gap-6"><span class="text-slate-500">Save TOL:</span> <span class="text-blue-600 font-bold">${item.sTOL}</span></div>
+                        <div class="flex justify-between gap-6"><span class="text-slate-500">Cancel TOL:</span> <span class="text-red-500 font-bold">${item.cTOL}</span></div>
+                        <div class="flex justify-between gap-6"><span class="text-slate-500">Save TMH:</span> <span class="text-blue-600 font-bold">${item.sTMH}</span></div>
+                        <div class="flex justify-between gap-6"><span class="text-slate-500">Cancel TMH:</span> <span class="text-red-500 font-bold">${item.cTMH}</span></div>
+                    </div>
+                </div>`;
+            });
+            document.getElementById('resContent').innerHTML = html;
+            closeModal('pullModal');
+            openModal('reportModal');
+        } catch(e) { 
+            console.error(e);
+            Swal.fire('Error', 'ดึงข้อมูลไม่สำเร็จ: กรุณา Deploy Apps Script เป็น Version ใหม่', 'error'); 
+        }
+    }
+
+    // ===== JAVASCRIPT ระบบเมนูและปุ่มลาก (จำมาใส่เป๊ะๆ) =====
+    const dragBtn = document.getElementById('floatingMenuBtn');
+    const sideFloat = document.getElementById('sidebarFloat');
+    const sideOverlay = document.getElementById('sidebarOverlay');
+    let isDragging = false;
+    let startX, startY, shiftX, shiftY;
+
+    function loadButtonPosition() {
+        const savedLeft = localStorage.getItem('floatBtnLeft');
+        const savedTop = localStorage.getItem('floatBtnTop');
+        if (savedLeft && savedTop) {
+            dragBtn.style.left = savedLeft + 'px';
+            dragBtn.style.top = savedTop + 'px';
+        }
+    }
+
+    dragBtn.onpointerdown = function(e) {
+        isDragging = false; startX = e.clientX; startY = e.clientY;
+        const rect = dragBtn.getBoundingClientRect();
+        shiftX = e.clientX - rect.left; shiftY = e.clientY - rect.top;
+        dragBtn.setPointerCapture(e.pointerId);
+        document.addEventListener('pointermove', onPointerMove);
+        document.addEventListener('pointerup', onPointerUp);
+    };
+
+    function onPointerMove(e) {
+        if (!isDragging && (Math.abs(e.clientX - startX) > 5 || Math.abs(e.clientY - startY) > 5)) isDragging = true;
+        if (isDragging) {
+            let newX = e.clientX - shiftX, newY = e.clientY - shiftY;
+            newX = Math.max(0, Math.min(newX, window.innerWidth - dragBtn.offsetWidth));
+            newY = Math.max(0, Math.min(newY, window.innerHeight - dragBtn.offsetHeight));
+            dragBtn.style.left = newX + 'px'; dragBtn.style.top = newY + 'px';
+        }
+    }
+
+    function onPointerUp(e) {
+        document.removeEventListener('pointermove', onPointerMove);
+        document.removeEventListener('pointerup', onPointerUp);
+        dragBtn.releasePointerCapture(e.pointerId);
+        if (isDragging) {
+            localStorage.setItem('floatBtnLeft', dragBtn.offsetLeft);
+            localStorage.setItem('floatBtnTop', dragBtn.offsetTop);
+        } else toggleSidebarFloat();
+        isDragging = false;
+    }
+
+    function toggleSidebarFloat() {
+        const btnRect = dragBtn.getBoundingClientRect();
+        const sidebarWidth = 280;
+        let top = btnRect.bottom + 10, left = btnRect.left;
+        if (left + sidebarWidth > window.innerWidth) left = window.innerWidth - sidebarWidth - 15;
+        if (top + 400 > window.innerHeight) {
+            top = btnRect.top - 410;
+            if (top < 10) top = 10;
+        }
+        sideFloat.style.top = top + 'px'; sideFloat.style.left = left + 'px';
+        sideFloat.style.transformOrigin = `${btnRect.left - left + 20}px ${btnRect.top > top ? 'bottom' : 'top'}`;
+        const isActive = sideFloat.classList.toggle('active');
+        sideOverlay.classList.toggle('active', isActive);
+        if (isActive && !sideFloat.innerHTML) loadSidebarContent();
+    }
+
+    function closeSidebarFloat() { sideFloat.classList.remove('active'); sideOverlay.classList.remove('active'); }
+
+    function loadSidebarContent() {
+        fetch('sidebar.html')
+            .then(res => res.text())
+            .then(data => {
+                sideFloat.innerHTML = `<div class="sidebar-header">เมนูนำทาง</div>` + data;
+            });
     }
 
     window.toggleDrop = function(btn, id) {
         const item = btn.parentElement;
         const isOpen = item.classList.toggle("open");
-        if (id) {
-            localStorage.setItem('menu-' + id, isOpen);
-        }
+        if (id) localStorage.setItem('menu-' + id, isOpen);
     }
-
-    function includeSidebar() {
-        const ts = new Date().getTime();
-        fetch(`sidebar.html?v=${ts}`)
-            .then(res => res.text())
-            .then(data => {
-                document.getElementById('sidebar').innerHTML = data;
-                restoreMenuState();
-            })
-            .catch(err => console.error("Sidebar load error:", err));
-    }
-
-    function restoreMenuState() {
-        ['credit', 'branch', 'sales'].forEach(id => {
-            if (localStorage.getItem('menu-' + id) === 'true') {
-                const el = document.getElementById('menu-' + id);
-                if (el) el.classList.add('open');
-            }
-        });
-    }
-
-    // --- ZOOM SYSTEM ---
-    function zoomIn() { scale += 0.2; applyZoom(); }
-    function zoomOut() { if (scale > 0.4) { scale -= 0.2; applyZoom(); } }
-    function resetZoom() { scale = 1; applyZoom(); }
-
-    function applyZoom() {
-        const content = document.getElementById("zoomContent");
-        content.style.transform = `scale(${scale})`;
-        content.style.transformOrigin = (scale > 1) ? "top left" : "top center";
-    }
-
-    window.onload = includeSidebar;
 </script>
-<footer>© 2026 Copy Right By Angerina Frog</footer>
+</body>
+</html>
 </body>
 </html>
 
