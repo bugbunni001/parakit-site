@@ -112,6 +112,36 @@
             <span class="text-xl font-bold text-slate-700">ดึงยอด Retention</span>
         </button>
     </div>
+
+    <div class="glass-card p-8 mt-12 mb-10 shadow-lg border-blue-100">
+        <div class="flex items-center gap-3 mb-6">
+            <div class="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center text-xl shadow-sm">
+                <i class="bi bi-card-list"></i>
+            </div>
+            <h2 class="text-xl font-bold text-slate-800">ลบข้อมูลที่ลงยอดผิด</h2>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div>
+                <label class="text-xs font-bold text-slate-400 ml-1 uppercase">วันที่</label>
+                <input type="date" id="manageDate" class="ios-input mt-1" onchange="fetchManageData()">
+            </div>
+            <div>
+                <label class="text-xs font-bold text-slate-400 ml-1 uppercase">สาขา</label>
+                <div class="select-wrapper">
+                    <select id="manageBranch" class="ios-input mt-1" onchange="fetchManageData()">
+                        <option value="" disabled selected>กรุณาเลือกสาขา...</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div id="manageDataContainer" class="space-y-4">
+            <div class="text-center py-10 text-slate-400 italic bg-white/50 rounded-2xl border border-dashed border-slate-300">
+                กรุณาเลือกสาขาเพื่อแสดงข้อมูล
+            </div>
+        </div>
+    </div>
 </div>
 
 <div id="saveModal" class="modal-overlay">
@@ -239,7 +269,7 @@
 </div>
 
 <script>
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycbzhdGW3QQgMbW8195YveJu_le3LW3uephdRUXZkqC2bd9lpF5uQqc4VoxuD3gp-KPXs2A/exec';
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbx8fE1RTUjVAi9gqShaNJN-JvSSOZUEeCcIHhT8aNbtynLVfb-PGRZTtkXJWrnXcB9GeA/exec';
     
     let totals = { sTOL: 0, cTOL: 0, sTMH: 0, cTMH: 0 };
 
@@ -255,19 +285,22 @@
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('saveDate').value = today;
         document.getElementById('pullDate').value = today;
+        document.getElementById('manageDate').value = today; // เซ็ตค่า default เป็นวันนี้
         
         const saveSelect = document.getElementById('saveBranch');
-        branches.forEach(b => {
-            let opt = document.createElement('option');
-            opt.value = b; opt.textContent = b;
-            saveSelect.appendChild(opt);
-        });
-
         const pullSelect = document.getElementById('pullBranch');
+        const manageSelect = document.getElementById('manageBranch');
+
         branches.forEach(b => {
-            let opt = document.createElement('option');
-            opt.value = b; opt.textContent = b;
-            pullSelect.appendChild(opt);
+            let opt = document.createElement('option'); opt.value = b; opt.textContent = b;
+            saveSelect.appendChild(opt);
+            
+            let opt2 = document.createElement('option'); opt2.value = b; opt2.textContent = b;
+            pullSelect.appendChild(opt2);
+            
+            // เติม dropdown ของส่วนจัดการข้อมูล
+            let opt3 = document.createElement('option'); opt3.value = b; opt3.textContent = b;
+            manageSelect.appendChild(opt3);
         });
 
         document.getElementById('saveModal').addEventListener('keypress', (e) => { if (e.key === 'Enter') saveData(); });
@@ -278,6 +311,86 @@
     function openModal(id) { document.getElementById(id).classList.add('modal-active'); }
     function closeModal(id) { document.getElementById(id).classList.remove('modal-active'); }
 
+    // ==========================================
+    // ฟังก์ชันจัดการข้อมูล (ดึงและลบรายบรรทัด)
+    // ==========================================
+    async function fetchManageData() {
+        const date = document.getElementById('manageDate').value;
+        const branch = document.getElementById('manageBranch').value;
+        const container = document.getElementById('manageDataContainer');
+        
+        if(!branch) return;
+
+        container.innerHTML = `<div class="text-center py-10 text-blue-500"><i class="bi bi-arrow-repeat animate-spin text-3xl"></i><p class="mt-2 font-medium">กำลังโหลดข้อมูล...</p></div>`;
+
+        try {
+            const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'fetch_rows', data: { date, branch } }) });
+            const result = await res.json();
+
+            if (result.status === 'not_found' || !result.list || result.list.length === 0) {
+                container.innerHTML = `<div class="text-center py-10 text-slate-400 italic bg-white/50 rounded-2xl border border-dashed border-slate-300">ไม่พบข้อมูลของสาขานี้ ในวันที่เลือก</div>`;
+                return;
+            }
+
+            let html = '';
+            result.list.forEach(item => {
+                // ปรับขนาดคลาสตัวอักษรให้ใหญ่และอ่านง่ายขึ้นที่นี่
+                html += `
+                <div class="p-6 bg-white/90 rounded-2xl border border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-5 transition hover:shadow-md">
+                    <div class="flex-1 w-full">
+                        <div class="flex items-center gap-3 mb-3">
+                            <span class="px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg text-sm font-bold"><i class="bi bi-person-badge mr-1"></i> ID: ${item.staffId}</span>
+                            <span class="text-sm text-slate-500 font-medium"><i class="bi bi-calendar-event"></i> ${item.date}</span>
+                        </div>
+                        <p class="text-lg font-bold text-slate-800 mb-3">${item.branch}</p>
+                        <div class="flex flex-wrap gap-x-4 gap-y-3 text-base font-semibold">
+                            <span class="text-blue-700 bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100">Save TOL: ${item.sTOL}</span>
+                            <span class="text-red-600 bg-red-50 px-3 py-1.5 rounded-lg border border-red-100">Cancel TOL: ${item.cTOL}</span>
+                            <span class="text-orange-700 bg-orange-50 px-3 py-1.5 rounded-lg border border-orange-100">Save TMH: ${item.sTMH}</span>
+                            <span class="text-red-600 bg-red-50 px-3 py-1.5 rounded-lg border border-red-100">Cancel TMH: ${item.cTMH}</span>
+                        </div>
+                    </div>
+                    <button onclick="deleteManageData(${item.rowId})" class="px-5 py-3 text-red-500 hover:text-white hover:bg-red-500 rounded-xl transition-all bg-red-50 shadow-sm whitespace-nowrap flex items-center gap-2 font-bold text-base">
+                        <i class="bi bi-trash3-fill"></i> ลบ
+                    </button>
+                </div>`;
+            });
+            container.innerHTML = html;
+        } catch(e) { 
+            container.innerHTML = `<div class="text-center py-10 text-red-500 bg-red-50 rounded-2xl border border-red-100">ดึงข้อมูลไม่สำเร็จ กรุณาลองใหม่</div>`;
+        }
+    }
+
+    async function deleteManageData(rowId) {
+        const confirm = await Swal.fire({
+            title: 'ยืนยันการลบข้อมูล?',
+            text: "หากลบแล้วข้อมูลจะหายไปจากระบบทันที",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#cbd5e1',
+            confirmButtonText: 'ลบข้อมูล',
+            cancelButtonText: 'ยกเลิก'
+        });
+
+        if (confirm.isConfirmed) {
+            Swal.fire({ title: 'กำลังลบข้อมูล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            try {
+                const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'delete_row', data: { rowId } }) });
+                const result = await res.json();
+                if (result.status === 'success') {
+                    Swal.fire('สำเร็จ', 'ลบข้อมูลเรียบร้อยแล้ว', 'success');
+                    fetchManageData(); // โหลดรายการใหม่ (แถวที่ลบจะหายไป)
+                } else {
+                    Swal.fire('Error', 'ไม่สามารถลบข้อมูลได้', 'error');
+                }
+            } catch(e) { Swal.fire('Error', 'การเชื่อมต่อผิดพลาด', 'error'); }
+        }
+    }
+
+    // ==========================================
+    // ฟังก์ชันเดิม (ไม่ถูกเปลี่ยนแปลง)
+    // ==========================================
     async function saveData() {
         const branchVal = document.getElementById('saveBranch').value;
         if(!branchVal) return Swal.fire('ข้อมูลไม่ครบ', 'กรุณาเลือกสาขา', 'warning');
@@ -302,6 +415,7 @@
                 document.getElementById('sTOL').value = '0'; document.getElementById('cTOL').value = '0';
                 document.getElementById('sTMH').value = '0'; document.getElementById('cTMH').value = '0';
                 document.getElementById('saveBranch').value = '';
+                fetchManageData(); // หากบันทึกแล้วให้ตารางด้านล่างอัปเดตด้วย
             }, 1000);
         } catch(e) { Swal.fire('Error', 'การเชื่อมต่อผิดพลาด', 'error'); }
     }
@@ -404,7 +518,7 @@
         });
     }
 
-    // ===== JAVASCRIPT ระบบเมนูและปุ่มลาก =====
+    // ===== JAVASCRIPT ระบบเมนูและปุ่มลาก (เหมือนเดิม) =====
     const dragBtn = document.getElementById('floatingMenuBtn');
     const sideFloat = document.getElementById('sidebarFloat');
     const sideOverlay = document.getElementById('sidebarOverlay');
@@ -462,12 +576,10 @@
 
     function closeSidebarFloat() { sideFloat.classList.remove('active'); sideOverlay.classList.remove('active'); }
 
-    // ฟังก์ชันโหลดเมนู Sidebar และกาง Dropdown ตามที่เคยจำไว้
     function loadSidebarContent() { 
         fetch('sidebar.html').then(res => res.text()).then(data => { 
             sideFloat.innerHTML = `<div class="sidebar-header">เมนูนำทาง</div>` + data; 
             
-            // ตรวจสอบสถานะการกางจาก localStorage
             const items = sideFloat.querySelectorAll('.item');
             items.forEach(item => {
                 const btn = item.querySelector('.drop-btn');
@@ -484,7 +596,6 @@
         }); 
     }
 
-    // ฟังก์ชันคลิก Dropdown และบันทึกสถานะ
     window.toggleDrop = function(btn, id) { 
         const item = btn.parentElement; 
         const isOpen = item.classList.toggle("open"); 
