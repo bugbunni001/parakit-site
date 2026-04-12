@@ -22,13 +22,21 @@
         .glass-card { background: var(--glass); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 24px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         .card-motion:hover { transform: translateY(-5px); background: rgba(255, 255, 255, 0.85); box-shadow: 0 20px 40px rgba(0,0,0,0.05); }
         
-        /* ตกแต่ง Input ให้เหมือน Dropdown */
-        .ios-input { width: 100%; padding: 12px 40px 12px 16px; border-radius: 14px; border: 1px solid rgba(0,0,0,0.08); background: white; outline: none; transition: 0.2s; cursor: pointer; }
+        /* ตกแต่ง Select ให้เหมือน Dropdown iOS */
+        .ios-input { 
+            width: 100%; padding: 12px 16px; border-radius: 14px; border: 1px solid rgba(0,0,0,0.08); 
+            background: white; outline: none; transition: 0.2s; cursor: pointer;
+            appearance: none; -webkit-appearance: none; /* ซ่อนลูกศรเดิม */
+        }
         .ios-input:focus { border-color: var(--ios-blue); box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1); }
         
-        /* ส่วนครอบ Input สาขา */
+        /* สร้างลูกศรใหม่ให้สวยงาม */
         .select-wrapper { position: relative; width: 100%; }
-        .select-wrapper::after { content: "\F282"; font-family: "bootstrap-icons"; position: absolute; right: 15px; top: 50%; transform: translateY(-20%); pointer-events: none; color: #8e8e93; font-size: 14px; }
+        .select-wrapper::after { 
+            content: "\F282"; font-family: "bootstrap-icons"; position: absolute; 
+            right: 15px; top: 50%; transform: translateY(-50%); 
+            pointer-events: none; color: #8e8e93; font-size: 14px; 
+        }
 
         .btn-primary { background: var(--ios-blue); color: white; border-radius: 16px; transition: all 0.2s; }
         .btn-primary:active { transform: scale(0.96); }
@@ -124,9 +132,11 @@
                 </div>
             </div>
             <div>
-                <label class="text-xs font-bold text-slate-400 ml-1 uppercase">สาขา (พิมพ์หรือคลิกเลือก)</label>
+                <label class="text-xs font-bold text-slate-400 ml-1 uppercase">สาขา</label>
                 <div class="select-wrapper">
-                    <input type="text" id="saveBranch" list="branchList" class="ios-input mt-1" placeholder="เลือกสาขา..." onfocus="this.value=''" autocomplete="off">
+                    <select id="saveBranch" class="ios-input mt-1">
+                        <option value="" disabled selected>กรุณาเลือกสาขา...</option>
+                    </select>
                 </div>
             </div>
             
@@ -152,18 +162,23 @@
         <div class="space-y-5">
             <div><label class="text-xs font-bold text-slate-400 ml-1 uppercase">วันที่</label><input type="date" id="pullDate" class="ios-input mt-1"></div>
             <div>
-                <label class="text-xs font-bold text-slate-400 ml-1 uppercase">สาขา (พิมพ์หรือคลิกเลือก)</label>
+                <label class="text-xs font-bold text-slate-400 ml-1 uppercase">สาขา</label>
                 <div class="select-wrapper">
-                    <input type="text" id="pullBranch" list="branchListWithAll" class="ios-input mt-1" placeholder="เลือกสาขา..." onfocus="this.value=''" autocomplete="off">
+                    <select id="pullBranch" class="ios-input mt-1">
+                        <option value="" disabled selected>กรุณาเลือกสาขา...</option>
+                        <option value="All Shop">All Shop</option>
+                    </select>
                 </div>
             </div>
             <div><label class="text-xs font-bold text-slate-400 ml-1 uppercase">ช่วงเวลา</label>
-                <select id="pullTime" class="ios-input mt-1 cursor-pointer">
-                    <option value="14.00">14.00 (0.00 - 14.00)</option>
-                    <option value="16.00">16.00 (14.01 - 16.00)</option>
-                    <option value="20.00">20.00 (16.01 - 23.59)</option>
-                    <option value="รวมทั้งหมด">รวมทั้งหมด</option>
-                </select>
+                <div class="select-wrapper">
+                    <select id="pullTime" class="ios-input mt-1">
+                        <option value="14.00">14.00 (0.00 - 14.00)</option>
+                        <option value="16.00">16.00 (14.01 - 16.00)</option>
+                        <option value="20.00">20.00 (16.01 - 23.59)</option>
+                        <option value="รวมทั้งหมด">รวมทั้งหมด</option>
+                    </select>
+                </div>
             </div>
             <button onclick="pullData()" class="w-full btn-primary py-4 font-bold text-lg mt-6 shadow-lg bg-emerald-500 flex justify-center items-center gap-2">
                 <i class="bi bi-cloud-arrow-down"></i> เรียกดูข้อมูล
@@ -171,9 +186,6 @@
         </div>
     </div>
 </div>
-
-<datalist id="branchList"></datalist>
-<datalist id="branchListWithAll"></datalist>
 
 <div id="reportModal" class="modal-overlay">
     <div class="glass-card w-full max-w-2xl p-8 mx-4 max-h-[90vh] overflow-y-auto custom-scroll shadow-2xl bg-white">
@@ -228,7 +240,6 @@
 </div>
 
 <script>
-    // อัปเดต URL ตามที่คุณระบุมาล่าสุด
     const GAS_URL = 'https://script.google.com/macros/s/AKfycbzhdGW3QQgMbW8195YveJu_le3LW3uephdRUXZkqC2bd9lpF5uQqc4VoxuD3gp-KPXs2A/exec';
     
     let totals = { sTOL: 0, cTOL: 0, sTMH: 0, cTMH: 0 };
@@ -246,17 +257,22 @@
         document.getElementById('saveDate').value = today;
         document.getElementById('pullDate').value = today;
         
-        // Populate Datalists
-        const datalistSave = document.getElementById('branchList');
+        // เติมข้อมูลใน Dropdown บันทึก
+        const saveSelect = document.getElementById('saveBranch');
         branches.forEach(b => {
-            let opt = document.createElement('option'); opt.value = b;
-            datalistSave.appendChild(opt);
+            let opt = document.createElement('option');
+            opt.value = b;
+            opt.textContent = b;
+            saveSelect.appendChild(opt);
         });
 
-        const datalistPull = document.getElementById('branchListWithAll');
-        ["All Shop", ...branches].forEach(b => {
-            let opt = document.createElement('option'); opt.value = b;
-            datalistPull.appendChild(opt);
+        // เติมข้อมูลใน Dropdown ดึงข้อมูล
+        const pullSelect = document.getElementById('pullBranch');
+        branches.forEach(b => {
+            let opt = document.createElement('option');
+            opt.value = b;
+            opt.textContent = b;
+            pullSelect.appendChild(opt);
         });
 
         document.getElementById('saveModal').addEventListener('keypress', (e) => { if (e.key === 'Enter') saveData(); });
@@ -269,7 +285,7 @@
 
     async function saveData() {
         const branchVal = document.getElementById('saveBranch').value;
-        if(!branches.includes(branchVal)) return Swal.fire('ข้อมูลไม่ถูกต้อง', 'กรุณาเลือกชื่อสาขาจากรายการ', 'warning');
+        if(!branchVal) return Swal.fire('ข้อมูลไม่ครบ', 'กรุณาเลือกสาขา', 'warning');
 
         const data = {
             date: document.getElementById('saveDate').value,
@@ -297,8 +313,7 @@
 
     async function pullData() {
         const branchVal = document.getElementById('pullBranch').value;
-        const validBranches = ["All Shop", ...branches];
-        if(!validBranches.includes(branchVal)) return Swal.fire('ข้อมูลไม่ถูกต้อง', 'กรุณาเลือกชื่อสาขาจากรายการ', 'warning');
+        if(!branchVal) return Swal.fire('ข้อมูลไม่ครบ', 'กรุณาเลือกสาขาที่ต้องการดึงข้อมูล', 'warning');
 
         const filter = {
             date: document.getElementById('pullDate').value,
