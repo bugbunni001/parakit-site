@@ -65,6 +65,8 @@
         .sidebar-float .sub { display: none; background: rgba(0,0,0,0.2); }
         .sidebar-float .item.open .sub { display: block; }
         .sidebar-float .sub a { padding-left: 45px; font-size: 13px; color: #8e8e93; }
+        .sidebar-float::-webkit-scrollbar { width: 4px; }
+        .sidebar-float::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
     </style>
 </head>
 <body class="p-6">
@@ -111,12 +113,16 @@
                 <div><label class="text-xs font-bold text-slate-400 ml-1">วันที่</label><input type="date" id="saveDate" class="ios-input mt-1"></div>
                 <div>
                     <label class="text-xs font-bold text-slate-400 ml-1 uppercase">รหัสพนักงาน</label>
-                    <input type="number" id="staffId" class="ios-input mt-1" placeholder="กรอกรหัสพนักงาน" 
+                    <input type="number" id="staffId" class="ios-input mt-1" placeholder="8 หลัก" 
                         oninput="if(this.value.length > 8) this.value = this.value.slice(0, 8);"
                         onkeydown="if(event.key==='e' || event.key==='E' || event.key==='.' || event.key==='-') event.preventDefault();">
                 </div>
             </div>
-            <div><label class="text-xs font-bold text-slate-400 ml-1 uppercase">เลือกสาขา</label><select id="saveBranch" class="ios-input mt-1"></select></div>
+            <div>
+                <label class="text-xs font-bold text-slate-400 ml-1 uppercase">สาขา (พิมพ์เพื่อค้นหา)</label>
+                <input type="text" id="saveBranch" list="branchList" class="ios-input mt-1" placeholder="เลือกหรือพิมพ์ชื่อสาขา..." onclick="this.value=''">
+            </div>
+            
             <div class="grid grid-cols-2 gap-4 border-t border-slate-200 pt-4 mt-2">
                 <div><label class="text-xs font-bold text-blue-500 ml-1">Save TOL</label><input type="number" id="sTOL" class="ios-input mt-1" value="0" onclick="this.select()"></div>
                 <div><label class="text-xs font-bold text-red-500 ml-1">Cancel TOL</label><input type="number" id="cTOL" class="ios-input mt-1" value="0" onclick="this.select()"></div>
@@ -138,7 +144,10 @@
         </div>
         <div class="space-y-5">
             <div><label class="text-xs font-bold text-slate-400 ml-1 uppercase">วันที่</label><input type="date" id="pullDate" class="ios-input mt-1"></div>
-            <div><label class="text-xs font-bold text-slate-400 ml-1 uppercase">สาขา</label><select id="pullBranch" class="ios-input mt-1"></select></div>
+            <div>
+                <label class="text-xs font-bold text-slate-400 ml-1 uppercase">สาขา (พิมพ์เพื่อค้นหา)</label>
+                <input type="text" id="pullBranch" list="branchList" class="ios-input mt-1" placeholder="เลือกหรือพิมพ์ชื่อสาขา..." onclick="this.value=''">
+            </div>
             <div><label class="text-xs font-bold text-slate-400 ml-1 uppercase">ช่วงเวลา</label>
                 <select id="pullTime" class="ios-input mt-1">
                     <option value="14.00">14.00 (0.00 - 14.00)</option>
@@ -153,6 +162,8 @@
         </div>
     </div>
 </div>
+
+<datalist id="branchList"></datalist>
 
 <div id="reportModal" class="modal-overlay">
     <div class="glass-card w-full max-w-2xl p-8 mx-4 max-h-[90vh] overflow-y-auto custom-scroll shadow-2xl bg-white">
@@ -209,7 +220,6 @@
 <script>
     const GAS_URL = 'https://script.google.com/macros/s/AKfycbzU0ak1jENmUq3QNpxEX-mvJJjPeTWk5xMEeUkmdAfutn0l_7CNCc0220PC3kIxGuP33A/exec';
     
-    // ตัวแปรเก็บยอดรวมแยกประเภท
     let totals = { sTOL: 0, cTOL: 0, sTMH: 0, cTMH: 0 };
 
     const branches = [
@@ -224,9 +234,14 @@
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('saveDate').value = today;
         document.getElementById('pullDate').value = today;
-        [document.getElementById('saveBranch'), document.getElementById('pullBranch')].forEach(el => {
-            branches.forEach(b => { let o = new Option(b, b); el.add(o); });
+        
+        const datalist = document.getElementById('branchList');
+        branches.forEach(b => {
+            let option = document.createElement('option');
+            option.value = b;
+            datalist.appendChild(option);
         });
+
         document.getElementById('saveModal').addEventListener('keypress', (e) => { if (e.key === 'Enter') saveData(); });
         document.getElementById('pullModal').addEventListener('keypress', (e) => { if (e.key === 'Enter') pullData(); });
         loadButtonPosition();
@@ -236,9 +251,12 @@
     function closeModal(id) { document.getElementById(id).classList.remove('modal-active'); }
 
     async function saveData() {
+        const branchVal = document.getElementById('saveBranch').value;
+        if(!branches.includes(branchVal)) return Swal.fire('ข้อมูลไม่ถูกต้อง', 'กรุณาเลือกหรือพิมพ์ชื่อสาขาให้ถูกต้อง', 'warning');
+
         const data = {
             date: document.getElementById('saveDate').value,
-            branch: document.getElementById('saveBranch').value,
+            branch: branchVal,
             staffId: document.getElementById('staffId').value,
             saveTol: document.getElementById('sTOL').value,
             cancelTol: document.getElementById('cTOL').value,
@@ -255,14 +273,18 @@
                 document.getElementById('staffId').value = '';
                 document.getElementById('sTOL').value = '0'; document.getElementById('cTOL').value = '0';
                 document.getElementById('sTMH').value = '0'; document.getElementById('cTMH').value = '0';
+                document.getElementById('saveBranch').value = '';
             }, 1000);
         } catch(e) { Swal.fire('Error', 'การเชื่อมต่อผิดพลาด', 'error'); }
     }
 
     async function pullData() {
+        const branchVal = document.getElementById('pullBranch').value;
+        if(!branches.includes(branchVal)) return Swal.fire('ข้อมูลไม่ถูกต้อง', 'กรุณาเลือกหรือพิมพ์ชื่อสาขาให้ถูกต้อง', 'warning');
+
         const filter = {
             date: document.getElementById('pullDate').value,
-            branch: document.getElementById('pullBranch').value,
+            branch: branchVal,
             time: document.getElementById('pullTime').value
         };
         Swal.fire({ title: 'กำลังดึงข้อมูล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
@@ -274,8 +296,27 @@
                 return Swal.fire('ไม่พบข้อมูล', 'ไม่พบข้อมูลของสาขา ในช่วงเวลาดังกล่าว', 'info');
             }
 
-            // คำนวณยอดรวมแยกประเภทจากรายการพนักงานที่ได้มา
-            totals = result.list.reduce((acc, item) => {
+            // --- ขั้นตอนการ Group ข้อมูลตาม Staff ID ---
+            const groupedData = result.list.reduce((acc, current) => {
+                const id = current.staffId;
+                if (!acc[id]) {
+                    // ถ้ายังไม่มี ID นี้ในตัวแปรสะสม ให้สร้างใหม่
+                    acc[id] = { ...current };
+                } else {
+                    // ถ้ามีแล้ว ให้บวกยอดเพิ่มเข้าไป
+                    acc[id].sTOL += current.sTOL;
+                    acc[id].cTOL += current.cTOL;
+                    acc[id].sTMH += current.sTMH;
+                    acc[id].cTMH += current.cTMH;
+                }
+                return acc;
+            }, {});
+
+            // แปลง Object กลับเป็น Array เพื่อนำไปแสดงผล
+            const displayList = Object.values(groupedData);
+
+            // คำนวณยอดรวมทั้งหมด (Grand Totals)
+            totals = displayList.reduce((acc, item) => {
                 acc.sTOL += item.sTOL; acc.cTOL += item.cTOL;
                 acc.sTMH += item.sTMH; acc.cTMH += item.cTMH;
                 return acc;
@@ -285,14 +326,13 @@
             document.getElementById('resDate').innerHTML = `<i class="bi bi-calendar3 mr-1"></i> วันที่: ${result.date}`;
             document.getElementById('resTime').innerHTML = `<i class="bi bi-clock mr-1"></i> เวลา: ${result.timeLabel}`;
             
-            // แสดงผลยอดรวมแยกประเภท
             document.getElementById('sumSTOL').innerText = totals.sTOL;
             document.getElementById('sumCTOL').innerText = totals.cTOL;
             document.getElementById('sumSTMH').innerText = totals.sTMH;
             document.getElementById('sumCTMH').innerText = totals.cTMH;
 
             let html = '';
-            result.list.forEach(item => {
+            displayList.forEach(item => {
                 html += `
                 <div class="p-5 bg-slate-50/80 rounded-2xl border border-slate-100 flex flex-col sm:flex-row justify-between gap-4 transition hover:bg-white hover:shadow-md">
                     <div class="flex items-center gap-3">
@@ -313,14 +353,11 @@
         } catch(e) { Swal.fire('Error', 'ดึงข้อมูลไม่สำเร็จ', 'error'); }
     }
 
-    // ฟังก์ชันคำนวณ %Save แยกประเภท
     function calculateSavePercent() {
         const tolTotal = totals.sTOL + totals.cTOL;
         const tmhTotal = totals.sTMH + totals.cTMH;
-        
         const tolPercent = tolTotal > 0 ? ((totals.sTOL / tolTotal) * 100).toFixed(2) : "0.00";
         const tmhPercent = tmhTotal > 0 ? ((totals.sTMH / tmhTotal) * 100).toFixed(2) : "0.00";
-
         Swal.fire({
             title: 'ผลลัพธ์คำนวณ %Save',
             html: `
@@ -335,33 +372,28 @@
                     </div>
                 </div>
             `,
-            confirmButtonText: 'รับทราบ',
-            confirmButtonColor: '#007aff'
+            confirmButtonText: 'รับทราบ', confirmButtonColor: '#007aff'
         });
     }
 
-    // ฟังก์ชันคำนวณการเพิ่ม %Save แยกประเภท
     function calculateRequiredSave() {
-        // สูตร: (ยอดรวมCancel * 7.51) - ยอดรวมSave
         const tolReq = Math.max(0, (totals.cTOL * 7.51) - totals.sTOL).toFixed(2);
         const tmhReq = Math.max(0, (totals.cTMH * 7.51) - totals.sTMH).toFixed(2);
-
         Swal.fire({
             title: 'สรุปยอดที่ต้อง SAVE เพิ่ม',
             html: `
                 <div class="space-y-6 mt-4">
                     <div class="p-4 bg-emerald-50 rounded-2xl border border-emerald-100 text-center">
                         <p class="text-xs font-bold text-emerald-600 uppercase tracking-widest mb-2">ยอดที่ต้องเพิ่ม (TOL)</p>
-                        <div class="text-4xl font-black text-emerald-700">${tolReq} บาท</div>
+                        <div class="text-4xl font-black text-emerald-700">${tolReq}</div>
                     </div>
                     <div class="p-4 bg-teal-50 rounded-2xl border border-teal-100 text-center">
                         <p class="text-xs font-bold text-teal-600 uppercase tracking-widest mb-2">ยอดที่ต้องเพิ่ม (TMH)</p>
-                        <div class="text-4xl font-black text-teal-700">${tmhReq} บาท</div>
+                        <div class="text-4xl font-black text-teal-700">${tmhReq}</div>
                     </div>
                 </div>
             `,
-            confirmButtonText: 'ตกลง',
-            confirmButtonColor: '#007aff'
+            confirmButtonText: 'ตกลง', confirmButtonColor: '#007aff'
         });
     }
 
