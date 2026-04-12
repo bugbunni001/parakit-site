@@ -113,7 +113,7 @@
                 <div><label class="text-xs font-bold text-slate-400 ml-1">วันที่</label><input type="date" id="saveDate" class="ios-input mt-1"></div>
                 <div>
                     <label class="text-xs font-bold text-slate-400 ml-1 uppercase">รหัสพนักงาน</label>
-                    <input type="number" id="staffId" class="ios-input mt-1" placeholder="8 หลัก" 
+                    <input type="number" id="staffId" class="ios-input mt-1" placeholder="กรอกรหัสพนักงาน" 
                         oninput="if(this.value.length > 8) this.value = this.value.slice(0, 8);"
                         onkeydown="if(event.key==='e' || event.key==='E' || event.key==='.' || event.key==='-') event.preventDefault();">
                 </div>
@@ -146,7 +146,7 @@
             <div><label class="text-xs font-bold text-slate-400 ml-1 uppercase">วันที่</label><input type="date" id="pullDate" class="ios-input mt-1"></div>
             <div>
                 <label class="text-xs font-bold text-slate-400 ml-1 uppercase">สาขา (พิมพ์เพื่อค้นหา)</label>
-                <input type="text" id="pullBranch" list="branchList" class="ios-input mt-1" placeholder="เลือกหรือพิมพ์ชื่อสาขา..." onclick="this.value=''">
+                <input type="text" id="pullBranch" list="branchListWithAll" class="ios-input mt-1" placeholder="เลือกหรือพิมพ์ชื่อสาขา..." onclick="this.value=''">
             </div>
             <div><label class="text-xs font-bold text-slate-400 ml-1 uppercase">ช่วงเวลา</label>
                 <select id="pullTime" class="ios-input mt-1">
@@ -164,6 +164,7 @@
 </div>
 
 <datalist id="branchList"></datalist>
+<datalist id="branchListWithAll"></datalist>
 
 <div id="reportModal" class="modal-overlay">
     <div class="glass-card w-full max-w-2xl p-8 mx-4 max-h-[90vh] overflow-y-auto custom-scroll shadow-2xl bg-white">
@@ -218,7 +219,7 @@
 </div>
 
 <script>
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycbzU0ak1jENmUq3QNpxEX-mvJJjPeTWk5xMEeUkmdAfutn0l_7CNCc0220PC3kIxGuP33A/exec';
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycby9yIi3DMoi3PPFyMgwu2mFnQYaLGy7mRlvjme1X-Co5d7q-CsN6LNiLrOLyrFsPL77xw/exec';
     
     let totals = { sTOL: 0, cTOL: 0, sTMH: 0, cTMH: 0 };
 
@@ -235,11 +236,20 @@
         document.getElementById('saveDate').value = today;
         document.getElementById('pullDate').value = today;
         
+        // สำหรับหน้าบันทึก (ไม่มี All Shop)
         const datalist = document.getElementById('branchList');
         branches.forEach(b => {
             let option = document.createElement('option');
             option.value = b;
             datalist.appendChild(option);
+        });
+
+        // สำหรับหน้าดึงข้อมูล (มี All Shop)
+        const datalistPull = document.getElementById('branchListWithAll');
+        ["All Shop", ...branches].forEach(b => {
+            let option = document.createElement('option');
+            option.value = b;
+            datalistPull.appendChild(option);
         });
 
         document.getElementById('saveModal').addEventListener('keypress', (e) => { if (e.key === 'Enter') saveData(); });
@@ -280,7 +290,8 @@
 
     async function pullData() {
         const branchVal = document.getElementById('pullBranch').value;
-        if(!branches.includes(branchVal)) return Swal.fire('ข้อมูลไม่ถูกต้อง', 'กรุณาเลือกหรือพิมพ์ชื่อสาขาให้ถูกต้อง', 'warning');
+        const validBranches = ["All Shop", ...branches];
+        if(!validBranches.includes(branchVal)) return Swal.fire('ข้อมูลไม่ถูกต้อง', 'กรุณาเลือกหรือพิมพ์ชื่อสาขาให้ถูกต้อง', 'warning');
 
         const filter = {
             date: document.getElementById('pullDate').value,
@@ -296,24 +307,7 @@
                 return Swal.fire('ไม่พบข้อมูล', 'ไม่พบข้อมูลของสาขา ในช่วงเวลาดังกล่าว', 'info');
             }
 
-            // --- ขั้นตอนการ Group ข้อมูลตาม Staff ID ---
-            const groupedData = result.list.reduce((acc, current) => {
-                const id = current.staffId;
-                if (!acc[id]) {
-                    // ถ้ายังไม่มี ID นี้ในตัวแปรสะสม ให้สร้างใหม่
-                    acc[id] = { ...current };
-                } else {
-                    // ถ้ามีแล้ว ให้บวกยอดเพิ่มเข้าไป
-                    acc[id].sTOL += current.sTOL;
-                    acc[id].cTOL += current.cTOL;
-                    acc[id].sTMH += current.sTMH;
-                    acc[id].cTMH += current.cTMH;
-                }
-                return acc;
-            }, {});
-
-            // แปลง Object กลับเป็น Array เพื่อนำไปแสดงผล
-            const displayList = Object.values(groupedData);
+            const displayList = result.list;
 
             // คำนวณยอดรวมทั้งหมด (Grand Totals)
             totals = displayList.reduce((acc, item) => {
@@ -333,11 +327,15 @@
 
             let html = '';
             displayList.forEach(item => {
+                // เปลี่ยนฉลากแสดงผลตามประเภทการดึงข้อมูล
+                const labelName = item.isBranchGroup ? "สาขา" : "ID";
+                const iconClass = item.isBranchGroup ? "bi bi-shop" : "bi bi-person-badge";
+                
                 html += `
                 <div class="p-5 bg-slate-50/80 rounded-2xl border border-slate-100 flex flex-col sm:flex-row justify-between gap-4 transition hover:bg-white hover:shadow-md">
                     <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm text-blue-500"><i class="bi bi-person-badge"></i></div>
-                        <span class="font-bold text-slate-700 tracking-wide">ID: ${item.staffId}</span>
+                        <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm text-blue-500"><i class="${iconClass}"></i></div>
+                        <span class="font-bold text-slate-700 tracking-wide">${labelName}: ${item.staffId}</span>
                     </div>
                     <div class="grid grid-cols-2 gap-x-8 gap-y-2 text-sm font-medium">
                         <div class="flex justify-between gap-6"><span>Save TOL :</span> <span class="text-blue-600 font-bold">${item.sTOL}</span></div>
