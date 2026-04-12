@@ -22,8 +22,14 @@
         .glass-card { background: var(--glass); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 24px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         .card-motion:hover { transform: translateY(-5px); background: rgba(255, 255, 255, 0.85); box-shadow: 0 20px 40px rgba(0,0,0,0.05); }
         
-        .ios-input { width: 100%; padding: 12px 16px; border-radius: 14px; border: 1px solid rgba(0,0,0,0.08); background: white; outline: none; transition: 0.2s; }
+        /* ตกแต่ง Input ให้เหมือน Dropdown */
+        .ios-input { width: 100%; padding: 12px 40px 12px 16px; border-radius: 14px; border: 1px solid rgba(0,0,0,0.08); background: white; outline: none; transition: 0.2s; cursor: pointer; }
         .ios-input:focus { border-color: var(--ios-blue); box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1); }
+        
+        /* ส่วนครอบ Input สาขา */
+        .select-wrapper { position: relative; width: 100%; }
+        .select-wrapper::after { content: "\F282"; font-family: "bootstrap-icons"; position: absolute; right: 15px; top: 50%; transform: translateY(-20%); pointer-events: none; color: #8e8e93; font-size: 14px; }
+
         .btn-primary { background: var(--ios-blue); color: white; border-radius: 16px; transition: all 0.2s; }
         .btn-primary:active { transform: scale(0.96); }
         
@@ -36,7 +42,6 @@
         .custom-scroll::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.1); border-radius: 10px; }
         .custom-scroll::-webkit-scrollbar-thumb:hover { background: rgba(0, 0, 0, 0.2); }
 
-        /* ===== CSS ปุ่มเมนูและ Sidebar ===== */
         #floatingMenuBtn {
             position: fixed; top: 10px; left: 15px; width: 45px; height: 45px;
             background: var(--ios-blue); color: white; border-radius: 50%;
@@ -119,8 +124,10 @@
                 </div>
             </div>
             <div>
-                <label class="text-xs font-bold text-slate-400 ml-1 uppercase">สาขา (พิมพ์เพื่อค้นหา)</label>
-                <input type="text" id="saveBranch" list="branchList" class="ios-input mt-1" placeholder="เลือกหรือพิมพ์ชื่อสาขา..." onclick="this.value=''">
+                <label class="text-xs font-bold text-slate-400 ml-1 uppercase">สาขา (พิมพ์หรือคลิกเลือก)</label>
+                <div class="select-wrapper">
+                    <input type="text" id="saveBranch" list="branchList" class="ios-input mt-1" placeholder="เลือกสาขา..." onfocus="this.value=''" autocomplete="off">
+                </div>
             </div>
             
             <div class="grid grid-cols-2 gap-4 border-t border-slate-200 pt-4 mt-2">
@@ -145,11 +152,13 @@
         <div class="space-y-5">
             <div><label class="text-xs font-bold text-slate-400 ml-1 uppercase">วันที่</label><input type="date" id="pullDate" class="ios-input mt-1"></div>
             <div>
-                <label class="text-xs font-bold text-slate-400 ml-1 uppercase">สาขา (พิมพ์เพื่อค้นหา)</label>
-                <input type="text" id="pullBranch" list="branchListWithAll" class="ios-input mt-1" placeholder="เลือกหรือพิมพ์ชื่อสาขา..." onclick="this.value=''">
+                <label class="text-xs font-bold text-slate-400 ml-1 uppercase">สาขา (พิมพ์หรือคลิกเลือก)</label>
+                <div class="select-wrapper">
+                    <input type="text" id="pullBranch" list="branchListWithAll" class="ios-input mt-1" placeholder="เลือกสาขา..." onfocus="this.value=''" autocomplete="off">
+                </div>
             </div>
             <div><label class="text-xs font-bold text-slate-400 ml-1 uppercase">ช่วงเวลา</label>
-                <select id="pullTime" class="ios-input mt-1">
+                <select id="pullTime" class="ios-input mt-1 cursor-pointer">
                     <option value="14.00">14.00 (0.00 - 14.00)</option>
                     <option value="16.00">16.00 (14.01 - 16.00)</option>
                     <option value="20.00">20.00 (16.01 - 23.59)</option>
@@ -219,7 +228,8 @@
 </div>
 
 <script>
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycby9yIi3DMoi3PPFyMgwu2mFnQYaLGy7mRlvjme1X-Co5d7q-CsN6LNiLrOLyrFsPL77xw/exec';
+    // อัปเดต URL ตามที่คุณระบุมาล่าสุด
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbzhdGW3QQgMbW8195YveJu_le3LW3uephdRUXZkqC2bd9lpF5uQqc4VoxuD3gp-KPXs2A/exec';
     
     let totals = { sTOL: 0, cTOL: 0, sTMH: 0, cTMH: 0 };
 
@@ -236,20 +246,17 @@
         document.getElementById('saveDate').value = today;
         document.getElementById('pullDate').value = today;
         
-        // สำหรับหน้าบันทึก (ไม่มี All Shop)
-        const datalist = document.getElementById('branchList');
+        // Populate Datalists
+        const datalistSave = document.getElementById('branchList');
         branches.forEach(b => {
-            let option = document.createElement('option');
-            option.value = b;
-            datalist.appendChild(option);
+            let opt = document.createElement('option'); opt.value = b;
+            datalistSave.appendChild(opt);
         });
 
-        // สำหรับหน้าดึงข้อมูล (มี All Shop)
         const datalistPull = document.getElementById('branchListWithAll');
         ["All Shop", ...branches].forEach(b => {
-            let option = document.createElement('option');
-            option.value = b;
-            datalistPull.appendChild(option);
+            let opt = document.createElement('option'); opt.value = b;
+            datalistPull.appendChild(opt);
         });
 
         document.getElementById('saveModal').addEventListener('keypress', (e) => { if (e.key === 'Enter') saveData(); });
@@ -262,7 +269,7 @@
 
     async function saveData() {
         const branchVal = document.getElementById('saveBranch').value;
-        if(!branches.includes(branchVal)) return Swal.fire('ข้อมูลไม่ถูกต้อง', 'กรุณาเลือกหรือพิมพ์ชื่อสาขาให้ถูกต้อง', 'warning');
+        if(!branches.includes(branchVal)) return Swal.fire('ข้อมูลไม่ถูกต้อง', 'กรุณาเลือกชื่อสาขาจากรายการ', 'warning');
 
         const data = {
             date: document.getElementById('saveDate').value,
@@ -291,7 +298,7 @@
     async function pullData() {
         const branchVal = document.getElementById('pullBranch').value;
         const validBranches = ["All Shop", ...branches];
-        if(!validBranches.includes(branchVal)) return Swal.fire('ข้อมูลไม่ถูกต้อง', 'กรุณาเลือกหรือพิมพ์ชื่อสาขาให้ถูกต้อง', 'warning');
+        if(!validBranches.includes(branchVal)) return Swal.fire('ข้อมูลไม่ถูกต้อง', 'กรุณาเลือกชื่อสาขาจากรายการ', 'warning');
 
         const filter = {
             date: document.getElementById('pullDate').value,
@@ -304,12 +311,10 @@
             const result = await res.json();
             Swal.close();
             if(result.status === 'not_found' || !result.list || result.list.length === 0) {
-                return Swal.fire('ไม่พบข้อมูล', 'ไม่พบข้อมูลของสาขา ในช่วงเวลาดังกล่าว', 'info');
+                return Swal.fire('ไม่พบข้อมูล', 'ไม่พบข้อมูลในช่วงเวลาดังกล่าว', 'info');
             }
 
             const displayList = result.list;
-
-            // คำนวณยอดรวมทั้งหมด (Grand Totals)
             totals = displayList.reduce((acc, item) => {
                 acc.sTOL += item.sTOL; acc.cTOL += item.cTOL;
                 acc.sTMH += item.sTMH; acc.cTMH += item.cTMH;
@@ -327,7 +332,6 @@
 
             let html = '';
             displayList.forEach(item => {
-                // เปลี่ยนฉลากแสดงผลตามประเภทการดึงข้อมูล
                 const labelName = item.isBranchGroup ? "สาขา" : "ID";
                 const iconClass = item.isBranchGroup ? "bi bi-shop" : "bi bi-person-badge";
                 
@@ -358,18 +362,16 @@
         const tmhPercent = tmhTotal > 0 ? ((totals.sTMH / tmhTotal) * 100).toFixed(2) : "0.00";
         Swal.fire({
             title: 'ผลลัพธ์คำนวณ %Save',
-            html: `
-                <div class="space-y-6 mt-4">
-                    <div class="p-4 bg-blue-50 rounded-2xl border border-blue-100">
-                        <p class="text-xs font-bold text-blue-500 uppercase tracking-widest mb-2">TOL Retention</p>
-                        <div class="text-4xl font-black text-blue-600">${tolPercent}%</div>
-                    </div>
-                    <div class="p-4 bg-indigo-50 rounded-2xl border border-indigo-100">
-                        <p class="text-xs font-bold text-indigo-500 uppercase tracking-widest mb-2">TMH Retention</p>
-                        <div class="text-4xl font-black text-indigo-600">${tmhPercent}%</div>
-                    </div>
+            html: `<div class="space-y-6 mt-4">
+                <div class="p-4 bg-blue-50 rounded-2xl border border-blue-100">
+                    <p class="text-xs font-bold text-blue-500 uppercase mb-2">TOL Retention</p>
+                    <div class="text-4xl font-black text-blue-600">${tolPercent}%</div>
                 </div>
-            `,
+                <div class="p-4 bg-indigo-50 rounded-2xl border border-indigo-100">
+                    <p class="text-xs font-bold text-indigo-500 uppercase mb-2">TMH Retention</p>
+                    <div class="text-4xl font-black text-indigo-600">${tmhPercent}%</div>
+                </div>
+            </div>`,
             confirmButtonText: 'รับทราบ', confirmButtonColor: '#007aff'
         });
     }
@@ -379,23 +381,21 @@
         const tmhReq = Math.max(0, (totals.cTMH * 7.51) - totals.sTMH).toFixed(2);
         Swal.fire({
             title: 'สรุปยอดที่ต้อง SAVE เพิ่ม',
-            html: `
-                <div class="space-y-6 mt-4">
-                    <div class="p-4 bg-emerald-50 rounded-2xl border border-emerald-100 text-center">
-                        <p class="text-xs font-bold text-emerald-600 uppercase tracking-widest mb-2">ยอดที่ต้องเพิ่ม (TOL)</p>
-                        <div class="text-4xl font-black text-emerald-700">${tolReq}</div>
-                    </div>
-                    <div class="p-4 bg-teal-50 rounded-2xl border border-teal-100 text-center">
-                        <p class="text-xs font-bold text-teal-600 uppercase tracking-widest mb-2">ยอดที่ต้องเพิ่ม (TMH)</p>
-                        <div class="text-4xl font-black text-teal-700">${tmhReq}</div>
-                    </div>
+            html: `<div class="space-y-6 mt-4">
+                <div class="p-4 bg-emerald-50 rounded-2xl border border-emerald-100 text-center">
+                    <p class="text-xs font-bold text-emerald-600 uppercase mb-2">ยอดที่ต้องเพิ่ม (TOL)</p>
+                    <div class="text-4xl font-black text-emerald-700">${tolReq}</div>
                 </div>
-            `,
+                <div class="p-4 bg-teal-50 rounded-2xl border border-teal-100 text-center">
+                    <p class="text-xs font-bold text-teal-600 uppercase mb-2">ยอดที่ต้องเพิ่ม (TMH)</p>
+                    <div class="text-4xl font-black text-teal-700">${tmhReq}</div>
+                </div>
+            </div>`,
             confirmButtonText: 'ตกลง', confirmButtonColor: '#007aff'
         });
     }
 
-    // ===== JAVASCRIPT ระบบเมนูและปุ่มลาก =====
+    // ระบบเมนูและปุ่มลาก (คงเดิม)
     const dragBtn = document.getElementById('floatingMenuBtn');
     const sideFloat = document.getElementById('sidebarFloat');
     const sideOverlay = document.getElementById('sidebarOverlay');
@@ -453,7 +453,6 @@
 
     function closeSidebarFloat() { sideFloat.classList.remove('active'); sideOverlay.classList.remove('active'); }
     function loadSidebarContent() { fetch('sidebar.html').then(res => res.text()).then(data => { sideFloat.innerHTML = `<div class="sidebar-header">เมนูนำทาง</div>` + data; }); }
-    window.toggleDrop = function(btn, id) { const item = btn.parentElement; const isOpen = item.classList.toggle("open"); if (id) localStorage.setItem('menu-' + id, isOpen); }
 </script>
 </body>
 </html>
