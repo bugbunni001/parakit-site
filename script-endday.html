@@ -67,18 +67,13 @@
             transform: scale(0.8) translateY(10px);
             transition: opacity 0.3s, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
             box-shadow: 0 15px 40px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1);
-            /* ซ่อน Scrollbar สำหรับ Firefox */
             scrollbar-width: none;
-            /* ซ่อน Scrollbar สำหรับ IE/Edge */
             -ms-overflow-style: none;
         }
-        /* ซ่อน Scrollbar สำหรับ Chrome/Safari */
         .sidebar-float::-webkit-scrollbar { display: none; }
-
         .sidebar-float.active { opacity: 1; visibility: visible; transform: scale(1) translateY(0); }
         .sidebar-float .sidebar-header { padding: 20px; font-size: 17px; font-weight: 600; color: #fff; border-bottom: 0.5px solid rgba(255,255,255,0.1); }
 
-        /* สไตล์ Dropdown ใน Sidebar */
         .sidebar-float .menu { padding: 8px 0; }
         .sidebar-float .menu a, .sidebar-float .drop-btn { 
             width: 100%; padding: 12px 20px; background: none; border: none; 
@@ -102,12 +97,31 @@
 
         .btn-ios { transition: all 0.3s ease; border-radius: 1rem; font-weight: 600; font-size: 1.1rem; }
         
-        /* SweetAlert Custom UI */
-        .swal2-popup { font-family: 'Kanit', sans-serif !important; border-radius: 1.5rem !important; width: 90% !important; max-width: 480px !important; padding: 1.25rem !important; font-size: 0.95rem !important; }
+        /* SweetAlert Custom UI & Input Layout */
+        .swal2-popup { font-family: 'Kanit', sans-serif !important; border-radius: 1.5rem !important; width: 95% !important; max-width: 520px !important; padding: 1.25rem !important; font-size: 0.95rem !important; }
         .section-header { border-left: 5px solid #3b82f6; padding-left: 10px; margin: 1.2rem 0 0.6rem 0; font-weight: 600; color: #1e3a8a; font-size: 1.05rem; text-align: left; }
-        .row-label { font-size: 0.95rem; font-weight: 600; color: #4b5563; margin-bottom: 4px; display: block; text-align: left; }
-        input, select { border-radius: 0.7rem !important; border: 1.5px solid rgba(0,0,0,0.1) !important; padding: 8px 12px !important; font-size: 0.95rem !important; width: 100% !important; outline: none; }
+        .row-label { font-size: 0.95rem; font-weight: 600; color: #4b5563; margin-bottom: 5px; display: block; text-align: left; }
+        
+        /* ปรับ Layout ให้ซ้าย-ขวา */
+        .input-row-container { 
+            display: flex !important; 
+            flex-direction: row !important;
+            gap: 12px !important; 
+            margin-bottom: 12px; 
+            width: 100%;
+        }
+        .input-col { 
+            flex: 1 !important; 
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .inner-label { font-size: 0.8rem; color: #3b82f6; font-weight: 600; margin-bottom: 2px; text-align: left; }
+        input, select { border-radius: 0.7rem !important; border: 1.5px solid rgba(0,0,0,0.1) !important; padding: 10px 12px !important; font-size: 1rem !important; width: 100% !important; outline: none; background: #fff; }
+        input:focus { border-color: var(--ios-blue); }
+        
         footer { margin-top: 2rem; font-size: 0.85rem; color: #64748b; text-align: center; }
+        pre { white-space: pre-wrap; word-wrap: break-word; line-height: 1.5; }
     </style>
 </head>
 <body>
@@ -132,7 +146,7 @@
     <footer>© 2026 Copy Right By Angerina Frog</footer>
 
     <script>
-        // --- ระบบ Draggable Sidebar & Dropdown Logic ---
+        // --- ระบบ Draggable Sidebar Logic ---
         const dragBtn = document.getElementById('floatingMenuBtn');
         const sideFloat = document.getElementById('sidebarFloat');
         const sideOverlay = document.getElementById('sidebarOverlay');
@@ -207,7 +221,6 @@
             sideOverlay.classList.remove('active');
         }
 
-        // ฟังก์ชันกาง/หุบเมนู และจำค่า
         window.toggleDrop = function(btn, id) {
             const item = btn.parentElement;
             const isOpen = item.classList.toggle("open");
@@ -219,10 +232,9 @@
                 .then(res => res.text())
                 .then(data => {
                     sideFloat.innerHTML = `<div class="sidebar-header">เมนูนำทาง</div>` + data;
-                    // คืนค่าสถานะการกางเมนูที่จำไว้
                     const menuItems = sideFloat.querySelectorAll('.item');
                     menuItems.forEach(item => {
-                        const id = item.id.replace('menu-', ''); // สมมติว่า id ของ item คือ menu-xxx
+                        const id = item.id.replace('menu-', '');
                         if (localStorage.getItem('menu-' + id) === 'true') {
                             item.classList.add('open');
                         }
@@ -239,7 +251,20 @@
         function getToday() { return new Date().toISOString().split('T')[0]; }
         
         function renderInputRow(label, id) {
-            return `<div class="mb-3"><label class="row-label">${label}</label><div class="input-row-container"><div class="input-col"><div class="inner-label">Sub</div><input id="${id}-s" type="number" placeholder="0"></div><div class="input-col"><div class="inner-label">Rev</div><input id="${id}-r" type="number" placeholder="0"></div></div></div>`;
+            return `
+            <div class="mb-4">
+                <label class="row-label">${label}</label>
+                <div class="input-row-container">
+                    <div class="input-col">
+                        <div class="inner-label">Sub</div>
+                        <input id="${id}-s" type="number" placeholder="0">
+                    </div>
+                    <div class="input-col">
+                        <div class="inner-label">Rev</div>
+                        <input id="${id}-r" type="number" placeholder="0">
+                    </div>
+                </div>
+            </div>`;
         }
 
         async function showAddModal() {
@@ -249,24 +274,42 @@
                 confirmButtonColor: '#3b82f6',
                 showCancelButton: true,
                 cancelButtonText: 'ยกเลิก',
-                html: `<div class="text-left" style="max-height: 60vh; overflow-y: auto; padding-right: 5px;">
+                html: `<div class="text-left" style="max-height: 65vh; overflow-y: auto; padding: 0 5px;">
                     <label class="row-label">วันที่</label><input id="swal-date" type="date" class="mb-3" value="${getToday()}">
                     <label class="row-label">สาขา</label><select id="swal-branch" class="mb-3">${BRANCHES.map(b => `<option value="${b}">${b}</option>`).join('')}</select>
+                    
                     <div class="section-header">Stock</div>
                     <select id="swal-stock-status" class="mb-2" onchange="document.getElementById('stock-reason-div').classList.toggle('hidden', this.value !== 'ขาด')">
                         <option value="ครบ">ครบ</option><option value="ขาด">ขาด</option>
                     </select>
                     <div id="stock-reason-div" class="hidden mb-3"><input id="swal-stock-reason" type="text" placeholder="ระบุเหตุผลที่ขาด..."></div>
+                    
                     <div class="section-header">Transaction SL</div>
-                    <div class="input-row-container"><div class="input-col"><div class="inner-label">SL</div><input id="swal-sl" type="number" placeholder="0"></div><div class="input-col"><div class="inner-label">Cancel</div><input id="swal-cancelq" type="number" placeholder="0"></div></div>
+                    <div class="input-row-container">
+                        <div class="input-col"><div class="inner-label">SL</div><input id="swal-sl" type="number" placeholder="0"></div>
+                        <div class="input-col"><div class="inner-label">Cancel</div><input id="swal-cancelq" type="number" placeholder="0"></div>
+                    </div>
+                    
                     <div class="section-header">Postpay (Target)</div>
-                    <div class="input-row-container"><div class="input-col"><div class="inner-label">New</div><input id="swal-tg-new" type="number" placeholder="0"></div><div class="input-col"><div class="inner-label">Exist</div><input id="swal-tg-exist" type="number" placeholder="0"></div></div>
+                    <div class="input-row-container">
+                        <div class="input-col"><div class="inner-label">New</div><input id="swal-tg-new" type="number" placeholder="0"></div>
+                        <div class="input-col"><div class="inner-label">Exist</div><input id="swal-tg-exist" type="number" placeholder="0"></div>
+                    </div>
+                    
                     <div class="section-header">Postpay (ยอดรายรายการ)</div>
-                    ${renderInputRow("ราหู", "rahu")}${renderInputRow("Device Bundle", "dv")}${renderInputRow("Migrate", "mg")}${renderInputRow("MNP", "mnp")}${renderInputRow("Existing", "ex")}
+                    ${renderInputRow("ราหู", "rahu")}
+                    ${renderInputRow("Device Bundle", "dv")}
+                    ${renderInputRow("Migrate", "mg")}
+                    ${renderInputRow("MNP", "mnp")}
+                    ${renderInputRow("Existing", "ex")}
+                    
                     <div class="section-header">TOL (Target)</div>
-                    ${renderInputRow("Regis", "t-rg")}${renderInputRow("Install", "t-in")}
+                    ${renderInputRow("Regis", "t-rg")}
+                    ${renderInputRow("Install", "t-in")}
+                    
                     <div class="section-header">TOL (ยอดวันนี้)</div>
-                    ${renderInputRow("Regis", "rg")}${renderInputRow("Install", "in")}
+                    ${renderInputRow("Regis", "rg")}
+                    ${renderInputRow("Install", "in")}
                 </div>`,
                 preConfirm: () => ({
                     date: document.getElementById('swal-date').value,
