@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ส่งยอดขายสิ้นวัน - Parakit-site</title>
     <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -19,6 +21,7 @@
             --text-light: #8e8e93;
         }
 
+        /* ===== GLOBAL SETUP ===== */
         body { 
             font-family: 'Kanit', sans-serif; 
             background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%); 
@@ -29,7 +32,7 @@
             justify-content: center; 
             padding: 20px; 
             margin: 0;
-            padding-top: 60px; /* เว้นที่ให้ Top Header */
+            padding-top: 60px;
         }
 
         /* ===== Header Navbar ===== */
@@ -61,17 +64,35 @@
         .sidebar-overlay.active { display: block; opacity: 1; }
 
         .sidebar-float {
-            position: fixed; width: 280px; max-height: 70vh;
+            position: fixed; width: 280px; max-height: 75vh;
             background: var(--sidebar-dark); border-radius: 20px;
             overflow-y: auto; z-index: 2001; opacity: 0; visibility: hidden;
             transform: scale(0.8) translateY(10px);
             transition: opacity 0.3s, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
             box-shadow: 0 15px 40px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1);
+            
+            /* ซ่อน Scroll bar ทุก Browser */
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;     /* Firefox */
         }
+        .sidebar-float::-webkit-scrollbar { display: none; } /* Chrome, Safari */
+
         .sidebar-float.active { opacity: 1; visibility: visible; transform: scale(1) translateY(0); }
         .sidebar-float .sidebar-header { padding: 20px; font-size: 17px; font-weight: 600; color: #fff; border-bottom: 0.5px solid rgba(255,255,255,0.1); }
 
-        /* ===== Main Container ===== */
+        /* Sidebar Content Styles */
+        .sidebar-float .menu { padding: 8px 0; }
+        .sidebar-float .menu a, .sidebar-float .drop-btn { 
+            width: 100%; padding: 12px 20px; background: none; border: none; 
+            color: #ebebf5; text-align: left; font-size: 14px; cursor: pointer; 
+            display: flex; align-items: center; text-decoration: none; transition: 0.2s;
+        }
+        .sidebar-float .menu a:hover, .sidebar-float .drop-btn:hover { background: rgba(255,255,255,0.1); }
+        .sidebar-float .sub { display: none; background: rgba(0,0,0,0.2); }
+        .sidebar-float .item.open .sub { display: block; }
+        .sidebar-float .sub a { padding-left: 45px; font-size: 13px; color: #8e8e93; }
+
+        /* ===== Main UI ===== */
         .glass-container { 
             background: rgba(255, 255, 255, 0.4); 
             backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
@@ -83,18 +104,14 @@
         }
 
         .btn-ios { transition: all 0.3s ease; border-radius: 1rem; font-weight: 600; font-size: 1.1rem; }
-        
-        /* SweetAlert Custom UI */
-        .swal2-popup { font-family: 'Kanit', sans-serif !important; border-radius: 1.5rem !important; width: 90% !important; max-width: 480px !important; padding: 1.25rem !important; font-size: 0.95rem !important; }
+        footer { margin-top: 2rem; font-size: 0.85rem; color: #64748b; text-align: center; }
+
+        /* SWAL Custom Header */
         .section-header { border-left: 5px solid #3b82f6; padding-left: 10px; margin: 1.2rem 0 0.6rem 0; font-weight: 600; color: #1e3a8a; font-size: 1.05rem; text-align: left; }
         .row-label { font-size: 0.95rem; font-weight: 600; color: #4b5563; margin-bottom: 4px; display: block; text-align: left; }
         .input-row-container { display: flex !important; gap: 8px !important; margin-bottom: 10px; }
-        .input-col { flex: 1 !important; }
         .inner-label { font-size: 0.8rem; color: #3b82f6; font-weight: 600; margin-bottom: 2px; text-align: left; }
         input, select { border-radius: 0.7rem !important; border: 1.5px solid rgba(0,0,0,0.1) !important; padding: 8px 12px !important; font-size: 0.95rem !important; width: 100% !important; outline: none; }
-        pre { white-space: pre-wrap; word-wrap: break-word; line-height: 1.5; }
-
-        footer { margin-top: 2rem; font-size: 0.85rem; color: #64748b; text-align: center; }
     </style>
 </head>
 <body>
@@ -119,7 +136,7 @@
     <footer>© 2026 Copy Right By Angerina Frog</footer>
 
     <script>
-        // --- ระบบ Draggable Sidebar Logic (1:1) ---
+        // --- 1. ระบบ Draggable Sidebar Logic ---
         const dragBtn = document.getElementById('floatingMenuBtn');
         const sideFloat = document.getElementById('sidebarFloat');
         const sideOverlay = document.getElementById('sidebarOverlay');
@@ -177,8 +194,8 @@
             let top = btnRect.bottom + 10;
             let left = btnRect.left;
             if (left + sidebarWidth > window.innerWidth) left = window.innerWidth - sidebarWidth - 15;
-            if (top + 400 > window.innerHeight) {
-                top = btnRect.top - 410;
+            if (top + 450 > window.innerHeight) {
+                top = btnRect.top - 460;
                 if (top < 10) top = 10;
             }
             sideFloat.style.top = top + 'px';
@@ -194,17 +211,35 @@
             sideOverlay.classList.remove('active');
         }
 
+        // ฟังก์ชันโหลดเมนูและสถานะการกาง (Drop State)
         function loadSidebarContent() {
             fetch('sidebar.html')
                 .then(res => res.text())
                 .then(data => {
                     sideFloat.innerHTML = `<div class="sidebar-header">เมนูนำทาง</div>` + data;
+                    
+                    // คืนสถานะการกางเมนู (Persistence)
+                    ['menu-credit', 'menu-branch', 'menu-sales'].forEach(id => {
+                        if (localStorage.getItem(id) === 'true') {
+                            const el = sideFloat.querySelector('#' + id);
+                            if (el) el.classList.add('open');
+                        }
+                    });
                 }).catch(err => {
                     sideFloat.innerHTML = `<div class="sidebar-header">เมนูนำทาง</div><div style="padding:20px; color:#fff;">ไม่พบไฟล์ sidebar.html</div>`;
                 });
         }
 
-        // --- ระบบจัดการยอดขาย (Sale Report Logic) ---
+        // ฟังก์ชัน กาง-หุบ เมนู (Global function)
+        window.toggleDrop = function(btn, id) {
+            const item = btn.parentElement;
+            const isOpen = item.classList.toggle("open");
+            if (id) {
+                localStorage.setItem(id, isOpen); // จำสถานะไว้ในเครื่อง
+            }
+        }
+
+        // --- 2. ระบบจัดการยอดขาย (Sales Logic) ---
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxGQmg5crSIBj6utEmGEeYeNn6OwS_WFgaqynJiPCS5bqj1_PyFAZIuXZZ4jo-T30mY-w/exec"; 
         const BRANCHES = ["80000397 TS BC Pracha Uthit", "80000264 TS LT Rama 2", "80000022 TS BC Rama 2", "80000530 TS LT Bang Yai", "80000215 TS JC Wanghin", "80000251 TS LT Rama 3", "80000538 TS Robinson Samutprakan", "80000023 TS BC Bangplee", "80000263 TS LT Bangpoo", "80000087 TS LT Srinakarin", "80002441 TS Lotus Bangkruai Sainoi", "80000284 TS BC Sapankhwai", "80000086 TS LT Bangkapi", "80000207 TS LT Prachachuen", "80002390 TS Terminal 21 Rama 3"];
 
@@ -294,7 +329,6 @@
                     } else {
                         const [y, m, d] = data[0].split('-');
                         const formattedDate = `${d}/${m}/${y}`;
-                        
                         const summary = `สรุปสิ้นวัน (${formattedDate})\nสาขา: ${data[1]}\nนับ stock: ${data[2] === "ขาด" ? `ขาด (${data[3]})` : "ครบ"}\nSL: ${data[4]} / Cancel: ${data[5]}\n=======\nPostpay\nTG Day: New ${data[6]} / Exist ${data[7]}\nทำได้วันนี้: ${Number(data[8]) + Number(data[10]) + Number(data[12]) + Number(data[14]) + Number(data[16])} / ${Number(data[9]) + Number(data[11]) + Number(data[13]) + Number(data[15]) + Number(data[17])}\nแบ่งเป็น ซิม/REV\nราหู: ${data[8]}/${data[9]}\nDV: ${data[10]}/${data[11]}\nMG: ${data[12]}/${data[13]}\nMNP: ${data[14]}/${data[15]}\nExist: ${data[16]}/${data[17]}\n=========\nTOL\nTG Day: Regis ${data[18]}/${data[19]} | Install ${data[20]}/${data[21]}\nวันนี้: Regis ${data[22]}/${data[23]} | Install ${data[24]}/${data[25]}\n=======`;
                         
                         Swal.fire({ 
