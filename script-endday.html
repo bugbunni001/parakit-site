@@ -3,269 +3,142 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - iOS Glass Style</title>
-    <!-- Google Font: Kanit -->
+    <title>ส่งยอดขายสิ้นวัน - Parakit-site</title>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        body {
-            font-family: 'Kanit', sans-serif;
-            background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .glass-container {
-            background: rgba(255, 255, 255, 0.4);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 2.5rem;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
-            width: 100%;
-            max-width: 400px;
-            padding: 2.5rem;
-            text-align: center;
-        }
-
-        .btn-ios {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border-radius: 1.25rem;
-            font-weight: 600;
-        }
-
-        .btn-ios:active {
-            transform: scale(0.96);
-            opacity: 0.8;
-        }
-
-        .swal2-popup {
-            font-family: 'Kanit', sans-serif !important;
-            border-radius: 2rem !important;
-            background: rgba(255, 255, 255, 0.8) !important;
-            backdrop-filter: blur(25px) !important;
-            -webkit-backdrop-filter: blur(25px) !important;
-        }
-
-        .section-header {
-            border-left: 5px solid #3b82f6;
-            padding-left: 12px;
-            margin: 1.5rem 0 0.5rem 0;
-            font-weight: 600;
-            color: #1e3a8a;
-            font-size: 1rem;
-        }
-
-        .input-pair {
-            display: grid;
-            grid-template-cols: 1fr 1.5fr;
-            gap: 8px;
-            margin-bottom: 8px;
-        }
-
-        input, select {
-            border-radius: 0.75rem !important;
-            border: 1px solid rgba(0,0,0,0.1) !important;
-            background: rgba(255,255,255,0.6) !important;
-            padding: 8px 12px !important;
-            font-size: 0.875rem !important;
-        }
+        body { font-family: 'Kanit', sans-serif; background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .glass-container { background: rgba(255, 255, 255, 0.4); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 2rem; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05); width: 100%; max-width: 400px; padding: 2rem; text-align: center; }
+        .btn-ios { transition: all 0.3s ease; border-radius: 1rem; font-weight: 600; font-size: 1.1rem; }
+        
+        /* ปรับ Pop-up ให้กะทัดรัดขึ้น */
+        .swal2-popup { font-family: 'Kanit', sans-serif !important; border-radius: 1.5rem !important; width: 90% !important; max-width: 480px !important; padding: 1.25rem !important; font-size: 0.95rem !important; }
+        .section-header { border-left: 5px solid #3b82f6; padding-left: 10px; margin: 1.2rem 0 0.6rem 0; font-weight: 600; color: #1e3a8a; font-size: 1.05rem; text-align: left; }
+        .row-label { font-size: 0.95rem; font-weight: 600; color: #4b5563; margin-bottom: 4px; display: block; text-align: left; }
+        .input-row-container { display: flex !important; gap: 8px !important; margin-bottom: 10px; }
+        .input-col { flex: 1 !important; }
+        .inner-label { font-size: 0.8rem; color: #3b82f6; font-weight: 600; margin-bottom: 2px; text-align: left; }
+        input, select { border-radius: 0.7rem !important; border: 1.5px solid rgba(0,0,0,0.1) !important; padding: 8px 12px !important; font-size: 0.95rem !important; width: 100% !important; }
+        pre { white-space: pre-wrap; word-wrap: break-word; line-height: 1.5; }
     </style>
 </head>
 <body>
-
     <div class="glass-container">
-        <h1 class="text-3xl font-semibold text-gray-800 mb-2">Sale Report</h1>
-        <p class="text-gray-500 text-sm mb-8">จัดการยอดขายรายวันของท่าน</p>
-
-        <div class="space-y-4">
-            <button onclick="showAddModal()" class="btn-ios w-full bg-blue-500 text-white py-4 shadow-lg shadow-blue-200 flex items-center justify-center gap-3">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                </svg>
-                เพิ่มข้อมูลใหม่
-            </button>
-
-            <button onclick="showFetchModal()" class="btn-ios w-full bg-white text-gray-700 py-4 shadow-sm border border-gray-100 flex items-center justify-center gap-3">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                </svg>
-                ดึงข้อมูลสรุป
-            </button>
+        <h1 class="text-2xl font-semibold text-gray-800 mb-1">ส่งยอดขายสิ้นวัน<h1>
+        <p class="text-gray-500 text-xs mb-6">จัดเก็บข้อมูลยอดขายสิ้นวันแต่ละสาขา</p>
+        <div class="space-y-3">
+            <button onclick="showAddModal()" class="btn-ios w-full bg-blue-500 text-white py-4 shadow-lg shadow-blue-200 hover:bg-blue-600">เพิ่มข้อมูลใหม่</button>
+            <button onclick="showFetchModal()" class="btn-ios w-full bg-white text-gray-700 py-4 shadow-sm border border-gray-100 hover:bg-gray-50">ดึงข้อมูลสรุป</button>
         </div>
     </div>
 
     <script>
-        // แก้ไข URL ตรงนี้ครับ
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbynQevPmYHi8rJ7kFH-YnITj3CNU1hzkcwhR3Cwky7oh9Js7GnH8bcBXauvpc-QhENcnQ/exec";
-        
-        const BRANCHES = [
-            "80000397 TS BC Pracha Uthit", "80000264 TS LT Rama 2", "80000022 TS BC Rama 2",
-            "80000530 TS LT Bang Yai", "80000215 TS JC Wanghin", "80000251 TS LT Rama 3",
-            "80000538 TS Robinson Samutprakan", "80000023 TS BC Bangplee", "80000263 TS LT Bangpoo",
-            "80000087 TS LT Srinakarin", "80002441 TS Lotus Bangkruai Sainoi", "80000284 TS BC Sapankhwai",
-            "80000086 TS LT Bangkapi", "80000207 TS LT Prachachuen", "80002390 TS Terminal 21 Rama 3"
-        ];
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxGQmg5crSIBj6utEmGEeYeNn6OwS_WFgaqynJiPCS5bqj1_PyFAZIuXZZ4jo-T30mY-w/exec"; // นำ URL ของ Web App มาวางตรงนี้ครับ
+        const BRANCHES = ["80000397 TS BC Pracha Uthit", "80000264 TS LT Rama 2", "80000022 TS BC Rama 2", "80000530 TS LT Bang Yai", "80000215 TS JC Wanghin", "80000251 TS LT Rama 3", "80000538 TS Robinson Samutprakan", "80000023 TS BC Bangplee", "80000263 TS LT Bangpoo", "80000087 TS LT Srinakarin", "80002441 TS Lotus Bangkruai Sainoi", "80000284 TS BC Sapankhwai", "80000086 TS LT Bangkapi", "80000207 TS LT Prachachuen", "80002390 TS Terminal 21 Rama 3"];
 
         function getToday() { return new Date().toISOString().split('T')[0]; }
+        
+        function renderInputRow(label, id) {
+            return `<div class="mb-3"><label class="row-label">${label}</label><div class="input-row-container"><div class="input-col"><div class="inner-label">Sub</div><input id="${id}-s" type="number" placeholder="0"></div><div class="input-col"><div class="inner-label">Rev</div><input id="${id}-r" type="number" placeholder="0"></div></div></div>`;
+        }
 
         async function showAddModal() {
             const { value: formValues } = await Swal.fire({
-                title: 'กรอกข้อมูลรายวัน',
+                title: 'กรอกยอดขายรายวัน',
                 confirmButtonText: 'บันทึกข้อมูล',
                 confirmButtonColor: '#3b82f6',
                 showCancelButton: true,
-                cancelButtonText: 'ปิด',
-                html: `
-                    <div class="text-left space-y-3 px-1" style="max-height: 65vh; overflow-y: auto;">
-                        <label class="block text-xs font-semibold text-gray-500">เลือกวันที่</label>
-                        <input id="swal-date" type="date" class="w-full mb-2" value="${getToday()}">
-                        
-                        <label class="block text-xs font-semibold text-gray-500">ชื่อสาขา</label>
-                        <select id="swal-branch" class="w-full mb-2">
-                            ${BRANCHES.map(b => `<option value="${b}">${b}</option>`).join('')}
-                        </select>
-
-                        <div class="section-header">Stock</div>
-                        <label class="block text-xs font-semibold text-gray-500">นับ Stock</label>
-                        <select id="swal-stock-status" class="w-full mb-2" onchange="toggleStockReason(this.value)">
-                            <option value="ครบ">ครบ</option>
-                            <option value="ขาด">ขาด</option>
-                        </select>
-                        <div id="stock-reason-div" class="hidden">
-                            <input id="swal-stock-reason" type="text" class="w-full mt-2" placeholder="เหตุผลที่ขาด...">
-                        </div>
-
-                        <div class="section-header">Transaction SL</div>
-                        <div class="grid grid-cols-2 gap-2">
-                            <input id="swal-sl" type="number" placeholder="จำนวนคิว (SL)">
-                            <input id="swal-cancelq" type="number" placeholder="คิวยกเลิก">
-                        </div>
-
-                        <div class="section-header">Postpay</div>
-                        <div class="grid grid-cols-2 gap-2 mb-2">
-                            <input id="swal-tg-new" type="number" placeholder="TG Day New">
-                            <input id="swal-tg-exist" type="number" placeholder="TG Day Exist">
-                        </div>
-                        
-                        <p class="text-[10px] text-blue-600 mb-1">ระบุยอดขาย (Sub / Revenue)</p>
-                        <div class="input-pair"><input id="rahu-s" type="number" placeholder="Rahu Sub"><input id="rahu-r" type="number" placeholder="Rahu Rev"></div>
-                        <div class="input-pair"><input id="dv-s" type="number" placeholder="DV Sub"><input id="dv-r" type="number" placeholder="DV Rev"></div>
-                        <div class="input-pair"><input id="mg-s" type="number" placeholder="MG Sub"><input id="mg-r" type="number" placeholder="MG Rev"></div>
-                        <div class="input-pair"><input id="mnp-s" type="number" placeholder="MNP Sub"><input id="mnp-r" type="number" placeholder="MNP Rev"></div>
-                        <div class="input-pair"><input id="ex-s" type="number" placeholder="Exist Sub"><input id="ex-r" type="number" placeholder="Exist Rev"></div>
-
-                        <div class="section-header">TOL</div>
-                        <p class="text-[10px] text-blue-600 mb-1">Target (Sub / Rev)</p>
-                        <div class="input-pair"><input id="t-rg-s" type="number" placeholder="TG Regis Sub"><input id="t-rg-r" type="number" placeholder="TG Regis Rev"></div>
-                        <div class="input-pair"><input id="t-in-s" type="number" placeholder="TG Inst Sub"><input id="t-in-r" type="number" placeholder="TG Inst Rev"></div>
-                        
-                        <p class="text-[10px] text-blue-600 mb-1">ยอดวันนี้ (Sub / Rev)</p>
-                        <div class="input-pair"><input id="rg-s" type="number" placeholder="Regis Sub"><input id="rg-r" type="number" placeholder="Regis Rev"></div>
-                        <div class="input-pair"><input id="in-s" type="number" placeholder="Inst Sub"><input id="in-r" type="number" placeholder="Inst Rev"></div>
-                    </div>
-                `,
-                preConfirm: () => {
-                    return {
-                        date: document.getElementById('swal-date').value,
-                        branch: document.getElementById('swal-branch').value,
-                        stockStatus: document.getElementById('swal-stock-status').value,
-                        stockReason: document.getElementById('swal-stock-reason').value,
-                        sl: document.getElementById('swal-sl').value,
-                        cancelQ: document.getElementById('swal-cancelq').value,
-                        tgNew: document.getElementById('swal-tg-new').value,
-                        tgExist: document.getElementById('swal-tg-exist').value,
-                        rahuSub: document.getElementById('rahu-s').value || 0,
-                        rahuRev: document.getElementById('rahu-r').value || 0,
-                        dvSub: document.getElementById('dv-s').value || 0,
-                        dvRev: document.getElementById('dv-r').value || 0,
-                        mgSub: document.getElementById('mg-s').value || 0,
-                        mgRev: document.getElementById('mg-r').value || 0,
-                        mnpSub: document.getElementById('mnp-s').value || 0,
-                        mnpRev: document.getElementById('mnp-r').value || 0,
-                        existSub: document.getElementById('ex-s').value || 0,
-                        existRev: document.getElementById('ex-r').value || 0,
-                        tolTgRegisSub: document.getElementById('t-rg-s').value || 0,
-                        tolTgRegisRev: document.getElementById('t-rg-r').value || 0,
-                        tolTgInstSub: document.getElementById('t-in-s').value || 0,
-                        tolTgInstRev: document.getElementById('t-in-r').value || 0,
-                        tolRegisSub: document.getElementById('rg-s').value || 0,
-                        tolRegisRev: document.getElementById('rg-r').value || 0,
-                        tolInstSub: document.getElementById('in-s').value || 0,
-                        tolInstRev: document.getElementById('in-r').value || 0
-                    }
-                }
+                cancelButtonText: 'ยกเลิก',
+                html: `<div class="text-left" style="max-height: 60vh; overflow-y: auto; padding-right: 5px;">
+                    <label class="row-label">วันที่</label><input id="swal-date" type="date" class="mb-3" value="${getToday()}">
+                    <label class="row-label">สาขา</label><select id="swal-branch" class="mb-3">${BRANCHES.map(b => `<option value="${b}">${b}</option>`).join('')}</select>
+                    <div class="section-header">Stock</div>
+                    <select id="swal-stock-status" class="mb-2" onchange="document.getElementById('stock-reason-div').classList.toggle('hidden', this.value !== 'ขาด')">
+                        <option value="ครบ">ครบ</option><option value="ขาด">ขาด</option>
+                    </select>
+                    <div id="stock-reason-div" class="hidden mb-3"><input id="swal-stock-reason" type="text" placeholder="ระบุเหตุผลที่ขาด..."></div>
+                    <div class="section-header">Transaction SL</div>
+                    <div class="input-row-container"><div class="input-col"><div class="inner-label">SL</div><input id="swal-sl" type="number" placeholder="0"></div><div class="input-col"><div class="inner-label">Cancel</div><input id="swal-cancelq" type="number" placeholder="0"></div></div>
+                    <div class="section-header">Postpay (Target)</div>
+                    <div class="input-row-container"><div class="input-col"><div class="inner-label">New</div><input id="swal-tg-new" type="number" placeholder="0"></div><div class="input-col"><div class="inner-label">Exist</div><input id="swal-tg-exist" type="number" placeholder="0"></div></div>
+                    <div class="section-header">Postpay (ยอดรายรายการ)</div>
+                    ${renderInputRow("ราหู", "rahu")}${renderInputRow("Device Bundle", "dv")}${renderInputRow("Migrate", "mg")}${renderInputRow("MNP", "mnp")}${renderInputRow("Existing", "ex")}
+                    <div class="section-header">TOL (Target)</div>
+                    ${renderInputRow("Regis", "t-rg")}${renderInputRow("Install", "t-in")}
+                    <div class="section-header">TOL (ยอดวันนี้)</div>
+                    ${renderInputRow("Regis", "rg")}${renderInputRow("Install", "in")}
+                </div>`,
+                preConfirm: () => ({
+                    date: document.getElementById('swal-date').value,
+                    branch: document.getElementById('swal-branch').value,
+                    stockStatus: document.getElementById('swal-stock-status').value,
+                    stockReason: document.getElementById('swal-stock-reason').value || "",
+                    sl: document.getElementById('swal-sl').value || 0,
+                    cancelQ: document.getElementById('swal-cancelq').value || 0,
+                    tgNew: document.getElementById('swal-tg-new').value || 0,
+                    tgExist: document.getElementById('swal-tg-exist').value || 0,
+                    rahuSub: document.getElementById('rahu-s').value || 0, rahuRev: document.getElementById('rahu-r').value || 0,
+                    dvSub: document.getElementById('dv-s').value || 0, dvRev: document.getElementById('dv-r').value || 0,
+                    mgSub: document.getElementById('mg-s').value || 0, mgRev: document.getElementById('mg-r').value || 0,
+                    mnpSub: document.getElementById('mnp-s').value || 0, mnpRev: document.getElementById('mnp-r').value || 0,
+                    existSub: document.getElementById('ex-s').value || 0, existRev: document.getElementById('ex-r').value || 0,
+                    tolTgRegisSub: document.getElementById('t-rg-s').value || 0, tolTgRegisRev: document.getElementById('t-rg-r').value || 0,
+                    tolTgInstSub: document.getElementById('t-in-s').value || 0, tolTgInstRev: document.getElementById('t-in-r').value || 0,
+                    tolRegisSub: document.getElementById('rg-s').value || 0, tolRegisRev: document.getElementById('rg-r').value || 0,
+                    tolInstSub: document.getElementById('in-s').value || 0, tolInstRev: document.getElementById('in-r').value || 0
+                })
             });
 
             if (formValues) {
                 Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
                 fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(formValues) })
-                .then(() => Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ!', showConfirmButton: false, timer: 1500 }));
+                .then(() => Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ!', timer: 1500 }))
+                .catch(() => Swal.fire('Error', 'ไม่สามารถเชื่อมต่อ Server ได้', 'error'));
             }
-        }
-
-        function toggleStockReason(val) {
-            document.getElementById('stock-reason-div').classList.toggle('hidden', val !== 'ขาด');
         }
 
         async function showFetchModal() {
             const { value: fetchParams } = await Swal.fire({
-                title: 'ดึงข้อมูลสรุปยอด',
+                title: 'ดึงข้อมูลสรุป',
                 confirmButtonText: 'ดึงข้อมูล',
-                confirmButtonColor: '#10b981',
-                html: `
-                    <div class="text-left space-y-3">
-                        <label class="block text-xs font-semibold text-gray-500">วันที่</label>
-                        <input id="f-date" type="date" class="w-full" value="${getToday()}">
-                        <label class="block text-xs font-semibold text-gray-500 mt-4">สาขา</label>
-                        <select id="f-branch" class="w-full">
-                            ${BRANCHES.map(b => `<option value="${b}">${b}</option>`).join('')}
-                        </select>
-                    </div>
-                `,
+                confirmButtonColor: '#3b82f6',
+                showCancelButton: true,
+                cancelButtonText: 'ยกเลิก',
+                html: `<div class="text-left">
+                    <label class="row-label">ระบุวันที่</label><input id="f-date" type="date" value="${getToday()}" class="mb-4">
+                    <label class="row-label">ระบุสาขา</label><select id="f-branch">${BRANCHES.map(b => `<option value="${b}">${b}</option>`).join('')}</select>
+                </div>`,
                 preConfirm: () => ({ date: document.getElementById('f-date').value, branch: document.getElementById('f-branch').value })
             });
 
             if (fetchParams) {
-                Swal.fire({ title: 'กำลังโหลด...', didOpen: () => Swal.showLoading() });
-                const res = await fetch(`${SCRIPT_URL}?date=${fetchParams.date}&branch=${encodeURIComponent(fetchParams.branch)}`);
-                const data = await res.json();
-                
-                if (data === "Not Found") {
-                    Swal.fire('ไม่พบข้อมูล', 'โปรดตรวจสอบวันที่และสาขาอีกครั้งครับ', 'warning');
-                } else {
-                    const dateArr = data[0].split('T')[0].split('-');
-                    const formattedDate = `${dateArr[2]}/${dateArr[1]}/${dateArr[0]}`;
-                    const stockDisplay = data[2] === "ขาด" ? `ขาด เหตุผลที่ขาด : ${data[3]}` : "ครบ";
+                Swal.fire({ title: 'กำลังค้นหา...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                try {
+                    const response = await fetch(`${SCRIPT_URL}?date=${fetchParams.date}&branch=${encodeURIComponent(fetchParams.branch)}`);
+                    const data = await response.json();
                     
-                    // คำนวณยอดรวมวันนี้
-                    const totalSub = Number(data[8]) + Number(data[10]) + Number(data[12]) + Number(data[14]) + Number(data[16]);
-                    const totalRev = Number(data[9]) + Number(data[11]) + Number(data[13]) + Number(data[15]) + Number(data[17]);
-
-                    const summary = `สรุปสิ้นวัน\n(${formattedDate})\nสาขา : ${data[1]}\nนับ stock : ${stockDisplay}\nSL : ${data[4]}\nQ ยกเลิก : ${data[5]}\n=======\nPostpay\nTG day : New : ${data[6]} / Existing : ${data[7]}\nทำได้วันนี้ : ${totalSub} / ${totalRev}\nแบ่งเป็น ระบุ จำนวนซิม /REV\nNew\nราหู : ${data[8]} / ${data[9]}\nDV bundle : ${data[10]} / ${data[11]}\nMG : ${data[12]} / ${data[13]}\nMNP : ${data[14]} / ${data[15]}\nExisting : ${data[16]} / ${data[17]}\n=========\nTOL\nTG day : Regis : ${data[18]} / ${data[19]} | Install : ${data[20]} / ${data[21]}\nทำได้วันนี้ : Regis : ${data[22]} / ${data[23]} | Install : ${data[24]} / ${data[25]}\n=======`;
-
-                    Swal.fire({
-                        title: 'ข้อมูลสรุปยอดขาย',
-                        confirmButtonText: 'คัดลอกส่ง Line',
-                        confirmButtonColor: '#22c55e',
-                        html: `<pre class="text-left text-[11px] bg-gray-50 p-3 rounded-lg border border-gray-100 shadow-inner overflow-x-auto text-gray-700">${summary}</pre>`,
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            navigator.clipboard.writeText(summary);
-                            Swal.fire({
-                                title: 'คัดลอกเรียบร้อย!',
-                                text: 'นำไปวางในไลน์ได้เลยครับ',
-                                icon: 'success',
-                                timer: 1500,
-                                showConfirmButton: false
-                            });
-                        }
-                    });
-                }
+                    if (data === "Not Found") {
+                        Swal.fire('ไม่พบข้อมูล', 'ไม่พบข้อมูลของสาขาและวันที่ระบุครับ', 'warning');
+                    } else {
+                        // จัดรูปแบบวันที่แสดงผล (DD/MM/YYYY)
+                        const [y, m, d] = data[0].split('-');
+                        const formattedDate = `${d}/${m}/${y}`;
+                        
+                        const summary = `สรุปสิ้นวัน (${formattedDate})\nสาขา: ${data[1]}\nนับ stock: ${data[2] === "ขาด" ? `ขาด (${data[3]})` : "ครบ"}\nSL: ${data[4]} / Cancel: ${data[5]}\n=======\nPostpay\nTG Day: New ${data[6]} / Exist ${data[7]}\nทำได้วันนี้: ${Number(data[8]) + Number(data[10]) + Number(data[12]) + Number(data[14]) + Number(data[16])} / ${Number(data[9]) + Number(data[11]) + Number(data[13]) + Number(data[15]) + Number(data[17])}\nแบ่งเป็น ซิม/REV\nราหู: ${data[8]}/${data[9]}\nDV: ${data[10]}/${data[11]}\nMG: ${data[12]}/${data[13]}\nMNP: ${data[14]}/${data[15]}\nExist: ${data[16]}/${data[17]}\n=========\nTOL\nTG Day: Regis ${data[18]}/${data[19]} | Install ${data[20]}/${data[21]}\nวันนี้: Regis ${data[22]}/${data[23]} | Install ${data[24]}/${data[25]}\n=======`;
+                        
+                        Swal.fire({ 
+                            title: 'พบข้อมูลล่าสุด', 
+                            confirmButtonText: 'คัดลอกส่ง Line', 
+                            html: `<pre class="text-left text-[12px] bg-gray-50 p-3 rounded-lg border border-gray-200 font-mono">${summary}</pre>` 
+                        }).then((result) => { 
+                            if (result.isConfirmed) { 
+                                navigator.clipboard.writeText(summary); 
+                                Swal.fire({ title: 'คัดลอกแล้ว!', icon: 'success', timer: 1000 }); 
+                            } 
+                        });
+                    }
+                } catch (error) { Swal.fire('Error', 'ไม่สามารถเชื่อมต่อ Server ได้', 'error'); }
             }
         }
     </script>
