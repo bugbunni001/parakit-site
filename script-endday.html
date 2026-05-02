@@ -4,28 +4,110 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ส่งยอดขายสิ้นวัน - Parakit-site</title>
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        body { font-family: 'Kanit', sans-serif; background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
-        .glass-container { background: rgba(255, 255, 255, 0.4); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 2rem; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05); width: 100%; max-width: 400px; padding: 2rem; text-align: center; }
+        :root {
+            --ios-blue: #007aff;
+            --ios-bg: #f2f2f7;
+            --glass-white: rgba(255, 255, 255, 0.75);
+            --glass-border: rgba(255, 255, 255, 0.5);
+            --sidebar-dark: rgba(28, 28, 30, 0.96);
+            --text-main: #1c1c1e;
+            --text-light: #8e8e93;
+        }
+
+        body { 
+            font-family: 'Kanit', sans-serif; 
+            background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%); 
+            min-height: 100vh; 
+            display: flex; 
+            flex-direction: column;
+            align-items: center; 
+            justify-content: center; 
+            padding: 20px; 
+            margin: 0;
+            padding-top: 60px; /* เว้นที่ให้ Top Header */
+        }
+
+        /* ===== Header Navbar ===== */
+        .top-header {
+            position: fixed; top: 0; left: 0; right: 0; height: 60px;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            z-index: 1000; display: flex; align-items: center; 
+            padding: 0 20px 0 75px;
+            border-bottom: 0.5px solid rgba(0,0,0,0.1);
+        }
+
+        /* ===== Floating Draggable Button ===== */
+        #floatingMenuBtn {
+            position: fixed; top: 10px; left: 15px; width: 45px; height: 45px;
+            background: var(--ios-blue); color: white; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px; cursor: move; z-index: 2100;
+            box-shadow: 0 4px 15px rgba(0, 122, 255, 0.4); border: none;
+            touch-action: none; transition: transform 0.2s, opacity 0.2s;
+        }
+        #floatingMenuBtn:active { transform: scale(0.9); }
+
+        /* ===== Sidebar Style ===== */
+        .sidebar-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.2);
+            z-index: 2000; display: none; opacity: 0; transition: opacity 0.3s;
+        }
+        .sidebar-overlay.active { display: block; opacity: 1; }
+
+        .sidebar-float {
+            position: fixed; width: 280px; max-height: 70vh;
+            background: var(--sidebar-dark); border-radius: 20px;
+            overflow-y: auto; z-index: 2001; opacity: 0; visibility: hidden;
+            transform: scale(0.8) translateY(10px);
+            transition: opacity 0.3s, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1);
+        }
+        .sidebar-float.active { opacity: 1; visibility: visible; transform: scale(1) translateY(0); }
+        .sidebar-float .sidebar-header { padding: 20px; font-size: 17px; font-weight: 600; color: #fff; border-bottom: 0.5px solid rgba(255,255,255,0.1); }
+
+        /* ===== Main Container ===== */
+        .glass-container { 
+            background: rgba(255, 255, 255, 0.4); 
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.3); 
+            border-radius: 2rem; 
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05); 
+            width: 100%; max-width: 400px; 
+            padding: 2.5rem 2rem; text-align: center; 
+        }
+
         .btn-ios { transition: all 0.3s ease; border-radius: 1rem; font-weight: 600; font-size: 1.1rem; }
         
-        /* ปรับ Pop-up ให้กะทัดรัดขึ้น */
+        /* SweetAlert Custom UI */
         .swal2-popup { font-family: 'Kanit', sans-serif !important; border-radius: 1.5rem !important; width: 90% !important; max-width: 480px !important; padding: 1.25rem !important; font-size: 0.95rem !important; }
         .section-header { border-left: 5px solid #3b82f6; padding-left: 10px; margin: 1.2rem 0 0.6rem 0; font-weight: 600; color: #1e3a8a; font-size: 1.05rem; text-align: left; }
         .row-label { font-size: 0.95rem; font-weight: 600; color: #4b5563; margin-bottom: 4px; display: block; text-align: left; }
         .input-row-container { display: flex !important; gap: 8px !important; margin-bottom: 10px; }
         .input-col { flex: 1 !important; }
         .inner-label { font-size: 0.8rem; color: #3b82f6; font-weight: 600; margin-bottom: 2px; text-align: left; }
-        input, select { border-radius: 0.7rem !important; border: 1.5px solid rgba(0,0,0,0.1) !important; padding: 8px 12px !important; font-size: 0.95rem !important; width: 100% !important; }
+        input, select { border-radius: 0.7rem !important; border: 1.5px solid rgba(0,0,0,0.1) !important; padding: 8px 12px !important; font-size: 0.95rem !important; width: 100% !important; outline: none; }
         pre { white-space: pre-wrap; word-wrap: break-word; line-height: 1.5; }
+
+        footer { margin-top: 2rem; font-size: 0.85rem; color: #64748b; text-align: center; }
     </style>
 </head>
 <body>
+
+    <header class="top-header">
+        <div style="font-weight: 700; font-size: 1.25rem; color: var(--text-main); letter-spacing: -0.8px;">ส่งยอดขายสิ้นวัน</div>
+    </header>
+
+    <button id="floatingMenuBtn" title="ลากเพื่อย้าย">เมนู</button>
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebarFloat()"></div>
+    <aside class="sidebar-float" id="sidebarFloat"></aside>
+
     <div class="glass-container">
-        <h1 class="text-2xl font-semibold text-gray-800 mb-1">ส่งยอดขายสิ้นวัน<h1>
+        <h2 class="text-xl font-semibold text-gray-800 mb-1">Sale Report</h2>
         <p class="text-gray-500 text-xs mb-6">จัดเก็บข้อมูลยอดขายสิ้นวันแต่ละสาขา</p>
         <div class="space-y-3">
             <button onclick="showAddModal()" class="btn-ios w-full bg-blue-500 text-white py-4 shadow-lg shadow-blue-200 hover:bg-blue-600">เพิ่มข้อมูลใหม่</button>
@@ -33,8 +115,96 @@
         </div>
     </div>
 
+    <footer>© 2026 Copy Right By Angerina Frog</footer>
+
     <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxGQmg5crSIBj6utEmGEeYeNn6OwS_WFgaqynJiPCS5bqj1_PyFAZIuXZZ4jo-T30mY-w/exec"; // นำ URL ของ Web App มาวางตรงนี้ครับ
+        // --- ระบบ Draggable Sidebar Logic (1:1) ---
+        const dragBtn = document.getElementById('floatingMenuBtn');
+        const sideFloat = document.getElementById('sidebarFloat');
+        const sideOverlay = document.getElementById('sidebarOverlay');
+        let isDragging = false;
+        let startX, startY, shiftX, shiftY;
+
+        function loadButtonPosition() {
+            const savedLeft = localStorage.getItem('floatBtnLeft');
+            const savedTop = localStorage.getItem('floatBtnTop');
+            if (savedLeft && savedTop) {
+                dragBtn.style.left = savedLeft + 'px';
+                dragBtn.style.top = savedTop + 'px';
+            }
+        }
+
+        dragBtn.onpointerdown = function(e) {
+            isDragging = false;
+            startX = e.clientX; startY = e.clientY;
+            const rect = dragBtn.getBoundingClientRect();
+            shiftX = e.clientX - rect.left;
+            shiftY = e.clientY - rect.top;
+            dragBtn.setPointerCapture(e.pointerId);
+            document.addEventListener('pointermove', onPointerMove);
+            document.addEventListener('pointerup', onPointerUp);
+        };
+
+        function onPointerMove(e) {
+            if (!isDragging && (Math.abs(e.clientX - startX) > 5 || Math.abs(e.clientY - startY) > 5)) isDragging = true;
+            if (isDragging) {
+                let newX = e.clientX - shiftX;
+                let newY = e.clientY - shiftY;
+                newX = Math.max(0, Math.min(newX, window.innerWidth - dragBtn.offsetWidth));
+                newY = Math.max(0, Math.min(newY, window.innerHeight - dragBtn.offsetHeight));
+                dragBtn.style.left = newX + 'px';
+                dragBtn.style.top = newY + 'px';
+            }
+        }
+
+        function onPointerUp(e) {
+            document.removeEventListener('pointermove', onPointerMove);
+            document.removeEventListener('pointerup', onPointerUp);
+            dragBtn.releasePointerCapture(e.pointerId);
+            if (isDragging) {
+                localStorage.setItem('floatBtnLeft', dragBtn.offsetLeft);
+                localStorage.setItem('floatBtnTop', dragBtn.offsetTop);
+            } else {
+                toggleSidebarFloat();
+            }
+            isDragging = false;
+        }
+
+        function toggleSidebarFloat() {
+            const btnRect = dragBtn.getBoundingClientRect();
+            const sidebarWidth = 280;
+            let top = btnRect.bottom + 10;
+            let left = btnRect.left;
+            if (left + sidebarWidth > window.innerWidth) left = window.innerWidth - sidebarWidth - 15;
+            if (top + 400 > window.innerHeight) {
+                top = btnRect.top - 410;
+                if (top < 10) top = 10;
+            }
+            sideFloat.style.top = top + 'px';
+            sideFloat.style.left = left + 'px';
+            sideFloat.style.transformOrigin = `${btnRect.left - left + 20}px ${btnRect.top > top ? 'bottom' : 'top'}`;
+            const isActive = sideFloat.classList.toggle('active');
+            sideOverlay.classList.toggle('active', isActive);
+            if (isActive && !sideFloat.innerHTML) loadSidebarContent();
+        }
+
+        function closeSidebarFloat() {
+            sideFloat.classList.remove('active');
+            sideOverlay.classList.remove('active');
+        }
+
+        function loadSidebarContent() {
+            fetch('sidebar.html')
+                .then(res => res.text())
+                .then(data => {
+                    sideFloat.innerHTML = `<div class="sidebar-header">เมนูนำทาง</div>` + data;
+                }).catch(err => {
+                    sideFloat.innerHTML = `<div class="sidebar-header">เมนูนำทาง</div><div style="padding:20px; color:#fff;">ไม่พบไฟล์ sidebar.html</div>`;
+                });
+        }
+
+        // --- ระบบจัดการยอดขาย (Sale Report Logic) ---
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxGQmg5crSIBj6utEmGEeYeNn6OwS_WFgaqynJiPCS5bqj1_PyFAZIuXZZ4jo-T30mY-w/exec"; 
         const BRANCHES = ["80000397 TS BC Pracha Uthit", "80000264 TS LT Rama 2", "80000022 TS BC Rama 2", "80000530 TS LT Bang Yai", "80000215 TS JC Wanghin", "80000251 TS LT Rama 3", "80000538 TS Robinson Samutprakan", "80000023 TS BC Bangplee", "80000263 TS LT Bangpoo", "80000087 TS LT Srinakarin", "80002441 TS Lotus Bangkruai Sainoi", "80000284 TS BC Sapankhwai", "80000086 TS LT Bangkapi", "80000207 TS LT Prachachuen", "80002390 TS Terminal 21 Rama 3"];
 
         function getToday() { return new Date().toISOString().split('T')[0]; }
@@ -121,7 +291,6 @@
                     if (data === "Not Found") {
                         Swal.fire('ไม่พบข้อมูล', 'ไม่พบข้อมูลของสาขาและวันที่ระบุครับ', 'warning');
                     } else {
-                        // จัดรูปแบบวันที่แสดงผล (DD/MM/YYYY)
                         const [y, m, d] = data[0].split('-');
                         const formattedDate = `${d}/${m}/${y}`;
                         
@@ -141,6 +310,8 @@
                 } catch (error) { Swal.fire('Error', 'ไม่สามารถเชื่อมต่อ Server ได้', 'error'); }
             }
         }
+
+        window.onload = loadButtonPosition;
     </script>
 </body>
 </html>
