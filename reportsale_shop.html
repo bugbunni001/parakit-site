@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>รายงานยอดขาย Shop</title>
+    <title>รายงานยอดขาย Shop - Parakit-site</title>
     <link rel="icon" type="image/png" href="favicon.png">
     <!-- โหลดชุดฟอนต์พรีเมียม Prompt และ Bootstrap Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -276,8 +276,8 @@
             <button class="btn-fetch" onclick="fetchData()">ดึงข้อมูล</button>
         </div>
 
-        <!-- Dashboard Workspace พื้นที่กระดานประมวลผลข้อมูล -->
-        <div id="shopReportContainer">
+        <!-- Dashboard Workspace พื้นที่กระดานประมวลผลข้อมูล (ตั้งค่าซ่อน display: none ไว้ตั้งแต่เริ่มต้น) -->
+        <div id="shopReportContainer" style="display: none;">
             
             <!-- การ์ดยอดขายรายวัน Shop -->
             <div class="card card-daily">
@@ -401,6 +401,7 @@
         let currentSalesData = [];
         let currentPage = 1;
         const rowsPerPage = 5;
+        let isDataFetched = false; // ตัวแปรสถานะตรวจสอบว่าเคยกดดึงข้อมูลสำเร็จแล้วหรือยัง
 
         function initDatePicker() {
             const picker = document.getElementById('datePicker');
@@ -419,7 +420,9 @@
             loadButtonPosition(); // คืนค่าพิกัดปุ่มลอยเมื่อเข้าเว็บ
             initDatePicker();
             
+            // ปรับตรรกะ Dropdown: จะสลับหน้าจอรายงานได้ก็ต่อเมื่อมีข้อมูลพร้อมเรนเดอร์แล้วเท่านั้น (ป้องกันหน้าเปล่าโผล่)
             document.getElementById('reportType').addEventListener('change', function() {
+                if(!isDataFetched) return; 
                 if(this.value === 'shop') {
                     document.getElementById('shopReportContainer').style.display = 'block';
                     document.getElementById('amReportContainer').style.display = 'none';
@@ -462,7 +465,14 @@
             const reportType = document.getElementById('reportType').value;
             
             if(!selectedDate) return alert("กรุณาเลือกวันที่ก่อนครับ");
-            if(reportType === 'am') return; 
+            
+            // จัดการเปิดการแสดงผลแบบกล่องข้อความสำหรับรายงานฝั่ง AM ทันทีเมื่อกดดึงข้อมูล
+            if(reportType === 'am') {
+                isDataFetched = true;
+                document.getElementById('shopReportContainer').style.display = 'none';
+                document.getElementById('amReportContainer').style.display = 'block';
+                return;
+            } 
 
             document.getElementById('loading').style.display = 'flex';
 
@@ -472,6 +482,9 @@
                     if(data.error) {
                         alert("เกิดข้อผิดพลาด: " + data.error);
                     } else {
+                        isDataFetched = true; // ปลดล็อกสถานะการดึงข้อมูลสำเร็จ
+                        document.getElementById('shopReportContainer').style.display = 'block';
+                        document.getElementById('amReportContainer').style.display = 'none';
                         renderDashboard(data);
                     }
                 })
@@ -516,7 +529,7 @@
                 </tr>
             `).join('');
 
-            // **แก้ไขการ์ด Focus SHOP ให้แสดงข้อความ (Text) ตรงตัวดิบ ๆ ไม่มีการจัดฟอร์แมตตัวเลขครอบทับ**
+            // การ์ด Focus SHOP แสดงข้อความดิบแท้ 100%
             const focusBody = document.getElementById('focusShopBody');
             focusBody.innerHTML = data.focusShop.map(item => `
                 <tr>
