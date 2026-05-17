@@ -2,338 +2,771 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Report ยอดขายรายบุคคล - Parakit-site</title>
-    <link rel="icon" type="image/png" href="favicon.png">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>รายงานยอดขายรายบุคคล - Parakit-site</title>
+    <!-- โหลดชุดฟอนต์พรีเมียม Kanit และ Bootstrap Icons -->
+        <link rel="icon" type="image/png" href="favicon.png">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     
     <style>
-        :root {
-            --ios-bg: #f5f5f7;
-            --glass-bg: rgba(255, 255, 255, 0.75);
-            --glass-border: rgba(255, 255, 255, 0.4);
-            --primary-blue: #0071e3;
-            --ios-blue: #007aff;
-            --sidebar-dark: rgba(28, 28, 30, 0.96);
-            --text-main: #1d1d1f;
-            --text-light: #86868b;
-            --card-shadow: 0 12px 40px rgba(0,0,0,0.06);
-            --success: #34c759;
-            --danger: #ff3b30;
-            --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
-            --transition-speed: 0.4s;
+        * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; margin: 0; padding: 0; }
+        
+        body { 
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f1 100%); 
+            background-attachment: fixed;
+            color: #1d1d1f; 
+            padding-bottom: 60px; 
         }
+        
+        /* Premium iOS Native Glass Header Bar */
+        header { 
+            background: rgba(255, 255, 255, 0.45); 
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            color: #007aff; 
+            padding: 24px; 
+            text-align: center; 
+            font-size: 28px; 
+            font-weight: 700; 
+            box-shadow: 0 1px 0px rgba(0, 0, 0, 0.04);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+            letter-spacing: -0.5px;
+        }
+        
+        .container { max-width: 1440px; margin: 30px auto; padding: 0 24px; }
+        
+        /* Controls Row - จัดวางชุดเครื่องมือควบคุมชิดขวาสุดแนวนอนในระนาบเดียวกัน */
+        .controls-row { 
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 16px; 
+            align-items: center; 
+            justify-content: flex-end; 
+            background: rgba(255, 255, 255, 0.55); 
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 14px 24px; 
+            border-radius: 20px; 
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.01); 
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            margin-bottom: 30px; 
+        }
+        .control-group { display: flex; align-items: center; gap: 10px; }
+        label { font-weight: 500; color: #3a3a3c; font-size: 14px; }
+        
+        /* iOS Interactive Form Fields */
+        input[type="date"], select { 
+            padding: 11px 16px; 
+            border: 1px solid rgba(0, 0, 0, 0.05); 
+            border-radius: 14px; 
+            font-size: 14px; 
+            outline: none; 
+            background: rgba(255, 255, 255, 0.8); 
+            color: #1d1d1f;
+            font-weight: 500;
+            transition: all 0.25s ease;
+        }
+        input[type="date"]:focus, select:focus { 
+            border-color: #007aff; 
+            background: #ffffff;
+            box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.15);
+        }
+        
+        /* iOS Push Button */
+        .btn-fetch { 
+            background: linear-gradient(135deg, #007aff, #0056b3); 
+            color: white; 
+            border: none; 
+            padding: 11px 32px; 
+            border-radius: 14px; 
+            font-size: 14px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            box-shadow: 0 4px 14px rgba(0, 122, 255, 0.2);
+            transition: all 0.2s ease; 
+        }
+        .btn-fetch:hover { 
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(0, 122, 255, 0.3);
+        }
+        
+        /* --- iOS Advanced Crystal Cards Structure --- */
+        .card { 
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border-radius: 24px; 
+            padding: 26px; 
+            margin-bottom: 25px; 
+            border: 1px solid rgba(255, 255, 255, 0.65);
+            box-shadow: 0 10px 35px rgba(0, 0, 0, 0.015);
+        }
+        
+        .card-daily { background: rgba(238, 246, 255, 0.85); border-top: 5px solid #007aff; }
+        .card-details { background: rgba(255, 255, 255, 0.85); border-top: 5px solid #8e8e93; }
+        .card-postpay { background: rgba(244, 242, 255, 0.85); border-top: 5px solid #5856d6; }
+        .card-cumulative { background: rgba(241, 253, 244, 0.88); border-top: 5px solid #34c759; }
+        .card-brand { background: rgba(253, 242, 255, 0.85); border-top: 5px solid #af52de; }
+        .card-focus { background: rgba(255, 241, 244, 0.85); border-top: 5px solid #ff2d55; }
+        .card-target { background: rgba(255, 247, 237, 0.85); border-top: 5px solid #ff9500; }
 
-        * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; -webkit-tap-highlight-color: transparent; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
-        body { margin: 0; background: var(--ios-bg); color: var(--text-main); min-height: 100vh; overflow-x: hidden; }
+        .card-title { 
+            font-size: 19px; 
+            font-weight: 600; 
+            margin-bottom: 20px; 
+            padding-bottom: 10px; 
+            border-bottom: 1px solid rgba(0, 0, 0, 0.04); 
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .card-daily .card-title { color: #0056b3; }
+        .card-details .card-title { color: #1c1c1e; }
+        .card-postpay .card-title { color: #3b3a78; }
+        .card-focus .card-title { color: #a31432; }
+        .card-cumulative .card-title { color: #146c2e; }
+        .card-target .card-title { color: #b55a00; }
+        .card-brand .card-title { color: #6a1b8a; }
+        
+        /* Layout Structure Flexible Grids */
+        .row-flex { display: flex; gap: 25px; flex-wrap: wrap; }
+        .flex-left-main { flex: 2; min-width: 600px; display: flex; flex-direction: column; gap: 0px; }
+        .flex-right-side { flex: 1; min-width: 340px; display: flex; flex-direction: column; gap: 0px; }
+        
+        /* Tables Core Styles */
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th, td { text-align: left; padding: 12px 14px; border-bottom: 1px solid rgba(0, 0, 0, 0.03); }
+        th { background-color: rgba(0, 0, 0, 0.03); color: #48484a; font-weight: 600; }
+        td { color: #2c2c2e; }
+        tr:hover { background-color: rgba(255, 255, 255, 0.4); }
+        
+        /* Metrics Blocks Layout */
+        .daily-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+        .daily-box { background: rgba(255, 255, 255, 0.5); padding: 16px 20px; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.5); display: flex; flex-direction: column; justify-content: center; }
+        .daily-box-label { font-size: 13px; font-weight: 500; color: #8e8e93; margin-bottom: 4px; text-transform: uppercase; }
+        .daily-box-value { font-size: 18px; font-weight: 600; color: #1c1c1e; }
+        .badge-date { background: #007aff; color: white; padding: 2px 10px; border-radius: 8px; font-size: 14px; font-weight: 600; }
+        
+        /* Color Flag Conditions (เลขปกติแดง / ติดลบเขียว) */
+        .text-red { color: #ff3b30 !important; font-weight: 600; }
+        .text-green { color: #34c759 !important; font-weight: 600; }
+        
+        /* Pagination Controls */
+        .pagination { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 24px; }
+        .page-btn { padding: 8px 16px; border: 1px solid rgba(0, 0, 0, 0.03); background: rgba(255, 255, 255, 0.8); border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.2s; }
+        .page-btn.active { background-color: #007aff; color: white; border-color: #007aff; box-shadow: 0 4px 12px rgba(0, 122, 255, 0.15); }
+        .page-btn:disabled { background-color: rgba(0, 0, 0, 0.02); color: #aeaeae; cursor: not-allowed; }
+        
+        /* Cumulative Grid Module */
+        .sub-cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+        .sub-card { 
+            background: rgba(255, 255, 255, 0.5); 
+            padding: 16px; 
+            border-radius: 16px; 
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            transition: all 0.2s ease;
+        }
+        .sub-card:hover { transform: translateY(-1px); background: rgba(255, 255, 255, 0.8); }
+        .sub-card-title { font-weight: 600; color: #1c1c1e; margin-bottom: 10px; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+        .sub-card-data { font-size: 13px; display: flex; flex-direction: column; gap: 5px; color: #48484a; }
+        .sub-card-data div { display: flex; justify-content: space-between; border-bottom: 1px dashed rgba(0,0,0,0.02); padding-bottom: 2px; }
+        
+        #loading { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.6); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); justify-content: center; align-items: center; font-size: 17px; font-weight: 500; color: #007aff; z-index: 1000; gap: 10px; }
+        .spinner { animation: rot 1s linear infinite; font-size: 20px; }
+        @keyframes rot { 100% { transform: rotate(360deg); } }
 
-        #floatingMenuBtn { position: fixed; top: 10px; left: 15px; width: 45px; height: 45px; background: var(--ios-blue); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: move; z-index: 2100; box-shadow: 0 4px 15px rgba(0, 122, 255, 0.4); border: none; touch-action: none; transition: transform 0.2s, opacity 0.2s; }
+        /* ===== เพิ่มเติม: สไตล์ระบบเมนูปุ่มลอยนำทาง iOS Style ===== */
+        #floatingMenuBtn {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            width: 50px;
+            height: 50px;
+            background: #007aff;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            cursor: move;
+            z-index: 2100;
+            box-shadow: 0 4px 15px rgba(0, 122, 255, 0.4);
+            border: none;
+            touch-action: none;
+            transition: transform 0.2s, opacity 0.2s;
+        }
         #floatingMenuBtn:active { transform: scale(0.9); }
 
-        .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.2); z-index: 2000; display: none; opacity: 0; transition: opacity 0.3s; }
+        .sidebar-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.2);
+            z-index: 2000;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
         .sidebar-overlay.active { display: block; opacity: 1; }
-        .sidebar-float { position: fixed; width: 280px; max-height: 70vh; background: var(--sidebar-dark); border-radius: 20px; overflow-y: auto; z-index: 2001; opacity: 0; visibility: hidden; transform: scale(0.8) translateY(10px); transition: opacity 0.3s, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); box-shadow: 0 15px 40px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.2) transparent; }
-        .sidebar-float.active { opacity: 1; visibility: visible; transform: scale(1) translateY(0); }
+
+        .sidebar-float {
+            position: fixed;
+            width: 280px;
+            max-height: 70vh;
+            background: rgba(28, 28, 30, 0.96);
+            border-radius: 20px;
+            overflow-y: auto;
+            z-index: 2001;
+            opacity: 0;
+            visibility: hidden;
+            transform: scale(0.8) translateY(10px);
+            transition: opacity 0.3s, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.1);
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,0.2) transparent;
+        }
+        .sidebar-float.active {
+            opacity: 1;
+            visibility: visible;
+            transform: scale(1) translateY(0);
+        }
         .sidebar-float .sidebar-header { padding: 20px; font-size: 17px; font-weight: 600; color: #fff; border-bottom: 0.5px solid rgba(255,255,255,0.1); }
         .sidebar-float .menu { padding: 8px 0; }
-        .sidebar-float .menu a, .sidebar-float .drop-btn { width: 100%; padding: 12px 20px; background: none; border: none; color: #ebebf5; text-align: left; font-size: 14px; cursor: pointer; display: flex; align-items: center; text-decoration: none; transition: 0.2s; }
+        .sidebar-float .menu a, .sidebar-float .drop-btn { 
+            width: 100%; padding: 12px 20px; background: none; border: none; 
+            color: #ebebf5; text-align: left; font-size: 14px; cursor: pointer; 
+            display: flex; align-items: center; text-decoration: none; transition: 0.2s;
+        }
         .sidebar-float .menu a:hover, .sidebar-float .drop-btn:hover { background: rgba(255,255,255,0.1); }
         .sidebar-float .sub { display: none; background: rgba(0,0,0,0.2); }
         .sidebar-float .item.open .sub { display: block; }
         .sidebar-float .sub a { padding-left: 45px; font-size: 13px; color: #8e8e93; }
-
-        .top-header { position: fixed; top: 0; left: 0; right: 0; height: 60px; background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); z-index: 1000; display: flex; align-items: center; padding: 0 20px 0 75px; border-bottom: 1px solid rgba(0,0,0,0.05); }
-        .card { background: var(--glass-bg); backdrop-filter: blur(15px); border-radius: 24px; border: 1px solid var(--glass-border); margin-bottom: 25px; box-shadow: var(--card-shadow); overflow: hidden; transition: transform 0.4s var(--ease), box-shadow 0.4s var(--ease); transform: translateZ(0); }
-        .card:hover { transform: translateY(-6px) translateZ(0); box-shadow: 0 20px 50px rgba(0,0,0,0.1); }
-        .card-header-bar { padding: 16px 25px; font-weight: 600; font-size: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(0,0,0,0.05); }
-        .main-wrapper { padding: 85px 20px 40px; display: flex; justify-content: center; }
-        .content-container { width: 100%; max-width: 1300px; }
-        .table-luxury { width: 100%; border-collapse: collapse; }
-        .table-luxury th { padding: 15px 20px; text-align: left; font-size: 11px; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.8px; border-bottom: 1px solid rgba(0,0,0,0.05); background: rgba(0,0,0,0.01); }
-        .table-luxury td { padding: 14px 20px; font-size: 14px; border-bottom: 1px solid rgba(0,0,0,0.03); transition: background 0.15s ease; }
-        .table-luxury tr:hover td { background: rgba(0,113,227,0.05); color: var(--primary-blue); }
-        .toolbar { background: var(--glass-bg); backdrop-filter: blur(15px); padding: 15px 25px; border-radius: 20px; border: 1px solid var(--glass-border); box-shadow: var(--card-shadow); display: flex; justify-content: flex-end; align-items: center; margin-bottom: 30px; gap: 15px; flex-wrap: wrap; }
-        .btn-fetch { background: var(--primary-blue); color: #fff; border: none; padding: 10px 24px; border-radius: 12px; cursor: pointer; font-weight: 500; transition: 0.3s var(--ease); box-shadow: 0 4px 15px rgba(0, 113, 227, 0.15); display: flex; align-items: center; gap: 8px; }
-        .btn-fetch:hover { transform: scale(1.02) translateZ(0); filter: brightness(1.1); }
-        .mtd-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 25px; }
-        @media (max-width: 500px) { .mtd-grid { grid-template-columns: 1fr; } }
-        .stat-box { padding: 20px; border-radius: 20px; background: rgba(255,255,255,0.4); border: 1px solid var(--glass-border); transition: all 0.3s var(--ease); }
-        .stat-box:hover { background: #fff; transform: scale(1.03) translateZ(0); border-color: var(--primary-blue); }
-        .stat-box .val { font-size: 30px; font-weight: 700; color: #1d1d1f; margin: 4px 0; letter-spacing: -1.2px; }
-        .up { color: var(--success) !important; font-weight: 600; }
-        .down { color: var(--danger) !important; font-weight: 600; }
-        #loader { display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.8); z-index: 9999; backdrop-filter: blur(15px); flex-direction: column; align-items: center; justify-content: center; }
-        .spinner { width: 35px; height: 35px; border: 3px solid #f2f2f7; border-top: 3px solid var(--primary-blue); border-radius: 50%; animation: spin 0.8s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .grid-container { display: grid; grid-template-columns: 1.6fr 1fr; gap: 25px; }
-        @media (max-width: 1000px) { .grid-container { grid-template-columns: 1fr; } }
-        #welcome-card { background: var(--glass-bg); padding: 90px 20px; border-radius: 30px; text-align: center; border: 1px solid var(--glass-border); box-shadow: var(--card-shadow); }
-        footer { padding: 40px; text-align: center; color: var(--text-light); font-size: 11px; }
-        .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-        .modern-select, .modern-date { border: 1px solid #d2d2d7; border-radius: 12px; padding: 10px 16px; font-size: 14px; background: #fff; outline: none; }
-        .pagination { display: flex; justify-content: center; align-items: center; gap: 8px; padding: 20px 0; background: rgba(0,0,0,0.02); }
-        .page-btn { min-width: 36px; height: 36px; border: 1px solid var(--glass-border); background: #fff; border-radius: 10px; cursor: pointer; font-weight: 500; transition: 0.3s var(--ease); }
-        .page-btn.active { background: var(--primary-blue); color: #fff; }
     </style>
 </head>
-    
 <body>
-<header class="top-header">
-    <div style="font-weight: 600; font-size: 1.1rem; color: var(--text-main);">รายงานยอดขาย By Indy</div>
-</header>
 
-<button id="floatingMenuBtn" title="ลากเพื่อย้าย">เมนู</button>
-<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebarFloat()"></div>
-<aside class="sidebar-float" id="sidebarFloat"></aside>
+    <!-- ระบบเมนูปุ่มลอยลากได้ นำทางภารกิจ -->
+    <button id="floatingMenuBtn" title="ลากเพื่อย้าย">เมนู</button>
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebarFloat()"></div>
+    <aside class="sidebar-float" id="sidebarFloat"></aside>
 
-<div id="loader"><div class="spinner"></div><p style="margin-top:20px; font-weight: 500; color: var(--text-main);">กำลังดึงข้อมูลการขาย...</p></div>
+    <div id="loading"><i class="bi bi-arrow-repeat spinner"></i> กำลังดึงข้อมูล กรุณารอสักครู่...</div>
 
-<div class="main-wrapper">
-  <div class="content-container">
-    <div class="toolbar">
-        <div style="display: flex; align-items: center; gap: 12px;">
-          <span style="color:var(--text-light); font-size: 13px;">พนักงาน</span>
-          <select id="name" class="modern-select"><option>นวพล</option><option>ปิยะพร</option><option>กรทักษ์</option></select>
+    <header>รายงานยอดขายรายบุคคล</header>
+
+    <div class="container">
+        <!-- Controls Bar - จัดแนวระนาบเดียวกัน -->
+        <div class="controls-row">
+            <div class="control-group">
+                <label><i class="bi bi-calendar3"></i> เลือกวันที่:</label>
+                <input type="date" id="datePicker">
+            </div>
+            <div class="control-group">
+                <label><i class="bi bi-person-badge"></i> ชื่อพนักงาน:</label>
+                <select id="employeeSelect">
+                    <option value="">-- เลือกพนักงาน --</option>
+                    <option value="นวพล">นวพล</option>
+                    <option value="ปิยะพร">ปิยะพร</option>
+                    <option value="กรทักษ์">กรทักษ์</option>
+                </select>
+            </div>
+            <button class="btn-fetch" onclick="fetchData()">ดึงข้อมูล</button>
         </div>
-        <div style="display: flex; align-items: center; gap: 12px;">
-          <span style="color:var(--text-light); font-size: 13px;">วันที่</span>
-          <input type="date" id="day" class="modern-date">
+
+        <div id="dashboardWorkspace" style="display: none;">
+            
+            <!-- 4. การ์ดยอดขายรายวัน -->
+            <div class="card card-daily">
+                <div class="card-title"><i class="bi bi-calendar-day"></i> ยอดขายรายวัน : <span class="emp-name-lbl">-</span></div>
+                <div id="dailyMetricsContainer" class="daily-list"></div>
+            </div>
+
+            <!-- 5. การ์ดรายละเอียดการขาย -->
+            <div class="card card-details">
+                <div class="card-title"><i class="bi bi-list-columns-reverse"></i> รายละเอียดการขาย : <span class="emp-name-lbl">-</span></div>
+                <div style="overflow-x: auto;">
+                    <table id="salesDetailsTable">
+                        <thead>
+                            <tr>
+                                <th>วันที่</th>
+                                <th>พนักงาน</th>
+                                <th>คนที่ขายให้</th>
+                                <th>Postpay</th>
+                                <th>ยอด Post</th>
+                                <th>Device</th>
+                                <th>ยอด Device</th>
+                                <th>เวลา</th>
+                                <th>สินเชื่อ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="salesDetailsBody"></tbody>
+                    </table>
+                </div>
+                <div class="pagination" id="paginationContainer"></div>
+            </div>
+
+            <!-- Split Grid Section -->
+            <div class="row-flex" style="align-items: flex-start;">
+                
+                <!-- ฝั่งซ้ายมือ -->
+                <div class="flex-left-main">
+                    
+                    <!-- 5.2 รายละเอียดการขาย Postpay -->
+                    <div class="card card-postpay" style="width: 100%;">
+                        <div class="card-title"><i class="bi bi-telephone-plus"></i> รายละเอียดการขาย Postpay : <span class="emp-name-lbl">-</span></div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Typeการขาย</th>
+                                    <th>ยอดขาย (บาท)</th>
+                                    <th>จำนวน</th>
+                                </tr>
+                            </thead>
+                            <tbody id="postpaySalesBody"></tbody>
+                        </table>
+                    </div>
+
+                    <!-- 7. ยอดขายสะสมทั้งเดือน -->
+                    <div class="card card-cumulative" style="width: 100%;">
+                        <div class="card-title"><i class="bi bi-activity"></i> ยอดขายสะสมทั้งเดือน : <span class="emp-name-lbl">-</span></div>
+                        <div id="cumulativeGrid" class="sub-cards-grid"></div>
+                    </div>
+                    
+                    <!-- 9. สรุปยอดขายตามแบรนด์ -->
+                    <div class="card card-brand" style="width: 100%; margin-bottom: 0;">
+                        <div class="card-title"><i class="bi bi-grid-3x3-gap"></i> สรุปยอดขายตามแบรนด์ : <span class="emp-name-lbl">-</span></div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>แบรนด์</th>
+                                    <th>ยอดรวม</th>
+                                    <th>จำนวนเครื่อง</th>
+                                </tr>
+                            </thead>
+                            <tbody id="brandSummaryBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ฝั่งขวามือ -->
+                <div class="flex-right-side">
+                    
+                    <!-- 6. การ์ด Focus -->
+                    <div class="card card-focus" style="width: 100%;">
+                        <div class="card-title"><i class="bi bi-bullseye"></i> Focus : <span class="emp-name-lbl">-</span></div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Target</th>
+                                    <th>Actual</th>
+                                </tr>
+                            </thead>
+                            <tbody id="focusShopBody"></tbody>
+                        </table>
+                    </div>
+
+                    <!-- 8. การ์ด รวม Target ทั้งหมด -->
+                    <div class="card card-target" style="width: 100%; margin-bottom: 0;">
+                        <div class="card-title"><i class="bi bi-trophy"></i> รวม Target ทั้งหมด : <span class="emp-name-lbl">-</span></div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>รายการ Target</th>
+                                    <th>จำนวน</th>
+                                </tr>
+                            </thead>
+                            <tbody id="targetAllBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
         </div>
-      <button class="btn-fetch" onclick="pullData()"><i class="bi bi-rocket-takeoff"></i> ดึงข้อมูล</button>
     </div>
 
-    <div id="welcome-card">
-        <div style="font-size: 60px; margin-bottom: 20px; opacity: 0.8; color: var(--primary-blue);"><i class="bi bi-bar-chart-fill"></i></div>
-        <p id="welcome-text" style="font-size: 1.1rem; font-weight: 300; color: #1d1d1f;">ระบุวันที่และพนักงานเพื่อดู<b>รายงานยอดขาย</b></p>
-    </div>
-        
-    <div id="dashboard" style="display:none;">
-      <div class="card">
-        <div class="card-header-bar" style="background: #1d1d1f; color:#fff;"><span><i class="bi bi-graph-up-arrow"></i> สรุปยอดรายวัน</span> <span id="out-date" style="background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 20px; font-size: 11px;"></span></div>
-        <div class="table-wrapper"><table class="table-luxury"><thead><tr><th>วันที่</th><th>New Post</th><th>Diff</th><th>BDBC</th><th>Diff</th><th>Apple</th><th>Diff</th><th>SmartPhone</th><th>Diff</th><th>All Post</th><th>All Device</th></tr></thead><tbody id="body-daily"></tbody></table></div>
-      </div>
+    <script>
+        // เปลี่ยน XXXXXX เป็น URL ของ Web App ที่ Publish จาก Google Apps Script ครับ
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbywY4gvvF87ki5K0ql52_6EZyk5Xaepjp4kC1M4m-OgreVGd6nugtrjV06UCWQRhKHa/exec";
 
-      <div class="card">
-        <div class="card-header-bar"><span><i class="bi bi-cart3"></i> รายละเอียดการขาย</span></div>
-        <div class="table-wrapper"><table class="table-luxury"><thead><tr><th>วันที่</th><th>พนักงาน</th><th>ลูกค้า</th><th>Postpay</th><th>ยอด</th><th>Device</th><th>ยอด</th><th>เวลา</th><th>สินเชื่อ</th></tr></thead><tbody id="body-web"></tbody></table></div>
-        <div id="web-pagination" class="pagination"></div>
-      </div>
+        let currentSalesData = [];
+        let currentPage = 1;
+        const rowsPerPage = 5;
 
-      <div class="grid-container">
-        <div class="col-left">
-          <div class="card">
-            <div class="card-header-bar" style="background: var(--primary-blue); color: #fff;"><span><i class="bi bi-file-earmark-text"></i> สรุปการขาย Postpay : <span class="out-name"></span></span></div>
-            <div class="table-wrapper"><table class="table-luxury" id="tbl-sum"><thead><tr><th>รายการ</th><th>ยอดขาย</th><th>จำนวน</th></tr></thead><tbody></tbody></table></div>
-          </div>
-          <div class="card">
-            <div class="card-header-bar"><span><i class="bi bi-rocket-fill"></i> ยอดสะสมทั้งเดือน</span></div>
-            <div class="mtd-grid" id="out-actual"></div>
-          </div>
-          <div class="card">
-            <div class="card-header-bar" style="background: #af52de; color: #fff;"><span><i class="bi bi-clipboard-data"></i> สรุปยอดขาย Device By Brand</span></div>
-            <div class="table-wrapper"><table class="table-luxury"><thead><tr><th>แบรนด์</th><th>ยอดรวม</th><th>หน่วย</th></tr></thead><tbody id="body-extra"></tbody></table></div>
-          </div>
-        </div>
-        <div class="col-right">
-          <div class="card">
-            <div class="card-header-bar" style="background: #48484a; color: #fff;"><span><i class="bi bi-target"></i> KPI Focus</span></div>
-            <div class="table-wrapper"><table class="table-luxury" id="tbl-focus"><thead><tr><th>ตัวชี้วัด</th><th style="text-align:right">Actual</th></tr></thead><tbody></tbody></table></div>
-          </div>
-          <div class="card">
-            <div class="card-header-bar" style="background: #1c1c1e; color: #fff;"><span><i class="bi bi-flag-fill"></i> เป้าหมาย (Target)</span></div>
-            <div id="target-list-container" style="padding: 5px 25px 25px;"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<script>
-    const dragBtn = document.getElementById('floatingMenuBtn');
-    const sideFloat = document.getElementById('sidebarFloat');
-    const sideOverlay = document.getElementById('sidebarOverlay');
-    let isDragging = false;
-    let startX, startY, shiftX, shiftY;
-
-    function loadButtonPosition() {
-        const savedLeft = localStorage.getItem('floatBtnLeft'), savedTop = localStorage.getItem('floatBtnTop');
-        if (savedLeft && savedTop) { dragBtn.style.left = savedLeft + 'px'; dragBtn.style.top = savedTop + 'px'; }
-    }
-
-    dragBtn.onpointerdown = function(e) {
-        isDragging = false; startX = e.clientX; startY = e.clientY;
-        const rect = dragBtn.getBoundingClientRect();
-        shiftX = e.clientX - rect.left; shiftY = e.clientY - rect.top;
-        dragBtn.setPointerCapture(e.pointerId);
-        document.addEventListener('pointermove', onPointerMove); document.addEventListener('pointerup', onPointerUp);
-    };
-
-    function onPointerMove(e) {
-        if (!isDragging && (Math.abs(e.clientX - startX) > 5 || Math.abs(e.clientY - startY) > 5)) isDragging = true;
-        if (isDragging) {
-            let newX = e.clientX - shiftX, newY = e.clientY - shiftY;
-            newX = Math.max(0, Math.min(newX, window.innerWidth - dragBtn.offsetWidth));
-            newY = Math.max(0, Math.min(newY, window.innerHeight - dragBtn.offsetHeight));
-            dragBtn.style.left = newX + 'px'; dragBtn.style.top = newY + 'px';
-        }
-    }
-
-    function onPointerUp(e) {
-        document.removeEventListener('pointermove', onPointerMove); document.removeEventListener('pointerup', onPointerUp);
-        dragBtn.releasePointerCapture(e.pointerId);
-        if (isDragging) { localStorage.setItem('floatBtnLeft', dragBtn.offsetLeft); localStorage.setItem('floatBtnTop', dragBtn.offsetTop); }
-        else { toggleSidebarFloat(); }
-        isDragging = false;
-    }
-
-    function toggleSidebarFloat() {
-        const btnRect = dragBtn.getBoundingClientRect();
-        const sidebarWidth = 280;
-        let top = btnRect.bottom + 10, left = btnRect.left;
-        if (left + sidebarWidth > window.innerWidth) left = window.innerWidth - sidebarWidth - 15;
-        if (top + 400 > window.innerHeight) { top = btnRect.top - 410; if (top < 10) top = 10; }
-        sideFloat.style.top = top + 'px'; sideFloat.style.left = left + 'px';
-        sideFloat.style.transformOrigin = `${btnRect.left - left + 20}px ${btnRect.top > top ? 'bottom' : 'top'}`;
-        const isActive = sideFloat.classList.toggle('active');
-        sideOverlay.classList.toggle('active', isActive);
-        if (isActive && !sideFloat.innerHTML) loadSidebarContent();
-    }
-
-    function closeSidebarFloat() { sideFloat.classList.remove('active'); sideOverlay.classList.remove('active'); }
-
-    function loadSidebarContent() {
-        fetch('sidebar.html').then(res => res.text()).then(data => {
-            sideFloat.innerHTML = `<div class="sidebar-header">เมนูนำทาง</div>` + data;
-            ['credit', 'branch', 'sales'].forEach(id => {
-                if (localStorage.getItem('menu-' + id) === 'true') {
-                    const el = sideFloat.querySelector('#menu-' + id);
-                    if (el) el.classList.add('open');
+        function initDatePicker() {
+            const picker = document.getElementById('datePicker');
+            const now = new Date();
+            picker.value = now.toISOString().split('T')[0];
+            
+            // รีเซ็ตวันที่เป็นวันใหม่เมื่อผ่านเวลา 23:59 น. (00:00 น.)
+            setInterval(() => {
+                const current = new Date();
+                if(current.getHours() === 0 && current.getMinutes() === 0) {
+                    picker.value = current.toISOString().split('T')[0];
                 }
-            });
-        });
-    }
+            }, 60000);
+        }
 
-    window.toggleDrop = function(btn, id) {
-        const item = btn.parentElement; const isOpen = item.classList.toggle("open");
-        if (id) localStorage.setItem('menu-' + id, isOpen);
-    }
+        window.onload = function() {
+            loadButtonPosition(); // คืนค่าพิกัดปุ่มลอยเมื่อเข้าเว็บ
+            initDatePicker();
+        };
 
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw0-tqaoEHDQLBI5sJgjYs0uj4HzACKw1ucNZ0Hl8HHInDkbs54C3UlEcyDUhzcolEYfQ/exec";
-    let webData = []; const rowsPerPage = 5;
-    document.getElementById('day').value = new Date().toISOString().split('T')[0];
+        // แปลงฟอร์แมตวันที่จากระบบเป็นสไตล์ DD/MM/YYYY
+        function displayFormatDate(isoDateStr) {
+            if(!isoDateStr) return '-';
+            const parts = isoDateStr.split('-');
+            if(parts.length !== 3) return isoDateStr;
+            return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
 
-    async function pullData() {
-        const loader = document.getElementById('loader'), welcome = document.getElementById('welcome-card'), dash = document.getElementById('dashboard');
-        loader.style.display = 'flex';
-        try {
-            const name = document.getElementById('name').value, dateVal = document.getElementById('day').value;
-            if (!dateVal) throw new Error("กรุณาเลือกวันที่");
-            const dayNum = new Date(dateVal).getDate();
-            const [res, webRes] = await Promise.all([
-                fetch(`${WEB_APP_URL}?action=getSales&name=${name}&day=${dayNum}`).then(r => r.json()),
-                fetch(`${WEB_APP_URL}?action=getWebDetails&day=${dateVal}`).then(r => r.json())
-            ]);
-            if(!res.success || !res.daily || (res.daily.totalP === 0 && res.daily.totalD === 0 && (!webRes.rows || webRes.rows.length === 0))) {
-                dash.style.display = 'none'; welcome.style.display = 'block';
-                document.getElementById('welcome-text').innerHTML = `<b style="color:var(--danger);"><i class="bi bi-exclamation-triangle-fill"></i> ไม่พบข้อมูลการขายในวันที่เลือก</b>`;
+        function formatInt(val) {
+            if (val === undefined || val === null || val === "") return "0";
+            let clean = String(val).replace(/[^0-9.-]/g, '');
+            const num = Math.round(parseFloat(clean));
+            return isNaN(num) ? "0" : num.toLocaleString();
+        }
+
+        // จัดการสี DIFF: เลขปกติธรรมดาแสดงผลสีแดง | ติดลบแสดงผลสีเขียว
+        function formatDiffInt(val) {
+            if (val === undefined || val === null || val === "") return "0";
+            let clean = String(val).replace(/[^0-9.-]/g, '');
+            const num = Math.round(parseFloat(clean));
+            if (isNaN(num)) return `<span>${val}</span>`;
+            if (num < 0) {
+                return `<span class="text-green">${num.toLocaleString()}</span>`;
+            } else {
+                return `<span class="text-red">${num.toLocaleString()}</span>`;
+            }
+        }
+
+        function formatPercent(val) {
+            if (val === undefined || val === null || val === "") return "0.00%";
+            let cleanVal = String(val).replace(/[^0-9.-]/g, '');
+            const num = parseFloat(cleanVal);
+            if (isNaN(num)) return "0.00%";
+            return num.toFixed(2) + '%';
+        }
+
+        function fetchData() {
+            const selectedDate = document.getElementById('datePicker').value;
+            const employee = document.getElementById('employeeSelect').value;
+            
+            if(!selectedDate) return alert("กรุณาเลือกวันที่ก่อนครับ");
+            if(!employee) return alert("กรุณาเลือกชื่อพนักงานก่อนครับ");
+
+            document.getElementById('loading').style.display = 'flex';
+
+            fetch(`${WEB_APP_URL}?date=${selectedDate}&employee=${encodeURIComponent(employee)}`)
+                .then(res => res.json())
+                .then(data => {
+                    if(data.error) {
+                        alert("เกิดข้อผิดพลาด: " + data.error);
+                    } else {
+                        // เปลี่ยนป้ายชื่อพนักงานกำกับบนทุกหน้าการ์ด
+                        document.querySelectorAll('.emp-name-lbl').forEach(el => el.innerText = employee);
+                        document.getElementById('dashboardWorkspace').style.display = 'block';
+                        renderDashboard(data);
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert("ไม่สามารถติดต่อเซิร์ฟเวอร์ฐานข้อมูลชีตได้สำเร็จ ตรวจสอบสิทธิ์สคริปต์กลางครับ");
+                })
+                .finally(() => {
+                    document.getElementById('loading').style.display = 'none';
+                });
+        }
+
+        function renderDashboard(data) {
+            // 4. เรนเดอร์ การ์ดยอดขายรายวัน
+            const d = data.dailyData;
+            const metricsContainer = document.getElementById('dailyMetricsContainer');
+            if(d) {
+                metricsContainer.innerHTML = `
+                    <div class="daily-box"><span class="daily-box-label">วันที่</span><div class="daily-box-value"><span class="badge-date">${displayFormatDate(document.getElementById('datePicker').value)}</span></div></div>
+                    <div class="daily-box"><span class="daily-box-label">New Post / DIFF</span><div class="daily-box-value">${formatInt(d.newPost)} <span style="font-size:14px; color:#aeaeae; font-weight:400;">|</span> ${formatDiffInt(d.newPostDiff)}</div></div>
+                    <div class="daily-box"><span class="daily-box-label">Exiting / DIFF</span><div class="daily-box-value">${formatInt(d.exiting)} <span style="font-size:14px; color:#aeaeae; font-weight:400;">|</span> ${formatDiffInt(d.exitingDiff)}</div></div>
+                    <div class="daily-box"><span class="daily-box-label">Apple / DIFF</span><div class="daily-box-value">${formatInt(d.apple)} <span style="font-size:14px; color:#aeaeae; font-weight:400;">|</span> ${formatDiffInt(d.appleDiff)}</div></div>
+                    <div class="daily-box"><span class="daily-box-label">SmartPhone / DIFF</span><div class="daily-box-value">${formatInt(d.smartPhone)} <span style="font-size:14px; color:#aeaeae; font-weight:400;">|</span> ${formatDiffInt(d.smartPhoneDiff)}</div></div>
+                    <div class="daily-box"><span class="daily-box-label">รวม Post / รวม Device</span><div class="daily-box-value" style="font-size:17px; color:#007aff;">${formatInt(d.totalPost)} <span style="font-size:13px; color:#aeaeae; font-weight:400;">Post</span> &nbsp;/&nbsp; ${formatInt(d.totalDevice)} <span style="font-size:13px; color:#aeaeae; font-weight:400;">Device</span></div></div>
+                `;
+            } else {
+                metricsContainer.innerHTML = '<p style="color:#ff3b30; padding:10px; font-weight:500;">ไม่พบข้อมูลยอดขายประจำวันที่ระบุในช่วงพิกัดตารางชีตครับ</p>';
+            }
+
+            // 5. เรนเดอร์ ตารางรายละเอียดการขาย (พร้อมระบบเปลี่ยนหน้าหน้าละ 5 แถว)
+            currentSalesData = data.detailedSales || [];
+            currentPage = 1;
+            renderDetailedSalesTable();
+
+            // 5.2 เรนเดอร์ รายละเอียดการขาย Postpay
+            const postpayBody = document.getElementById('postpaySalesBody');
+            postpayBody.innerHTML = data.postpaySales.map(item => `
+                <tr>
+                    <td><b>${item.type || ''}</b></td>
+                    <td style="font-weight:500;">${item.sales !== "" ? formatInt(item.sales) : '-'}</td>
+                    <td style="font-weight:500;">${item.count !== "" ? formatInt(item.count) : '-'}</td>
+                </tr>
+            `).join('');
+
+            // 6. เรนเดอร์ การ์ด Focus (แสดงค่าข้อความแท้ 100%)
+            const focusBody = document.getElementById('focusShopBody');
+            focusBody.innerHTML = data.focusShop.map(item => `
+                <tr>
+                    <td style="font-weight:500;">${item.target !== "" ? item.target : '-'}</td>
+                    <td><b style="color:#ff2d55;">${item.actual !== "" ? item.actual : '-'}</b></td>
+                </tr>
+            `).join('');
+
+            // 7. เรนเดอร์ ยอดขายสะสมทั้งเดือน และคำนวณ Runrate ประจำตัวแปรวัน
+            renderCumulativeCards(data.cumulative, data.dayContext);
+
+            // 8. เรนเดอร์ ตารางรวม Target ทั้งหมด
+            renderTargetTable(data.targets);
+
+            // 9. เรนเดอร์ สรุปยอดขายตามแบรนด์
+            const brandBody = document.getElementById('brandSummaryBody');
+            brandBody.innerHTML = data.brandSummary.map(item => `
+                <tr>
+                    <td><b>${item.brand || ''}</b></td>
+                    <td style="font-weight:500;">${item.total !== "" ? formatInt(item.total) : '-'}</td>
+                    <td style="font-weight:500;">${item.qty !== "" ? formatInt(item.qty) : '-'}</td>
+                </tr>
+            `).join('');
+        }
+
+        function renderDetailedSalesTable() {
+            const tbody = document.getElementById('salesDetailsBody');
+            tbody.innerHTML = '';
+            
+            if(currentSalesData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:#8e8e93; padding: 30px 0; font-size:15px;">ไม่พบข้อมูลรายการขายของพนักงานท่านนี้ประจำวันที่ระบุในแผ่นงานยอดจากเว็บครับ</td></tr>`;
+                document.getElementById('paginationContainer').innerHTML = '';
                 return;
             }
-            welcome.style.display = 'none'; dash.style.display = 'block';
-            render(res); webData = (webRes.rows || []).filter(r => r[1] === name); renderWebTable(1);
-        } catch (err) {
-            dash.style.display = 'none'; welcome.style.display = 'block';
-            document.getElementById('welcome-text').innerHTML = `<b style="color:var(--danger);"><i class="bi bi-exclamation-octagon-fill"></i> Error: ${err.message}</b>`;
-        } finally { setTimeout(() => { loader.style.display = 'none'; }, 300); }
-    }
 
-    function renderWebTable(page) {
-        const tbody = document.getElementById('body-web'), pagin = document.getElementById('web-pagination');
-        tbody.innerHTML = ''; pagin.innerHTML = '';
-        if (webData.length === 0) { tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding: 40px; color: var(--text-light);">ไม่มีข้อมูลธุรกรรม</td></tr>`; return; }
-        const start = (page - 1) * rowsPerPage;
-        webData.slice(start, start + rowsPerPage).forEach(row => {
-            const tr = document.createElement('tr');
-            row.forEach((cell, idx) => {
-                const td = document.createElement('td');
-                td.innerText = (idx === 7 && cell.includes("T")) ? cell.split("T")[1].split(".")[0] : cell;
-                tr.appendChild(td);
+            const startIdx = (currentPage - 1) * rowsPerPage;
+            const endIdx = startIdx + rowsPerPage;
+            const pageData = currentSalesData.slice(startIdx, endIdx);
+
+            pageData.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${displayFormatDate(row.date)}</td>
+                    <td><b>${row.employee}</b></td>
+                    <td>${row.customer}</td>
+                    <td>${row.postpay}</td>
+                    <td style="font-weight:500;">${formatInt(row.postAmount)}</td>
+                    <td>${row.device}</td>
+                    <td style="font-weight:500;">${formatInt(row.deviceAmount)}</td>
+                    <td><span class="badge-date" style="background:#8e8e93; font-weight:400; font-size:12px;">${row.time}</span></td>
+                    <td>${row.loan}</td>
+                `;
+                tbody.appendChild(tr);
             });
-            tbody.appendChild(tr);
-        });
-        const total = Math.ceil(webData.length / rowsPerPage);
-        if(total > 1) {
-            for (let i = 1; i <= total; i++) {
-                const btn = document.createElement('button'); btn.innerText = i; btn.className = `page-btn ${i === page ? 'active' : ''}`;
-                btn.onclick = () => renderWebTable(i); pagin.appendChild(btn);
+
+            renderPaginationControls();
+        }
+
+        function renderPaginationControls() {
+            const container = document.getElementById('paginationContainer');
+            container.innerHTML = '';
+            const totalPages = Math.ceil(currentSalesData.length / rowsPerPage);
+            if(totalPages <= 1) return;
+
+            const prevBtn = document.createElement('button');
+            prevBtn.className = 'page-btn';
+            prevBtn.innerText = 'ก่อนหน้า';
+            prevBtn.disabled = currentPage === 1;
+            prevBtn.onclick = () => { currentPage--; renderDetailedSalesTable(); };
+            container.appendChild(prevBtn);
+
+            for(let i = 1; i <= totalPages; i++) {
+                const pageBtn = document.createElement('button');
+                pageBtn.className = `page-btn ${i === currentPage ? 'active' : ''}`;
+                pageBtn.innerText = i;
+                pageBtn.onclick = () => { currentPage = i; renderDetailedSalesTable(); };
+                container.appendChild(pageBtn);
+            }
+
+            const nextBtn = document.createElement('button');
+            nextBtn.className = 'page-btn';
+            nextBtn.innerText = 'ถัดไป';
+            nextBtn.disabled = currentPage === totalPages;
+            nextBtn.onclick = () => { currentPage++; renderDetailedSalesTable(); };
+            container.appendChild(nextBtn);
+        }
+
+        function renderCumulativeCards(c, ctx) {
+            const container = document.getElementById('cumulativeGrid');
+            const currentDay = ctx.currentDay;
+            const totalDays = ctx.totalDays;
+
+            const keys = [
+                { name: "All Post", obj: c.allPost, icon: "bi-collection" },
+                { name: "New Post", obj: c.newPost, icon: "bi-plus-square" },
+                { name: "Exiting", obj: c.exiting, icon: "bi-box-arrow-in-right" },
+                { name: "Apple", obj: c.apple, icon: "bi-apple" },
+                { name: "iPhone", obj: c.iphone, icon: "bi-phone" },
+                { name: "iPad", obj: c.ipad, icon: "bi-tablet" },
+                { name: "SmartPhone", obj: c.smartPhone, icon: "bi-phone-flip" }
+            ];
+
+            container.innerHTML = keys.map(k => {
+                // แก้ไขการดึงเปอร์เซ็นต์ Achieve มาคำนวณ Runrate แทนค่าตัวเลขดิบ เพื่อให้ผลลัพธ์คงสเกลฐาน 100% เสมอ
+                let rawAchieve = String(k.obj.achieve).replace(/[^0-9.-]/g, '');
+                let achieveNum = parseFloat(rawAchieve) || 0;
+                
+                // กรณีค่าที่ส่งมาจากแผ่นงานกูเกิ้ลชีตเป็นสัดส่วนทศนิยมปกติ (เช่น 0.85 แทน 85)
+                if (achieveNum > 0 && achieveNum <= 1 && String(k.obj.achieve).indexOf('%') === -1) {
+                    achieveNum = achieveNum * 100;
+                }
+                
+                // คำนวณสูตรแนวโน้มความสำเร็จสะสมรายเดือน (%Runrate)
+                const runrateResult = currentDay > 0 ? ((achieveNum / currentDay) * totalDays) : 0;
+
+                return `
+                    <div class="sub-card">
+                        <div class="sub-card-title"><i class="${k.icon}"></i> ${k.name}</div>
+                        <div class="sub-card-data">
+                            <div><span>Actual:</span> <b>${formatInt(k.obj.actual)}</b></div>
+                            <div><span>DIFF:</span> <b>${formatInt(k.obj.diff)}</b></div>
+                            <div><span>%Achieve:</span> <b style="color:#007aff;">${formatPercent(k.obj.achieve)}</b></div>
+                            <div><span>%Runrate:</span> <b style="color:#146c2e;">${formatPercent(runrateResult)}</b></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderTargetTable(targets) {
+            const tbody = document.getElementById('targetAllBody');
+            tbody.innerHTML = '';
+            
+            const sections = [
+                { label: "Target All Post", items: targets.allPost },
+                { label: "Target New Post", items: targets.newPost },
+                { label: "Target Exiting", items: targets.exiting },
+                { label: "Target Apple", items: targets.apple },
+                { label: "Target iPhone", items: targets.iphone },
+                { label: "Target iPad", items: targets.ipad },
+                { label: "Target SmartPhone", items: targets.smartPhone }
+            ];
+
+            sections.forEach(sec => {
+                const titleTr = document.createElement('tr');
+                titleTr.innerHTML = `<td colspan="2" style="background-color: rgba(255, 149, 0, 0.07); font-weight: 600; color: #b55a00; padding: 11px 16px; font-size:14px;">${sec.label}</td>`;
+                tbody.appendChild(titleTr);
+                
+                if(sec.items && sec.items.length > 0) {
+                    sec.items.forEach(item => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td style="padding-left: 28px; color:#48484a; font-size:13px;">${item.label || '-'}</td>
+                            <td style="font-weight: 600; font-size:13px; color:#1c1c1e;">${item.value !== "" ? formatInt(item.value) : '-'}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+            });
+        }
+
+        // ===== ระบบ JS ควบคุมชุดเครื่องมือเมนูปุ่มลอยลากได้ (Floating Menu & Sidebar Module) =====
+        const dragBtn = document.getElementById('floatingMenuBtn');
+        const sideFloat = document.getElementById('sidebarFloat');
+        const sideOverlay = document.getElementById('sidebarOverlay');
+        let isDragging = false;
+        let startX, startY, shiftX, shiftY;
+
+        function loadButtonPosition() {
+            const savedLeft = localStorage.getItem('floatBtnLeft');
+            const savedTop = localStorage.getItem('floatBtnTop');
+            if (savedLeft && savedTop) {
+                dragBtn.style.left = savedLeft + 'px';
+                dragBtn.style.top = savedTop + 'px';
             }
         }
-    }
 
-    function render(data) {
-        document.querySelectorAll('.out-name').forEach(el => el.innerText = data.name);
-        document.getElementById('out-date').innerText = data.daily.date;
-        const getCls = (v) => v.toString().includes('-') ? `class="up"` : `class="down"`, d = data.daily;
-        document.getElementById('body-daily').innerHTML = `<tr><td style="font-weight:600;">${d.date}</td><td>${d.np}</td><td><span ${getCls(d.npD)}>${d.npD}</span></td><td>${d.bd}</td><td><span ${getCls(d.bdD)}>${d.bdD}</span></td><td>${d.ap}</td><td><span ${getCls(d.apD)}>${d.apD}</span></td><td>${d.sm}</td><td><span ${getCls(d.smD)}>${d.smD}</span></td><td style="font-weight:700;">${d.totalP}</td><td style="font-weight:700;">${d.totalD}</td></tr>`;
-        document.querySelector('#tbl-sum tbody').innerHTML = data.summary.map(r => {
-            if(!r[0]) return ''; const isTotal = r[0].includes('รวมยอด');
-            return `<tr style="${isTotal ? 'background:rgba(0,113,227,0.05); font-weight:600;' : ''}"><td>${r[0]}</td><td>${r[1]}</td><td style="font-weight:600">${r[2]}</td></tr>`;
-        }).join('');
-        document.querySelector('#tbl-focus tbody').innerHTML = data.focus.map(r => r[0] ? `<tr><td>${r[0]}</td><td style="text-align:right; font-weight:700; color:var(--primary-blue);">${r[1]}</td></tr>` : '').join('');
-        document.getElementById('target-list-container').innerHTML = data.targetList.map(r => {
-            if(!r[0]) return ''; let bg = "", icon = ""; const lbl = r[0].toUpperCase();
-            if(lbl.includes('TARGET NEW')) { bg = "#0071e3"; icon = "bi-file-earmark-plus"; }
-            else if(lbl.includes('TARGET BDBC')) { bg = "#34c759"; icon = "bi-check2-circle"; }
-            else if(lbl.includes('TARGET APPLE')) { bg = "#ff9500"; icon = "bi-apple"; }
-            else if(lbl.includes('TARGET SMARTPHONE')) { bg = "#ff3b30"; icon = "bi-phone"; }
-            return bg ? `<div style="padding: 12px 18px; color: #fff; border-radius: 12px; margin: 18px 0 10px; font-weight: 600; font-size: 13px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 8px; background:${bg}"><i class="bi ${icon}"></i> <span>${r[0]}</span></div>` : `<div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(0,0,0,0.04); font-size: 14.5px;"><span>${r[0]}</span><span style="font-weight:600;">${r[1] || '0'}</span></div>`;
-        }).join('');
+        dragBtn.onpointerdown = function(e) {
+            isDragging = false;
+            startX = e.clientX; startY = e.clientY;
+            const rect = dragBtn.getBoundingClientRect();
+            shiftX = e.clientX - rect.left;
+            shiftY = e.clientY - rect.top;
+            dragBtn.setPointerCapture(e.pointerId);
+            document.addEventListener('pointermove', onPointerMove);
+            document.addEventListener('pointerup', onPointerUp);
+        };
 
-        // ส่วนที่คำนวณ Runrate
-        const dateInput = document.getElementById('day').value;
-        const selectedDate = new Date(dateInput);
-        const currentDay = selectedDate.getDate();
-        const daysInMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0).getDate();
+        function onPointerMove(e) {
+            if (!isDragging && (Math.abs(e.clientX - startX) > 5 || Math.abs(e.clientY - startY) > 5)) isDragging = true;
+            if (isDragging) {
+                let newX = e.clientX - shiftX;
+                let newY = e.clientY - shiftY;
+                newX = Math.max(0, Math.min(newX, window.innerWidth - dragBtn.offsetWidth));
+                newY = Math.max(0, Math.min(newY, window.innerHeight - dragBtn.offsetHeight));
+                dragBtn.style.left = newX + 'px';
+                dragBtn.style.top = newY + 'px';
+            }
+        }
 
-        const config = [
-            {l:'New Post', v:data.actuals.np, b:'#0071e3', full: false}, 
-            {l:'BDBC', v:data.actuals.bd, b:'#34c759', full: false},
-            {l:'All Post', v:data.actuals.allPost, b:'#5856d6', full: true}, 
-            {l:'Apple', v:data.actuals.ap, b:'#ff9500', full: false}, 
-            {l:'SmartPhone', v:data.actuals.sm, b:'#ff3b30', full: false}
-        ];
+        function onPointerUp(e) {
+            document.removeEventListener('pointermove', onPointerMove);
+            document.removeEventListener('pointerup', onPointerUp);
+            dragBtn.releasePointerCapture(e.pointerId);
+            if (isDragging) {
+                localStorage.setItem('floatBtnLeft', dragBtn.offsetLeft);
+                localStorage.setItem('floatBtnTop', dragBtn.offsetTop);
+            } else {
+                toggleSidebarFloat();
+            }
+            isDragging = false;
+        }
 
-        document.getElementById('out-actual').innerHTML = config.map(i => {
-            // คำนวณ Runrate: (Achieved * จำนวนวันทั้งหมดในเดือน) / วันที่ปัจจุบัน
-            const runrate = ((parseFloat(i.v.ach) * daysInMonth) / currentDay).toFixed(2);
-            
-            return `
-            <div class="stat-box" style="border-top:4px solid ${i.b}; ${i.full ? 'grid-column: 1 / -1;' : ''}">
-                <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-                    <div>
-                        <div style="font-size:16px;color:var(--text-light);font-weight:500;">${i.l}</div>
-                        <div class="val">${i.v.val}</div>
-                    </div>
-                    <div style="text-align:right;">
-                        <div style="font-size:16px;"><span ${getCls(i.v.diff)}>Diff ${i.v.diff}</span></div>
-                    </div>
-                </div>
-                <div style="font-size:16px; color:var(--primary-blue); font-weight:700; margin-top:16px; display:flex; gap:10px; align-items:center;">
-                    <span>Achieved: ${i.v.ach}%</span>
-                    <span style="color:#ccc; font-weight:300;">|</span>
-                    <span style="color:#5856d6;">Runrate: ${runrate}%</span>
-                </div>
-            </div>`;
-        }).join('');
+        function toggleSidebarFloat() {
+            const btnRect = dragBtn.getBoundingClientRect();
+            const sidebarWidth = 280;
+            let top = btnRect.bottom + 10;
+            let left = btnRect.left;
+            if (left + sidebarWidth > window.innerWidth) left = window.innerWidth - sidebarWidth - 15;
+            if (top + 400 > window.innerHeight) {
+                top = btnRect.top - 410;
+                if (top < 10) top = 10;
+            }
+            sideFloat.style.top = top + 'px';
+            sideFloat.style.left = left + 'px';
+            sideFloat.style.transformOrigin = `${btnRect.left - left + 20}px ${btnRect.top > top ? 'bottom' : 'top'}`;
+            const isActive = sideFloat.classList.toggle('active');
+            sideOverlay.classList.toggle('active', isActive);
+            if (isActive && !sideFloat.innerHTML) loadSidebarContent();
+        }
 
-        if(data.extraStats) document.getElementById('body-extra').innerHTML = data.extraStats.map(r => `<tr><td style="font-weight:600;">${r[0]}</td><td>${r[1]}</td><td style="font-weight:600;">${r[2]}</td></tr>`).join('');
-    }
+        function closeSidebarFloat() {
+            sideFloat.classList.remove('active');
+            sideOverlay.classList.remove('active');
+        }
 
-    window.onload = () => { loadButtonPosition(); };
-</script>
-<footer>© 2026 Copyright by Angerina Frog</footer>
+        function loadSidebarContent() {
+            fetch('sidebar.html')
+                .then(res => res.text())
+                .then(data => {
+                    sideFloat.innerHTML = `<div class="sidebar-header">เมนูนำทาง</div>` + data;
+                    ['credit', 'branch', 'sales'].forEach(id => {
+                        if (localStorage.getItem('menu-' + id) === 'true') {
+                            const el = sideFloat.querySelector('#menu-' + id);
+                            if (el) el.classList.add('open');
+                        }
+                    });
+                });
+        }
+
+        window.toggleDrop = function(btn, id) {
+            const item = btn.parentElement;
+            const isOpen = item.classList.toggle("open");
+            if (id) localStorage.setItem('menu-' + id, isOpen);
+        }
+    </script>
 </body>
 </html>
