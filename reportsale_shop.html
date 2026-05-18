@@ -6,11 +6,11 @@
     <title>รายงานยอดขาย Shop - Parakit-site</title>
     <link rel="icon" type="image/png" href="favicon.png">
     <!-- โหลดชุดฟอนต์พรีเมียม Prompt และ Bootstrap Icons -->
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     
     <style>
-        * { box-sizing: border-box; font-family: 'Kanit', sans-serif; margin: 0; padding: 0; }
+        * { box-sizing: border-box; font-family: 'Prompt', sans-serif; margin: 0; padding: 0; }
         
         body { 
             background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f1 100%); 
@@ -396,7 +396,7 @@
     </div>
 
     <script>
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw-qxeuwLaALTdk4eG4K5ODVJOg3BLs5KNkRqdhZSzGrCokMxBjF7tUgTIRPy9lBDAqUg/exec";
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwU5d6ovGU8JPFkKAJHrcXhXL_QQmGLpXn9DPvDnt0PF9UGRcobN6qJEirGbH7c0AWDQQ/exec";
 
         let currentSalesData = [];
         let currentPage = 1;
@@ -432,6 +432,17 @@
                 }
             });
         };
+
+        // ฟังก์ชันแปลงรูปแบบวันที่จากฐานข้อมูลให้เป็นสไตล์ วัน-เดือน-ปี (DD/MM/YYYY)
+        function displayFormatDate(dateStr) {
+            if (!dateStr) return '-';
+            let cleanDate = String(dateStr).split('T')[0];
+            const parts = cleanDate.split('-');
+            if (parts.length === 3) {
+                return `${parts[2]}/${parts[1]}/${parts[0]}`;
+            }
+            return dateStr;
+        }
 
         function formatInt(val) {
             if (val === undefined || val === null || val === "") return "0";
@@ -498,12 +509,12 @@
         }
 
         function renderDashboard(data) {
-            // Render การ์ดยอดขายรายวัน Shop
+            // Render การ์ดยอดขายรายวัน Shop พร้อมครอบฟังก์ชันแสดง วัน-เดือน-ปี
             const d = data.dailyData;
             const metricsContainer = document.getElementById('dailyMetricsContainer');
             if(d) {
                 metricsContainer.innerHTML = `
-                    <div class="daily-box"><span class="daily-box-label">วันที่</span><div class="daily-box-value"><span class="badge-date">${d.date || '-'}</span></div></div>
+                    <div class="daily-box"><span class="daily-box-label">วันที่</span><div class="daily-box-value"><span class="badge-date">${displayFormatDate(d.date)}</span></div></div>
                     <div class="daily-box"><span class="daily-box-label">New Post / DIFF</span><div class="daily-box-value">${formatInt(d.newPost)} <span style="font-size:14px; color:#aeaeae; font-weight:400;">|</span> ${formatDiffInt(d.newPostDiff)}</div></div>
                     <div class="daily-box"><span class="daily-box-label">Exiting / DIFF</span><div class="daily-box-value">${formatInt(d.exiting)} <span style="font-size:14px; color:#aeaeae; font-weight:400;">|</span> ${formatDiffInt(d.exitingDiff)}</div></div>
                     <div class="daily-box"><span class="daily-box-label">Apple / DIFF</span><div class="daily-box-value">${formatInt(d.apple)} <span style="font-size:14px; color:#aeaeae; font-weight:400;">|</span> ${formatDiffInt(d.appleDiff)}</div></div>
@@ -572,7 +583,7 @@
             pageData.forEach(row => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td>${row.date}</td>
+                    <td>${displayFormatDate(row.date)}</td>
                     <td><b>${row.employee}</b></td>
                     <td>${row.customer}</td>
                     <td>${row.postpay}</td>
@@ -622,10 +633,12 @@
             const currentDay = ctx.currentDay;
             const totalDays = ctx.totalDays;
 
+            // กำหนดโครงสร้างข้อมูลคีย์รวมถึงการนำ All Device มารวมใช้ชุดสูตร %Achieve มาตรฐานเหมือนกลุ่มตัวอื่นทั้งหมดครับ
             const keys = [
                 { name: "All Post", obj: c.allPost, icon: "bi-collection" },
                 { name: "New Post", obj: c.newPost, icon: "bi-plus-square" },
                 { name: "Exiting", obj: c.exiting, icon: "bi-box-arrow-in-right" },
+                { name: "All Device", obj: c.allDevice, icon: "bi-phone-vibrate" }, 
                 { name: "Apple", obj: c.apple, icon: "bi-apple" },
                 { name: "iPhone", obj: c.iphone, icon: "bi-phone" },
                 { name: "iPad", obj: c.ipad, icon: "bi-tablet" },
@@ -633,14 +646,16 @@
             ];
 
             container.innerHTML = keys.map(k => {
+                // ดึงสัดส่วนความสำเร็จ %Achieve ของแต่ละการ์ดมาแตกคำนวณหารเฉลี่ยรายวันตามมาตรฐานเสมอกัน 100%
                 let rawAchieve = String(k.obj.achieve).replace(/[^0-9.-]/g, '');
                 let achieveNum = parseFloat(rawAchieve) || 0;
-
+                
                 if (achieveNum > 0 && achieveNum <= 1 && String(k.obj.achieve).indexOf('%') === -1) {
                     achieveNum = achieveNum * 100;
                 }
-
+                
                 const runrateResult = currentDay > 0 ? ((achieveNum / currentDay) * totalDays) : 0;
+                const runrateDisplay = formatPercent(runrateResult);
 
                 return `
                     <div class="sub-card">
@@ -649,31 +664,32 @@
                             <div><span>Actual:</span> <b>${formatInt(k.obj.actual)}</b></div>
                             <div><span>DIFF:</span> <b>${formatDiffInt(k.obj.diff)}</b></div>
                             <div><span>%Achieve:</span> <b style="color:#007aff;">${formatPercent(k.obj.achieve)}</b></div>
-                            <div><span>%Runrate:</span> <b style="color:#146c2e;">${formatPercent(runrateResult)}</b></div>
+                            <div><span>%Runrate:</span> <b style="color:#146c2e;">${runrateDisplay}</b></div>
                         </div>
                     </div>
                 `;
             }).join('');
         }
 
+        // ฟังก์ชันเรนเดอร์แยกสีชุด Target All Post (โทนสีน้ำเงิน) และ Target All Device (โทนสีส้ม) อย่างชัดเจน
         function renderTargetTable(targets) {
             const tbody = document.getElementById('targetAllBody');
             tbody.innerHTML = '';
             
             const sections = [
-                { label: "Target All Post", items: targets.allPost },
-                { label: "Target New Post", items: targets.newPost },
-                { label: "Target Exiting", items: targets.exiting },
-                { label: "Target All Device", items: targets.allDevice },
-                { label: "Target Apple", items: targets.apple },
-                { label: "Target iPhone", items: targets.iphone },
-                { label: "Target iPad", items: targets.ipad },
-                { label: "Target SmartPhone", items: targets.smartPhone }
+                { label: "Target All Post", items: targets.allPost, bg: "rgba(0, 122, 255, 0.1)", color: "#0056b3" },
+                { label: "Target New Post", items: targets.newPost, bg: "rgba(0, 122, 255, 0.05)", color: "#007aff" },
+                { label: "Target Exiting", items: targets.exiting, bg: "rgba(0, 122, 255, 0.05)", color: "#007aff" },
+                { label: "Target All Device", items: targets.allDevice, bg: "rgba(255, 149, 0, 0.12)", color: "#b55a00" },
+                { label: "Target Apple", items: targets.apple, bg: "rgba(255, 149, 0, 0.06)", color: "#ff9500" },
+                { label: "Target iPhone", items: targets.iphone, bg: "rgba(255, 149, 0, 0.06)", color: "#ff9500" },
+                { label: "Target iPad", items: targets.ipad, bg: "rgba(255, 149, 0, 0.06)", color: "#ff9500" },
+                { label: "Target SmartPhone", items: targets.smartPhone, bg: "rgba(255, 149, 0, 0.06)", color: "#ff9500" }
             ];
 
             sections.forEach(sec => {
                 const titleTr = document.createElement('tr');
-                titleTr.innerHTML = `<td colspan="2" style="background-color: rgba(255, 149, 0, 0.07); font-weight: 600; color: #b55a00; padding: 11px 16px; font-size:14px;">${sec.label}</td>`;
+                titleTr.innerHTML = `<td colspan="2" style="background-color: ${sec.bg}; font-weight: 600; color: ${sec.color}; padding: 11px 16px; font-size:14px;">${sec.label}</td>`;
                 tbody.appendChild(titleTr);
                 
                 if(sec.items && sec.items.length > 0) {
