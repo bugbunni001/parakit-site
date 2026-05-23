@@ -211,11 +211,11 @@
         }
 
         .date-filter-wrapper {
-            position: relative;
-            min-width: 160px;
             display: flex;
             gap: 8px;
             align-items: center;
+            min-width: 160px;
+            position: relative;
         }
         .date-input-container { position: relative; flex-grow: 1; }
         .date-input-container i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--ios-blue); pointer-events: none; }
@@ -818,6 +818,11 @@
             });
             filterData();
             updateStats(fullData);
+
+            // [เพิ่มใหม่] เรียกใช้งานกล่องตรวจหางานเกินกำหนดเฉพาะตอนเข้าเว็บครั้งแรกหรือรีเฟรชหน้าจอเท่านั้น
+            if (!manual) {
+                checkAndShowOverduePopup();
+            }
         } catch (e) { 
             console.error("Load failed:", e);
             tableBody.innerHTML = '<tr><td colspan="8" style="text-align:center;">โหลดข้อมูลไม่สำเร็จ กรุณารีเฟรชหน้าจอ</td></tr>'; 
@@ -1123,7 +1128,6 @@
                     const serverResponse = await res.json();
                     if(serverResponse.status === "success") {
                         Swal.fire({title: 'สำเร็จ', icon: 'success', timer: 1000, showConfirmButton: false}).then(() => {
-                            // อัปเดตข้อมูลแบบไม่ต้องรีโหลดทั้งหน้า
                             currentPage = 1;
                             loadData(true);
                         });
@@ -1223,7 +1227,6 @@
                     const serverResponse = await res.json();
                     if(serverResponse.status === "success") {
                         Swal.fire({title: 'สำเร็จ', icon: 'success', timer: 1000, showConfirmButton: false}).then(() => {
-                            // อัปเดตข้อมูลแบบไม่ต้องรีโหลดทั้งหน้า
                             const newType = result.value.jobType;
                             if(newType) {
                                 document.getElementById('searchInput').value = newType;
@@ -1239,6 +1242,132 @@
             }
         });
     }
+
+    // [เพิ่มใหม่] ชุดฟังก์ชันประมวลผลคำนวณและเรนเดอร์งานเกินกำหนดสะสมในป็อปอัพหน้าแรก
+    function checkAndShowOverduePopup() {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        // กรองหาเฉพาะงานที่หมดเวลาไปแล้ว และไม่ใช่งานแบบ Infinity Mode (isDaily)
+        const overdueItems = fullData.filter(row => {
+            const isDaily = (row[12] === "true" || row[12] === true);
+            if (isDaily) return false;
+
+            const deadlineStr = row[10];
+            if (!deadlineStr || deadlineStr === "-" || deadlineStr === "") return false;
+
+            const deadlineDate = new Date(deadlineStr);
+            deadlineDate.setHours(0, 0, 0, 0);
+
+            return !isNaN(deadlineDate) && deadlineDate < today;
+        });
+
+        if (overdueItems.length > 0) {
+            let tableRowsHtml = '';
+            overdueItems.forEach(row => {
+                const isPinned = (row[7] === "true" || row[7] === true);
+                const isProcessing = (row[9] === "true" || row[9] === true);
+                const isDaily = (row[12] === "true" || row[12] === true);
+                const rawPass = row[13] ? String(row[13]).replace(/^'/, '') : "";
+                const hasPassword = rawPass.trim() !== ""; 
+                const reportId = row[11] || "-";
+                const rowJson = encodeURIComponent(JSON.stringify(row));
+                const deadlineDate = fixDate(row[10]);
+                
+                const blurStyle = hasPassword ? 'filter: blur(5px); user-select: none; opacity: 0.6; display: inline-block;' : '';
+                const lockIcon = hasPassword ? '<i class="fa-solid fa-lock" style="color:var(--ios-red); margin-right:6px;" title="ติดรหัสผ่าน"></i>' : '';
+                
+                let filesHtml = '-';
+                if (hasPassword && row[5]) {
+                    filesHtml = '<span style="color:var(--ios-red); font-size:12px; font-weight:600;"><i class="fa-solid fa-lock"></i> ล็อคไฟล์</span>';
+                } else if (row[5]) {
+                    const urls = row[5].split(", ");
+                    filesHtml = urls.map((u, i) => `<a href="${u}" target="_blank" style="color:var(--ios-blue); text-decoration:none; margin-right:5px;"><i class="fa-solid fa-file"></i> ${i+1}</a>`).join('');
+                }
+
+                tableRowsHtml += `
+                    <tr class="${isPinned ? 'pinned-row' : ''}">
+                        <td onclick="checkPasswordAndShow('${rowJson}')" style="cursor:pointer;"><strong>${fixDate(row[0])}</strong><span class="report-id-label">ID: ${reportId}</span></td>
+                        <td onclick="checkPasswordAndShow('${rowJson}')" style="cursor:pointer;"><span class="job-type-badge">${row[8] || "ทั่วไป"}</span></td>
+                        <td onclick="checkPasswordAndShow('${rowJson}')" style="cursor:pointer; font-weight:600; color:var(--ios-blue);">
+                            ${lockIcon}<span style="${blurStyle}">${String(row[1]||'').replace(/^'/, '')}</span>
+                        </td>
+                        <td onclick="checkPasswordAndShow('${rowJson}')" style="cursor:pointer;">
+                            <span style="${blurStyle}">${row[2]||''}<br><small style="color:#8e8e93">${String(row[3]||'').replace(/^'/, '')}</small></span>
+                        </td>
+                        <td onclick="checkPasswordAndShow('${rowJson}')" style="cursor:pointer;">
+                            <div style="max-width:300px; max-height:100px; overflow:hidden; white-space:normal; display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; color:#666; font-size:13px; line-height:1.4; ${blurStyle}">${row[6] || "-"}</div>
+                        </td>
+                        <td onclick="checkPasswordAndShow('${rowJson}')" style="cursor:pointer;">${row[4]||''}</td>
+                        <td onclick="checkPasswordAndShow('${rowJson}')" style="cursor:${hasPassword ? 'pointer' : 'default'};">${filesHtml}</td>
+                        <td>
+                            <div class="action-btns-container">
+                                <div class="action-btns">
+                                    <button class="btn-pin ${isPinned ? 'active' : ''}" onclick="togglePinFromPopup('${reportId}', this)" title="ปักหมุด"><i class="fa-solid fa-thumbtack"></i></button>
+                                    <button class="btn-process ${isProcessing ? 'active' : ''}" onclick="toggleProcessingFromPopup('${reportId}', this)" title="กำลังดำเนินการ"><i class="fa-solid fa-clock-rotate-left"></i></button>
+                                    <button class="btn-daily ${isDaily ? 'active' : ''}" onclick="toggleDailyFromPopup('${reportId}', this)" title="แสดงงานนี้ทุกวัน"><i class="fa-solid fa-infinity"></i></button>
+                                    <button class="btn-edit" onclick="editData('${rowJson}')" title="แก้ไขข้อมูล"><i class="fa-solid fa-pen-to-square"></i></button>
+                                    <button class="btn-delete" onclick="deleteDataFromPopup('${reportId}')" title="ลบรายการ"><i class="fa-solid fa-trash"></i></button>
+                                </div>
+                                <span class="deadline-label-small" style="background:#fff0f0; color:var(--ios-red); border-color:rgba(255,59,48,0.2);">เลยกำหนด : ${deadlineDate}</span>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            Swal.fire({
+                title: '⚠️ งานที่เลยกำหนดแล้ว! ถ้ายังเห็นอยู่ไม่มีแก้ไข ก็ ปรับ ปรับ ปรับ!',
+                width: '95%',
+                customClass: { popup: 'swal-modal-custom' },
+                html: `
+                    <div class="table-wrapper" style="max-height: 55vh; overflow-y: auto; text-align: left; margin-top: 15px;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th width="120">วันที่ / เลขที่</th>
+                                    <th width="160">ประเภทงาน</th>
+                                    <th>รหัสสมาชิก</th>
+                                    <th>ชื่อลูกค้า / เบอร์</th>
+                                    <th width="300">รายละเอียด</th> 
+                                    <th>พนักงาน</th>
+                                    <th>เอกสาร</th>
+                                    <th width="200">จัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${tableRowsHtml}
+                            </tbody>
+                        </table>
+                    </div>
+                `,
+                confirmButtonText: 'ตกลง',
+                confirmButtonColor: 'var(--ios-blue)'
+            });
+        }
+    }
+
+    // [เพิ่มใหม่] สะพานคำสั่งสำหรับการกดจัดการสถานะจากหน้าต่างป็อปอัพโดยตรง
+    window.togglePinFromPopup = async function(reportId, btn) {
+        btn.classList.toggle('active');
+        const tr = btn.closest('tr');
+        if (tr) tr.classList.toggle('pinned-row');
+        await togglePin(reportId);
+    };
+
+    window.toggleProcessingFromPopup = async function(reportId, btn) {
+        btn.classList.toggle('active');
+        await toggleProcessing(reportId);
+    };
+
+    window.toggleDailyFromPopup = async function(reportId, btn) {
+        btn.classList.toggle('active');
+        await toggleDaily(reportId);
+    };
+
+    window.deleteDataFromPopup = async function(reportId) {
+        await deleteData(reportId);
+    };
 
     window.onload = () => { loadButtonPosition(); loadData(); };
 </script>
