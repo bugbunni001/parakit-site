@@ -141,6 +141,7 @@
             margin-bottom: 10px;
         }
         .stat-card-long.daily-card { background: linear-gradient(90deg, #8e5aff, #5856d6); box-shadow: 0 4px 15px rgba(142, 90, 255, 0.3); }
+        .stat-card-long.overdue-card { background: linear-gradient(90deg, #FF3B30, #FF9500); box-shadow: 0 4px 15px rgba(255, 59, 48, 0.3); }
         .stat-card-long:hover { transform: scale(1.01); filter: brightness(1.1); }
         .stat-card-long .info { display: flex; flex-direction: column; }
         .stat-card-long .title { font-size: 14px; font-weight: 600; }
@@ -695,19 +696,47 @@
         let pinnedCount = 0;
         let deadlineCount = 0;
         let dailyCount = 0;
-        const todayStr = formatForInputDate(new Date());
+        let overdueCount = 0;
+        
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const todayStr = formatForInputDate(today);
+        
         jobTypes.forEach(t => counts[t] = 0);
         data.forEach(row => {
             const type = row[8] || "ทั่วไป";
             if(counts[type] !== undefined) counts[type]++;
             if(row[7] === "true" || row[7] === true) pinnedCount++;
             if(row[9] === "true" || row[9] === true) processingCount++;
-            const deadline = formatForInputDate(row[10]);
+            
+            const deadlineStr = row[10];
+            const deadline = formatForInputDate(deadlineStr);
             const isDaily = (row[12] === "true" || row[12] === true);
-            if(isDaily) dailyCount++;
-            if(!isDaily && deadline === todayStr) deadlineCount++;
+            
+            if(isDaily) {
+                dailyCount++;
+            } else {
+                if (deadline === todayStr) {
+                    deadlineCount++;
+                } else if (deadlineStr && deadlineStr !== "-" && deadlineStr !== "") {
+                    const deadlineDate = new Date(deadlineStr);
+                    deadlineDate.setHours(0, 0, 0, 0);
+                    if (!isNaN(deadlineDate) && deadlineDate < today) {
+                        overdueCount++;
+                    }
+                }
+            }
         });
+        
         let cardsHtml = `
+            <div class="stat-card-long overdue-card" onclick="filterByOverdue(this)">
+                <div class="info">
+                    <span class="title">งานที่เลยกำหนด</span>
+                    <span class="title">(โดนปรับแน่!)</span>
+                    <span class="date-label">ถ้ายังเห็น!</span>
+                </div>
+                <div class="count-val">${overdueCount} รายการ</div>
+            </div>
             <div class="stat-card-long" onclick="filterByDeadline(this)">
                 <div class="info">
                     <span class="title">ครบที่กำหนด</span>
@@ -741,6 +770,26 @@
             cardsHtml += `<div class="stat-card" onclick="filterByType('${type}', this)"><span class="count">${counts[type]}</span><span class="label">${type}</span></div>`;
         });
         statsCon.innerHTML = cardsHtml;
+    }
+
+    function filterByOverdue(el) {
+        document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        filteredData = fullData.filter(row => {
+            const isDaily = (row[12] === "true" || row[12] === true);
+            if (isDaily) return false;
+
+            const deadlineStr = row[10];
+            if (!deadlineStr || deadlineStr === "-" || deadlineStr === "") return false;
+
+            const deadlineDate = new Date(deadlineStr);
+            deadlineDate.setHours(0, 0, 0, 0);
+
+            return !isNaN(deadlineDate) && deadlineDate < today;
+        });
+        currentPage = 1; renderTable();
     }
 
     function filterByDeadline(el) {
@@ -818,11 +867,6 @@
             });
             filterData();
             updateStats(fullData);
-
-            // [เพิ่มใหม่] เรียกใช้งานกล่องตรวจหางานเกินกำหนดเฉพาะตอนเข้าเว็บครั้งแรกหรือรีเฟรชหน้าจอเท่านั้น
-            if (!manual) {
-                checkAndShowOverduePopup();
-            }
         } catch (e) { 
             console.error("Load failed:", e);
             tableBody.innerHTML = '<tr><td colspan="8" style="text-align:center;">โหลดข้อมูลไม่สำเร็จ กรุณารีเฟรชหน้าจอ</td></tr>'; 
@@ -865,6 +909,12 @@
                 filesHtml = urls.map((u, i) => `<a href="${u}" target="_blank" style="color:var(--ios-blue); text-decoration:none; margin-right:5px;"><i class="fa-solid fa-file"></i> ${i+1}</a>`).join('');
             }
             
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const dDate = new Date(row[10]);
+            dDate.setHours(0, 0, 0, 0);
+            const isOverdueItem = (!isDaily && row[10] && row[10] !== "-" && dDate < today);
+
             tr.innerHTML = `
                 <td><strong>${fixDate(row[0])}</strong><span class="report-id-label">ID: ${reportId}</span></td>
                 <td><span class="job-type-badge">${row[8] || "ทั่วไป"}</span></td>
@@ -888,7 +938,8 @@
                             <button class="btn-edit" onclick="editData('${rowJson}')" title="แก้ไขข้อมูล"><i class="fa-solid fa-pen-to-square"></i></button>
                             <button class="btn-delete" onclick="deleteData('${reportId}')" title="ลบรายการ"><i class="fa-solid fa-trash"></i></button>
                         </div>
-                        ${isDaily ? `<span class="deadline-label-small" style="background:#f5eeff; color:var(--ios-purple); border-color:rgba(142,90,255,0.2);">แสดงทุกวัน (Infinity)</span>` : (deadlineDate !== "-" ? `<span class="deadline-label-small">ครบกำหนด : ${deadlineDate}</span>` : '')}
+                        ${isDaily ? `<span class="deadline-label-small" style="background:#f5eeff; color:var(--ios-purple); border-color:rgba(142,90,255,0.2);">แสดงทุกวัน (Infinity)</span>` : 
+                          (deadlineDate !== "-" ? `<span class="deadline-label-small" style="${isOverdueItem ? 'background:#fff0f0; color:var(--ios-red); border-color:rgba(255,59,48,0.3);' : ''}">${isOverdueItem ? 'เลยกำหนด : ' : 'ครบกำหนด : '}${deadlineDate}</span>` : '')}
                     </div>
                 </td>
             `;
@@ -990,7 +1041,7 @@
                 cancelButtonText: 'ยกเลิก',
                 inputAttributes: {
                     autocapitalize: 'off',
-                    autocorrect: 'off'
+                    autorrect: 'off'
                 },
                 inputValidator: (value) => {
                     if (!value) return 'กรุณากรอกรหัสผ่าน!';
@@ -1085,7 +1136,7 @@
                     <div><label class="swal-label">หมายเลขสมาชิก</label><input type="text" id="memberId" class="swal-input-styled" placeholder="TMH/TOL/TVS"></div>
                     <div class="swal-field-full"><label class="swal-label">ชื่อลูกค้า</label><input type="text" id="name" class="swal-input-styled"></div>
                     <div><label class="swal-label">เบอร์ติดต่อ</label><input type="text" id="phone" class="swal-input-styled" placeholder="0XXXXXXXXX" maxlength="10"></div>
-                    <div><label class="swal-label">พนักงาน</label><select id="staff" class="swal-input-styled"><option value="">-- เลือก --</option><option value="ศุภกฤต">ศุภกฤต</option><option value="นวพล">นวพล</option><option value="ปิยะพร">ปิยะพร</option><option value="กรทักษ์">กรทักษ์</option></select></div>
+                    <div><label class="swal-label">พนักงาน</label><select id="staff" class="swal-input-styled"><option value="">-- เลือกพนักงาน --</option><option value="ศุภกฤต">ศุภกฤต</option><option value="นวพล">นวพล</option><option value="ปิยะพร">ปิยะพร</option><option value="กรทักษ์">กรทักษ์</option></select></div>
                     
                     <div><label class="swal-label">วันครบกำหนดงาน</label><input type="date" id="deadline" class="swal-input-styled"></div>
                     <div>
@@ -1109,12 +1160,13 @@
             showCancelButton: true, confirmButtonText: 'บันทึกข้อมูล', preConfirm: async () => {
                 const memberIdVal = document.getElementById('memberId').value.trim();
                 const phoneVal = document.getElementById('phone').value.trim();
-                if (!memberIdVal || !phoneVal) { Swal.showValidationMessage('กรุณากรอกข้อมูลให้ครบถ้วน'); return false; }
+                const staffVal = document.getElementById('staff').value;
+                if (!memberIdVal || !phoneVal || !staffVal) { Swal.showValidationMessage('กรุณากรอกข้อมูลและเลือกชื่อพนักงานให้ครบถ้วน'); return false; }
                 return { 
                     action: "insert", reportId: newId, 
                     jobType: document.getElementById('jobType').value, date: document.getElementById('date').value, 
                     memberId: "'" + memberIdVal, name: document.getElementById('name').value, phone: "'" + phoneVal, 
-                    staff: document.getElementById('staff').value, jobDetail: document.getElementById('jobDetail').value, 
+                    staff: staffVal, jobDetail: document.getElementById('jobDetail').value, 
                     deadline: document.getElementById('deadline').value, isDaily: document.getElementById('isDaily').checked ? "true" : "",
                     password: "'" + document.getElementById('jobPassword').value,
                     files: selectedFiles.map(f => ({name: f.name, data: f.data})) 
@@ -1173,6 +1225,11 @@
         let typeOptions = `<option value="">-- เลือกประเภทงาน --</option>`;
         jobTypes.forEach(t => { typeOptions += `<option value="${t}" ${item[8] === t ? 'selected' : ''}>${t}</option>`; });
         
+        let staffOptions = `<option value="">-- เลือกพนักงาน --</option>`;
+        ['ศุภกฤต', 'นวพล', 'ปิยะพร', 'กรทักษ์'].forEach(s => {
+            staffOptions += `<option value="${s}" ${item[4] === s ? 'selected' : ''}>${s}</option>`;
+        });
+        
         Swal.fire({
             title: 'แก้ไขข้อมูล: ' + (item[11] || ''),
             customClass: { popup: 'swal-modal-custom' }, width: '700px',
@@ -1184,7 +1241,7 @@
                     <div><label class="swal-label">รหัสสมาชิก</label><input type="text" id="swal-memberId" class="swal-input-styled" value="${String(item[1]||'').replace(/^'/, '')}"></div>
                     <div class="swal-field-full"><label class="swal-label">ชื่อลูกค้า</label><input type="text" id="swal-name" class="swal-input-styled" value="${item[2]||''}"></div>
                     <div><label class="swal-label">เบอร์ติดต่อ</label><input type="text" id="swal-phone" class="swal-input-styled" value="${String(item[3]||'').replace(/^'/, '')}" maxlength="10"></div>
-                    <div><label class="swal-label">พนักงาน</label><select id="swal-staff" class="swal-input-styled">${['ศุภกฤต', 'นวพล', 'ปิยะพร', 'กรทักษ์'].map(s => `<option value="${s}" ${item[4] === s ? 'selected' : ''}>${s}</option>`).join('')}</select></div>
+                    <div><label class="swal-label">พนักงาน</label><select id="swal-staff" class="swal-input-styled">${staffOptions}</select></div>
                     
                     <div><label class="swal-label">วันครบกำหนดงาน</label><input type="date" id="swal-deadline" class="swal-input-styled" value="${formatForInputDate(item[10])}"></div>
                     <div>
@@ -1208,11 +1265,15 @@
             didOpen: () => renderSelectedFiles(),
             showCancelButton: true, confirmButtonText: 'บันทึกการแก้ไข',
             preConfirm: () => {
+                const memberIdVal = document.getElementById('swal-memberId').value.trim();
+                const phoneVal = document.getElementById('swal-phone').value.trim();
+                const staffVal = document.getElementById('swal-staff').value;
+                if (!memberIdVal || !phoneVal || !staffVal) { Swal.showValidationMessage('กรุณากรอกข้อมูลและเลือกชื่อพนักงานให้ครบถ้วน'); return false; }
                 return { 
                     action: "update", reportId: item[11], date: document.getElementById('swal-date').value, 
-                    memberId: "'" + document.getElementById('swal-memberId').value, 
-                    name: document.getElementById('swal-name').value, phone: "'" + document.getElementById('swal-phone').value, 
-                    staff: document.getElementById('swal-staff').value, jobDetail: document.getElementById('swal-jobDetail').value, 
+                    memberId: "'" + memberIdVal, 
+                    name: document.getElementById('swal-name').value, phone: "'" + phoneVal, 
+                    staff: staffVal, jobDetail: document.getElementById('swal-jobDetail').value, 
                     jobType: document.getElementById('swal-jobType').value, deadline: document.getElementById('swal-deadline').value,
                     isDaily: document.getElementById('swal-isDaily').checked ? "true" : "",
                     password: "'" + document.getElementById('swal-jobPassword').value,
@@ -1242,132 +1303,6 @@
             }
         });
     }
-
-    // [เพิ่มใหม่] ชุดฟังก์ชันประมวลผลคำนวณและเรนเดอร์งานเกินกำหนดสะสมในป็อปอัพหน้าแรก
-    function checkAndShowOverduePopup() {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        // กรองหาเฉพาะงานที่หมดเวลาไปแล้ว และไม่ใช่งานแบบ Infinity Mode (isDaily)
-        const overdueItems = fullData.filter(row => {
-            const isDaily = (row[12] === "true" || row[12] === true);
-            if (isDaily) return false;
-
-            const deadlineStr = row[10];
-            if (!deadlineStr || deadlineStr === "-" || deadlineStr === "") return false;
-
-            const deadlineDate = new Date(deadlineStr);
-            deadlineDate.setHours(0, 0, 0, 0);
-
-            return !isNaN(deadlineDate) && deadlineDate < today;
-        });
-
-        if (overdueItems.length > 0) {
-            let tableRowsHtml = '';
-            overdueItems.forEach(row => {
-                const isPinned = (row[7] === "true" || row[7] === true);
-                const isProcessing = (row[9] === "true" || row[9] === true);
-                const isDaily = (row[12] === "true" || row[12] === true);
-                const rawPass = row[13] ? String(row[13]).replace(/^'/, '') : "";
-                const hasPassword = rawPass.trim() !== ""; 
-                const reportId = row[11] || "-";
-                const rowJson = encodeURIComponent(JSON.stringify(row));
-                const deadlineDate = fixDate(row[10]);
-                
-                const blurStyle = hasPassword ? 'filter: blur(5px); user-select: none; opacity: 0.6; display: inline-block;' : '';
-                const lockIcon = hasPassword ? '<i class="fa-solid fa-lock" style="color:var(--ios-red); margin-right:6px;" title="ติดรหัสผ่าน"></i>' : '';
-                
-                let filesHtml = '-';
-                if (hasPassword && row[5]) {
-                    filesHtml = '<span style="color:var(--ios-red); font-size:12px; font-weight:600;"><i class="fa-solid fa-lock"></i> ล็อคไฟล์</span>';
-                } else if (row[5]) {
-                    const urls = row[5].split(", ");
-                    filesHtml = urls.map((u, i) => `<a href="${u}" target="_blank" style="color:var(--ios-blue); text-decoration:none; margin-right:5px;"><i class="fa-solid fa-file"></i> ${i+1}</a>`).join('');
-                }
-
-                tableRowsHtml += `
-                    <tr class="${isPinned ? 'pinned-row' : ''}">
-                        <td onclick="checkPasswordAndShow('${rowJson}')" style="cursor:pointer;"><strong>${fixDate(row[0])}</strong><span class="report-id-label">ID: ${reportId}</span></td>
-                        <td onclick="checkPasswordAndShow('${rowJson}')" style="cursor:pointer;"><span class="job-type-badge">${row[8] || "ทั่วไป"}</span></td>
-                        <td onclick="checkPasswordAndShow('${rowJson}')" style="cursor:pointer; font-weight:600; color:var(--ios-blue);">
-                            ${lockIcon}<span style="${blurStyle}">${String(row[1]||'').replace(/^'/, '')}</span>
-                        </td>
-                        <td onclick="checkPasswordAndShow('${rowJson}')" style="cursor:pointer;">
-                            <span style="${blurStyle}">${row[2]||''}<br><small style="color:#8e8e93">${String(row[3]||'').replace(/^'/, '')}</small></span>
-                        </td>
-                        <td onclick="checkPasswordAndShow('${rowJson}')" style="cursor:pointer;">
-                            <div style="max-width:300px; max-height:100px; overflow:hidden; white-space:normal; display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; color:#666; font-size:13px; line-height:1.4; ${blurStyle}">${row[6] || "-"}</div>
-                        </td>
-                        <td onclick="checkPasswordAndShow('${rowJson}')" style="cursor:pointer;">${row[4]||''}</td>
-                        <td onclick="checkPasswordAndShow('${rowJson}')" style="cursor:${hasPassword ? 'pointer' : 'default'};">${filesHtml}</td>
-                        <td>
-                            <div class="action-btns-container">
-                                <div class="action-btns">
-                                    <button class="btn-pin ${isPinned ? 'active' : ''}" onclick="togglePinFromPopup('${reportId}', this)" title="ปักหมุด"><i class="fa-solid fa-thumbtack"></i></button>
-                                    <button class="btn-process ${isProcessing ? 'active' : ''}" onclick="toggleProcessingFromPopup('${reportId}', this)" title="กำลังดำเนินการ"><i class="fa-solid fa-clock-rotate-left"></i></button>
-                                    <button class="btn-daily ${isDaily ? 'active' : ''}" onclick="toggleDailyFromPopup('${reportId}', this)" title="แสดงงานนี้ทุกวัน"><i class="fa-solid fa-infinity"></i></button>
-                                    <button class="btn-edit" onclick="editData('${rowJson}')" title="แก้ไขข้อมูล"><i class="fa-solid fa-pen-to-square"></i></button>
-                                    <button class="btn-delete" onclick="deleteDataFromPopup('${reportId}')" title="ลบรายการ"><i class="fa-solid fa-trash"></i></button>
-                                </div>
-                                <span class="deadline-label-small" style="background:#fff0f0; color:var(--ios-red); border-color:rgba(255,59,48,0.2);">เลยกำหนด : ${deadlineDate}</span>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            });
-
-            Swal.fire({
-                title: '⚠️ งานที่เลยกำหนดแล้ว! ถ้ายังเห็นอยู่ไม่มีแก้ไข ก็ ปรับ ปรับ ปรับ!',
-                width: '95%',
-                customClass: { popup: 'swal-modal-custom' },
-                html: `
-                    <div class="table-wrapper" style="max-height: 55vh; overflow-y: auto; text-align: left; margin-top: 15px;">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th width="120">วันที่ / เลขที่</th>
-                                    <th width="160">ประเภทงาน</th>
-                                    <th>รหัสสมาชิก</th>
-                                    <th>ชื่อลูกค้า / เบอร์</th>
-                                    <th width="300">รายละเอียด</th> 
-                                    <th>พนักงาน</th>
-                                    <th>เอกสาร</th>
-                                    <th width="200">จัดการ</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${tableRowsHtml}
-                            </tbody>
-                        </table>
-                    </div>
-                `,
-                confirmButtonText: 'ตกลง',
-                confirmButtonColor: 'var(--ios-blue)'
-            });
-        }
-    }
-
-    // [เพิ่มใหม่] สะพานคำสั่งสำหรับการกดจัดการสถานะจากหน้าต่างป็อปอัพโดยตรง
-    window.togglePinFromPopup = async function(reportId, btn) {
-        btn.classList.toggle('active');
-        const tr = btn.closest('tr');
-        if (tr) tr.classList.toggle('pinned-row');
-        await togglePin(reportId);
-    };
-
-    window.toggleProcessingFromPopup = async function(reportId, btn) {
-        btn.classList.toggle('active');
-        await toggleProcessing(reportId);
-    };
-
-    window.toggleDailyFromPopup = async function(reportId, btn) {
-        btn.classList.toggle('active');
-        await toggleDaily(reportId);
-    };
-
-    window.deleteDataFromPopup = async function(reportId) {
-        await deleteData(reportId);
-    };
 
     window.onload = () => { loadButtonPosition(); loadData(); };
 </script>
