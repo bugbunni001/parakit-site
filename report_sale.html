@@ -389,8 +389,8 @@
                         </table>
                     </div>
 
-                    <!-- 8. การ์ด รวม Target ทั้งหมด -->
-                    <div class="card card-target" style="width: 100%; margin-bottom: 0;">
+                    <!-- 8. การ์ด รวม Target ทั้งหมด (ปลด margin-bottom: 0 ออกเพื่อเว้นระยะลงมาหาตารางคอมมิชชัน) -->
+                    <div class="card card-target" style="width: 100%;">
                         <div class="card-title"><i class="bi bi-trophy"></i> รวม Target ทั้งหมด : <span class="emp-name-lbl">-</span></div>
                         <table>
                             <thead>
@@ -402,6 +402,21 @@
                             <tbody id="targetAllBody"></tbody>
                         </table>
                     </div>
+
+                    <!-- [เพิ่มใหม่] การ์ด ค่า Commission วางต่อท้ายล่างสุดฝั่งขวาพอดีกริด -->
+                    <div class="card card-target" style="width: 100%; margin-bottom: 0; border-top: 5px solid #ff9500;">
+                        <div class="card-title"><i class="bi bi-currency-dollar"></i> ค่า Commission : <span class="emp-name-lbl">-</span></div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>รายการ</th>
+                                    <th>%การขาย</th>
+                                    <th>ค่าคอมที่ได้รับ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="commissionBody"></tbody>
+                        </table>
+                    </div>
                 </div>
 
             </div>
@@ -410,7 +425,7 @@
     </div>
 
     <script>
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwTARhbw7fChsAnlHA8qyPzW-G4rrY1bVDu4g76y6qlROoHTtVuSB36oV2LGGiuVPbF/exec";
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwE1xhEfuD7dISerfpkNDjiHGmjfdkx4g5PgH6KBWcUytByM-5grYi5I5mwsKWQrs8C/exec";
 
         let currentSalesData = [];
         let currentPage = 1;
@@ -421,7 +436,6 @@
             const now = new Date();
             picker.value = now.toISOString().split('T')[0];
             
-            // รีเซ็ตวันที่เป็นวันใหม่เมื่อผ่านเวลา 23:59 น. (00:00 น.)
             setInterval(() => {
                 const current = new Date();
                 if(current.getHours() === 0 && current.getMinutes() === 0) {
@@ -431,7 +445,7 @@
         }
 
         window.onload = function() {
-            loadButtonPosition(); // คืนค่าพิกัดปุ่มลอยเมื่อเข้าเว็บ
+            loadButtonPosition();
             initDatePicker();
         };
 
@@ -545,6 +559,30 @@
             // 8. เรนเดอร์ ตารางรวม Target ทั้งหมด
             renderTargetTable(data.targets);
 
+            // [เพิ่มใหม่] เรนเดอร์ ตารางค่า Commission
+            const commissionBody = document.getElementById('commissionBody');
+            if (commissionBody && data.commissionData) {
+                commissionBody.innerHTML = data.commissionData.map(item => {
+                    let rawRate = item.rate;
+                    let rateDisplay = "-";
+                    if (rawRate !== undefined && rawRate !== null && rawRate !== "") {
+                        let rateNum = parseFloat(String(rawRate).replace(/[^0-9.-]/g, '')) || 0;
+                        if (rateNum > 0 && rateNum <= 1 && String(rawRate).indexOf('%') === -1) {
+                            rateNum = rateNum * 100; // แปลงเลขทศนิยมเป็น %
+                        }
+                        rateDisplay = String(rawRate).indexOf('%') !== -1 ? rawRate : rateNum.toFixed(2) + '%';
+                    }
+                    
+                    return `
+                        <tr>
+                            <td><b>${item.item || ''}</b></td>
+                            <td style="font-weight:500; color:#007aff;">${rateDisplay}</td>
+                            <td style="font-weight:600; color:#146c2e;">${item.amount !== "" ? formatInt(item.amount) : '-'}</td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
             // 9. เรนเดอร์ สรุปยอดขายตามแบรนด์
             const brandBody = document.getElementById('brandSummaryBody');
             brandBody.innerHTML = data.brandSummary.map(item => `
@@ -645,7 +683,6 @@
                     achieveNum = achieveNum * 100;
                 }
                 
-                // คำนวณเปอร์เซ็นต์ระบบแนวโน้มเป้าหมายรายเดือน (%Runrate) อิงตามฐานเปอร์เซ็นต์สะสมสากลทศนิยม 2 ตำแหน่ง
                 const runrateResult = currentDay > 0 ? ((achieveNum / currentDay) * totalDays) : 0;
 
                 return `
