@@ -389,7 +389,7 @@
                         </table>
                     </div>
 
-                    <!-- 8. การ์ด รวม Target ทั้งหมด (ปลด margin-bottom: 0 ออกเพื่อเว้นระยะลงมาหาตารางคอมมิชชัน) -->
+                    <!-- 8. การ์ด รวม Target ทั้งหมด -->
                     <div class="card card-target" style="width: 100%;">
                         <div class="card-title"><i class="bi bi-trophy"></i> รวม Target ทั้งหมด : <span class="emp-name-lbl">-</span></div>
                         <table>
@@ -403,7 +403,7 @@
                         </table>
                     </div>
 
-                    <!-- [เพิ่มใหม่] การ์ด ค่า Commission วางต่อท้ายล่างสุดฝั่งขวาพอดีกริด -->
+                    <!-- การ์ด ค่า Commission วางต่อท้ายล่างสุดฝั่งขวาพอดีกริด -->
                     <div class="card card-target" style="width: 100%; margin-bottom: 0; border-top: 5px solid #ff9500;">
                         <div class="card-title"><i class="bi bi-currency-dollar"></i> ค่า Commission : <span class="emp-name-lbl">-</span></div>
                         <table>
@@ -559,18 +559,30 @@
             // 8. เรนเดอร์ ตารางรวม Target ทั้งหมด
             renderTargetTable(data.targets);
 
-            // [เพิ่มใหม่] เรนเดอร์ ตารางค่า Commission
+            // เรนเดอร์ ตารางค่า Commission [ปรับปรุงเงื่อนไขข้อยกเว้นแบบจำนวนเต็ม]
             const commissionBody = document.getElementById('commissionBody');
             if (commissionBody && data.commissionData) {
                 commissionBody.innerHTML = data.commissionData.map(item => {
                     let rawRate = item.rate;
                     let rateDisplay = "-";
+                    
                     if (rawRate !== undefined && rawRate !== null && rawRate !== "") {
+                        let itemName = String(item.item).trim();
+                        // รายการที่ต้องการให้แสดงผลเป็นจำนวนเต็มดิบ ๆ ไม่ติด %
+                        let specialItems = ["Up Sell TOL", "TOL 9-12 link", "ฟันธงราหู"];
+                        
                         let rateNum = parseFloat(String(rawRate).replace(/[^0-9.-]/g, '')) || 0;
-                        if (rateNum > 0 && rateNum <= 1 && String(rawRate).indexOf('%') === -1) {
-                            rateNum = rateNum * 100; // แปลงเลขทศนิยมเป็น %
+                        
+                        if (specialItems.includes(itemName)) {
+                            // แสดงผลเป็นจำนวนเต็มแบบคลาสสิก ไม่ใส่ % ต่อท้าย
+                            rateDisplay = Math.round(rateNum).toLocaleString();
+                        } else {
+                            // รายการปกติอื่น ๆ แปลงทศนิยมและคงรูปแบบ % ตามปกติ
+                            if (rateNum > 0 && rateNum <= 1 && String(rawRate).indexOf('%') === -1) {
+                                rateNum = rateNum * 100;
+                            }
+                            rateDisplay = String(rawRate).indexOf('%') !== -1 ? rawRate : rateNum.toFixed(2) + '%';
                         }
-                        rateDisplay = String(rawRate).indexOf('%') !== -1 ? rawRate : rateNum.toFixed(2) + '%';
                     }
                     
                     return `
