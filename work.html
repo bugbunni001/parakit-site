@@ -6,12 +6,11 @@
     <title>ระบบเคลียร์งาน - Parakit-site</title>
     <link rel="icon" type="image/png" href="favicon.png">
     
-    <!-- เปลี่ยนมาใช้ฟอนต์ Prompt ตามสไตล์งานระบบดีไซน์แก้วครับ -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <style>
@@ -250,7 +249,7 @@
         .date-filter-input:focus { border-color: var(--ios-blue); background: white; }
 
         .search-wrapper { flex-grow: 1; position: relative; }
-        .search-wrapper i.fa-magnifying-glass { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: var(--ios-blue); }
+        .search-wrapper i.bi-search { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: var(--ios-blue); }
         
         .btn-clear-search {
             position: absolute;
@@ -483,7 +482,17 @@
         .file-item .remove-file { color: var(--ios-red); cursor: pointer; font-size: 16px; padding-left: 10px; }
         
         .existing-file-item { background: #f0f9ff; border-color: #bae6fd; }
-        .existing-file-item i.fa-trash-can { color: var(--ios-red); }
+        .existing-file-item i.bi-trash { color: var(--ios-red); }
+
+        /* 🔥 เอฟเฟกต์หมุนไอคอนรีเฟรชสำหรับ Bootstrap Icon */
+        .bi-spin {
+            display: inline-block;
+            animation: bi-spin-keyframes 1s linear infinite;
+        }
+        @keyframes bi-spin-keyframes {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
     </style>
@@ -501,7 +510,7 @@
 
 <div class="floating-controls">
     <button id="btn-back-to-top" class="btn-float" onclick="scrollToTop()" title="กลับไปด้านบน">
-        <i class="fa-solid fa-arrow-up"></i>
+        <i class="bi bi-arrow-up"></i>
     </button>
 </div>
 
@@ -511,26 +520,26 @@
 
     <div class="action-bar">
         <button class="btn-add-job" onclick="openAddJobModal()">
-            <i class="fa-solid fa-plus-circle"></i> เพิ่มรายการใหม่
+            <i class="bi bi-plus-circle"></i> เพิ่มรายการใหม่
         </button>
         <div class="search-area-wrapper">
             <div class="date-filter-wrapper">
                 <button class="btn-clear-all" onclick="clearAllFilters()" title="ล้างข้อมูลทั้งหมด">ล้างข้อมูล</button>
                 <div class="date-input-container">
-                    <i class="fa-solid fa-calendar-days"></i>
+                    <i class="bi bi-calendar3"></i>
                     <input type="date" id="dateFilter" class="date-filter-input" onchange="filterData()" title="กรองตามวันครบกำหนด">
                 </div>
             </div>
             
             <div class="search-wrapper">
-                <i class="fa-solid fa-magnifying-glass"></i>
+                <i class="bi bi-search"></i>
                 <input type="text" id="searchInput" class="search-input" placeholder="ค้นหาข้อมูล..." onkeyup="filterData()">
                 <button id="clearSearchBtn" class="btn-clear-search" onclick="clearSearch()" title="ล้างการค้นหา">
-                    <i class="fa-solid fa-xmark"></i>
+                    <i class="bi bi-x-lg"></i>
                 </button>
             </div>
             <button class="btn-refresh-inline" onclick="loadData(true)" title="รีเฟรชข้อมูล">
-                <i class="fa-solid fa-rotate-right"></i>
+                <i class="bi bi-arrow-clockwise"></i>
             </button>
         </div>
     </div>
@@ -558,12 +567,12 @@
     <div id="pagination" class="pagination-container"></div>
     
     <p style="margin-top:30px; font-size:13px; color:rgba(0,0,0,0.5); font-weight: 500;">
-        <i class="fa-solid fa-copyright"></i> 2026 Copyright by <strong>Angerina Frog</strong>
+        <i class="bi bi-c-circle"></i> 2026 Copyright by <strong>Angerina Frog</strong>
     </p>
 </div>
 
 <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwk3sTLvTvHEc0WHmwb0Lhu00aODTW1274nwcA5H800nnQdgTqMzgN4E2xrEv4rsz-3/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyvPwVegFlELnYezYFGRsZLuU9IGj7aaNdsJ3YcHgVbTWCOCw1JpprFR5Nich52ZsDO/exec';
 
     const jobTypes = [
         "MGM ปรับลด", "ยกเลิกบริการ (ปกติ)", "ยกเลิกบริการ (5P)", "MNP",
@@ -690,7 +699,6 @@
 
     function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
 
-    // 🔥 [Optimization 1] ทำลายความหน่วงของ Stats บอร์ด ดึงจากตัวแปร Pre-cached ตรงๆ ไม่สร้าง Date Object ในลูป
     function updateStats(data) {
         const statsCon = document.getElementById('statsContainer');
         const counts = {};
@@ -817,7 +825,6 @@
         filterData();
     }
 
-    // 🔥 [Optimization 2] ฟังก์ชันพิมพ์ค้นหาความเร็วสูง เรียกใช้ String-Cache ทันที ไม่ลูปแปลงค่าตัวอักษรซ้ำซ้อน
     function filterData() {
         const filter = document.getElementById('searchInput').value.toLowerCase();
         const dateFilter = document.getElementById('dateFilter').value;
@@ -829,11 +836,10 @@
         currentPage = 1; renderTable();
     }
 
-    // 🔥 [Optimization 3] เร่งความเร็วการประมวลผลข้อมูลก้อนใหญ่ด้วยการทำ Pre-Parsing คัดแยกตัวแปรและสถานะไว้ตั้งแต่แรก
     async function loadData(manual = false) {
         const tableBody = document.getElementById('dataTable');
-        const refreshBtn = document.querySelector('.fa-rotate-right');
-        if(refreshBtn) refreshBtn.classList.add('fa-spin');
+        const refreshBtn = document.querySelector('.bi-arrow-clockwise');
+        if(refreshBtn) refreshBtn.classList.add('bi-spin');
         try {
             const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: "read"}) });
             const data = await res.json();
@@ -841,7 +847,6 @@
             const today = new Date();
             today.setHours(0, 0, 0, 0);
 
-            // เก็บ Cache ตัวแปรล่วงหน้าทั้งหมดเพื่อหลีกเลี่ยงภาระใน Array loop ชั้นลึก
             data.forEach(row => {
                 row._searchStr = row.join(' ').toLowerCase();
                 row._deadlineStr = formatForInputDate(row[10]);
@@ -849,7 +854,6 @@
                 row._isPinned = (row[7] === "true" || row[7] === true);
                 row._isProcessing = (row[9] === "true" || row[9] === true);
                 
-                // คำนวณสถานะเลยกำหนดล่วงหน้า
                 if (row._isDaily) {
                     row._isOverdue = false;
                 } else if (row[10] && row[10] !== "-" && row[10] !== "") {
@@ -861,7 +865,6 @@
                 }
             });
 
-            // เรียงลำดับจากข้อมูลแคชที่เตรียมไว้
             fullData = data.sort((a, b) => {
                 if (a._isPinned && !b._isPinned) return -1;
                 if (!a._isPinned && b._isPinned) return 1;
@@ -874,11 +877,10 @@
             console.error("Load failed:", e);
             tableBody.innerHTML = '<tr><td colspan="8" style="text-align:center;">โหลดข้อมูลไม่สำเร็จ กรุณารีเฟรชหน้าจอ</td></tr>'; 
         } finally { 
-            if(refreshBtn) refreshBtn.classList.remove('fa-spin'); 
+            if(refreshBtn) refreshBtn.classList.remove('bi-spin'); 
         }
     }
 
-    // 🔥 [Optimization 4] ปรับฟังก์ชันเรนเดอร์ตารางมาเขียนดึงค่าตัวแปรจาก Cache ทำให้สร้างตารางเสร็จไวและนิ่งขึ้นมากครับ
     function renderTable() {
         const tableBody = document.getElementById('dataTable');
         tableBody.innerHTML = '';
@@ -904,14 +906,14 @@
             if (isPinned) tr.classList.add('pinned-row');
             
             const blurStyle = hasPassword ? 'filter: blur(5px); user-select: none; opacity: 0.6; display: inline-block;' : '';
-            const lockIcon = hasPassword ? '<i class="fa-solid fa-lock" style="color:var(--ios-red); margin-right:6px;" title="ติดรหัสผ่าน"></i>' : '';
+            const lockIcon = hasPassword ? '<i class="bi bi-lock-fill" style="color:var(--ios-red); margin-right:6px;" title="ติดรหัสผ่าน"></i>' : '';
             
             let filesHtml = '-';
             if (hasPassword && row[5]) {
-                filesHtml = '<span style="color:var(--ios-red); font-size:12px; font-weight:600;"><i class="fa-solid fa-lock"></i> ล็อคไฟล์</span>';
+                filesHtml = '<span style="color:var(--ios-red); font-size:12px; font-weight:600;"><i class="bi bi-lock-fill"></i> ล็อคไฟล์</span>';
             } else if (row[5]) {
                 const urls = row[5].split(", ");
-                filesHtml = urls.map((u, i) => `<a href="${u}" target="_blank" style="color:var(--ios-blue); text-decoration:none; margin-right:5px;"><i class="fa-solid fa-file"></i> ${i+1}</a>`).join('');
+                filesHtml = urls.map((u, i) => `<a href="${u}" target="_blank" style="color:var(--ios-blue); text-decoration:none; margin-right:5px;"><i class="bi bi-file-earmark-text"></i> ${i+1}</a>`).join('');
             }
             
             const isOverdueItem = row._isOverdue;
@@ -933,11 +935,11 @@
                 <td>
                     <div class="action-btns-container">
                         <div class="action-btns">
-                            <button class="btn-pin ${isPinned ? 'active' : ''}" onclick="togglePin('${reportId}')" title="ปักหมุด"><i class="fa-solid fa-thumbtack"></i></button>
-                            <button class="btn-process ${isProcessing ? 'active' : ''}" onclick="toggleProcessing('${reportId}')" title="กำลังดำเนินการ"><i class="fa-solid fa-clock-rotate-left"></i></button>
-                            <button class="btn-daily ${isDaily ? 'active' : ''}" onclick="toggleDaily('${reportId}')" title="แสดงงานนี้ทุกวัน"><i class="fa-solid fa-infinity"></i></button>
-                            <button class="btn-edit" onclick="editData('${rowJson}')" title="แก้ไขข้อมูล"><i class="fa-solid fa-pen-to-square"></i></button>
-                            <button class="btn-delete" onclick="deleteData('${reportId}')" title="ลบรายการ"><i class="fa-solid fa-trash"></i></button>
+                            <button class="btn-pin ${isPinned ? 'active' : ''}" onclick="togglePin('${reportId}')" title="ปักหมุด"><i class="bi bi-pin-angle-fill"></i></button>
+                            <button class="btn-process ${isProcessing ? 'active' : ''}" onclick="toggleProcessing('${reportId}')" title="กำลังดำเนินการ"><i class="bi bi-clock-history"></i></button>
+                            <button class="btn-daily ${isDaily ? 'active' : ''}" onclick="toggleDaily('${reportId}')" title="แสดงงานนี้ทุกวัน"><i class="bi bi-infinity"></i></button>
+                            <button class="btn-edit" onclick="editData('${rowJson}')" title="แก้ไขข้อมูล"><i class="bi bi-pencil-square"></i></button>
+                            <button class="btn-delete" onclick="deleteData('${reportId}')" title="ลบรายการ"><i class="bi bi-trash3-fill"></i></button>
                         </div>
                         ${isDaily ? `<span class="deadline-label-small" style="background:#f5eeff; color:var(--ios-purple); border-color:rgba(142,90,255,0.2);">แสดงทุกวัน (Infinity)</span>` : 
                           (deadlineDate !== "-" ? `<span class="deadline-label-small" style="${isOverdueItem ? 'background:#fff0f0; color:var(--ios-red); border-color:rgba(255,59,48,0.3);' : ''}">${isOverdueItem ? 'เลยกำหนด : ' : 'ครบกำหนด : '}${deadlineDate}</span>` : '')}
@@ -955,7 +957,7 @@
         const totalPages = Math.ceil(totalItems / itemsPerPage);
         if (totalPages <= 1) return;
         const prevBtn = document.createElement('button');
-        prevBtn.className = 'pagination-btn'; prevBtn.innerHTML = '<i class="fa-solid fa-chevron-left"></i>';
+        prevBtn.className = 'pagination-btn'; prevBtn.innerHTML = '<i class="bi bi-chevron-left"></i>';
         prevBtn.disabled = currentPage === 1;
         prevBtn.onclick = () => { currentPage--; renderTable(); scrollToTop(); };
         paginationCon.appendChild(prevBtn);
@@ -967,7 +969,7 @@
             paginationCon.appendChild(pageBtn);
         }
         const nextBtn = document.createElement('button');
-        nextBtn.className = 'pagination-btn'; nextBtn.innerHTML = '<i class="fa-solid fa-chevron-right"></i>';
+        nextBtn.className = 'pagination-btn'; nextBtn.innerHTML = '<i class="bi bi-chevron-right"></i>';
         nextBtn.disabled = currentPage === totalPages;
         nextBtn.onclick = () => { currentPage++; renderTable(); scrollToTop(); };
         paginationCon.appendChild(nextBtn);
@@ -1008,7 +1010,6 @@
             fullData[idx]._isDaily = !fullData[idx]._isDaily;
             fullData[idx][12] = String(fullData[idx]._isDaily);
             
-            // อัปเดตสถานะเลยกำหนดใหม่ทันที
             if (fullData[idx]._isDaily) {
                 fullData[idx]._isOverdue = false;
             } else if (fullData[idx][10] && fullData[idx][10] !== "-" && fullData[idx][10] !== "") {
@@ -1043,7 +1044,7 @@
         
         if (pass) {
             Swal.fire({
-                title: '<i class="fa-solid fa-lock" style="color:var(--ios-red);"></i> ติดรหัสผ่าน',
+                title: '<i class="bi bi-lock-fill" style="color:var(--ios-red);"></i> ติดรหัสผ่าน',
                 text: 'กรุณากรอกรหัสผ่านเพื่อดูรายละเอียดข้อมูลนี้',
                 input: 'password',
                 inputPlaceholder: 'ใส่รหัสผ่าน...',
@@ -1072,7 +1073,7 @@
         let filesDetail = '-';
         if (item[5]) {
             const urls = item[5].split(", ");
-            filesDetail = urls.map((u, i) => `<a href="${u}" target="_blank" style="color:var(--ios-blue); text-decoration:none; font-weight:600; margin-right:15px;"><i class="fa-solid fa-file"></i> ไฟล์ที่ ${i+1}</a>`).join('');
+            filesDetail = urls.map((u, i) => `<a href="${u}" target="_blank" style="color:var(--ios-blue); text-decoration:none; font-weight:600; margin-right:15px;"><i class="bi bi-file-earmark-text"></i> ไฟล์ที่ ${i+1}</a>`).join('');
         }
         Swal.fire({
             title: 'รายละเอียดรายการ',
@@ -1124,10 +1125,10 @@
         if (!fileListDiv) return;
         let html = '';
         existingFiles.forEach((url, idx) => {
-            html += `<div class="file-item existing-file-item"><span onclick="window.open('${url}', '_blank')" style="cursor:pointer; color:var(--ios-blue); text-decoration:underline;"><i class="fa-solid fa-cloud"></i> ไฟล์เดิม ${idx + 1}</span><span class="remove-file" onclick="removeExistingFile('${url}')"><i class="fa-solid fa-trash-can"></i></span></div>`;
+            html += `<div class="file-item existing-file-item"><span onclick="window.open('${url}', '_blank')" style="cursor:pointer; color:var(--ios-blue); text-decoration:underline;"><i class="bi bi-cloud-fill"></i> ไฟล์เดิม ${idx + 1}</span><span class="remove-file" onclick="removeExistingFile('${url}')"><i class="bi bi-trash"></i></span></div>`;
         });
         selectedFiles.forEach(file => {
-            html += `<div class="file-item"><span><i class="fa-solid fa-file"></i> ${file.name}</span><span class="remove-file" onclick="removeFile(${file.id})"><i class="fa-solid fa-circle-xmark"></i></span></div>`;
+            html += `<div class="file-item"><span><i class="bi bi-file-earmark"></i> ${file.name}</span><span class="remove-file" onclick="removeFile(${file.id})"><i class="bi bi-x-circle-fill"></i></span></div>`;
         });
         fileListDiv.innerHTML = html;
     }
@@ -1152,7 +1153,7 @@
                     
                     <div><label class="swal-label">วันครบกำหนดงาน</label><input type="date" id="deadline" class="swal-input-styled"></div>
                     <div>
-                        <label class="swal-label" style="color:var(--ios-red);"><i class="fa-solid fa-lock"></i> รหัสผ่านล็อคงาน</label>
+                        <label class="swal-label" style="color:var(--ios-red);"><i class="bi bi-lock-fill"></i> รหัสผ่านล็อคงาน</label>
                         <input type="text" id="jobPassword" class="swal-input-styled" placeholder="กำหนดรหัสผ่าน">
                     </div>
 
@@ -1211,7 +1212,7 @@
 
         if (pass) {
             Swal.fire({
-                title: '<i class="fa-solid fa-lock" style="color:var(--ios-red);"></i> ติดรหัสผ่าน',
+                title: '<i class="bi bi-lock-fill" style="color:var(--ios-red);"></i> ติดรหัสผ่าน',
                 text: 'กรุณากรอกรหัสผ่านเพื่อเข้าสู่โหมดแก้ไขข้อมูล',
                 input: 'password',
                 inputPlaceholder: 'ใส่รหัสผ่าน...',
@@ -1257,7 +1258,7 @@
                     
                     <div><label class="swal-label">วันครบกำหนดงาน</label><input type="date" id="swal-deadline" class="swal-input-styled" value="${formatForInputDate(item[10])}"></div>
                     <div>
-                        <label class="swal-label" style="color:var(--ios-red);"><i class="fa-solid fa-lock"></i> รหัสผ่านล็อคงาน</label>
+                        <label class="swal-label" style="color:var(--ios-red);"><i class="bi bi-lock-fill"></i> รหัสผ่านล็อคงาน</label>
                         <input type="text" id="swal-jobPassword" class="swal-input-styled" value="${String(item[13]||'').replace(/^'/, '')}" placeholder="กำหนดรหัสผ่าน">
                     </div>
 
