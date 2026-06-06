@@ -278,7 +278,21 @@
             <textarea id="amTextContainer" readonly style="width: 100%; height: 340px; background: rgba(255,255,255,0.5); border: 1px solid rgba(0,0,0,0.06); border-radius: 16px; padding: 16px; font-family: 'Courier New', Courier, monospace; font-size: 14px; color: #1c1c1e; resize: none; outline: none; line-height: 1.6; box-shadow: inset 0 1px 3px rgba(0,0,0,0.02);"></textarea>
             <div style="display: flex; justify-content: flex-end; align-items: center; gap: 14px;">
                 <span id="countdownText" style="font-size: 13px; color: #8e8e93; font-weight: 500;"></span>
-                <button id="copyAmBtn" onclick="copyAmReportText()" class="btn-fetch" style="padding: 11px 28px; display: flex; align-items: center; gap: 8px;"><i class="bi bi-clipboard-check"></i> คัดลอกรายงาน</button>
+                <button id="copyAmBtn" onclick="copyAmReportText()" class="btn-fetch" style="padding: 11px 28px; display: flex; align-items: center; gap: 8px;"><i class="bi bi-clipboard-check"></i> คัดลอก</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="sasiModal" style="display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.3); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); z-index: 3001; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s ease;">
+        <div style="background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px); width: 90%; max-width: 550px; border-radius: 28px; padding: 26px; border: 1px solid rgba(255, 255, 255, 0.5); box-shadow: 0 24px 60px rgba(0,0,0,0.15); display: flex; flex-direction: column; gap: 18px; transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(0,0,0,0.06); padding-bottom: 14px;">
+                <span style="font-size: 18px; font-weight: 600; color: #ff9500;"><i class="bi bi-chat-right-heart-fill"></i> รีพอร์ตสิ้นวัน ห้อง SASI</span>
+                <button onclick="closeSasiModal()" style="background: none; border: none; font-size: 22px; color: #8e8e93; cursor: pointer; transition: color 0.2s;"><i class="bi bi-x-circle-fill"></i></button>
+            </div>
+            <textarea id="sasiTextContainer" readonly style="width: 100%; height: 360px; background: rgba(255,255,255,0.5); border: 1px solid rgba(0,0,0,0.06); border-radius: 16px; padding: 16px; font-family: 'Courier New', Courier, monospace; font-size: 13.5px; color: #1c1c1e; resize: none; outline: none; line-height: 1.55; box-shadow: inset 0 1px 3px rgba(0,0,0,0.02);"></textarea>
+            <div style="display: flex; justify-content: flex-end; align-items: center; gap: 14px;">
+                <span id="sasiCountdownText" style="font-size: 13px; color: #8e8e93; font-weight: 500;"></span>
+                <button id="copySasiBtn" onclick="copySasiReportText()" class="btn-fetch" style="background: #ff9500; padding: 11px 28px; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 14px rgba(255, 149, 0, 0.25);"><i class="bi bi-clipboard-check"></i> คัดลอกรายงาน</button>
             </div>
         </div>
     </div>
@@ -296,6 +310,7 @@
                 <select id="reportType">
                     <option value="shop">ดึงยอดขายร้าน</option>
                     <option value="am">รีพอร์ตสิ้นวัน AM</option>
+                    <option value="sasi">รีพอร์ตสิ้นวัน ห้อง SASI</option>
                 </select>
             </div>
             <button class="btn-fetch" onclick="fetchData()">ดึงข้อมูล</button>
@@ -445,20 +460,21 @@
         </div>
 
         <div id="amReportContainer" style="display: none;" class="card card-details">
-            <div class="card-title"><i class="bi bi-moon-stars"></i> รีพอร์ตสิ้นวัน AM</div>
-            <p style="color: #48484a; font-weight: 500; padding: 10px 0;">เลือกวันที่ และ กดดึงข้อมูล เพื่อแสดงรีพอร์ตสิ้นวัน AM</p>
+            <div class="card-title"><i class="bi bi-moon-stars"></i> รีพอร์ตสิ้นวัน</div>
+            <p id="amReportContainerText" style="color: #48484a; font-weight: 500; padding: 10px 0;">เลือกวันที่ และ กดดึงข้อมูล เพื่อแสดงรีพอร์ตสรุปสิ้นวัน</p>
         </div>
     </div>
 
     <script>
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyrUQAnVpxDsCiw8XpgfJx27DVzoHcDsVPOZ_NKtpkJLckeH8psoavWqi8OJrbiXgytdw/exec";
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzfXYI8NH4QRF8jnCwJyh0G8mUK8Ld0ZxBkWlrAND_769ojoCS17sjF9HZ6lCcY_kWypg/exec";
 
         let currentSalesData = [];
         let currentPage = 1;
         const rowsPerPage = 5;
         let isDataFetched = false;
-        let lastFetchedData = null; // เก็บข้อมูลดิบทั้งหมดที่ได้รับจาก API ล่าสุด
+        let lastFetchedData = null; 
         let amCountdownInterval = null;
+        let sasiCountdownInterval = null;
 
         const postpayCategories = [
             "New Sim Only", "Mg Sim Only", "New Rahu", "New พลังดาว",
@@ -487,18 +503,11 @@
             loadButtonPosition();
             initDatePicker();
             
+            // 🔥 ปรับปรุง: การเปลี่ยนค่าใน Dropdown จะเคลียร์/ซ่อนหน้าต่างรายงานชั่วคราวเท่านั้น (ไม่เรียกเปิด Pop-up หรือคัดกรองอัตโนมัติ)
             document.getElementById('reportType').addEventListener('change', function() {
-                if(!isDataFetched) return; 
-                if(this.value === 'shop') {
-                    document.getElementById('shopReportContainer').style.display = 'block';
-                    document.getElementById('amReportContainer').style.display = 'none';
-                } else {
-                    document.getElementById('shopReportContainer').style.display = 'none';
-                    document.getElementById('amReportContainer').style.display = 'block';
-                    if(lastFetchedData) {
-                        showAmReportModal(lastFetchedData, document.getElementById('datePicker').value);
-                    }
-                }
+                document.getElementById('shopReportContainer').style.display = 'none';
+                document.getElementById('amReportContainer').style.display = 'none';
+                document.getElementById('amReportContainerText').innerText = "เลือกประเภทรายงาน และกดปุ่ม 'ดึงข้อมูล' เพื่อแสดงรายงานสรุปครับ";
             });
         };
 
@@ -554,17 +563,24 @@
                         alert("เกิดข้อผิดพลาด: " + data.error);
                     } else {
                         isDataFetched = true;
-                        lastFetchedData = data; // บันทึกแคชข้อมูลสดไว้ใช้งานซ้ำแยกประเภท
+                        lastFetchedData = data; 
                         
                         renderDashboard(data);
                         
+                        // 🔥 ระบบจะเปิดและแสดงข้อมูลรายงานอย่างถูกต้องเจาะจงเฉพาะเมื่อกดปุ่ม "ดึงข้อมูล" นี้เท่านั้น
                         if(reportType === 'shop') {
                             document.getElementById('shopReportContainer').style.display = 'block';
                             document.getElementById('amReportContainer').style.display = 'none';
-                        } else {
+                        } else if(reportType === 'am') {
                             document.getElementById('shopReportContainer').style.display = 'none';
                             document.getElementById('amReportContainer').style.display = 'block';
+                            document.getElementById('amReportContainerText').innerText = "ข้อมูลรีพอร์ต AM ของวันที่ระบุถูกดึงและประมวลผลขึ้นมาในรูปแบบหน้าต่าง Pop-up สรุปเรียบร้อยแล้วครับ";
                             showAmReportModal(data, selectedDate);
+                        } else if(reportType === 'sasi') {
+                            document.getElementById('shopReportContainer').style.display = 'none';
+                            document.getElementById('amReportContainer').style.display = 'block';
+                            document.getElementById('amReportContainerText').innerText = "ข้อมูลรีพอร์ต ห้อง SASI ของวันที่ระบุถูกดึงและประมวลผลขึ้นมาในรูปแบบหน้าต่าง Pop-up สรุปเรียบร้อยแล้วครับ";
+                            showSasiReportModal(data, selectedDate);
                         }
                     }
                 })
@@ -726,22 +742,16 @@
             });
         }
 
-        // 🌟 ฟังก์ชันพิเศษประมวลผลข้อความและเปิดโชว์ iOS Pop-up AM Report
         function showAmReportModal(data, selectedDate) {
             const formattedDate = displayFormatDate(selectedDate);
             const c = data.cumulative || {};
 
-            // ฟังก์ชันย่อยสำหรับจัดระเบียบโครงสร้างแถวข้อมูล Target / Actual / %Ach / Diff
             const getAmRowString = (obj) => {
                 if (!obj) return "- / - / - / -";
                 let actNum = parseFloat(String(obj.actual).replace(/[^0-9.-]/g, '')) || 0;
                 let diffNum = parseFloat(String(obj.diff).replace(/[^0-9.-]/g, '')) || 0;
-                
                 let tg = obj.target !== undefined ? formatInt(obj.target) : formatInt(actNum + diffNum);
-                let act = formatInt(obj.actual);
-                let ach = formatPercent(obj.achieve);
-                let df = formatInt(obj.diff);
-                return `${tg} / ${act} / ${ach} / ${df}`;
+                return `${tg} / ${formatInt(obj.actual)} / ${formatPercent(obj.achieve)} / ${formatInt(obj.diff)}`;
             };
 
             const amTemplate = `ชื่อสาขา : TrueShop BigC Prachauthit
@@ -764,14 +774,12 @@ New = ${getAmRowString(c.newPost)}
 Existing = ${getAmRowString(c.exiting)}
 
 
-Att TMC =  
+Att TMC =   
 Att Social Care= `;
 
             document.getElementById('amTextContainer').value = amTemplate;
-
             const modal = document.getElementById('amModal');
             const modalBox = modal.querySelector('div');
-            
             modal.style.display = 'flex';
             document.getElementById('countdownText').innerText = '';
             
@@ -781,23 +789,15 @@ Att Social Care= `;
             copyBtn.style.background = '#007aff';
 
             if(amCountdownInterval) clearInterval(amCountdownInterval);
-
-            setTimeout(() => {
-                modal.style.opacity = '1';
-                modalBox.style.transform = 'scale(1)';
-            }, 15);
+            setTimeout(() => { modal.style.opacity = '1'; modalBox.style.transform = 'scale(1)'; }, 15);
         }
 
         function closeAmModal() {
             const modal = document.getElementById('amModal');
             const modalBox = modal.querySelector('div');
             if(amCountdownInterval) clearInterval(amCountdownInterval);
-            
-            modal.style.opacity = '0';
-            modalBox.style.transform = 'scale(0.9)';
-            setTimeout(() => {
-                modal.style.display = 'none';
-            }, 300);
+            modal.style.opacity = '0'; modalBox.style.transform = 'scale(0.9)';
+            setTimeout(() => { modal.style.display = 'none'; }, 300);
         }
 
         function copyAmReportText() {
@@ -805,25 +805,108 @@ Att Social Care= `;
             navigator.clipboard.writeText(textContainer.value).then(() => {
                 const copyBtn = document.getElementById('copyAmBtn');
                 copyBtn.innerHTML = `<i class="bi bi-check-circle-fill"></i> คัดลอกสำเร็จ!`;
-                copyBtn.style.background = '#34c759';
-                copyBtn.disabled = true;
-
+                copyBtn.style.background = '#34c759'; copyBtn.disabled = true;
                 let seconds = 3;
                 const cdText = document.getElementById('countdownText');
                 cdText.innerText = `กำลังปิดอัตโนมัติใน ${seconds} วินาที...`;
-
                 amCountdownInterval = setInterval(() => {
                     seconds--;
-                    if(seconds <= 0) {
-                        clearInterval(amCountdownInterval);
-                        closeAmModal();
-                    } else {
-                        cdText.innerText = `กำลังปิดอัตโนมัติใน ${seconds} วินาที...`;
-                    }
+                    if(seconds <= 0) { clearInterval(amCountdownInterval); closeAmModal(); } 
+                    else { cdText.innerText = `กำลังปิดอัตโนมัติใน ${seconds} วินาที...`; }
                 }, 1000);
-            }).catch(err => {
-                alert("ระบบเบราว์เซอร์บล็อกการเข้าถึงคลิปบอร์ด กรุณาคลุมดำคัดลอกด้วยตนเองครับ");
+            }).catch(() => { alert("ระบบเบราว์เซอร์บล็อกการเข้าถึงคลิปบอร์ด กรุณาคลุมดำคัดลอกด้วยตนเองครับ"); });
+        }
+
+        function showSasiReportModal(data, selectedDate) {
+            const formattedDate = displayFormatDate(selectedDate);
+            const c = data.cumulative || {};
+            const detailed = data.detailedSales || [];
+            const ctx = data.dayContext || { currentDay: 1, totalDays: 30 };
+
+            let remainingDays = ctx.totalDays - ctx.currentDay;
+            if (remainingDays <= 0) remainingDays = 1;
+
+            const cleanNum = (val) => parseFloat(String(val).replace(/[^0-9.-]/g, '')) || 0;
+
+            const c10 = cleanNum(c.newPost.target);
+            const l3 = cleanNum(c.newPost.actual);
+            const c13 = cleanNum(c.exiting.target);
+            const o3 = cleanNum(c.exiting.actual);
+
+            const tgNewDay = Math.round((c10 - l3) / remainingDays);
+            const tgExistingDay = Math.round((c13 - o3) / remainingDays);
+
+            let totalCount = 0, totalSum = 0;
+            let newCount = 0, newSum = 0;
+            let dvCount = 0, dvSum = 0;
+            let mgCount = 0, mgSum = 0;
+            let mnpCount = 0, mnpSum = 0;
+            let existingCount = 0, existingSum = 0;
+            let rahuCount = 0, rahuSum = 0;
+
+            const listNewGroup = ["new sim only", "mg sim only", "new rahu", "new พลังดาว", "new myplan", "new/mg bundling", "mnp"];
+
+            detailed.forEach(row => {
+                if(!row.postpay) return;
+                const type = String(row.postpay).trim().toLowerCase();
+                const amt = cleanNum(row.postAmount);
+
+                totalCount++;
+                totalSum += amt;
+
+                if(listNewGroup.includes(type)) {
+                    newCount++;
+                    newSum += amt;
+                }
+                if(type === "new/mg bundling") { dvCount++; dvSum += amt; }
+                if(type === "mg sim only") { mgCount++; mgSum += amt; }
+                if(type === "mnp") { mnpCount++; mnpSum += amt; }
+                if(type === "bdbc") { existingCount++; existingSum += amt; }
+                if(type === "new rahu") { rahuCount++; rahuSum += amt; }
             });
+
+            const fmtSasiRow = (cnt, sum) => `${cnt}/${Math.round(sum).toLocaleString()}`;
+
+            const sasiTemplate = `สรุปสิ้นวัน \n(${formattedDate})\nสาขา : TS BigC Prachauthit\nนับ stock : ครบ ✅\n======\nจำนวนคิวที่เข้ามา\nคิว service all ตั้งแต่วันที่ 1-ปัจจุบัน \nQ รวม  = 0\n=======\nไม่รวมขาย\nQ วันนี้ = 0\nQ ยกเลิก : 0\n=======\nPostpay\nTG day : New ${tgNewDay.toLocaleString()} / Existing ${tgExistingDay.toLocaleString()}\nทำได้วันนี้ : ${fmtSasiRow(totalCount, totalSum)}\nรวมยอดขาย New \nNew : ${fmtSasiRow(newCount, newSum)}\nDV bundle : ${fmtSasiRow(dvCount, dvSum)}\nMG : ${fmtSasiRow(mgCount, mgSum)}\nMNP : ${fmtSasiRow(mnpCount, mnpSum)}\nExisting : ${fmtSasiRow(existingCount, existingSum)}\nFocus sim \n1. ราหู = ${fmtSasiRow(rahuCount, rahuSum)}\n2. 5G DV FC = 0/0\n=========\nTOL \nTG day : Regis =  1/599 / Install = 1/599\nทำได้วันนี้ :  Regis =  0/0 / Install = 0/0\n=======`;
+
+            document.getElementById('sasiTextContainer').value = sasiTemplate;
+            const modal = document.getElementById('sasiModal');
+            const modalBox = modal.querySelector('div');
+            modal.style.display = 'flex';
+            document.getElementById('sasiCountdownText').innerText = '';
+            
+            const copyBtn = document.getElementById('copySasiBtn');
+            copyBtn.innerHTML = `<i class="bi bi-clipboard-check"></i> คัดลอก`;
+            copyBtn.disabled = false;
+            copyBtn.style.background = '#ff9500';
+
+            if(sasiCountdownInterval) clearInterval(sasiCountdownInterval);
+            setTimeout(() => { modal.style.opacity = '1'; modalBox.style.transform = 'scale(1)'; }, 15);
+        }
+
+        function closeSasiModal() {
+            const modal = document.getElementById('sasiModal');
+            const modalBox = modal.querySelector('div');
+            if(sasiCountdownInterval) clearInterval(sasiCountdownInterval);
+            modal.style.opacity = '0'; modalBox.style.transform = 'scale(0.9)';
+            setTimeout(() => { modal.style.display = 'none'; }, 300);
+        }
+
+        function copySasiReportText() {
+            const textContainer = document.getElementById('sasiTextContainer');
+            navigator.clipboard.writeText(textContainer.value).then(() => {
+                const copyBtn = document.getElementById('copySasiBtn');
+                copyBtn.innerHTML = `<i class="bi bi-check-circle-fill"></i> คัดลอกสำเร็จ!`;
+                copyBtn.style.background = '#34c759'; copyBtn.disabled = true;
+                let seconds = 3;
+                const cdText = document.getElementById('sasiCountdownText');
+                cdText.innerText = `กำลังปิดอัตโนมัติใน ${seconds} วินาที...`;
+                sasiCountdownInterval = setInterval(() => {
+                    seconds--;
+                    if(seconds <= 0) { clearInterval(sasiCountdownInterval); closeSasiModal(); } 
+                    else { cdText.innerText = `กำลังปิดอัตโนมัติใน ${seconds} วินาที...`; }
+                }, 1000);
+            }).catch(() => { alert("ระบบเบราว์เซอร์บล็อกการเข้าถึงคลิปบอร์ด กรุณาคลุมดำคัดลอกด้วยตนเองครับ"); });
         }
 
         function renderPaginationControls() {
@@ -874,14 +957,10 @@ Att Social Care= `;
             container.innerHTML = keys.map(k => {
                 let rawAchieve = String(k.obj.achieve).replace(/[^0-9.-]/g, '');
                 let achieveNum = parseFloat(rawAchieve) || 0;
-                
                 if (achieveNum > 0 && achieveNum <= 1 && String(k.obj.achieve).indexOf('%') === -1) {
                     achieveNum = achieveNum * 100;
                 }
-                
                 const runrateResult = currentDay > 0 ? ((achieveNum / currentDay) * totalDays) : 0;
-                const runrateDisplay = formatPercent(runrateResult);
-
                 return `
                     <div class="sub-card">
                         <div class="sub-card-title"><i class="${k.icon}"></i> ${k.name}</div>
@@ -889,7 +968,7 @@ Att Social Care= `;
                             <div><span>Actual:</span> <b>${formatInt(k.obj.actual)}</b></div>
                             <div><span>DIFF:</span> <b>${formatDiffInt(k.obj.diff)}</b></div>
                             <div><span>%Achieve:</span> <b style="color:#007aff;">${formatPercent(k.obj.achieve)}</b></div>
-                            <div><span>%Runrate:</span> <b style="color:#146c2e;">${runrateDisplay}</b></div>
+                            <div><span>%Runrate:</span> <b style="color:#146c2e;">${formatPercent(runrateResult)}</b></div>
                         </div>
                     </div>
                 `;
@@ -939,18 +1018,13 @@ Att Social Care= `;
         function loadButtonPosition() {
             const savedLeft = localStorage.getItem('floatBtnLeft');
             const savedTop = localStorage.getItem('floatBtnTop');
-            if (savedLeft && savedTop) {
-                dragBtn.style.left = savedLeft + 'px';
-                dragBtn.style.top = savedTop + 'px';
-            }
+            if (savedLeft && savedTop) { dragBtn.style.left = savedLeft + 'px'; dragBtn.style.top = savedTop + 'px'; }
         }
 
         dragBtn.onpointerdown = function(e) {
-            isDragging = false;
-            startX = e.clientX; startY = e.clientY;
+            isDragging = false; startX = e.clientX; startY = e.clientY;
             const rect = dragBtn.getBoundingClientRect();
-            shiftX = e.clientX - rect.left;
-            shiftY = e.clientY - rect.top;
+            shiftX = e.clientX - rect.left; shiftY = e.clientY - rect.top;
             dragBtn.setPointerCapture(e.pointerId);
             document.addEventListener('pointermove', onPointerMove);
             document.addEventListener('pointerup', onPointerUp);
@@ -959,12 +1033,10 @@ Att Social Care= `;
         function onPointerMove(e) {
             if (!isDragging && (Math.abs(e.clientX - startX) > 5 || Math.abs(e.clientY - startY) > 5)) isDragging = true;
             if (isDragging) {
-                let newX = e.clientX - shiftX;
-                let newY = e.clientY - shiftY;
+                let newX = e.clientX - shiftX; let newY = e.clientY - shiftY;
                 newX = Math.max(0, Math.min(newX, window.innerWidth - dragBtn.offsetWidth));
                 newY = Math.max(0, Math.min(newY, window.innerHeight - dragBtn.offsetHeight));
-                dragBtn.style.left = newX + 'px';
-                dragBtn.style.top = newY + 'px';
+                dragBtn.style.left = newX + 'px'; dragBtn.style.top = newY + 'px';
             }
         }
 
@@ -975,34 +1047,24 @@ Att Social Care= `;
             if (isDragging) {
                 localStorage.setItem('floatBtnLeft', dragBtn.offsetLeft);
                 localStorage.setItem('floatBtnTop', dragBtn.offsetTop);
-            } else {
-                toggleSidebarFloat();
-            }
+            } else { toggleSidebarFloat(); }
             isDragging = false;
         }
 
         function toggleSidebarFloat() {
             const btnRect = dragBtn.getBoundingClientRect();
             const sidebarWidth = 280;
-            let top = btnRect.bottom + 10;
-            let left = btnRect.left;
+            let top = btnRect.bottom + 10; let left = btnRect.left;
             if (left + sidebarWidth > window.innerWidth) left = window.innerWidth - sidebarWidth - 15;
-            if (top + 400 > window.innerHeight) {
-                top = btnRect.top - 410;
-                if (top < 10) top = 10;
-            }
-            sideFloat.style.top = top + 'px';
-            sideFloat.style.left = left + 'px';
+            if (top + 400 > window.innerHeight) { top = btnRect.top - 410; if (top < 10) top = 10; }
+            sideFloat.style.top = top + 'px'; sideFloat.style.left = left + 'px';
             sideFloat.style.transformOrigin = `${btnRect.left - left + 20}px ${btnRect.top > top ? 'bottom' : 'top'}`;
             const isActive = sideFloat.classList.toggle('active');
             sideOverlay.classList.toggle('active', isActive);
             if (isActive && !sideFloat.innerHTML) loadSidebarContent();
         }
 
-        function closeSidebarFloat() {
-            sideFloat.classList.remove('active');
-            sideOverlay.classList.remove('active');
-        }
+        function closeSidebarFloat() { sideFloat.classList.remove('active'); sideOverlay.classList.remove('active'); }
 
         function loadSidebarContent() {
             fetch('sidebar.html')
