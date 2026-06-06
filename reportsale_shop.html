@@ -269,6 +269,20 @@
 
     <div id="loading"><i class="bi bi-arrow-repeat spinner"></i> กำลังดึงข้อมูล กรุณารอสักครู่...</div>
 
+    <div id="amModal" style="display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.3); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); z-index: 3000; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s ease;">
+        <div style="background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px); width: 90%; max-width: 550px; border-radius: 28px; padding: 26px; border: 1px solid rgba(255, 255, 255, 0.5); box-shadow: 0 24px 60px rgba(0,0,0,0.15); display: flex; flex-direction: column; gap: 18px; transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(0,0,0,0.06); padding-bottom: 14px;">
+                <span style="font-size: 18px; font-weight: 600; color: #007aff;"><i class="bi bi-moon-stars-fill"></i> รีพอร์ตสิ้นวัน AM</span>
+                <button onclick="closeAmModal()" style="background: none; border: none; font-size: 22px; color: #8e8e93; cursor: pointer; transition: color 0.2s;"><i class="bi bi-x-circle-fill"></i></button>
+            </div>
+            <textarea id="amTextContainer" readonly style="width: 100%; height: 340px; background: rgba(255,255,255,0.5); border: 1px solid rgba(0,0,0,0.06); border-radius: 16px; padding: 16px; font-family: 'Courier New', Courier, monospace; font-size: 14px; color: #1c1c1e; resize: none; outline: none; line-height: 1.6; box-shadow: inset 0 1px 3px rgba(0,0,0,0.02);"></textarea>
+            <div style="display: flex; justify-content: flex-end; align-items: center; gap: 14px;">
+                <span id="countdownText" style="font-size: 13px; color: #8e8e93; font-weight: 500;"></span>
+                <button id="copyAmBtn" onclick="copyAmReportText()" class="btn-fetch" style="padding: 11px 28px; display: flex; align-items: center; gap: 8px;"><i class="bi bi-clipboard-check"></i> คัดลอกรายงาน</button>
+            </div>
+        </div>
+    </div>
+
     <header>รายงานยอดขาย Shop</header>
 
     <div class="container">
@@ -432,17 +446,19 @@
 
         <div id="amReportContainer" style="display: none;" class="card card-details">
             <div class="card-title"><i class="bi bi-moon-stars"></i> รีพอร์ตสิ้นวัน AM</div>
-            <p style="color: #8e8e93; padding: 10px 0;">ระบบฟังก์ชันดึงรายงานสิ้นวัน AM (กำลังเตรียมการพัฒนาเพิ่มเติม)</p>
+            <p style="color: #48484a; font-weight: 500; padding: 10px 0;">เลือกวันที่ และ กดดึงข้อมูล เพื่อแสดงรีพอร์ตสิ้นวัน AM</p>
         </div>
     </div>
 
     <script>
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwr-63FZCMtFbBp2fHIikwEmPuREcDrNJ1XN8Ry9qEDxziyrxZzmrnD0VpEg9wybFjEKw/exec";
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyrUQAnVpxDsCiw8XpgfJx27DVzoHcDsVPOZ_NKtpkJLckeH8psoavWqi8OJrbiXgytdw/exec";
 
         let currentSalesData = [];
         let currentPage = 1;
         const rowsPerPage = 5;
         let isDataFetched = false;
+        let lastFetchedData = null; // เก็บข้อมูลดิบทั้งหมดที่ได้รับจาก API ล่าสุด
+        let amCountdownInterval = null;
 
         const postpayCategories = [
             "New Sim Only", "Mg Sim Only", "New Rahu", "New พลังดาว",
@@ -479,6 +495,9 @@
                 } else {
                     document.getElementById('shopReportContainer').style.display = 'none';
                     document.getElementById('amReportContainer').style.display = 'block';
+                    if(lastFetchedData) {
+                        showAmReportModal(lastFetchedData, document.getElementById('datePicker').value);
+                    }
                 }
             });
         };
@@ -526,13 +545,6 @@
             
             if(!selectedDate) return alert("กรุณาเลือกวันที่ก่อนครับ");
             
-            if(reportType === 'am') {
-                isDataFetched = true;
-                document.getElementById('shopReportContainer').style.display = 'none';
-                document.getElementById('amReportContainer').style.display = 'block';
-                return;
-            } 
-
             document.getElementById('loading').style.display = 'flex';
 
             fetch(`${WEB_APP_URL}?date=${selectedDate}`)
@@ -542,9 +554,18 @@
                         alert("เกิดข้อผิดพลาด: " + data.error);
                     } else {
                         isDataFetched = true;
-                        document.getElementById('shopReportContainer').style.display = 'block';
-                        document.getElementById('amReportContainer').style.display = 'none';
+                        lastFetchedData = data; // บันทึกแคชข้อมูลสดไว้ใช้งานซ้ำแยกประเภท
+                        
                         renderDashboard(data);
+                        
+                        if(reportType === 'shop') {
+                            document.getElementById('shopReportContainer').style.display = 'block';
+                            document.getElementById('amReportContainer').style.display = 'none';
+                        } else {
+                            document.getElementById('shopReportContainer').style.display = 'none';
+                            document.getElementById('amReportContainer').style.display = 'block';
+                            showAmReportModal(data, selectedDate);
+                        }
                     }
                 })
                 .catch(err => {
@@ -640,12 +661,10 @@
             renderPaginationControls();
         }
 
-        // 🔥 ฟังก์ชันคำนวณและเรนเดอร์แยกคอลัมน์ซ้าย-ขวา แบบแยกตารางอิสระ พร้อมใส่ระบบอัปเดตวันที่แบบไดนามิก
         function renderCategorySummary() {
             const postpayTbody = document.getElementById('postpayCategoryBody');
             const deviceTbody = document.getElementById('deviceCategoryBody');
             
-            // 🌟 ส่วนเพิ่มเติม: อัปเดตหัวข้อการ์ดพร้อมแสดงวันที่ที่เลือกในรูปแบบ (วัน/เดือน/ปี)
             const selectedDate = document.getElementById('datePicker').value;
             const formattedDate = displayFormatDate(selectedDate);
             document.getElementById('categorySummaryTitle').innerHTML = `<i class="bi bi-tags-fill"></i> สรุปยอดการขายแยกตามหมวดหมู่ : (วันที่ ${formattedDate})`;
@@ -659,14 +678,11 @@
                 return;
             }
 
-            // สร้างโครงสร้างแผนผังสำหรับเก็บผลลัพธ์การคำนวณ
             const summaryMap = {};
             postpayCategories.forEach(cat => { summaryMap[cat] = { type: cat, sales: 0, count: 0 }; });
             deviceCategories.forEach(cat => { summaryMap[cat] = { type: cat, sales: 0, count: 0 }; });
 
-            // ลูปคำนวณประมวลผลข้อมูลยอดขายและจำนวนสะสมทีละแถว
             currentSalesData.forEach(row => {
-                // คำนวณฝั่ง Postpay (คอลัมน์ D และ E)
                 if(row.postpay) {
                     const cleanPostpay = String(row.postpay).trim();
                     const matchedCat = postpayCategories.find(c => c.toLowerCase() === cleanPostpay.toLowerCase());
@@ -676,7 +692,6 @@
                         summaryMap[matchedCat].count += 1;
                     }
                 }
-                // คำนวณฝั่ง Device (คอลัมน์ F และ G)
                 if(row.device) {
                     const cleanDevice = String(row.device).trim();
                     const matchedCat = deviceCategories.find(c => c.toLowerCase() === cleanDevice.toLowerCase());
@@ -688,7 +703,6 @@
                 }
             });
 
-            // เรนเดอร์ตารางฝั่งซ้าย (Postpay)
             postpayCategories.forEach(cat => {
                 const item = summaryMap[cat];
                 const tr = document.createElement('tr');
@@ -700,7 +714,6 @@
                 postpayTbody.appendChild(tr);
             });
 
-            // เรนเดอร์ตารางฝั่งขวา (Device)
             deviceCategories.forEach(cat => {
                 const item = summaryMap[cat];
                 const tr = document.createElement('tr');
@@ -710,6 +723,106 @@
                     <td style="font-weight:500;">${item.count > 0 ? formatInt(item.count) : '-'}</td>
                 `;
                 deviceTbody.appendChild(tr);
+            });
+        }
+
+        // 🌟 ฟังก์ชันพิเศษประมวลผลข้อความและเปิดโชว์ iOS Pop-up AM Report
+        function showAmReportModal(data, selectedDate) {
+            const formattedDate = displayFormatDate(selectedDate);
+            const c = data.cumulative || {};
+
+            // ฟังก์ชันย่อยสำหรับจัดระเบียบโครงสร้างแถวข้อมูล Target / Actual / %Ach / Diff
+            const getAmRowString = (obj) => {
+                if (!obj) return "- / - / - / -";
+                let actNum = parseFloat(String(obj.actual).replace(/[^0-9.-]/g, '')) || 0;
+                let diffNum = parseFloat(String(obj.diff).replace(/[^0-9.-]/g, '')) || 0;
+                
+                let tg = obj.target !== undefined ? formatInt(obj.target) : formatInt(actNum + diffNum);
+                let act = formatInt(obj.actual);
+                let ach = formatPercent(obj.achieve);
+                let df = formatInt(obj.diff);
+                return `${tg} / ${act} / ${ach} / ${df}`;
+            };
+
+            const amTemplate = `ชื่อสาขา : TrueShop BigC Prachauthit
+Code 70 : 70059
+Month ${formattedDate}
+
+Target /Actual/%Ach/Diff
+Device All = ${getAmRowString(c.allDevice)}
+
+iPhone = ${getAmRowString(c.iphone)}
+
+iPad = ${getAmRowString(c.ipad)}
+
+SmartPhone = ${getAmRowString(c.smartPhone)}
+
+Post All = ${getAmRowString(c.allPost)}
+
+New = ${getAmRowString(c.newPost)}
+
+Existing = ${getAmRowString(c.exiting)}
+
+
+Att TMC =  
+Att Social Care= `;
+
+            document.getElementById('amTextContainer').value = amTemplate;
+
+            const modal = document.getElementById('amModal');
+            const modalBox = modal.querySelector('div');
+            
+            modal.style.display = 'flex';
+            document.getElementById('countdownText').innerText = '';
+            
+            const copyBtn = document.getElementById('copyAmBtn');
+            copyBtn.innerHTML = `<i class="bi bi-clipboard-check"></i> คัดลอก`;
+            copyBtn.disabled = false;
+            copyBtn.style.background = '#007aff';
+
+            if(amCountdownInterval) clearInterval(amCountdownInterval);
+
+            setTimeout(() => {
+                modal.style.opacity = '1';
+                modalBox.style.transform = 'scale(1)';
+            }, 15);
+        }
+
+        function closeAmModal() {
+            const modal = document.getElementById('amModal');
+            const modalBox = modal.querySelector('div');
+            if(amCountdownInterval) clearInterval(amCountdownInterval);
+            
+            modal.style.opacity = '0';
+            modalBox.style.transform = 'scale(0.9)';
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300);
+        }
+
+        function copyAmReportText() {
+            const textContainer = document.getElementById('amTextContainer');
+            navigator.clipboard.writeText(textContainer.value).then(() => {
+                const copyBtn = document.getElementById('copyAmBtn');
+                copyBtn.innerHTML = `<i class="bi bi-check-circle-fill"></i> คัดลอกสำเร็จ!`;
+                copyBtn.style.background = '#34c759';
+                copyBtn.disabled = true;
+
+                let seconds = 3;
+                const cdText = document.getElementById('countdownText');
+                cdText.innerText = `กำลังปิดอัตโนมัติใน ${seconds} วินาที...`;
+
+                amCountdownInterval = setInterval(() => {
+                    seconds--;
+                    if(seconds <= 0) {
+                        clearInterval(amCountdownInterval);
+                        closeAmModal();
+                    } else {
+                        cdText.innerText = `กำลังปิดอัตโนมัติใน ${seconds} วินาที...`;
+                    }
+                }, 1000);
+            }).catch(err => {
+                alert("ระบบเบราว์เซอร์บล็อกการเข้าถึงคลิปบอร์ด กรุณาคลุมดำคัดลอกด้วยตนเองครับ");
             });
         }
 
