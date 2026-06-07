@@ -218,12 +218,13 @@
         .sidebar-float .item.open .sub { display: block; }
         .sidebar-float .sub a { padding-left: 45px; font-size: 13px; color: #8e8e93; }
 
-        /* แผงแต่งเช็คบ็อกซ์ส่งเป้าเช้า */
-        . morning-staff-group h4 { font-size: 14px; color: #48484a; margin-bottom: 8px; font-weight: 600; }
-        .morning-staff-list { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; }
-        .morning-lbl { display: inline-flex; align-items: center; gap: 8px; background: rgba(255, 255, 255, 0.6); padding: 8px 16px; border-radius: 12px; border: 1px solid rgba(0,0,0,0.05); font-size: 13.5px; font-weight: 500; cursor: pointer; transition: background 0.2s; }
-        .morning-lbl:hover { background: #ffffff; }
-        .morning-chk-input { width: 16px; height: 16px; cursor: pointer; accent-color: #007aff; }
+        /* Style เพิ่มเติมสำหรับ Morning Checklist Grid */
+        .staff-grid { display: flex; flex-direction: column; gap: 16px; margin-top: 10px; }
+        .staff-row { display: flex; align-items: center; gap: 14px; background: rgba(255,255,255,0.4); padding: 12px 20px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.5); }
+        .staff-role-label { font-weight: 600; min-width: 110px; color: #007aff; }
+        .checkbox-group { display: flex; flex-wrap: wrap; gap: 18px; align-items: center; }
+        .checkbox-item { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 500; cursor: pointer; }
+        .checkbox-item input[type="checkbox"] { width: 18px; height: 18px; accent-color: #007aff; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -265,13 +266,13 @@
     <div id="morningModal" style="display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.3); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); z-index: 3002; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s ease;">
         <div style="background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px); width: 90%; max-width: 550px; border-radius: 28px; padding: 26px; border: 1px solid rgba(255, 255, 255, 0.5); box-shadow: 0 24px 60px rgba(0,0,0,0.15); display: flex; flex-direction: column; gap: 18px; transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);">
             <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(0,0,0,0.06); padding-bottom: 14px;">
-                <span style="font-size: 18px; font-weight: 600; color: #007aff;"><i class="bi bi-sun-fill"></i> รีพอร์ตส่ง Target ตอนเช้า</span>
+                <span style="font-size: 18px; font-weight: 600; color: #24b300;"><i class="bi bi-sun-fill"></i> รีพอร์ตส่ง Target ตอนเช้า</span>
                 <button onclick="closeMorningModal()" style="background: none; border: none; font-size: 22px; color: #8e8e93; cursor: pointer; transition: color 0.2s;"><i class="bi bi-x-circle-fill"></i></button>
             </div>
-            <textarea id="morningTextContainer" readonly style="width: 100%; height: 380px; background: rgba(255,255,255,0.5); border: 1px solid rgba(0,0,0,0.06); border-radius: 16px; padding: 16px; font-family: 'Courier New', Courier, monospace; font-size: 13.5px; color: #1c1c1e; resize: none; outline: none; line-height: 1.55; box-shadow: inset 0 1px 3px rgba(0,0,0,0.02);"></textarea>
+            <textarea id="morningTextContainer" readonly style="width: 100%; height: 420px; background: rgba(255,255,255,0.5); border: 1px solid rgba(0,0,0,0.06); border-radius: 16px; padding: 16px; font-family: 'Courier New', Courier, monospace; font-size: 13.5px; color: #1c1c1e; resize: none; outline: none; line-height: 1.55; box-shadow: inset 0 1px 3px rgba(0,0,0,0.02);"></textarea>
             <div style="display: flex; justify-content: flex-end; align-items: center; gap: 14px;">
                 <span id="morningCountdownText" style="font-size: 13px; color: #8e8e93; font-weight: 500;"></span>
-                <button id="copyMorningBtn" onclick="copyMorningReportText()" class="btn-fetch" style="padding: 11px 28px; display: flex; align-items: center; gap: 8px;"><i class="bi bi-clipboard-check"></i> คัดลอกรายงาน</button>
+                <button id="copyMorningBtn" onclick="copyMorningReportText()" class="btn-fetch" style="background: #24b300; padding: 11px 28px; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 14px rgba(36, 179, 0, 0.25);"><i class="bi bi-clipboard-check"></i> คัดลอกรายงาน</button>
             </div>
         </div>
     </div>
@@ -290,37 +291,38 @@
                     <option value="shop">ดึงยอดขายร้าน</option>
                     <option value="am">รีพอร์ตสิ้นวัน AM</option>
                     <option value="sasi">รีพอร์ตสิ้นวัน ห้อง SASI</option>
-                    <option value="morning">ส่ง Target ตอนเช้า</option>
-                </select>
+                    <option value="morning">ส่ง Target ตอนเช้า</option> </select>
             </div>
             <button class="btn-fetch" onclick="fetchData()">ดึงข้อมูล</button>
         </div>
 
-        <div id="morningReportContainer" style="display: none;" class="card card-details">
-            <div class="card-title" style="color: #007aff;"><i class="bi bi-person-check-fill"></i> เช็คชื่อพนักงานเข้าทำงาน (ส่ง Target ตอนเช้า)</div>
-            <div style="margin-bottom: 24px;">
-                <div class="morning-staff-group">
-                    <h4>Management :</h4>
-                    <div class="morning-staff-list">
-                        <label class="morning-lbl"><input type="checkbox" class="morning-staff-chk" data-role="mgmt" data-name="ศุภกฤต" checked class="morning-chk-input"> ศุภกฤต</label>
+        <div id="morningTargetContainer" style="display: none;" class="card card-details">
+            <div class="card-title" style="color: #24b300;"><i class="bi bi-check2-square"></i> เช็ครายชื่อพนักงานประจำวัน (ส่ง Target ตอนเช้า)</div>
+            <div class="staff-grid">
+                <div class="staff-row">
+                    <div class="staff-role-label">Management :</div>
+                    <div class="checkbox-group">
+                        <label class="checkbox-item"><input type="checkbox" id="chk_suphakrit" value="ศุภกฤต"> ศุภกฤต</label>
                     </div>
                 </div>
-                <div class="morning-staff-group">
-                    <h4>RR :</h4>
-                    <div class="morning-staff-list">
-                        <label class="morning-lbl"><input type="checkbox" class="morning-staff-chk" data-role="rr" data-name="นวพล" checked class="morning-chk-input"> นวพล</label>
-                        <label class="morning-lbl"><input type="checkbox" class="morning-staff-chk" data-role="rr" data-name="ปิยะพร" checked class="morning-chk-input"> ปิยะพร</label>
-                        <label class="morning-lbl"><input type="checkbox" class="morning-staff-chk" data-role="rr" data-name="กรทักษ์" checked class="morning-chk-input"> กรทักษ์</label>
+                <div class="staff-row">
+                    <div class="staff-role-label">RR :</div>
+                    <div class="checkbox-group">
+                        <label class="checkbox-item"><input type="checkbox" id="chk_nawaphon" value="นวพล"> นวพล</label>
+                        <label class="checkbox-item"><input type="checkbox" id="chk_piyaporn" value="ปิยะพร"> ปิยะพร</label>
+                        <label class="checkbox-item"><input type="checkbox" id="chk_korntak" value="กรทักษ์"> กรทักษ์</label>
                     </div>
                 </div>
-                <div class="morning-staff-group">
-                    <h4>PC :</h4>
-                    <div class="morning-staff-list">
-                        <label class="morning-lbl"><input type="checkbox" class="morning-staff-chk" data-role="pc" data-name="จิดาภา" checked class="morning-chk-input"> จิดาภา</label>
+                <div class="staff-row">
+                    <div class="staff-role-label">PC :</div>
+                    <div class="checkbox-group">
+                        <label class="checkbox-item"><input type="checkbox" id="chk_jidapa" value="จิดาภา"> จิดาภา</label>
                     </div>
                 </div>
             </div>
-            <button class="btn-fetch" onclick="generateMorningReport()" style="background: #007aff; box-shadow: 0 4px 14px rgba(0, 122, 255, 0.3);"><i class="bi bi-cpu-fill"></i> ประมวลผลข้อมูล</button>
+            <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
+                <button class="btn-fetch" style="background: #24b300; box-shadow: 0 4px 14px rgba(36, 179, 0, 0.25);" onclick="processMorningTarget()">ประมวลผลข้อมูลเป้าหมาย</button>
+            </div>
         </div>
 
         <div id="shopReportContainer" style="display: none;">
@@ -419,7 +421,7 @@
     </div>
 
     <script>
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzW9-3eujwkDb6xJYUXJTXSSh-nmgu-kPzmZyIc6J83K2IfDV3EVlDl8Fob1aVOQt0V2g/exec";
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycby0DkT_Y6kAS8NZMABZ7PfkJuzI0ns6LfmdGWVFvr3Rv3D7odpIiWM8QyiBjoc2AUff/exec";
 
         let currentSalesData = [];
         let currentPage = 1;
@@ -428,7 +430,7 @@
         let lastFetchedData = null; 
         let amCountdownInterval = null;
         let sasiCountdownInterval = null;
-        let morningCountdownInterval = null; // ตัวจับเวลาสำหรับเป้าเช้า
+        let morningCountdownInterval = null;
 
         const postpayCategories = [
             "New Sim Only", "Mg Sim Only", "New Rahu", "New พลังดาว",
@@ -460,7 +462,7 @@
             document.getElementById('reportType').addEventListener('change', function() {
                 document.getElementById('shopReportContainer').style.display = 'none';
                 document.getElementById('amReportContainer').style.display = 'none';
-                document.getElementById('morningReportContainer').style.display = 'none'; // ซ่อนชุดเป้าหมายตอนเช้า
+                document.getElementById('morningTargetContainer').style.display = 'none';
                 document.getElementById('amReportContainerText').innerText = "เลือกประเภทรายงาน และกดปุ่ม 'ดึงข้อมูล' เพื่อแสดงรายงานสรุปครับ";
             });
         };
@@ -516,21 +518,24 @@
                         if(reportType === 'shop') {
                             document.getElementById('shopReportContainer').style.display = 'block';
                             document.getElementById('amReportContainer').style.display = 'none';
+                            document.getElementById('morningTargetContainer').style.display = 'none';
                         } else if(reportType === 'am') {
                             document.getElementById('shopReportContainer').style.display = 'none';
                             document.getElementById('amReportContainer').style.display = 'block';
+                            document.getElementById('morningTargetContainer').style.display = 'none';
                             document.getElementById('amReportContainerText').innerText = "ข้อมูลรีพอร์ต AM ของวันที่ระบุถูกดึงและประมวลผลขึ้นมาในรูปแบบหน้าต่าง Pop-up สรุปเรียบร้อยแล้วครับ";
                             showAmReportModal(data, selectedDate);
                         } else if(reportType === 'sasi') {
                             document.getElementById('shopReportContainer').style.display = 'none';
                             document.getElementById('amReportContainer').style.display = 'block';
+                            document.getElementById('morningTargetContainer').style.display = 'none';
                             document.getElementById('amReportContainerText').innerText = "ข้อมูลรีพอร์ต ห้อง SASI ของวันที่ระบุถูกดึงและประมวลผลขึ้นมาในรูปแบบหน้าต่าง Pop-up สรุปเรียบร้อยแล้วครับ";
                             showSasiReportModal(data, selectedDate);
-                        } else if(reportType === 'morning') {
-                            // 🌟 จัดการเปิดแผงพนักงานสำหรับจัดการเป้าตอนเช้า
+                        } else if(reportType === 'morning') { // 🌟 เงื่อนไขเปิดแสดงแผง Checkbox 🌟
                             document.getElementById('shopReportContainer').style.display = 'none';
-                            document.getElementById('amReportContainer').style.display = 'none';
-                            document.getElementById('morningReportContainer').style.display = 'block';
+                            document.getElementById('amReportContainer').style.display = 'block';
+                            document.getElementById('amReportContainerText').innerText = "กรุณาติ๊กเลือกพนักงานด้านล่าง จากนั้นกดปุ่ม 'ประมวลผลข้อมูลเป้าหมาย' เพื่อสร้างรายงานส่งไลน์ช่วงเช้าครับ";
+                            document.getElementById('morningTargetContainer').style.display = 'block';
                         }
                     }
                 })
@@ -747,7 +752,10 @@
                 if (row.postpay) {
                     const type = String(row.postpay).trim().toLowerCase();
                     const amt = cleanNum(row.postAmount);
-                    totalCount++; totalSum += amt;
+
+                    totalCount++;
+                    totalSum += amt;
+
                     if(listNewGroup.includes(type)) { newCount++; newSum += amt; }
                     if(type === "new/mg bundling") { dvCount++; dvSum += amt; }
                     if(type === "mg sim only") { mgCount++; mgSum += amt; }
@@ -755,6 +763,7 @@
                     if(type === "bdbc") { existingCount++; existingSum += amt; }
                     if(type === "new rahu") { rahuCount++; rahuSum += amt; }
                 }
+
                 if (row.vasType) {
                     const vType = String(row.vasType).trim();
                     const vValue = cleanNum(row.vasValue);
@@ -764,6 +773,7 @@
             });
 
             const fmtSasiRow = (cnt, sum) => `${cnt}/${Math.round(sum).toLocaleString()}`;
+
             const sasiTemplate = `สรุปสิ้นวัน \n(${formattedDate})\nสาขา : TS BigC Prachauthit\nนับ stock : ครบ ✅\n======\nจำนวนคิวที่เข้ามา\nคิว service all ตั้งแต่วันที่ 1-ปัจจุบัน \nQ รวม  = 0\n=======\nไม่รวมขาย\nQ วันนี้ = 0\nQ ยกเลิก : 0\n=======\nPostpay\nTG day : New ${tgNewDay.toLocaleString()} / Existing ${tgExistingDay.toLocaleString()}\nทำได้วันนี้ : ${fmtSasiRow(totalCount, totalSum)}\nรวมยอดขาย New \nNew : ${fmtSasiRow(newCount, newSum)}\nDV bundle : ${fmtSasiRow(dvCount, dvSum)}\nMG : ${fmtSasiRow(mgCount, mgSum)}\nMNP : ${fmtSasiRow(mnpCount, mnpSum)}\nExisting : ${fmtSasiRow(existingCount, existingSum)}\nFocus sim \n1. ราหู = ${fmtSasiRow(rahuCount, rahuSum)}\n2. 5G DV FC = 0/0\n=========\nTOL \nTG day : Regis =  1/599 / Install = 1/599\nทำได้วันนี้ :  Regis =  0/0 / Install = 0/0\n=======\nRedeem TVS NOW  : ${redeemTvsSum.toLocaleString()}\nTrue Cyber Safe Pro : ${cyberSafeSum.toLocaleString()}`;
 
             document.getElementById('sasiTextContainer').value = sasiTemplate;
@@ -799,92 +809,97 @@
             }).catch(() => { alert("ระบบเบราว์เซอร์บล็อกการเข้าถึงคลิปบอร์ด กรุณาคลุมดำคัดลอกด้วยตนเองครับ"); });
         }
 
-        // 🌟 เพิ่มเติม: ฟังก์ชันประมวลผลคำนวณและแจกเป้าตอนเช้า (Morning Targets Report) 🌟
-        function generateMorningReport() {
-            if(!isDataFetched || !lastFetchedData) return alert("ไม่พบฐานข้อมูล กรุณากดปุ่ม 'ดึงข้อมูล' ก่อนประมวลผลเป้าหมายครับ");
-            
-            const data = lastFetchedData;
-            const c = data.cumulative || {};
-            const ctx = data.dayContext || { currentDay: 1, totalDays: 30 };
 
-            // หาจำนวนวันที่เหลือในเดือน
-            let remainingDays = ctx.totalDays - ctx.currentDay;
+        // 🌟 NEW: ฟังก์ชันประมวลผลคำนวณรายงาน "ส่ง Target ตอนเช้า" 🌟
+        function processMorningTarget() {
+            if (!isDataFetched || !lastFetchedData) return alert("กรุณากดปุ่ม 'ดึงข้อมูล' หลักด้านบนก่อนครับ");
+            
+            const selectedDate = document.getElementById('datePicker').value;
+            const formattedDate = displayFormatDate(selectedDate);
+            const c = lastFetchedData.cumulative || {};
+            const detailed = lastFetchedData.detailedSales || [];
+            const ctx = lastFetchedData.dayContext || { currentDay: 1, totalDays: 30 };
+
+            // เช็คจำนวนวันคงเหลือ (รวมวันปัจจุบันสำหรับการคำนวณช่วงเช้า)
+            let remainingDays = ctx.totalDays - ctx.currentDay + 1;
             if (remainingDays <= 0) remainingDays = 1;
 
             const cleanNum = (val) => parseFloat(String(val).replace(/[^0-9.-]/g, '')) || 0;
 
-            // ดึงค่าเป้าหมายและยอดสะสมจากออบเจกต์ชีต SHOP
-            const c7 = cleanNum(c.allPost.target);    // C7 Target All Post
-            const m1 = cleanNum(c.allPost.actual);    // M1 Actual All Post
-            const c10 = cleanNum(c.newPost.target);   // C10 Target New Post
-            const l3 = cleanNum(c.newPost.actual);    // L3 Actual New Post
-            const c13 = cleanNum(c.exiting.target);   // C13 Target Exiting
-            const o3 = cleanNum(c.exiting.actual);    // O3 Actual Exiting
+            // 1. ตรวจสอบสถานะการมาทำงานจาก Checkbox หน้าเว็บ
+            const isSuphakrit = document.getElementById('chk_suphakrit').checked;
+            const isNawaphon = document.getElementById('chk_nawaphon').checked;
+            const isPiyaporn = document.getElementById('chk_piyaporn').checked;
+            const isKorntak = document.getElementById('chk_korntak').checked;
+            const isJidapa = document.getElementById('chk_jidapa').checked;
 
-            // คำนวณเป้าหมายรายวันประจำวัน
-            const postPayAllDaily = Math.round((c7 - m1) / remainingDays);
-            const newDaily = Math.round((c10 - l3) / remainingDays);
-            const existingDaily = Math.round((c13 - o3) / remainingDays);
+            const mgmtCount = isSuphakrit ? 1 : 0;
+            const pcCount = isJidapa ? 1 : 0;
+            
+            // รวบรวมรายชื่อทีม RR ที่เลือกมาปฏิบัติงานจริง
+            let activeRRs = [];
+            if (isNawaphon) activeRRs.push("นวพล");
+            if (isPiyaporn) activeRRs.push("ปิยะพร");
+            if (isKorntak) activeRRs.push("กรทักษ์");
+            const rrCount = activeRRs.length;
 
-            // เก็บจำนวนคนทำงานและรายชื่อ RR ที่มาทำงาน
-            let countMgmt = 0;
-            let countRR = 0;
-            let countPC = 0;
-            let checkedRRList = [];
+            // 2. คำนวณเป้าหมายรายวันหลักของ Shop
+            // Post pay all = (C7 - M1) / วันที่เหลือ
+            const postPayAllDay = Math.round((cleanNum(c.allPost.target) - cleanNum(c.allPost.actual)) / remainingDays);
+            // New = (C10 - L3) / วันที่เหลือ
+            const newDay = Math.round((cleanNum(c.newPost.target) - cleanNum(c.newPost.actual)) / remainingDays);
+            // Existing = (C13 - O3) / วันที่เหลือ
+            const existingDay = Math.round((cleanNum(c.exiting.target) - cleanNum(c.exiting.actual)) / remainingDays);
 
-            const chks = document.querySelectorAll('.morning-staff-chk');
-            chks.forEach(chk => {
-                if(chk.checked) {
-                    const role = chk.getAttribute('data-role');
-                    const name = chk.getAttribute('data-name');
-                    if(role === 'mgmt') countMgmt++;
-                    if(role === 'pc') countPC++;
-                    if(role === 'rr') {
-                        countRR++;
-                        checkedRRList.push(name);
-                    }
-                }
-            });
+            // 3. เริ่มขึ้นโครงสร้างตัวรายงาน Text
+            let textOutput = `ชื่อสาขา : TS BigC Prachauthit\nจำนวน พนง ทั้งหมด : 5\nแบ่งเป็น \n1. Management : 1/${mgmtCount}\n2. RR : 3/${rrCount}\n3. PC : 1/${pcCount}\n=========\nเป้าหมายรายวัน\nPost pay all = ${postPayAllDay.toLocaleString()}\nNew = ${newDay.toLocaleString()}\nExisting = ${existingDay.toLocaleString()}\n========\nแจกเป้า RR ที่มาทำงาน `;
 
-            // สร้างข้อความแจกเป้าหมายรายคนเฉพาะ RR ที่ Checkbox
-            let rrBlockText = "";
-            if (checkedRRList.length > 0) {
-                const rrNewShared = Math.round(newDaily / countRR);
-                const rrExistingShared = Math.round(existingDaily / countRR);
-                
-                checkedRRList.forEach((rrName, index) => {
-                    rrBlockText += `${index + 1}.RR ชื่อ ${rrName}\nNew = ${rrNewShared.toLocaleString()}\nExisting = ${rrExistingShared.toLocaleString()}`;
-                    if(index < checkedRRList.length - 1) rrBlockText += "\n";
-                });
+            // หมวดหมู่ประเภทงานสำหรับการเช็คกลุ่มยอด New
+            const listNewGroup = ["new sim only", "mg sim only", "new rahu", "new พลังดาว", "new myplan", "new/mg bundling", "mnp"];
+
+            // 4. ลูปคำนวณแจกเป้าและเช็คผลงานรายบุคคลเฉพาะคนที่ติ๊ก Checkbox
+            if (rrCount === 0) {
+                textOutput += `\n(ไม่มีพนักงาน RR มาปฏิบัติงานในวันนี้)`;
             } else {
-                rrBlockText = "ไม่มีพนักงาน RR เข้าทำงานในวันนี้";
+                activeRRs.forEach((rrName, idx) => {
+                    // เป้าเฉลี่ยของแต่ละคน
+                    const personalNewTarget = Math.round(newDay / rrCount);
+                    const personalExistingTarget = Math.round(existingDay / rrCount);
+
+                    // คำนวณหายอดขายรวมที่ทำได้จริง ณ วันนั้นของพนักงานคนนี้
+                    let personalNewActual = 0;
+                    let personalExistingActual = 0;
+
+                    detailed.forEach(row => {
+                        if (String(row.employee).trim() === rrName && row.postpay) {
+                            const pType = String(row.postpay).trim().toLowerCase();
+                            const amt = cleanNum(row.postAmount);
+
+                            if (listNewGroup.includes(pType)) {
+                                personalNewActual += amt;
+                            }
+                            if (pType === "bdbc") {
+                                personalExistingActual += amt;
+                            }
+                        }
+                    });
+
+                    // ต่อนิพจน์ชุดข้อมูลของแต่ละคนเข้าไปใน Template
+                    textOutput += `\n${idx + 1}.RR ชื่อ ${rrName}\nNew = ${personalNewTarget.toLocaleString()}/${personalNewActual.toLocaleString()}\nExisting = ${personalExistingTarget.toLocaleString()}/${personalExistingActual.toLocaleString()}`;
+                });
             }
 
-            // พิมพ์ Format ผลลัพธ์จำนวนพนักงานตามเงื่อนไข (เช่น 3/2 เป็นต้น)
-            const templateMorning = `ชื่อสาขา : TS BigC Prachauthit
-จำนวน พนง ทั้งหมด : 5
-แบ่งเป็น 
-1. Management : 1/${countMgmt}
-2. RR : 3/${countRR}
-3. PC : 1/${countPC}
-=========
-เป้าหมายรายวัน
-Post pay all = ${postPayAllDaily.toLocaleString()}
-New = ${newDaily.toLocaleString()}
-Existing = ${existingDaily.toLocaleString()}
-========
-แจกเป้า RR ที่มาทำงาน 
-${rrBlockText}
-=======`;
+            textOutput += `\n=======`;
 
-            document.getElementById('morningTextContainer').value = templateMorning;
-            
-            // เปิดหน้าต่าง Modal 
+            // 5. สั่งเปิดแสดงผลตัว Pop-up สรุปข้อมูลช่วงเช้า
+            document.getElementById('morningTextContainer').value = textOutput;
             const modal = document.getElementById('morningModal'); const modalBox = modal.querySelector('div');
             modal.style.display = 'flex'; document.getElementById('morningCountdownText').innerText = '';
+            
             const copyBtn = document.getElementById('copyMorningBtn');
             copyBtn.innerHTML = `<i class="bi bi-clipboard-check"></i> คัดลอกรายงาน`;
-            copyBtn.disabled = false; copyBtn.style.background = '#007aff';
+            copyBtn.disabled = false; copyBtn.style.background = '#24b300';
+            
             if(morningCountdownInterval) clearInterval(morningCountdownInterval);
             setTimeout(() => { modal.style.opacity = '1'; modalBox.style.transform = 'scale(1)'; }, 15);
         }
@@ -911,6 +926,7 @@ ${rrBlockText}
                 }, 1000);
             }).catch(() => { alert("ระบบเบราว์เซอร์บล็อกการเข้าถึงคลิปบอร์ด กรุณาคลุมดำคัดลอกด้วยตนเองครับ"); });
         }
+
 
         function renderPaginationControls() {
             const container = document.getElementById('paginationContainer'); container.innerHTML = '';
