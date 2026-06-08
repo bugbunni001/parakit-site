@@ -958,7 +958,7 @@
                     <span style="${blurStyle}">${row[2]||''}<br><small style="color:#8e8e93">${String(row[3]||'').replace(/^'/, '')}</small></span>
                 </td>
                 <td onclick="checkPasswordAndShow('${rowJson}')" style="cursor:pointer;">
-                    <div style="max-width:300px; max-height:100px; overflow:hidden; white-space:normal; display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; color:#666; font-size:13px; line-height:1.4; ${blurStyle}">${row[6] || "-"}</div>
+                    <div style="max-width:300px; max-height:100px; overflow:hidden; white-space:normal; display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; color:#666; font-size:13px; line-height:1.4; ${blurStyle}">${String(row[6]||'-').replace(/^'/, '')}</div>
                 </td>
                 <td>${row[4]||''}</td>
                 <td onclick="checkPasswordAndShow('${rowJson}')" style="cursor:${hasPassword ? 'pointer' : 'default'};">${filesHtml}</td>
@@ -1087,12 +1087,24 @@
                 tableRowsHtml = `<tr><td colspan="5" style="text-align:center; color:#888; padding: 25px 0;">ไม่มีใบงานค้างในถังขยะครับ</td></tr>`;
             } else {
                 trashData.forEach(row => {
+                    const deletedTime = new Date(row.deletedDate).getTime();
+                    let countdownHtml = '';
+                    if (!isNaN(deletedTime)) {
+                        const expiryTime = deletedTime + (30 * 24 * 60 * 60 * 1000);
+                        const remainingDays = Math.ceil((expiryTime - Date.now()) / (1000 * 60 * 60 * 24));
+                        if (remainingDays > 0) {
+                            countdownHtml = `<br><small style="color:var(--ios-orange); font-weight:600;"><i class="bi bi-hourglass-split"></i> เหลือ ${remainingDays} วัน</small>`;
+                        } else {
+                            countdownHtml = `<br><small style="color:var(--text-light); font-weight:600;"><i class="bi bi-exclamation-circle-fill"></i> หมดเวลา</small>`;
+                        }
+                    }
+
                     tableRowsHtml += `
                         <tr>
                             <td><strong>${row.reportId}</strong><br><small style="color: var(--text-light);">${row.jobType}</small></td>
                             <td>${row.name}<br><small style="color: var(--text-light);">${row.memberId}</small></td>
                             <td>${row.staff}</td>
-                            <td style="color:var(--ios-red); font-weight: 500;">${fixDate(row.deletedDate)}</td>
+                            <td style="color:var(--ios-red); font-weight: 500; white-space: nowrap;">${fixDate(row.deletedDate)}${countdownHtml}</td>
                             <td>
                                 <button class="btn-edit" style="width:32px; height:32px; font-size:14px;" onclick="restoreTrashItem('${row.reportId}')" title="กู้คืนข้อมูล"><i class="bi bi-arrow-counterclockwise"></i></button>
                             </td>
@@ -1234,7 +1246,7 @@
                     <div><label class="swal-label">เบอร์ติดต่อ</label><div class="detail-view-item"><span class="val">${String(item[3]||'').replace(/^'/, '')}</span></div></div>
                     <div><label class="swal-label">พนักงาน</label><div class="detail-view-item"><span class="val">${item[4]||''}</span></div></div>
                     <div><label class="swal-label">วันครบกำหนดงาน</label><div class="detail-view-item"><span class="val" style="color:var(--ios-red);">${fixDate(item[10])}</span></div></div>
-                    <div class="swal-field-full"><label class="swal-label">รายละเอียดเพิ่มเติม</label><div class="detail-view-item" style="min-height:160px;"><span class="val" style="font-weight:400; white-space:pre-wrap;">${item[6] || '-'}</span></div></div>
+                    <div class="swal-field-full"><label class="swal-label">รายละเอียดเพิ่มเติม</label><div class="detail-view-item" style="min-height:160px;"><span class="val" style="font-weight:400; white-space:pre-wrap;">${String(item[6]||'-').replace(/^'/, '')}</span></div></div>
                     <div class="swal-field-full" style="text-align:center; margin-top:10px;">${filesDetail}</div>
                 </div>
             `,
@@ -1325,7 +1337,7 @@
                     action: "insert", reportId: newId, 
                     jobType: document.getElementById('jobType').value, date: document.getElementById('date').value, 
                     memberId: "'" + memberIdVal, name: document.getElementById('name').value, phone: "'" + phoneVal, 
-                    staff: staffVal, jobDetail: document.getElementById('jobDetail').value, 
+                    staff: staffVal, jobDetail: "'" + document.getElementById('jobDetail').value, 
                     deadline: document.getElementById('deadline').value, isDaily: document.getElementById('isDaily').checked ? "true" : "",
                     password: "'" + document.getElementById('jobPassword').value,
                     files: selectedFiles.map(f => ({name: f.name, data: f.data})) 
@@ -1411,7 +1423,7 @@
                         <label for="swal-isDaily" style="font-size:14px; font-weight:600; color:var(--ios-purple); cursor:pointer;">แสดงงานนี้ทุกวัน (Infinity Mode)</label>
                     </div>
 
-                    <div class="swal-field-full"><label class="swal-label">รายละเอียด</label><textarea id="swal-jobDetail" class="swal-input-styled" style="height:160px; resize:none;">${item[6] || ''}</textarea></div>
+                    <div class="swal-field-full"><label class="swal-label">รายละเอียด</label><textarea id="swal-jobDetail" class="swal-input-styled" style="height:160px; resize:none;">${String(item[6] || '').replace(/^'/, '')}</textarea></div>
                     <div class="swal-field-full">
                         <label class="swal-label">จัดการไฟล์แนบ</label>
                         <input type="file" id="file" class="swal-input-styled" onchange="handleFileSelect(event)" multiple>
@@ -1430,7 +1442,7 @@
                     action: "update", reportId: item[11], date: document.getElementById('swal-date').value, 
                     memberId: "'" + memberIdVal, 
                     name: document.getElementById('swal-name').value, phone: "'" + phoneVal, 
-                    staff: staffVal, jobDetail: document.getElementById('swal-jobDetail').value, 
+                    staff: staffVal, jobDetail: "'" + document.getElementById('swal-jobDetail').value, 
                     jobType: document.getElementById('swal-jobType').value, deadline: document.getElementById('swal-deadline').value,
                     isDaily: document.getElementById('swal-isDaily').checked ? "true" : "",
                     password: "'" + document.getElementById('swal-jobPassword').value,
