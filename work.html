@@ -511,9 +511,10 @@
             to { transform: rotate(360deg); }
         }
 
-        .modal-table { width:100% !important; min-width:100% !important; margin-top:10px; }
-        .modal-table th { padding: 10px; font-size:12px; background: rgba(0,0,0,0.05); }
-        .modal-table td { padding: 10px; font-size:12px; border-bottom: 1px solid rgba(0,0,0,0.05); }
+        /* 🌟 อัปเกรดขนาดตัวอักษรและโครงสร้างตารางของ Modal ถังขยะ และ Log ระบบ */
+        .modal-table { width:100% !important; min-width:100% !important; margin-top:10px; border-collapse: collapse; }
+        .modal-table th { padding: 12px 10px; font-size:14px; background: rgba(0,0,0,0.05); color: var(--text-main); font-weight: 600; }
+        .modal-table td { padding: 12px 10px; font-size:14px; border-bottom: 1px solid rgba(0,0,0,0.05); color: var(--text-main); vertical-align: middle; }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
     </style>
@@ -1075,7 +1076,6 @@
         }
     }
 
-    // 🌟 ฟังก์ชันเปิดแสดงกล่องหน้าต่างถังขยะระบบ 🌟
     async function openTrashModal() {
         Swal.fire({ title: 'กำลังโหลดข้อมูลในถังขยะ...', didOpen: () => Swal.showLoading() });
         try {
@@ -1084,17 +1084,17 @@
             
             let tableRowsHtml = '';
             if (trashData.length === 0) {
-                tableRowsHtml = `<tr><td colspan="5" style="text-align:center; color:#888;">ไม่มีใบงานค้างในถังขยะครับ</td></tr>`;
+                tableRowsHtml = `<tr><td colspan="5" style="text-align:center; color:#888; padding: 25px 0;">ไม่มีใบงานค้างในถังขยะครับ</td></tr>`;
             } else {
                 trashData.forEach(row => {
                     tableRowsHtml += `
                         <tr>
-                            <td><strong>${row.reportId}</strong><br><small>${row.jobType}</small></td>
-                            <td>${row.name}<br><small>${row.memberId}</small></td>
+                            <td><strong>${row.reportId}</strong><br><small style="color: var(--text-light);">${row.jobType}</small></td>
+                            <td>${row.name}<br><small style="color: var(--text-light);">${row.memberId}</small></td>
                             <td>${row.staff}</td>
-                            <td style="color:var(--ios-red); font-size:11px;">${fixDate(row.deletedDate)}</td>
+                            <td style="color:var(--ios-red); font-weight: 500;">${fixDate(row.deletedDate)}</td>
                             <td>
-                                <button class="btn-edit" style="width:28px; height:28px; font-size:12px;" onclick="restoreTrashItem('${row.reportId}')" title="กู้คืนข้อมูล"><i class="bi bi-arrow-counterclockwise"></i></button>
+                                <button class="btn-edit" style="width:32px; height:32px; font-size:14px;" onclick="restoreTrashItem('${row.reportId}')" title="กู้คืนข้อมูล"><i class="bi bi-arrow-counterclockwise"></i></button>
                             </td>
                         </tr>
                     `;
@@ -1103,13 +1103,13 @@
 
             Swal.fire({
                 title: '<i class="bi bi-trash3-fill" style="color:var(--ios-red)"></i> ถังขยะ (ย้อนหลัง 30 วัน)',
-                width: '750px',
+                width: '780px',
                 customClass: { popup: 'swal-modal-custom' },
                 html: `
-                    <p style="font-size:11.5px; color:var(--text-light); background:#fff0f0; border:1px solid rgba(255,59,48,0.2); padding:8px 12px; border-radius:10px; margin-bottom:15px; text-align:left;">
-                        <i class="bi bi-info-circle-fill"></i> งานที่ถูกลบจะอยู่ในถังขยะ 30 วัน หลังจากนั้นจะถูกระบบลบออกโดยอัตโนมัติครับ
+                    <p style="font-size:14px; color:var(--text-light); background:#fff0f0; border:1px solid rgba(255,59,48,0.2); padding:10px 14px; border-radius:10px; margin-bottom:15px; text-align:left;">
+                        <i class="bi bi-info-circle-fill" style="color: var(--ios-red);"></i> งานที่ถูกลบจะอยู่ในถังขยะ 30 วัน หลังจากนั้นจะถูกระบบลบออกโดยอัตโนมัติ
                     </p>
-                    <div style="max-height: 350px; overflow-y: auto; border: 1px solid rgba(0,0,0,0.08); border-radius:14px; background:#fff;">
+                    <div style="max-height: 380px; overflow-y: auto; border: 1px solid rgba(0,0,0,0.08); border-radius:14px; background:#fff;">
                         <table class="modal-table">
                             <thead>
                                 <tr>
@@ -1127,7 +1127,6 @@
         }
     }
 
-    // ฟังก์ชันกู้คืนงานจากถังขยะ
     async function restoreTrashItem(reportId) {
         Swal.fire({ title: 'กำลังกู้คืนข้อมูล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
         try {
@@ -1141,7 +1140,6 @@
         } catch (e) { Swal.fire('ผิดพลาด', 'ไม่สามารถกู้คืนงานได้ครับ', 'error'); }
     }
 
-    // 🌟 ฟังก์ชันเปิดแสดงกล่องหน้าต่าง Log 🌟
     async function openLogsModal() {
         Swal.fire({ title: 'กำลังโหลด Log การทำรายการ...', didOpen: () => Swal.showLoading() });
         try {
@@ -1150,7 +1148,7 @@
             
             let tableRowsHtml = '';
             if (logsData.length === 0) {
-                tableRowsHtml = `<tr><td colspan="4" style="text-align:center; color:#888;">ไม่มี Log การทำรายการบันทึกไว้</td></tr>`;
+                tableRowsHtml = `<tr><td colspan="4" style="text-align:center; color:#888; padding: 25px 0;">ไม่มี Log การทำรายการบันทึกไว้</td></tr>`;
             } else {
                 logsData.forEach(row => {
                     let actionBadgeColor = 'background:#eef7ff; color:var(--ios-blue);';
@@ -1159,10 +1157,10 @@
                     
                     tableRowsHtml += `
                         <tr>
-                            <td style="white-space:nowrap;">${row.timestamp}</td>
-                            <td><span class="job-type-badge" style="${actionBadgeColor}">${row.actionType}</span></td>
+                            <td style="white-space:nowrap; font-weight: 500;">${row.timestamp}</td>
+                            <td><span class="job-type-badge" style="${actionBadgeColor} font-size: 12px; padding: 3px 10px;">${row.actionType}</span></td>
                             <td><strong>${row.reportId}</strong></td>
-                            <td style="text-align:left; max-width:280px; white-space:normal;">${row.details}</td>
+                            <td style="text-align:left; max-width:280px; white-space:normal; line-height: 1.4;">${row.details}</td>
                         </tr>
                     `;
                 });
@@ -1170,14 +1168,14 @@
 
             Swal.fire({
                 title: '<i class="bi bi-journal-text" style="color:var(--ios-blue)"></i> Log การทำงานในระบบ',
-                width: '800px',
+                width: '850px',
                 customClass: { popup: 'swal-modal-custom' },
                 html: `
-                    <div style="max-height: 400px; overflow-y: auto; border: 1px solid rgba(0,0,0,0.08); border-radius:14px; background:#fff;">
+                    <div style="max-height: 420px; overflow-y: auto; border: 1px solid rgba(0,0,0,0.08); border-radius:14px; background:#fff;">
                         <table class="modal-table">
                             <thead>
                                 <tr>
-                                    <th width="140">วัน-เวลา</th><th width="140">การกระทำ</th><th width="120">Report ID</th><th>รายละเอียด Log</th>
+                                    <th width="160">วัน-เวลา</th><th width="150">การกระทำ</th><th width="120">Report ID</th><th>รายละเอียด Log</th>
                                 </tr>
                             </thead>
                             <tbody>${tableRowsHtml}</tbody>
