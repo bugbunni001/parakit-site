@@ -602,7 +602,7 @@
 </div>
 
 <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyNP7QHJ6gles-tdKZ4d143kvJFvxHwUuvax7LetbZ6n3CRcuPwnjERW-5rUUkI4jED/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw3iFGJFALDHVu1lKfjIRBFkFQUIzs9Xc-oF8HHzr2YBNDQ_JmZDRrY1VYDb1ZxqIpQ/exec';
 
     const jobTypes = [
         "MGM ปรับลด", "ยกเลิกบริการ (ปกติ)", "ยกเลิกบริการ (5P)", "MNP",
@@ -1105,8 +1105,9 @@
                             <td>${row.name}<br><small style="color: var(--text-light);">${row.memberId}</small></td>
                             <td>${row.staff}</td>
                             <td style="color:var(--ios-red); font-weight: 500; white-space: nowrap;">${fixDate(row.deletedDate)}${countdownHtml}</td>
-                            <td>
+                            <td style="white-space: nowrap;">
                                 <button class="btn-edit" style="width:32px; height:32px; font-size:14px;" onclick="restoreTrashItem('${row.reportId}')" title="กู้คืนข้อมูล"><i class="bi bi-arrow-counterclockwise"></i></button>
+                                <button class="btn-delete" style="width:32px; height:32px; font-size:14px;" onclick="deleteTrashItemPermanently('${row.reportId}')" title="ลบถาวร"><i class="bi bi-trash3-fill"></i></button>
                             </td>
                         </tr>
                     `;
@@ -1125,7 +1126,7 @@
                         <table class="modal-table">
                             <thead>
                                 <tr>
-                                    <th>ID / ประเภท</th><th>ลูกค้า / สมาชิก</th><th>ผู้รับผิดชอบ</th><th>วันที่ถูกลบ</th><th>กู้คืน</th>
+                                    <th>ID / ประเภท</th><th>ลูกค้า / สมาชิก</th><th>ผู้รับผิดชอบ</th><th>วันที่ถูกลบ</th><th>จัดการ</th>
                                 </tr>
                             </thead>
                             <tbody>${tableRowsHtml}</tbody>
@@ -1150,6 +1151,34 @@
                 });
             }
         } catch (e) { Swal.fire('ผิดพลาด', 'ไม่สามารถกู้คืนงานได้ครับ', 'error'); }
+    }
+
+    async function deleteTrashItemPermanently(reportId) {
+        const confirm = await Swal.fire({ 
+            title: 'ลบใบงานถาวร?', 
+            text: "ใบงาน ID: " + reportId + " จะถูกลบออกจากระบบทันทีและไม่สามารถกู้คืนได้อีก!", 
+            icon: 'warning', 
+            showCancelButton: true, 
+            confirmButtonColor: '#FF3B30', 
+            confirmButtonText: 'ลบถาวร', 
+            cancelButtonText: 'ยกเลิก',
+            allowOutsideClick: false
+        });
+        if (confirm.isConfirmed) {
+            Swal.fire({ title: 'กำลังลบข้อมูล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            try {
+                const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: "deletePermanently", reportId: reportId}) });
+                const serverResponse = await res.json();
+                if(serverResponse.status === "success") {
+                    Swal.fire({title: 'ลบใบงานถาวรเรียบร้อยแล้วครับ', icon: 'success', timer: 1000, showConfirmButton: false}).then(() => {
+                        openTrashModal();
+                        loadData(true);
+                    });
+                } else { throw new Error(); }
+            } catch (e) {
+                Swal.fire('ผิดพลาด', 'ไม่สามารถลบข้อมูลถาวรได้ครับ', 'error');
+            }
+        }
     }
 
     async function openLogsModal() {
