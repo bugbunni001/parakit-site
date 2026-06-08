@@ -194,14 +194,32 @@
             flex-wrap: wrap;
         }
 
+        .left-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
         .btn-add-job {
             background: linear-gradient(135deg, #007aff, #0056b3);
-            color: white; padding: 12px 28px; border-radius: 16px; border: none;
-            font-size: 16px; font-weight: 600; cursor: pointer;
+            color: white; padding: 12px 24px; border-radius: 16px; border: none;
+            font-size: 15px; font-weight: 600; cursor: pointer;
             box-shadow: 0 8px 20px rgba(0, 122, 255, 0.3);
-            transition: 0.3s; display: flex; align-items: center; gap: 10px;
+            transition: 0.3s; display: flex; align-items: center; gap: 8px;
         }
-        .btn-add-job:hover { transform: translateY(-3px); box-shadow: 0 12px 25px rgba(0, 122, 255, 0.4); opacity: 0.9; }
+        .btn-add-job:hover { transform: translateY(-2px); box-shadow: 0 12px 25px rgba(0, 122, 255, 0.4); }
+
+        .btn-trash-view {
+            background: rgba(255, 59, 48, 0.1); color: var(--ios-red);
+            padding: 12px 20px; border-radius: 16px; border: 1px solid rgba(255, 59, 48, 0.2);
+            font-size: 15px; font-weight: 600; cursor: pointer; transition: 0.3s;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .btn-trash-view:hover { background: var(--ios-red); color: white; transform: translateY(-2px); }
+
+        .btn-log-view {
+            background: rgba(0, 0, 0, 0.05); color: var(--text-main);
+            padding: 12px 20px; border-radius: 16px; border: 1px solid var(--glass-border);
+            font-size: 15px; font-weight: 600; cursor: pointer; transition: 0.3s;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .btn-log-view:hover { background: var(--text-main); color: white; transform: translateY(-2px); }
 
         .search-area-wrapper {
             display: flex;
@@ -493,6 +511,10 @@
             to { transform: rotate(360deg); }
         }
 
+        .modal-table { width:100% !important; min-width:100% !important; margin-top:10px; }
+        .modal-table th { padding: 10px; font-size:12px; background: rgba(0,0,0,0.05); }
+        .modal-table td { padding: 10px; font-size:12px; border-bottom: 1px solid rgba(0,0,0,0.05); }
+
         @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
@@ -518,9 +540,17 @@
     <div class="stats-container" id="statsContainer"></div>
 
     <div class="action-bar">
-        <button class="btn-add-job" onclick="openAddJobModal()">
-            <i class="bi bi-plus-circle"></i> เพิ่มรายการใหม่
-        </button>
+        <div class="left-actions">
+            <button class="btn-add-job" onclick="openAddJobModal()">
+                <i class="bi bi-plus-circle"></i> เพิ่มรายการใหม่
+            </button>
+            <button class="btn-trash-view" onclick="openTrashModal()">
+                <i class="bi bi-trash3"></i> ถังขยะ
+            </button>
+            <button class="btn-log-view" onclick="openLogsModal()">
+                <i class="bi bi-journal-text"></i> Log ทำรายการ
+            </button>
+        </div>
         <div class="search-area-wrapper">
             <div class="date-filter-wrapper">
                 <button class="btn-clear-all" onclick="clearAllFilters()" title="ล้างข้อมูลทั้งหมด">ล้างข้อมูล</button>
@@ -571,7 +601,7 @@
 </div>
 
 <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzQaoBQbj14sVeOO8l0bh1d0DVkwOb_svUZDgtSVyB3n-VSE_Eg_1ZhJ9LoyCPPI3nr/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyNP7QHJ6gles-tdKZ4d143kvJFvxHwUuvax7LetbZ6n3CRcuPwnjERW-5rUUkI4jED/exec';
 
     const jobTypes = [
         "MGM ปรับลด", "ยกเลิกบริการ (ปกติ)", "ยกเลิกบริการ (5P)", "MNP",
@@ -739,7 +769,7 @@
             <div class="stat-card-long" onclick="filterByDeadline(this)">
                 <div class="info">
                     <span class="title">ครบที่กำหนด</span>
-                    <span class="title">ต้องเคลียร์(วันนี้)</span>
+                    <span class="title">(วันนี้)</span>
                     <span class="date-label">${fixDate(new Date())}</span>
                 </div>
                 <div class="count-val">${deadlineCount} รายการ</div>
@@ -1026,14 +1056,138 @@
 
     async function deleteData(reportId) {
         const confirm = await Swal.fire({ 
-            title: 'ยืนยันการลบ?', text: "ID: " + reportId, icon: 'warning', 
-            showCancelButton: true, confirmButtonColor: '#FF3B30', confirmButtonText: 'ลบเลย',
+            title: 'ย้ายลงถังขยะ?', text: "ใบงาน ID: " + reportId + " จะถูกเก็บไว้ในถังขยะเป็นเวลา 30 วัน", icon: 'warning', 
+            showCancelButton: true, confirmButtonColor: '#FF3B30', confirmButtonText: 'ย้ายลงถังขยะ',
             allowOutsideClick: false
         });
         if (confirm.isConfirmed) {
-            fullData = fullData.filter(r => r[11] != reportId);
-            filterData(); updateStats(fullData);
-            fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: "delete", reportId: reportId}) });
+            Swal.fire({ title: 'กำลังประมวลผล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            try {
+                const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: "delete", reportId: reportId}) });
+                const serverResponse = await res.json();
+                if(serverResponse.status === "success") {
+                    Swal.fire({title: 'ย้ายใบงานลงถังขยะเรียบร้อยแล้ว', icon: 'success', timer: 1000, showConfirmButton: false});
+                    loadData(true);
+                } else { throw new Error(); }
+            } catch (e) {
+                Swal.fire('ผิดพลาด', 'ไม่สามารถย้ายใบงานลงถังขยะได้', 'error');
+            }
+        }
+    }
+
+    // 🌟 ฟังก์ชันเปิดแสดงกล่องหน้าต่างถังขยะระบบ 🌟
+    async function openTrashModal() {
+        Swal.fire({ title: 'กำลังโหลดข้อมูลในถังขยะ...', didOpen: () => Swal.showLoading() });
+        try {
+            const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: "readTrash"}) });
+            const trashData = await res.json();
+            
+            let tableRowsHtml = '';
+            if (trashData.length === 0) {
+                tableRowsHtml = `<tr><td colspan="5" style="text-align:center; color:#888;">ไม่มีใบงานค้างในถังขยะครับ</td></tr>`;
+            } else {
+                trashData.forEach(row => {
+                    tableRowsHtml += `
+                        <tr>
+                            <td><strong>${row.reportId}</strong><br><small>${row.jobType}</small></td>
+                            <td>${row.name}<br><small>${row.memberId}</small></td>
+                            <td>${row.staff}</td>
+                            <td style="color:var(--ios-red); font-size:11px;">${fixDate(row.deletedDate)}</td>
+                            <td>
+                                <button class="btn-edit" style="width:28px; height:28px; font-size:12px;" onclick="restoreTrashItem('${row.reportId}')" title="กู้คืนข้อมูล"><i class="bi bi-arrow-counterclockwise"></i></button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+
+            Swal.fire({
+                title: '<i class="bi bi-trash3-fill" style="color:var(--ios-red)"></i> ถังขยะ (ย้อนหลัง 30 วัน)',
+                width: '750px',
+                customClass: { popup: 'swal-modal-custom' },
+                html: `
+                    <p style="font-size:11.5px; color:var(--text-light); background:#fff0f0; border:1px solid rgba(255,59,48,0.2); padding:8px 12px; border-radius:10px; margin-bottom:15px; text-align:left;">
+                        <i class="bi bi-info-circle-fill"></i> งานที่ถูกลบจะอยู่ในถังขยะ 30 วัน หลังจากนั้นจะถูกระบบลบออกโดยอัตโนมัติครับ
+                    </p>
+                    <div style="max-height: 350px; overflow-y: auto; border: 1px solid rgba(0,0,0,0.08); border-radius:14px; background:#fff;">
+                        <table class="modal-table">
+                            <thead>
+                                <tr>
+                                    <th>ID / ประเภท</th><th>ลูกค้า / สมาชิก</th><th>ผู้รับผิดชอบ</th><th>วันที่ถูกลบ</th><th>กู้คืน</th>
+                                </tr>
+                            </thead>
+                            <tbody>${tableRowsHtml}</tbody>
+                        </table>
+                    </div>
+                `,
+                showConfirmButton: false, showCancelButton: true, cancelButtonText: 'ปิดหน้าต่าง'
+            });
+        } catch (e) {
+            Swal.fire('ผิดพลาด', 'ไม่สามารถโหลดถังขยะได้ครับ', 'error');
+        }
+    }
+
+    // ฟังก์ชันกู้คืนงานจากถังขยะ
+    async function restoreTrashItem(reportId) {
+        Swal.fire({ title: 'กำลังกู้คืนข้อมูล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        try {
+            const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: "restore", reportId: reportId}) });
+            const serverResponse = await res.json();
+            if(serverResponse.status === "success") {
+                Swal.fire({title: 'กู้คืนงานสำเร็จครับ', icon: 'success', timer: 1000, showConfirmButton: false}).then(() => {
+                    loadData(true);
+                });
+            }
+        } catch (e) { Swal.fire('ผิดพลาด', 'ไม่สามารถกู้คืนงานได้ครับ', 'error'); }
+    }
+
+    // 🌟 ฟังก์ชันเปิดแสดงกล่องหน้าต่าง Log 🌟
+    async function openLogsModal() {
+        Swal.fire({ title: 'กำลังโหลด Log การทำรายการ...', didOpen: () => Swal.showLoading() });
+        try {
+            const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: "readLogs"}) });
+            const logsData = await res.json();
+            
+            let tableRowsHtml = '';
+            if (logsData.length === 0) {
+                tableRowsHtml = `<tr><td colspan="4" style="text-align:center; color:#888;">ไม่มี Log การทำรายการบันทึกไว้</td></tr>`;
+            } else {
+                logsData.forEach(row => {
+                    let actionBadgeColor = 'background:#eef7ff; color:var(--ios-blue);';
+                    if(row.actionType.includes("ลบ")) actionBadgeColor = 'background:#fff0f0; color:var(--ios-red);';
+                    if(row.actionType.includes("แก้ไข")) actionBadgeColor = 'background:#eef7ed; color:var(--ios-green);';
+                    
+                    tableRowsHtml += `
+                        <tr>
+                            <td style="white-space:nowrap;">${row.timestamp}</td>
+                            <td><span class="job-type-badge" style="${actionBadgeColor}">${row.actionType}</span></td>
+                            <td><strong>${row.reportId}</strong></td>
+                            <td style="text-align:left; max-width:280px; white-space:normal;">${row.details}</td>
+                        </tr>
+                    `;
+                });
+            }
+
+            Swal.fire({
+                title: '<i class="bi bi-journal-text" style="color:var(--ios-blue)"></i> Log การทำงานในระบบ',
+                width: '800px',
+                customClass: { popup: 'swal-modal-custom' },
+                html: `
+                    <div style="max-height: 400px; overflow-y: auto; border: 1px solid rgba(0,0,0,0.08); border-radius:14px; background:#fff;">
+                        <table class="modal-table">
+                            <thead>
+                                <tr>
+                                    <th width="140">วัน-เวลา</th><th width="140">การกระทำ</th><th width="120">Report ID</th><th>รายละเอียด Log</th>
+                                </tr>
+                            </thead>
+                            <tbody>${tableRowsHtml}</tbody>
+                        </table>
+                    </div>
+                `,
+                showConfirmButton: false, showCancelButton: true, cancelButtonText: 'ปิดหน้าต่าง'
+            });
+        } catch (e) {
+            Swal.fire('ผิดพลาด', 'ไม่สามารถดึง Log ได้ครับ', 'error');
         }
     }
 
@@ -1051,10 +1205,7 @@
                 showCancelButton: true,
                 confirmButtonText: 'ยืนยัน',
                 cancelButtonText: 'ยกเลิก',
-                inputAttributes: {
-                    autocapitalize: 'off',
-                    autorrect: 'off'
-                },
+                inputAttributes: { autocapitalize: 'off', autorrect: 'off' },
                 inputValidator: (value) => {
                     if (!value) return 'กรุณากรอกรหัสผ่าน!';
                     if (value !== pass) return 'รหัสผ่านไม่ถูกต้อง!';
@@ -1062,9 +1213,7 @@
             }).then((result) => {
                 if (result.isConfirmed) showFullDetail(rowJson);
             });
-        } else {
-            showFullDetail(rowJson);
-        }
+        } else { showFullDetail(rowJson); }
     }
 
     window.showFullDetail = function(rowJson) {
@@ -1226,9 +1375,7 @@
             }).then((result) => {
                 if (result.isConfirmed) proceedToEdit(rowJson);
             });
-        } else {
-            proceedToEdit(rowJson);
-        }
+        } else { proceedToEdit(rowJson); }
     }
 
     function proceedToEdit(rowJson) {
@@ -1288,7 +1435,7 @@
                     staff: staffVal, jobDetail: document.getElementById('swal-jobDetail').value, 
                     jobType: document.getElementById('swal-jobType').value, deadline: document.getElementById('swal-deadline').value,
                     isDaily: document.getElementById('swal-isDaily').checked ? "true" : "",
-                    password: "'" + document.getElementById('swal-jobPassword').value, /* 🔥 แก้ไข ID ตรงนี้จากเดิมที่เป็นของหน้าบันทึกงานใหม่ ให้สัมพันธ์กับ Modal แก้ไขแล้วครับ */
+                    password: "'" + document.getElementById('swal-jobPassword').value,
                     existingFiles: existingFiles, files: selectedFiles.map(f => ({name: f.name, data: f.data})) 
                 };
             }
@@ -1301,9 +1448,7 @@
                     if(serverResponse.status === "success") {
                         Swal.fire({title: 'สำเร็จ', icon: 'success', timer: 1000, showConfirmButton: false}).then(() => {
                             const newType = result.value.jobType;
-                            if(newType) {
-                                document.getElementById('searchInput').value = newType;
-                            }
+                            if(newType) { document.getElementById('searchInput').value = newType; }
                             currentPage = 1;
                             loadData(true);
                         });
