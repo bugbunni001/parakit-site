@@ -602,7 +602,7 @@
 </div>
 
 <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw3iFGJFALDHVu1lKfjIRBFkFQUIzs9Xc-oF8HHzr2YBNDQ_JmZDRrY1VYDb1ZxqIpQ/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwstNwOuBsPMgDjj3zyVHkeR-w7gAKlgORabdMQN89ymkCfK5Fh3iNb3HIP4qzHUxFR/exec';
 
     const jobTypes = [
         "MGM ปรับลด", "ยกเลิกบริการ (ปกติ)", "ยกเลิกบริการ (5P)", "MNP",
@@ -1087,11 +1087,16 @@
                 tableRowsHtml = `<tr><td colspan="5" style="text-align:center; color:#888; padding: 25px 0;">ไม่มีใบงานค้างในถังขยะครับ</td></tr>`;
             } else {
                 trashData.forEach(row => {
-                    const deletedTime = new Date(row.deletedDate).getTime();
+                    const deleteDate = new Date(row.deletedDate);
                     let countdownHtml = '';
-                    if (!isNaN(deletedTime)) {
-                        const expiryTime = deletedTime + (30 * 24 * 60 * 60 * 1000);
-                        const remainingDays = Math.ceil((expiryTime - Date.now()) / (1000 * 60 * 60 * 24));
+                    if (!isNaN(deleteDate.getTime())) {
+                        const today = new Date();
+                        // เคลียร์เศษเวลาของทั้งสองวันให้เป็นเที่ยงคืน เพื่อเปรียบเทียบจำนวนวันปฏิทินที่ผ่านไปอย่างคงที่
+                        const d1 = new Date(deleteDate.getFullYear(), deleteDate.getMonth(), deleteDate.getDate());
+                        const d2 = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                        const diffDays = Math.floor((d2 - d1) / (1000 * 60 * 60 * 24));
+                        const remainingDays = 30 - diffDays;
+
                         if (remainingDays > 0) {
                             countdownHtml = `<br><small style="color:var(--ios-orange); font-weight:600;"><i class="bi bi-hourglass-split"></i> เหลือ ${remainingDays} วัน</small>`;
                         } else {
@@ -1474,7 +1479,7 @@
                     staff: staffVal, jobDetail: "'" + document.getElementById('swal-jobDetail').value, 
                     jobType: document.getElementById('swal-jobType').value, deadline: document.getElementById('swal-deadline').value,
                     isDaily: document.getElementById('swal-isDaily').checked ? "true" : "",
-                    password: "'" + document.getElementById('swal-jobPassword').value,
+                    password: "'" + document.getElementById('jobPassword').value,
                     existingFiles: existingFiles, files: selectedFiles.map(f => ({name: f.name, data: f.data})) 
                 };
             }
