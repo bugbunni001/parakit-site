@@ -608,7 +608,7 @@
         "MGM ปรับลด", "ยกเลิกบริการ (ปกติ)", "ยกเลิกบริการ (5P)", "MNP",
         "เปลี่ยนรายเดือนเป็นเติมเงิน", "เปลี่ยนโปรโมชั่น", "Add ส่วนลด",
         "Delete ส่วนลด" , "Add เน็ตเพิ่ม", "ระงับสัญญาณชั่วคราวTOL", 
-        "ส่งเรื่องตรวจสอบ", "ขอเงินคืน" , "งานเก็บไว้เช็ค"
+        "ส่งเรื่องตรวจสอบ", "ขอเงินคืน" , "งานเก็บไว้เช็ค" , "TRUE MOBILE CARE"
     ];
 
     let fullData = [];
@@ -624,6 +624,36 @@
     const sideOverlay = document.getElementById('sidebarOverlay');
     let isDragging = false;
     let startX, startY, shiftX, shiftY;
+
+    // --- ฟังก์ชันหลักสำหรับเคลียร์ระบบวันที่ให้เสถียร ---
+    function parseCustomDate(dateVal) {
+        if (!dateVal || dateVal === "-" || dateVal === "") return null;
+        if (dateVal instanceof Date) return isNaN(dateVal) ? null : dateVal;
+        
+        if (typeof dateVal === 'string') {
+            const parts = dateVal.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+            if (parts) {
+                const day = parseInt(parts[1], 10);
+                const month = parseInt(parts[2], 10) - 1; 
+                const year = parseInt(parts[3], 10);
+                return new Date(year, month, day);
+            }
+        }
+        const d = new Date(dateVal);
+        return isNaN(d) ? null : d;
+    }
+
+    function fixDate(dateVal) {
+        const d = parseCustomDate(dateVal);
+        if (!d) return (dateVal && dateVal !== "") ? dateVal : "-";
+        return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+    }
+
+    function formatForInputDate(dateVal) {
+        const d = parseCustomDate(dateVal);
+        if (!d) return "";
+        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
 
     function generateReportId() {
         return Math.floor(1000000000 + Math.random() * 9000000000).toString();
@@ -708,25 +738,13 @@
         if (id) localStorage.setItem('menu-' + id, isOpen);
     }
 
-    function fixDate(dateVal) {
-        if (!dateVal || dateVal === "-" || dateVal === "") return "-";
-        const d = new Date(dateVal);
-        return isNaN(d) ? dateVal : `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
-    }
-
-    function formatForInputDate(dateVal) {
-        if (!dateVal) return "";
-        const d = new Date(dateVal);
-        if (isNaN(d)) return "";
-        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-    }
-
     window.onscroll = function() {
         const btn = document.getElementById("btn-back-to-top");
         if (document.body.scrollTop > 200 || document.documentElement.scrollTop > 200) btn.classList.add("show");
         else btn.classList.remove("show");
     };
 
+    // ปรับเวลากลับขึ้นบนให้สมูท
     function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
 
     function updateStats(data) {
@@ -887,18 +905,20 @@
                 if (row._isDaily) {
                     row._isOverdue = false;
                 } else if (row[10] && row[10] !== "-" && row[10] !== "") {
-                    const dDate = new Date(row[10]);
-                    dDate.setHours(0, 0, 0, 0);
-                    row._isOverdue = !isNaN(dDate) && dDate < today;
+                    const dDate = parseCustomDate(row[10]);
+                    row._isOverdue = dDate && dDate < today;
                 } else {
                     row._isOverdue = false;
                 }
             });
 
+            // ปรับระบบการเรียงลำดับให้เสถียรขึ้น
             fullData = data.sort((a, b) => {
                 if (a._isPinned && !b._isPinned) return -1;
                 if (!a._isPinned && b._isPinned) return 1;
-                return new Date(b[0]) - new Date(a[0]);
+                const dateA = parseCustomDate(a[0]) || new Date(0);
+                const dateB = parseCustomDate(b[0]) || new Date(0);
+                return dateB - dateA;
             });
 
             filterData();
@@ -941,7 +961,7 @@
             let filesHtml = '-';
             if (hasPassword && row[5]) {
                 filesHtml = '<span style="color:var(--ios-red); font-size:12px; font-weight:600;"><i class="bi bi-lock-fill"></i> ล็อคไฟล์</span>';
-            } else if (row[5]) {
+            } else if (row[5] && row[5] !== "-" && row[5] !== "") {
                 const urls = row[5].split(", ");
                 filesHtml = urls.map((u, i) => `<a href="${u}" target="_blank" style="color:var(--ios-blue); text-decoration:none; margin-right:5px;"><i class="bi bi-file-earmark-text"></i> ${i+1}</a>`).join('');
             }
@@ -1025,7 +1045,9 @@
             fullData.sort((a, b) => {
                 if (a._isPinned && !b._isPinned) return -1;
                 if (!a._isPinned && b._isPinned) return 1;
-                return new Date(b[0]) - new Date(a[0]);
+                const dateA = parseCustomDate(a[0]) || new Date(0);
+                const dateB = parseCustomDate(b[0]) || new Date(0);
+                return dateB - dateA;
             });
             filterData(); updateStats(fullData);
         }
@@ -1044,8 +1066,8 @@
                 fullData[idx]._isOverdue = false;
             } else if (fullData[idx][10] && fullData[idx][10] !== "-" && fullData[idx][10] !== "") {
                 const today = new Date(); today.setHours(0,0,0,0);
-                const dDate = new Date(fullData[idx][10]); dDate.setHours(0,0,0,0);
-                fullData[idx]._isOverdue = !isNaN(dDate) && dDate < today;
+                const dDate = parseCustomDate(fullData[idx][10]);
+                fullData[idx]._isOverdue = dDate && dDate < today;
             }
             
             filterData(); updateStats(fullData);
@@ -1087,11 +1109,10 @@
                 tableRowsHtml = `<tr><td colspan="5" style="text-align:center; color:#888; padding: 25px 0;">ไม่มีใบงานค้างในถังขยะครับ</td></tr>`;
             } else {
                 trashData.forEach(row => {
-                    const deleteDate = new Date(row.deletedDate);
+                    const deleteDate = parseCustomDate(row.deletedDate) || new Date(row.deletedDate);
                     let countdownHtml = '';
-                    if (!isNaN(deleteDate.getTime())) {
+                    if (deleteDate && !isNaN(deleteDate.getTime())) {
                         const today = new Date();
-                        // เคลียร์เศษเวลาของทั้งสองวันให้เป็นเที่ยงคืน เพื่อเปรียบเทียบจำนวนวันปฏิทินที่ผ่านไปอย่างคงที่
                         const d1 = new Date(deleteDate.getFullYear(), deleteDate.getMonth(), deleteDate.getDate());
                         const d2 = new Date(today.getFullYear(), today.getMonth(), today.getDate());
                         const diffDays = Math.floor((d2 - d1) / (1000 * 60 * 60 * 24));
@@ -1263,7 +1284,7 @@
     window.showFullDetail = function(rowJson) {
         const item = JSON.parse(decodeURIComponent(rowJson));
         let filesDetail = '-';
-        if (item[5]) {
+        if (item[5] && item[5] !== "-" && item[5] !== "") {
             const urls = item[5].split(", ");
             filesDetail = urls.map((u, i) => `<a href="${u}" target="_blank" style="color:var(--ios-blue); text-decoration:none; font-weight:600; margin-right:15px;"><i class="bi bi-file-earmark-text"></i> ไฟล์ที่ ${i+1}</a>`).join('');
         }
@@ -1425,7 +1446,11 @@
 
     function proceedToEdit(rowJson) {
         const item = JSON.parse(decodeURIComponent(rowJson));
-        selectedFiles = []; existingFiles = item[5] ? item[5].split(", ") : []; 
+        
+        // แก้ไขระบบสกัดกั้นบั๊กกรณีไม่มีไฟล์แนบ
+        selectedFiles = []; 
+        existingFiles = (item[5] && item[5] !== "-" && item[5] !== "") ? item[5].split(", ") : []; 
+        
         let typeOptions = `<option value="">-- เลือกประเภทงาน --</option>`;
         jobTypes.forEach(t => { typeOptions += `<option value="${t}" ${item[8] === t ? 'selected' : ''}>${t}</option>`; });
         
