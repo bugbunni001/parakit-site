@@ -53,7 +53,7 @@
         </button>
 
         <div class="flex justify-between items-center text-xs pt-2">
-          <button onclick="handleForgotPassword()" class="text-slate-400 hover:text-emerald-600"><i class="fa-solid fa-key mr-1"></i>ลืมรหัสผ่าน?</button>
+          <button onclick="handleForgotPasswordOTP()" class="text-slate-400 hover:text-emerald-600"><i class="fa-solid fa-key mr-1"></i>ลืมรหัสผ่าน?</button>
           <button onclick="openRegisterModal()" class="text-emerald-500 font-semibold hover:underline">สร้างบัญชีใหม่ <i class="fa-solid fa-arrow-right-to-bracket ml-1"></i></button>
         </div>
       </div>
@@ -99,9 +99,10 @@
   </div>
 
   <script>
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbydxBSxXrRz8y78ueYATOg--dOR_W7FHalUcrlauPnZi0e73zE9Vj70JbpWNn59P1aRWw/exec"; 
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwVG966YS_0-qCA4y7tJzIH2_nPj-9lBpHGYkZMFkPblCnJ-xlsmzjMKAQ_jmpT6nsm_w/exec"; 
     let currentUser = null;
-    let localLoadedImages = {}; // แคชเก็บรูปภาพความเร็วสูง
+    let localLoadedImages = {}; 
+    let lastMessageTimestamp = 0; // เก็บจุดเวลาล่าสุดเพื่อลดแบนด์วิดท์ในการ Sync ข้อความ
 
     document.addEventListener("DOMContentLoaded", () => {
       loadUserList();
@@ -113,14 +114,14 @@
         document.getElementById("my-name").innerText = currentUser.username;
         document.getElementById("my-avatar").src = currentUser.avatar;
         
-        // โหลดภาพพื้นหลังจำเพาะของแต่ละ User
         const savedBg = localStorage.getItem(`chat_bg_${currentUser.username}`);
         if(savedBg) { document.getElementById("chat-box").style.backgroundImage = `url('${savedBg}')`; }
         
         loadMessages();
       }
       
-      setInterval(loadMessages, 3000);
+      // ดึงข้อมูลแชทแบบ Real-time ความเร็วสูง
+      setInterval(loadMessages, 2500);
     });
 
     function loadUserList() {
@@ -143,12 +144,19 @@
       const password = document.getElementById("login-password").value;
       if(!username || !password) return;
 
+      // แสดงสปินเนอร์เพื่อความลื่นไหลแบบทันทีทันใด
+      const btn = document.querySelector("button[onclick='handleLogin()']");
+      btn.disabled = true;
+      btn.innerText = "กำลังตรวจสอบ...";
+
       fetch(WEB_APP_URL, {
         method: "POST",
         body: JSON.stringify({ action: "login", username, password })
       })
       .then(res => res.json())
       .then(res => {
+        btn.disabled = false;
+        btn.innerText = "เข้าสู่ระบบแชท";
         if(res.success) {
           currentUser = res.user;
           localStorage.setItem("chat_current_user", JSON.stringify(currentUser));
@@ -204,26 +212,94 @@
       });
     }
 
-    function handleForgotPassword() {
+    // ฟังก์ชันระบบกู้รหัสผ่านผ่าน OTP ป้อนในหน้าเว็บโดยตรง
+    function handleForgotPasswordOTP() {
       Swal.fire({
         title: 'ลืมรหัสผ่าน',
         input: 'text',
-        inputLabel: 'ระบุ Username ของคุณเพื่อส่งคำขอรีเซ็ต',
+        inputLabel: 'ระบุ Username ของคุณเพื่อรับรหัส OTP ในเมล',
         inputPlaceholder: 'กรอก Username...',
         showCancelButton: true,
-        confirmButtonText: 'ส่งลิงก์รีเซ็ต',
+        confirmButtonText: 'ส่งรหัส OTP',
         cancelButtonText: 'ยกเลิก',
         didOpen: () => {
           Swal.getInput().addEventListener('keyup', (e) => { if(e.key==='Enter') Swal.clickConfirm(); });
         }
       }).then((result) => {
         if (result.value) {
+          const targetUser = result.value;
+          
+          // หน้าต่างโหลดพื้นหลังทันทีระหว่างยิง OTP เข้าเมล
+          Swal.fire({ title: 'กำลังส่งรหัส OTP เข้าอีเมล...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+
           fetch(WEB_APP_URL, {
             method: "POST",
-            body: JSON.stringify({ action: "forgot", username: result.value })
-          }).then(res => res.json()).then(data => {
+            body: JSON.stringify({ action: "sendOTP", username: targetUser })
+          })
+          .then(res => res.json())
+          .then(data => {
             if(data.success) {
-              Swal.fire('สำเร็จ', `${data.message} <br><br><b>ลิงก์สำหรับคลิกเพื่อตั้งรหัสใหม่ทันที:</b><br><a href="${data.debugLink}" target="_blank" style="color:#10b981;word-break:break-all;">${data.debugLink}</a>`, 'success');
+              // เปิดหน้าต่างกรอกรหัส OTP ทันที
+              Swal.fire({
+                title: 'กรอกรหัส OTP',
+                text: 'กรุณานำรหัส OTP 6 หลักจากอีเมลของคุณมากรอกในช่องด้านล่าง',
+                input: 'text',
+                inputPlaceholder: 'กรอกรหัส 6 หลักที่นี่...',
+                showCancelButton: true,
+                confirmButtonText: 'ยืนยันรหัส',
+                cancelButtonText: 'ยกเลิก',
+                didOpen: () => {
+                  Swal.getInput().addEventListener('keyup', (e) => { if(e.key==='Enter') Swal.clickConfirm(); });
+                },
+                preConfirm: (otpCode) => {
+                  if(!otpCode || otpCode.length !== 6) { Swal.showValidationMessage('กรุณากรอกรหัส OTP ให้ครบ 6 หลักครับ'); return; }
+                  return otpCode;
+                }
+              }).then((otpResult) => {
+                if(otpResult.value) {
+                  // ส่งตรวจสอบความถูกต้องของรหัส OTP
+                  fetch(WEB_APP_URL, {
+                    method: "POST",
+                    body: JSON.stringify({ action: "verifyOTP", username: targetUser, otp: otpResult.value })
+                  })
+                  .then(res => res.json())
+                  .then(verifyData => {
+                    if(verifyData.success) {
+                      // เปิดหน้าต่างรีเซ็ตรหัสผ่านใหม่ทันที
+                      Swal.fire({
+                        title: 'ตั้งรหัสผ่านใหม่',
+                        html: `
+                          <input type="password" id="new-pwd-otp" class="swal2-input" placeholder="ป้อนรหัสผ่านใหม่ (ขั้นต่ำ 8 ตัว)" onkeypress="if(event.key==='Enter') Swal.clickConfirm()">
+                          <input type="password" id="confirm-pwd-otp" class="swal2-input" placeholder="ยืนยันรหัสผ่านอีกครั้ง" onkeypress="if(event.key==='Enter') Swal.clickConfirm()">
+                        `,
+                        confirmButtonText: 'เปลี่ยนรหัสผ่าน',
+                        showCancelButton: true,
+                        cancelButtonText: 'ยกเลิก',
+                        preConfirm: () => {
+                          const p1 = Swal.getPopup().querySelector('#new-pwd-otp').value;
+                          const p2 = Swal.getPopup().querySelector('#confirm-pwd-otp').value;
+                          if(!p1 || !p2) { Swal.showValidationMessage('กรุณากรอกรหัสผ่านให้ครบถ้วนครับ'); return; }
+                          if(p1.length < 8) { Swal.showValidationMessage('รหัสผ่านต้องมีความยาวอย่างน้อย 8 ตัวอักษรขึ้นไปครับ'); return; }
+                          if(p1 !== p2) { Swal.showValidationMessage('รหัสผ่านทั้งสองช่องไม่ตรงกันครับ'); return; }
+                          return p1;
+                        }
+                      }).then((newPwdResult) => {
+                        if(newPwdResult.value) {
+                          // อัปเดตรหัสผ่านใหม่ลงชีตทันที
+                          fetch(WEB_APP_URL, {
+                            method: "POST",
+                            body: JSON.stringify({ action: "resetPasswordOTP", username: targetUser, token: verifyData.token, newPassword: newPwdResult.value })
+                          }).then(res => res.json()).then(finalRes => {
+                            Swal.fire(finalRes.success ? 'สำเร็จ!' : 'ล้มเหลว', finalRes.message, finalRes.success ? 'success' : 'error');
+                          });
+                        }
+                      });
+                    } else {
+                      Swal.fire('ข้อผิดพลาด', verifyData.message, 'error');
+                    }
+                  });
+                }
+              });
             } else {
               Swal.fire('ข้อผิดพลาด', data.message, 'error');
             }
@@ -232,7 +308,7 @@
       });
     }
 
-    // ฟังก์ชัน Optimistic UI ทำงานเบื้องหลัง ไม่ล็อกหน้าจอ
+    // ฟังก์ชันความเร็วสูงยิงข้อความแสดงผลแบบ 0.1 วินาที (Optimistic UI)
     function sendText() {
       const input = document.getElementById("msg-input");
       const content = input.value.trim();
@@ -313,7 +389,6 @@
               const isImage = /\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(msg.fileName);
               
               if (isImage) {
-                // ตัวแปลงแชทความเร็วสูง: ดึง Base64 จาก Cache ถ้าโหลดไปแล้ว
                 const cachedData = localLoadedImages[msg.content];
                 const imgSrc = cachedData ? cachedData : "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
                 const lazyClass = cachedData ? "" : "lazy-stream-img";
@@ -350,6 +425,7 @@
               </div>
             `;
           });
+          
           const isScrollBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 200;
           container.innerHTML = html;
           
@@ -358,7 +434,6 @@
         });
     }
 
-    // ดึงรูปภาพแบบมัลติเธรด โหลดภาพทันทีใน 0.3 วินาที
     function lazyLoadStreamImages() {
       document.querySelectorAll(".lazy-stream-img").forEach(img => {
         const fileId = img.getAttribute("data-id");
@@ -369,7 +444,7 @@
               if(base64) { 
                 const fullSrc = "data:image/jpeg;base64," + base64;
                 img.src = fullSrc;
-                localLoadedImages[fileId] = fullSrc; // จำลง Memory แคชลดภาระส่ง API
+                localLoadedImages[fileId] = fullSrc; 
               }
             });
         }
@@ -419,7 +494,6 @@
       document.body.removeChild(a);
     }
 
-    // ฟังก์ชันส่งไฟล์แบบไม่ล็อกหน้าจอ โหลดเบื้องหลัง
     function handleFileUpload(e) {
       const file = e.target.files[0];
       if (!file) return;
@@ -430,7 +504,6 @@
       reader.onload = function(event) {
         const base64Data = event.target.result;
         
-        // ถ้าเป็นภาพให้ขึ้นกล่องภาพจำลองในแชทรอไว้ทันทีแบบ Real-time
         if(isImage) {
           appendOptimisticMessage({ sender: currentUser.username, type: "file-preview", content: base64Data, timeStr: getNowTimeStr(), avatar: currentUser.avatar });
         }
@@ -474,7 +547,6 @@
       });
     }
 
-    // ฟังก์ชันเปลี่ยนภาพพื้นหลังของแต่ละบุคคลด้วย Link รูปภาพ 
     function changeChatBgLink() {
       Swal.fire({
         title: 'เปลี่ยนภาพพื้นหลังแชท',
@@ -486,7 +558,7 @@
       }).then((result) => {
         if (result.value) {
           document.getElementById("chat-box").style.backgroundImage = `url('${result.value}')`;
-          localStorage.setItem(`chat_bg_${currentUser.username}`, result.value); // เซฟจำแยกกันแต่ละไอดี
+          localStorage.setItem(`chat_bg_${currentUser.username}`, result.value);
           Swal.fire('สำเร็จ', 'ปรับเปลี่ยนภาพพื้นหลังเฉพาะคุณเรียบร้อยแล้วครับ', 'success');
         }
       });
