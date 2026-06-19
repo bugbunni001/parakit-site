@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Premium LINE Web Chat</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  
+  <style>
+    body { font-family: 'Prompt', sans-serif; background: #7494c4; }
+    .premium-glass { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.5); }
+    .swal2-popup { font-family: 'Prompt', sans-serif !important; border-radius: 20px !important; }
+    .chat-bg { background-color: #abc1de; background-size: cover; background-position: center; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+  </style>
+</head>
+<body class="h-screen flex items-center justify-center p-0 md:p-4">
+
+  <div class="w-full h-full md:max-w-md md:h-[85vh] premium-glass md:rounded-3xl shadow-2xl flex flex-col overflow-hidden relative">
+    
+    <div id="auth-screen" class="absolute inset-0 bg-white z-40 flex flex-col p-6 justify-center">
+      <div class="text-center mb-8">
+        <div class="w-20 h-20 bg-emerald-500 rounded-3xl mx-auto flex items-center justify-center text-white text-4xl shadow-lg mb-4">
+          <i class="fa-solid fa-comments"></i>
+        </div>
+        <h2 class="text-2xl font-bold text-slate-800">Chat Parakit Web Connect</h2>
+        <p class="text-xs text-slate-400 mt-1">กรุณาเลือกผู้ใช้งานและเข้าสู่ระบบ</p>
+      </div>
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-500 mb-1.5"><i class="fa-solid fa-user-tag mr-1"></i> เลือก User ในระบบ</label>
+          <select id="user-select" class="w-full p-3 rounded-xl border border-slate-200 bg-slate-50 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            <option value="">-- กำลังโหลดรายชื่อผู้ใช้ --</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-500 mb-1.5">Username</label>
+          <input type="text" id="login-username" placeholder="กรอกชื่อผู้ใช้" class="w-full p-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-500 mb-1.5">Password</label>
+          <input type="password" id="login-password" placeholder="กรอกรหัสผ่าน" class="w-full p-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+        </div>
+
+        <button onclick="handleLogin()" class="w-full py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-medium shadow-md transition duration-300">
+          เข้าสู่ระบบแชท
+        </button>
+
+        <div class="flex justify-between items-center text-xs pt-2">
+          <button onclick="handleForgotPassword()" class="text-slate-400 hover:text-emerald-600"><i class="fa-solid fa-key mr-1"></i>ลืมรหัสผ่าน?</button>
+          <button onclick="openRegisterModal()" class="text-emerald-500 font-semibold hover:underline">สร้างบัญชีใหม่ <i class="fa-solid fa-arrow-right-to-bracket ml-1"></i></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="p-4 bg-slate-800 text-white flex items-center justify-between shadow-md">
+      <div class="flex items-center gap-3">
+        <div class="relative cursor-pointer" onclick="changeUserAvatar()">
+          <img id="my-avatar" src="" class="w-10 h-10 rounded-full border-2 border-emerald-400 object-cover">
+          <span class="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-slate-800 rounded-full"></span>
+        </div>
+        <div>
+          <h3 id="my-name" class="font-semibold text-sm">Username</h3>
+          <p class="text-[10px] text-emerald-400"><i class="fa-solid fa-circle text-[8px] mr-1"></i>ออนไลน์ห้องรวม</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-4 text-lg text-slate-300">
+        <label class="cursor-pointer hover:text-white" title="เปลี่ยนพื้นหลัง">
+          <i class="fa-solid fa-image"></i>
+          <input type="file" id="bg-input" accept="image/*" class="hidden" onchange="changeChatBg(event)">
+        </label>
+        <button onclick="location.reload()" title="ออกจากระบบ" class="hover:text-rose-400"><i class="fa-solid fa-right-from-bracket"></i></button>
+      </div>
+    </div>
+
+    <div id="chat-box" class="flex-1 chat-bg p-4 overflow-y-auto no-scrollbar space-y-3">
+      </div>
+
+    <div class="p-3 bg-white border-t border-slate-100 flex flex-col gap-2">
+      <div class="flex items-center gap-3 text-slate-400 text-sm px-1">
+        <button onclick="showEmojiPicker()" class="hover:text-amber-500" title="ส่งอิโมจิ"><i class="fa-regular fa-face-smile text-lg"></i></button>
+        <button onclick="showStickerPicker()" class="hover:text-blue-500" title="ส่งสติ๊กเกอร์"><i class="fa-regular fa-note-sticky text-lg"></i></button>
+        <label class="cursor-pointer hover:text-emerald-500" title="ส่งไฟล์ทุกประเภท">
+          <i class="fa-solid fa-paperclip text-lg"></i>
+          <input type="file" id="file-input" class="hidden" onchange="handleFileUpload(event)">
+        </label>
+      </div>
+      
+      <div class="flex items-center gap-2">
+        <input type="text" id="msg-input" onkeypress="if(event.key==='Enter') sendText()" placeholder="พิมพ์ข้อความที่นี่..." class="flex-1 p-2.5 px-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500">
+        <button onclick="sendText()" class="w-10 h-10 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full flex items-center justify-center shadow-md transition"><i class="fa-solid fa-paper-plane text-xs"></i></button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // คัดลอก URL ของ Web App จาก Google Apps Script มาใส่ตรงนี้ครับ
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyXjVSf9GNuxaz57Z_3MYfNuwoUeo-zxIc1B3bSwXDAEzdnlAXp0CL8ZVfhYMZyhNUwiw/exec"; 
+    
+    let currentUser = null;
+
+    document.addEventListener("DOMContentLoaded", () => {
+      loadUserList();
+      setInterval(loadMessages, 3000); // อัปเดตข้อความห้องแชทอัตโนมัติทุกๆ 3 วินาที
+    });
+
+    function loadUserList() {
+      fetch(`${WEB_APP_URL}?action=getUsers`)
+        .then(res => res.json())
+        .then(users => {
+          const select = document.getElementById("user-select");
+          if(users.length === 0){
+            select.innerHTML = `<option value="">ยังไม่มี User ในระบบ</option>`;
+            return;
+          }
+          select.innerHTML = users.map(u => `<option value="${u.username}">${u.username}</option>`).join('');
+          document.getElementById("login-username").value = select.value;
+          select.onchange = () => { document.getElementById("login-username").value = select.value; };
+        });
+    }
+
+    function handleLogin() {
+      const username = document.getElementById("login-username").value;
+      const password = document.getElementById("login-password").value;
+      
+      if(!username || !password) return;
+
+      fetch(WEB_APP_URL, {
+        method: "POST",
+        body: JSON.stringify({ action: "login", username, password })
+      })
+      .then(res => res.json())
+      .then(res => {
+        if(res.success) {
+          currentUser = res.user;
+          document.getElementById("auth-screen").classList.add("hidden");
+          document.getElementById("my-name").innerText = currentUser.username;
+          document.getElementById("my-avatar").src = currentUser.avatar;
+          loadMessages();
+        } else {
+          // แจ้งเตือนผ่าน SweetAlert เมื่อรหัสผ่านผิด
+          Swal.fire({ icon: 'error', title: 'เข้าสู่ระบบล้มเหลว', text: res.message, confirmButtonColor: '#ef4444' });
+        }
+      });
+    }
+
+    function openRegisterModal() {
+      Swal.fire({
+        title: 'สร้างบัญชีผู้ใช้ใหม่',
+        html: `
+          <input type="text" id="reg-user" class="swal2-input" placeholder="Username">
+          <input type="password" id="reg-pass" class="swal2-input" placeholder="Password">
+          <input type="email" id="reg-email" class="swal2-input" placeholder="Email สำหรับรีเซ็ตรหัสผ่าน">
+        `,
+        confirmButtonText: 'สมัครสมาชิก',
+        showCancelButton: true,
+        cancelButtonText: 'ยกเลิก',
+        preConfirm: () => {
+          const username = Swal.getPopup().querySelector('#reg-user').value;
+          const password = Swal.getPopup().querySelector('#reg-pass').value;
+          const email = Swal.getPopup().querySelector('#reg-email').value;
+          if (!username || !password || !email) { Swal.showValidationMessage(`กรุณากรอกข้อมูลให้ครบทุกช่องครับ`) }
+          return { username, password, email }
+        }
+      }).then((result) => {
+        if (result.isConfirmed) {
+          fetch(WEB_APP_URL, {
+            method: "POST",
+            body: JSON.stringify({ action: "register", ...result.value })
+          }).then(res => res.json()).then(data => {
+            Swal.fire(data.success ? 'สำเร็จ!' : 'ล้มเหลว', data.message, data.success ? 'success' : 'error').then(() => loadUserList());
+          });
+        }
+      });
+    }
+
+    function handleForgotPassword() {
+      Swal.fire({
+        title: 'ลืมรหัสผ่าน',
+        input: 'text',
+        inputLabel: 'ระบุ Username ของคุณเพื่อส่งคำขอรีเซ็ต',
+        inputPlaceholder: 'กรอก Username...',
+        showCancelButton: true,
+        confirmButtonText: 'ส่งลิงก์รีเซ็ต',
+        cancelButtonText: 'ยกเลิก'
+      }).then((result) => {
+        if (result.value) {
+          fetch(WEB_APP_URL, {
+            method: "POST",
+            body: JSON.stringify({ action: "forgot", username: result.value })
+          }).then(res => res.json()).then(data => {
+            if(data.success) {
+              Swal.fire('สำเร็จ', `${data.message} <br><br><b>ลิงก์สำหรับคลิกเพื่อตั้งรหัสใหม่ทันที:</b><br><a href="${data.debugLink}" target="_blank" style="color:#10b981;word-break:break-all;">${data.debugLink}</a>`, 'success');
+            } else {
+              Swal.fire('ข้อผิดพลาด', data.message, 'error');
+            }
+          });
+        }
+      });
+    }
+
+    function sendText() {
+      const input = document.getElementById("msg-input");
+      const content = input.value.trim();
+      if(!content) return;
+      input.value = "";
+      
+      fetch(WEB_APP_URL, {
+        method: "POST",
+        body: JSON.stringify({ action: "sendMessage", username: currentUser.username, type: "text", content })
+      }).then(() => loadMessages());
+    }
+
+    function loadMessages() {
+      if(!currentUser) return;
+      fetch(`${WEB_APP_URL}?action=getMessages`)
+        .then(res => res.json())
+        .then(messages => {
+          const container = document.getElementById("chat-box");
+          let html = "";
+          messages.forEach(msg => {
+            const isMe = msg.sender === currentUser.username;
+            let contentHtml = "";
+
+            if (msg.type === "text") {
+              contentHtml = `<div class="p-2.5 px-4 rounded-2xl text-sm ${isMe ? 'bg-emerald-400 text-white rounded-tr-none' : 'bg-white text-slate-800 rounded-tl-none'} shadow-sm">${msg.content}</div>`;
+            } else if (msg.type === "sticker") {
+              contentHtml = `<img src="${msg.content}" class="w-24 h-24 object-contain">`;
+            } else if (msg.type === "file") {
+              contentHtml = `
+                <a href="${msg.content}" target="_blank" class="p-3 rounded-2xl bg-white border flex items-center gap-3 shadow-sm max-w-[240px]">
+                  <div class="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600"><i class="fa-solid fa-file-arrow-down text-lg"></i></div>
+                  <div class="overflow-hidden">
+                    <p class="text-xs font-semibold text-slate-700 truncate">${msg.fileName}</p>
+                    <p class="text-[10px] text-slate-400">คลิกดาวน์โหลดไฟล์</p>
+                  </div>
+                </a>
+              `;
+            }
+
+            html += `
+              <div class="flex items-start gap-2.5 ${isMe ? 'flex-row-reverse' : ''}">
+                <img src="${msg.avatar}" class="w-8 h-8 rounded-full object-cover shadow-sm">
+                <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'}">
+                  <span class="text-[10px] text-slate-600 mb-0.5">${msg.sender}</span>
+                  <div class="flex items-end gap-1.5 ${isMe ? 'flex-row-reverse' : ''}">
+                    ${contentHtml}
+                    <span class="text-[9px] text-slate-500">${msg.timeStr}</span>
+                  </div>
+                </div>
+              </div>
+            `;
+          });
+          const isScrollBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 100;
+          container.innerHTML = html;
+          if(isScrollBottom) { container.scrollTop = container.scrollHeight; }
+        });
+    }
+
+    function handleFileUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      Swal.fire({ title: 'กำลังอัปโหลดไฟล์ไปที่ Drive...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        const base64Data = event.target.result;
+        fetch(WEB_APP_URL, {
+          method: "POST",
+          body: JSON.stringify({ action: "uploadFile", base64Data, fileName: file.name, mimeType: file.type })
+        }).then(res => res.json()).then(data => {
+          if(data.success) {
+            fetch(WEB_APP_URL, {
+              method: "POST",
+              body: JSON.stringify({ action: "sendMessage", username: currentUser.username, type: "file", content: data.url, fileName: file.name })
+            }).then(() => { Swal.close(); loadMessages(); });
+          }
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function showEmojiPicker() {
+      const emojis = ["😀", "😂", "🥰", "😎", "👍", "🙏", "🎉", "🔥", "❤️", "✨"];
+      Swal.fire({
+        title: 'เลือกคีย์บอร์ดอิโมจิ',
+        html: `<div class="grid grid-cols-5 gap-3 text-2xl">${emojis.map(e => `<span onclick="insertEmoji('${e}')" class="cursor-pointer hover:scale-125 transition">${e}</span>`).join('')}</div>`,
+        showConfirmButton: false
+      });
+    }
+    function insertEmoji(e) { document.getElementById("msg-input").value += e; Swal.close(); }
+
+    function showStickerPicker() {
+      const stickers = [
+        "https://fonts.gstatic.com/s/e/notoemoji/latest/1f431/512.webp",
+        "https://fonts.gstatic.com/s/e/notoemoji/latest/1f436/512.webp",
+        "https://fonts.gstatic.com/s/e/notoemoji/latest/1f98a/512.webp",
+        "https://fonts.gstatic.com/s/e/notoemoji/latest/1f42a/512.webp"
+      ];
+      Swal.fire({
+        title: 'ส่งสติ๊กเกอร์ด่วน',
+        html: `<div class="grid grid-cols-2 gap-4">${stickers.map(s => `<img src="${s}" onclick="sendSticker('${s}')" class="w-20 h-20 mx-auto cursor-pointer hover:scale-110 transition">`).join('')}</div>`,
+        showConfirmButton: false
+      });
+    }
+    function sendSticker(url) {
+      fetch(WEB_APP_URL, {
+        method: "POST",
+        body: JSON.stringify({ action: "sendMessage", username: currentUser.username, type: "sticker", content: url })
+      }).then(() => { Swal.close(); loadMessages(); });
+    }
+
+    function changeChatBg(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (ev) => { document.getElementById("chat-box").style.backgroundImage = `url(${ev.target.result})`; };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function changeUserAvatar() {
+      Swal.fire({
+        title: 'เปลี่ยนรูปโปรไฟล์ของคุณ',
+        input: 'url',
+        inputLabel: 'ใส่ URL ลิงก์รูปภาพใหม่ของคุณที่นี่',
+        inputPlaceholder: 'https://example.com/image.jpg',
+        showCancelButton: true
+      }).then((result) => {
+        if (result.value) {
+          fetch(WEB_APP_URL, {
+            method: "POST",
+            body: JSON.stringify({ action: "updateAvatar", username: currentUser.username, avatarUrl: result.value })
+          }).then(() => {
+            currentUser.avatar = result.value;
+            document.getElementById("my-avatar").src = result.value;
+            Swal.fire('สำเร็จ', 'อัปเดตรูปประจำตัวเรียบร้อยแล้วครับ', 'success');
+          });
+        }
+      });
+    }
+  </script>
+</body>
+</html>
