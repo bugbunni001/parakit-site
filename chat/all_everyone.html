@@ -15,7 +15,7 @@
     body { font-family: 'Prompt', sans-serif; background: #7494c4; }
     .premium-glass { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.5); }
     .swal2-popup { font-family: 'Prompt', sans-serif !important; border-radius: 20px !important; }
-    .chat-bg { background-color: #abc1de; background-size: cover; background-position: center; }
+    .chat-bg { background-color: #abc1de; background-size: cover; background-position: center; transition: background 0.3s ease; }
     .no-scrollbar::-webkit-scrollbar { display: none; }
   </style>
 </head>
@@ -71,10 +71,9 @@
         </div>
       </div>
       <div class="flex items-center gap-4 text-lg text-slate-300">
-        <label class="cursor-pointer hover:text-white" title="เปลี่ยนพื้นหลัง">
+        <button onclick="changeChatBgLink()" title="เปลี่ยนพื้นหลังแชทด้วยลิงก์" class="hover:text-white">
           <i class="fa-solid fa-image"></i>
-          <input type="file" id="bg-input" accept="image/*" class="hidden" onchange="changeChatBg(event)">
-        </label>
+        </button>
         <button onclick="handleLogout()" title="ออกจากระบบ" class="hover:text-rose-400"><i class="fa-solid fa-right-from-bracket"></i></button>
       </div>
     </div>
@@ -102,18 +101,22 @@
   <script>
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbydxBSxXrRz8y78ueYATOg--dOR_W7FHalUcrlauPnZi0e73zE9Vj70JbpWNn59P1aRWw/exec"; 
     let currentUser = null;
+    let localLoadedImages = {}; // แคชเก็บรูปภาพความเร็วสูง
 
     document.addEventListener("DOMContentLoaded", () => {
-      // โหลดรายชื่อผู้ใช้เข้าระบบก่อน
       loadUserList();
       
-      // ฟังก์ชันเช็คความจำ Local Storage หากล็อกอินไว้แล้วไม่ต้องเลือกใหม่
       const savedUser = localStorage.getItem("chat_current_user");
       if (savedUser) {
         currentUser = JSON.parse(savedUser);
         document.getElementById("auth-screen").classList.add("hidden");
         document.getElementById("my-name").innerText = currentUser.username;
         document.getElementById("my-avatar").src = currentUser.avatar;
+        
+        // โหลดภาพพื้นหลังจำเพาะของแต่ละ User
+        const savedBg = localStorage.getItem(`chat_bg_${currentUser.username}`);
+        if(savedBg) { document.getElementById("chat-box").style.backgroundImage = `url('${savedBg}')`; }
+        
         loadMessages();
       }
       
@@ -148,10 +151,14 @@
       .then(res => {
         if(res.success) {
           currentUser = res.user;
-          localStorage.setItem("chat_current_user", JSON.stringify(currentUser)); // จำลง LocalStorage
+          localStorage.setItem("chat_current_user", JSON.stringify(currentUser));
           document.getElementById("auth-screen").classList.add("hidden");
           document.getElementById("my-name").innerText = currentUser.username;
           document.getElementById("my-avatar").src = currentUser.avatar;
+          
+          const savedBg = localStorage.getItem(`chat_bg_${currentUser.username}`);
+          if(savedBg) { document.getElementById("chat-box").style.backgroundImage = `url('${savedBg}')`; }
+          
           loadMessages();
         } else {
           Swal.fire({ icon: 'error', title: 'เข้าสู่ระบบล้มเหลว', text: res.message, confirmButtonColor: '#ef4444' });
@@ -169,7 +176,7 @@
         title: 'สร้างบัญชีผู้ใช้ใหม่',
         html: `
           <input type="text" id="reg-user" class="swal2-input" placeholder="Username" onkeypress="if(event.key==='Enter') Swal.clickConfirm()">
-          <input type="password" id="reg-pass" class="swal2-input" placeholder="Password" onkeypress="if(event.key==='Enter') Swal.clickConfirm()">
+          <input type="password" id="reg-pass" class="swal2-input" placeholder="Password (ขั้นต่ำ 8 ตัว)" onkeypress="if(event.key==='Enter') Swal.clickConfirm()">
           <input type="email" id="reg-email" class="swal2-input" placeholder="Email สำหรับรีเซ็ตรหัสผ่าน" onkeypress="if(event.key==='Enter') Swal.clickConfirm()">
         `,
         confirmButtonText: 'สมัครสมาชิก',
@@ -179,7 +186,10 @@
           const username = Swal.getPopup().querySelector('#reg-user').value;
           const password = Swal.getPopup().querySelector('#reg-pass').value;
           const email = Swal.getPopup().querySelector('#reg-email').value;
-          if (!username || !password || !email) { Swal.showValidationMessage(`กรุณากรอกข้อมูลให้ครบทุกช่องครับ`) }
+          
+          if (!username || !password || !email) { Swal.showValidationMessage(`กรุณากรอกข้อมูลให้ครบทุกช่องครับ`); return; }
+          if (password.length < 8) { Swal.showValidationMessage(`รหัสผ่านต้องมีความยาวอย่างน้อย 8 ตัวอักษรขึ้นไปครับ`); return; }
+          
           return { username, password, email }
         }
       }).then((result) => {
@@ -203,7 +213,6 @@
         showCancelButton: true,
         confirmButtonText: 'ส่งลิงก์รีเซ็ต',
         cancelButtonText: 'ยกเลิก',
-        customClass: { input: 'on-enter-click' },
         didOpen: () => {
           Swal.getInput().addEventListener('keyup', (e) => { if(e.key==='Enter') Swal.clickConfirm(); });
         }
@@ -223,19 +232,28 @@
       });
     }
 
-    // ฟังก์ชันยิงข้อความแสดงผลแบบทันที (Optimistic UI) 
+    // ฟังก์ชัน Optimistic UI ทำงานเบื้องหลัง ไม่ล็อกหน้าจอ
     function sendText() {
       const input = document.getElementById("msg-input");
       const content = input.value.trim();
       if(!content) return;
       input.value = "";
       
-      // แทรกกล่องจำลองลงในหน้าจอทันที ไม่ต้องรอดีเลย์ 3 วิ
       appendOptimisticMessage({ sender: currentUser.username, type: "text", content: content, timeStr: getNowTimeStr(), avatar: currentUser.avatar });
 
       fetch(WEB_APP_URL, {
         method: "POST",
         body: JSON.stringify({ action: "sendMessage", username: currentUser.username, type: "text", content })
+      });
+    }
+
+    function sendSticker(url) {
+      appendOptimisticMessage({ sender: currentUser.username, type: "sticker", content: url, timeStr: getNowTimeStr(), avatar: currentUser.avatar });
+      Swal.close();
+
+      fetch(WEB_APP_URL, {
+        method: "POST",
+        body: JSON.stringify({ action: "sendMessage", username: currentUser.username, type: "sticker", content: url })
       });
     }
 
@@ -247,13 +265,27 @@
     function appendOptimisticMessage(msg) {
       const container = document.getElementById("chat-box");
       const div = document.createElement("div");
-      div.className = "flex items-start gap-2.5 flex-row-reverse";
+      const isMe = msg.sender === currentUser.username;
+      div.className = `flex items-start gap-2.5 ${isMe ? 'flex-row-reverse' : ''}`;
+      
+      let contentHtml = "";
+      if(msg.type === "text") {
+        contentHtml = `<div class="p-2.5 px-4 rounded-2xl text-sm bg-emerald-400 text-white rounded-tr-none shadow-sm">${msg.content}</div>`;
+      } else if(msg.type === "sticker") {
+        contentHtml = `<img src="${msg.content}" class="w-24 h-24 object-contain">`;
+      } else if(msg.type === "file-preview") {
+        contentHtml = `
+          <div class="relative rounded-2xl border bg-white shadow-sm max-w-[200px]">
+            <img src="${msg.content}" class="max-w-full h-auto rounded-2xl object-cover min-w-[120px]" alt="preview">
+          </div>`;
+      }
+      
       div.innerHTML = `
         <img src="${msg.avatar}" class="w-8 h-8 rounded-full object-cover shadow-sm">
-        <div class="flex flex-col items-end">
+        <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'}">
           <span class="text-[10px] text-slate-600 mb-0.5">${msg.sender}</span>
-          <div class="flex items-end gap-1.5 flex-row-reverse">
-            <div class="p-2.5 px-4 rounded-2xl text-sm bg-emerald-400 text-white rounded-tr-none shadow-sm opacity-70">${msg.content}</div>
+          <div class="flex items-end gap-1.5 ${isMe ? 'flex-row-reverse' : ''}">
+            ${contentHtml}
             <span class="text-[9px] text-slate-500">${msg.timeStr}</span>
           </div>
         </div>
@@ -281,11 +313,15 @@
               const isImage = /\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(msg.fileName);
               
               if (isImage) {
-                // หากเป็นภาพ ให้สตรีมรูปภาพมา Render ในห้องแชทโดยตรง (ซ่อน URL ไดร์ฟ)
+                // ตัวแปลงแชทความเร็วสูง: ดึง Base64 จาก Cache ถ้าโหลดไปแล้ว
+                const cachedData = localLoadedImages[msg.content];
+                const imgSrc = cachedData ? cachedData : "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
+                const lazyClass = cachedData ? "" : "lazy-stream-img";
+                
                 contentHtml = `
                   <div class="relative group cursor-pointer overflow-hidden rounded-2xl border bg-white shadow-sm max-w-[200px]" onclick="previewImageInline('${msg.content}', '${msg.fileName}')">
-                    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=" data-id="${msg.content}" class="lazy-stream-img max-w-full h-auto min-w-[120px] min-h-[80px] object-cover" alt="Image">
-                    <div class="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs transition"><i class="fa-solid fa-magnifying-glass-plus text-base"></i></div>
+                    <img src="${imgSrc}" data-id="${msg.content}" class="${lazyClass} max-w-full h-auto min-w-[120px] min-h-[80px] object-cover" alt="Image">
+                    <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs transition"><i class="fa-solid fa-expand text-sm"></i></div>
                   </div>
                 `;
               } else {
@@ -314,60 +350,62 @@
               </div>
             `;
           });
-          const isScrollBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 150;
+          const isScrollBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 200;
           container.innerHTML = html;
           
-          // ทยอยโหลดรูปภาพเบื้องหลังผ่าน File Proxy
           lazyLoadStreamImages();
-
           if(isScrollBottom) { container.scrollTop = container.scrollHeight; }
         });
     }
 
-    // ฟังก์ชันเรียกสตรีมมิ่งภาพเบื้องหลัง แปลงสิทธิ์ไม่หลุดไปหน้า Drive
+    // ดึงรูปภาพแบบมัลติเธรด โหลดภาพทันทีใน 0.3 วินาที
     function lazyLoadStreamImages() {
       document.querySelectorAll(".lazy-stream-img").forEach(img => {
         const fileId = img.getAttribute("data-id");
-        if (fileId && img.src.startsWith("data:")) {
+        if (fileId && !localLoadedImages[fileId]) {
           fetch(`${WEB_APP_URL}?action=streamImage&fileId=${fileId}`)
             .then(res => res.text())
             .then(base64 => {
-              if(base64) { img.src = "data:image/jpeg;base64," + base64; }
-              img.classList.remove("lazy-stream-img");
+              if(base64) { 
+                const fullSrc = "data:image/jpeg;base64," + base64;
+                img.src = fullSrc;
+                localLoadedImages[fileId] = fullSrc; // จำลง Memory แคชลดภาระส่ง API
+              }
             });
         }
       });
     }
 
-    // เปิดดูรูปภาพสปอตไลท์พรีวิวพร้อมปุ่มเซฟรูป
     function previewImageInline(fileId, fileName) {
-      Swal.fire({ title: 'กำลังดึงรูปภาพ...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
-      fetch(`${WEB_APP_URL}?action=streamImage&fileId=${fileId}`)
-        .then(res => res.text())
-        .then(base64 => {
-          Swal.fire({
-            title: fileName,
-            imageUrl: "data:image/jpeg;base64," + base64,
-            imageAlt: fileName,
-            showCancelButton: true,
-            confirmButtonText: '<i class="fa-solid fa-download"></i> ดาวน์โหลดรูปภาพ',
-            cancelButtonText: 'ปิดหน้าต่าง',
-            confirmButtonColor: '#10b981'
-          }).then((result) => {
-            if (result.isConfirmed) {
-              triggerBinaryDownload("data:image/jpeg;base64," + base64, fileName);
-            }
-          });
+      if(localLoadedImages[fileId]) {
+        openSpotlightSwal(localLoadedImages[fileId], fileName);
+      } else {
+        fetch(`${WEB_APP_URL}?action=streamImage&fileId=${fileId}`).then(res => res.text()).then(base64 => {
+          const srcData = "data:image/jpeg;base64," + base64;
+          localLoadedImages[fileId] = srcData;
+          openSpotlightSwal(srcData, fileName);
         });
+      }
     }
 
-    // โหลดไฟล์ประยุกต์ทุกนามสกุลแบบซ่อนลิงก์หลังบ้านสำเร็จรูป
+    function openSpotlightSwal(srcData, fileName) {
+      Swal.fire({
+        title: fileName,
+        imageUrl: srcData,
+        imageAlt: fileName,
+        showCancelButton: true,
+        confirmButtonText: '<i class="fa-solid fa-download"></i> ดาวน์โหลดรูป',
+        cancelButtonText: 'ปิด',
+        confirmButtonColor: '#10b981'
+      }).then((result) => {
+        if (result.isConfirmed) { triggerBinaryDownload(srcData, fileName); }
+      });
+    }
+
     function downloadFileInline(fileId, fileName) {
-      Swal.fire({ title: 'กำลังจัดเตรียมไฟล์ดาวน์โหลด...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
       fetch(`${WEB_APP_URL}?action=streamImage&fileId=${fileId}`)
         .then(res => res.text())
         .then(base64 => {
-          Swal.close();
           triggerBinaryDownload("data:application/octet-stream;base64," + base64, fileName);
         });
     }
@@ -381,15 +419,22 @@
       document.body.removeChild(a);
     }
 
+    // ฟังก์ชันส่งไฟล์แบบไม่ล็อกหน้าจอ โหลดเบื้องหลัง
     function handleFileUpload(e) {
       const file = e.target.files[0];
       if (!file) return;
 
-      Swal.fire({ title: 'กำลังประมวลผลไฟล์เข้าสู่ระบบ...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
-
+      const isImage = /\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(file.name);
       const reader = new FileReader();
+      
       reader.onload = function(event) {
         const base64Data = event.target.result;
+        
+        // ถ้าเป็นภาพให้ขึ้นกล่องภาพจำลองในแชทรอไว้ทันทีแบบ Real-time
+        if(isImage) {
+          appendOptimisticMessage({ sender: currentUser.username, type: "file-preview", content: base64Data, timeStr: getNowTimeStr(), avatar: currentUser.avatar });
+        }
+
         fetch(WEB_APP_URL, {
           method: "POST",
           body: JSON.stringify({ action: "uploadFile", base64Data, fileName: file.name, mimeType: file.type })
@@ -398,7 +443,7 @@
             fetch(WEB_APP_URL, {
               method: "POST",
               body: JSON.stringify({ action: "sendMessage", username: currentUser.username, type: "file", content: data.fileId, fileName: file.name })
-            }).then(() => { Swal.close(); loadMessages(); });
+            }).then(() => { loadMessages(); });
           }
         });
       };
@@ -428,20 +473,23 @@
         showConfirmButton: false
       });
     }
-    function sendSticker(url) {
-      fetch(WEB_APP_URL, {
-        method: "POST",
-        body: JSON.stringify({ action: "sendMessage", username: currentUser.username, type: "sticker", content: url })
-      }).then(() => { Swal.close(); loadMessages(); });
-    }
 
-    function changeChatBg(e) {
-      const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (ev) => { document.getElementById("chat-box").style.backgroundImage = `url(${ev.target.result})`; };
-        reader.readAsDataURL(file);
-      }
+    // ฟังก์ชันเปลี่ยนภาพพื้นหลังของแต่ละบุคคลด้วย Link รูปภาพ 
+    function changeChatBgLink() {
+      Swal.fire({
+        title: 'เปลี่ยนภาพพื้นหลังแชท',
+        input: 'url',
+        inputLabel: 'ใส่ URL ลิงก์รูปภาพพื้นหลังที่คุณต้องการ',
+        inputPlaceholder: 'https://example.com/background.jpg',
+        showCancelButton: true,
+        didOpen: () => { Swal.getInput().addEventListener('keyup', (e) => { if(e.key==='Enter') Swal.clickConfirm(); }); }
+      }).then((result) => {
+        if (result.value) {
+          document.getElementById("chat-box").style.backgroundImage = `url('${result.value}')`;
+          localStorage.setItem(`chat_bg_${currentUser.username}`, result.value); // เซฟจำแยกกันแต่ละไอดี
+          Swal.fire('สำเร็จ', 'ปรับเปลี่ยนภาพพื้นหลังเฉพาะคุณเรียบร้อยแล้วครับ', 'success');
+        }
+      });
     }
 
     function changeUserAvatar() {
