@@ -63,7 +63,7 @@
     #viewer-hidden-container { display: none; }
     .viewer-title { display: none !important; }
     
-    /* แก้ไข Context Menu ให้อยู่ตรงกลางหน้าจอ */
+    /* Context Menu กึ่งกลางหน้าจอ */
     .custom-cm {
       position: fixed;
       z-index: 1000;
@@ -232,7 +232,7 @@
       </div>
       
       <div class="flex items-center gap-2 items-end">
-        <textarea id="msg-input" rows="1" placeholder="พิมพ์ข้อความในห้องแชทรวม... (Shift + Enter เพื่อขึ้นบรรทัดใหม่)" class="flex-1 p-2.5 sm:p-3.5 px-4 sm:px-5 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 font-medium text-slate-800 placeholder-slate-400 shadow-sm transition-all no-scrollbar"></textarea>
+        <textarea id="msg-input" rows="1" placeholder="พิมพ์ข้อความของคุณที่นี่..." class="flex-1 p-2.5 sm:p-3.5 px-4 sm:px-5 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 font-medium text-slate-800 placeholder-slate-400 shadow-sm transition-all no-scrollbar"></textarea>
         <button id="btn-send" class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-green-500/20 transform active:scale-95 transition-all shrink-0 mb-0.5">
           <i class="fa-solid fa-paper-plane text-xs sm:text-sm"></i>
         </button>
@@ -259,7 +259,7 @@
     <img id="viewer-target-image" src="" alt="Chat Content Image">
   </div>
 
-  <audio id="global-noti-sound" src="http://googleusercontent.com/file_content/0" preload="auto"></audio>
+  <audio id="global-noti-sound" src="https://assets.mixkit.co/active_storage/sfx/2357/2357-84.wav" preload="auto"></audio>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
@@ -293,7 +293,7 @@
     let recordDuration = 0;
 
     let queueFilesToUpload = []; // เก็บอาเรย์คิวไฟล์พรีวิวก่อนส่งจริง
-    let selectedMessageItems = {}; // เก็บคีย์รายการข้อความที่เลือกสำหรับส่งแชร์ต่อ
+    let selectedMessageItems = {}; // เก็บคีย์รายการข้อความวัตถุเต็มรูปแบบที่เลือกไว้สำหรับแชร์
 
     const emojis = ["😀","😂","🥰","😎","🤩","😏","👍","👌","🙏","🎉","🔥","❤️","😭","😱","😡","🤫","💩","✨","👀","💯","🎂","🚀","👏","🥳","🥺","💔","💖","🌟","🍀","🍺","☕️","🍙","🎮","🐱","🐶","🦊","👑","💸","ชิว","เซ็ง","สู้ๆ","งอน"];
     const stickers = [
@@ -309,12 +309,6 @@
       initAudioRecorder();
       initDragAndDropEvents();
       initMultiSelectEvents();
-    });
-
-    // สำรองระบบตรวจสอบลิงก์เสียงหากไฟล์หลักเกิดการบล็อค CORS
-    const notiAudioEl = document.getElementById('global-noti-sound');
-    notiAudioEl.addEventListener('error', () => {
-       notiAudioEl.src = "https://assets.mixkit.co/active_storage/sfx/2357/2357-84.wav";
     });
 
     function unlockAudioContext() {
@@ -431,7 +425,6 @@
       document.getElementById('btn-submit-upload-all').addEventListener('click', executeQueueUploads);
     }
 
-    // ฟังก์ชันจัดการ Drag and Drop พื้นที่หน้าแชท
     function initDragAndDropEvents() {
       const chatInterface = document.getElementById('chat-interface');
       const dropZone = document.getElementById('drop-zone-overlay');
@@ -461,14 +454,12 @@
       });
     }
 
-    // ฟังก์ชันจัดการการคลิกเลือกแนบไฟล์ปกติ
     window.handleFileSelection = function(e) {
       if(e.target.files && e.target.files.length > 0) {
         processRawFiles(e.target.files);
       }
     };
 
-    // นำไฟล์เข้าคิวตรวจสอบพรีวิว (จำกัดรอบละ 5 ไฟล์)
     function processRawFiles(files) {
       const totalSelected = files.length;
       if(totalSelected > 5) {
@@ -513,7 +504,6 @@
       document.getElementById('file-input').value = '';
     }
 
-    // อัปโหลดไฟล์จากคิวพรีวิวเข้าเซิร์ฟเวอร์เรียงทีละไฟล์
     async function executeQueueUploads() {
       document.getElementById('upload-preview-modal').classList.add('hidden');
       
@@ -583,7 +573,7 @@
       });
     }
 
-    // ฟังก์ชันเปิด-ปิดโหมดจัดการเลือกหลายรายการเพื่อแชร์ออกภายนอก
+    // ฟังก์ชันจัดการระบบแชร์แบบหลายรายการพร้อมกัน
     function initMultiSelectEvents() {
       const btnToggle = document.getElementById('btn-toggle-multi-select');
       const bar = document.getElementById('multi-select-bar');
@@ -612,11 +602,11 @@
       document.getElementById('btn-share-selected').addEventListener('click', handleShareSelectedItems);
     }
 
-    window.toggleItemCheckboxState = function(key, textDescription) {
+    window.toggleItemCheckboxState = function(key, msgObj) {
       if(selectedMessageItems[key]) {
         delete selectedMessageItems[key];
       } else {
-        selectedMessageItems[key] = textDescription;
+        selectedMessageItems[key] = msgObj; // บันทึก Object ข้อความทั้งหมดเก็บไว้ใช้งาน
       }
       updateMultiSelectCounterDisplay();
     };
@@ -626,35 +616,100 @@
       document.getElementById('multi-select-count').innerText = `เลือกไว้ ${size} รายการ`;
     }
 
-    // ระบบรวบรวมข้อความ/ลิงก์ไฟล์ที่เลือกเพื่อส่ง Native Share ไปยังแอปอื่น (Line, Messenger, IG ฯลฯ)
+    // ฟังก์ชันอัจฉริยะ ดาวน์โหลดไฟล์จาก Google Drive และนำมาประกอบเป็น File Object เพื่อแชร์ตรงเข้าแอปพลิเคชันอื่นทันที
     async function handleShareSelectedItems() {
-      const stringsArray = Object.values(selectedMessageItems);
-      if(stringsArray.length === 0) {
+      const items = Object.values(selectedMessageItems);
+      if(items.length === 0) {
         Swal.fire('คำแนะนำ', 'โปรดเลือกข้อความหรือไฟล์ที่ต้องการแชร์อย่างน้อย 1 รายการครับ', 'info');
         return;
       }
 
-      const compiledText = stringsArray.join("\n\n---\n\n");
+      Swal.fire({
+        title: 'กำลังเตรียมดึงข้อมูลไฟล์...',
+        html: 'ระบบกำลังดาวน์โหลดไฟล์และมีเดียทั้งหมดจาก Google Drive ลงมาบนเครื่องเพื่อเตรียมส่งต่อเข้าแอปพลิเคชันอื่นอัตโนมัติครับ...',
+        allowOutsideClick: false,
+        didOpen: () => { Swal.showLoading(); }
+      });
 
-      if (navigator.share) {
-        try {
-          await navigator.share({
-            title: 'ข้อมูลแชร์จากระบบ Parakit Chat',
-            text: compiledText
-          });
-          document.getElementById('btn-toggle-multi-select').click();
-        } catch (err) {
-          console.log("User cancelled share flow");
+      let filesToShare = [];
+      let plainTexts = [];
+
+      try {
+        // วนลูปประมวลผลดาวน์โหลดไฟล์ที่ถูกเลือกไว้
+        for (let msg of items) {
+          if (!msg.deleted && msg.fileId && ['image', 'video', 'audio', 'file'].includes(msg.type)) {
+            try {
+              const downloadApiUrl = `https://drive.google.com/uc?export=download&id=${msg.fileId}`;
+              const response = await fetch(downloadApiUrl);
+              if (!response.ok) throw new Error('Network file fetch failed');
+              
+              const blob = await response.blob();
+              // สร้าง JavaScript File Object จาก Blob ข้อมูลจริงที่ดาวน์โหลดมาได้
+              const fileObj = new File([blob], msg.filename || `file_${Date.now()}`, { type: blob.type });
+              filesToShare.push(fileObj);
+            } catch (err) {
+              console.error('Error auto-downloading file for native sharing:', err);
+              // กรณีดึงไฟล์ไม่สำเร็จเนื่องจากเครือข่าย ให้สำรองข้อมูลเป็น Text Link แทน
+              plainTexts.push(`[ไฟล์แนบ: ${msg.filename || 'ดาวน์โหลดล้มเหลว'}] \nลิงก์ไฟล์: ${msg.content}`);
+            }
+          } else if (!msg.deleted && msg.type === 'text') {
+            plainTexts.push(`[${msg.senderName}]: ${msg.content}`);
+          } else if (!msg.deleted && msg.type === 'sticker') {
+            plainTexts.push(`[สติ๊กเกอร์จาก ${msg.senderName}]: ${msg.content}`);
+          }
         }
-      } else {
-        // Fallback เขียนข้อมูลลงคลิปบอร์ดกรณีเบราว์เซอร์ไม่ซัพพอร์ต Web Share API
-        navigator.clipboard.writeText(compiledText);
-        Swal.fire('สำเร็จ', 'เบราว์เซอร์นี้ไม่รองรับการแชร์โดยตรง ระบบทำการคัดลอกข้อความทั้งหมดลงคลิปบอร์ดให้แทนแล้วครับ นำไปกดวางส่งต่อได้เลยครับ', 'success');
-        document.getElementById('btn-toggle-multi-select').click();
+
+        Swal.close();
+
+        // นำส่งข้อมูลแชร์ผ่าน Web Share API
+        if (navigator.share) {
+          if (filesToShare.length > 0) {
+            // ตรวจสอบความสามารถเบราว์เซอร์ว่ารองรับการแชร์ไฟล์ชุดนี้พร้อมกันในคราวเดียวได้หรือไม่
+            if (navigator.canShare && navigator.canShare({ files: filesToShare })) {
+              await navigator.share({
+                files: filesToShare,
+                title: 'แชร์ไฟล์และมีเดียจาก Parakit Chat',
+                text: plainTexts.join('\n\n')
+              });
+            } else {
+              // กรณีระบบปลายทางบังคับ หรือไม่สามารถ Bundle ไฟล์รวมกันได้ ให้ทำการแยกส่งทีละไฟล์ให้อัตโนมัติในทันที
+              for (let i = 0; i < filesToShare.length; i++) {
+                await navigator.share({
+                  files: [filesToShare[i]],
+                  title: `ส่งไฟล์ที่ ${i + 1} อัตโนมัติ`
+                });
+              }
+              if (plainTexts.length > 0) {
+                await navigator.share({
+                  text: plainTexts.join('\n\n'),
+                  title: 'แชร์ข้อความจาก Parakit Chat'
+                });
+              }
+            }
+          } else if (plainTexts.length > 0) {
+            // มีเฉพาะข้อความล้วน
+            await navigator.share({
+              text: plainTexts.join('\n\n'),
+              title: 'แชร์ข้อความจาก Parakit Chat'
+            });
+          }
+          document.getElementById('btn-toggle-multi-select').click();
+        } else {
+          // ระบบ Fallback กรณีอุปกรณ์หรือเบราว์เซอร์ไม่รองรับ Native Share (คัดลอกเป็นกล่องข้อความลงคลิปบอร์ดแทน)
+          let compiledText = plainTexts.join("\n\n---\n\n");
+          if (items.some(m => m.fileId)) {
+            compiledText += "\n\n(หมายเหตุ: เบราว์เซอร์บนระบบนี้ไม่รองรับการส่งไฟล์ข้ามแอปพลิเคชันตรง ระบบได้ทำการคัดลอกลิงก์เนื้อหาลงคลิปบอร์ดให้แทนแล้วครับ)";
+          }
+          navigator.clipboard.writeText(compiledText);
+          Swal.fire('สำเร็จ', 'เบราว์เซอร์นี้ไม่รองรับการแชร์ไฟล์ตรง ระบบทำการคัดลอกข้อความและลิงก์ไฟล์ลงคลิปบอร์ดให้แทนเรียบร้อยครับ นำไปกดวางส่งต่อได้เลยครับ', 'success');
+          document.getElementById('btn-toggle-multi-select').click();
+        }
+      } catch (globalErr) {
+        console.error(globalErr);
+        Swal.fire('ข้อผิดพลาด', 'ระบบแชร์ประมวลผลล้มเหลวครับ', 'error');
       }
     }
 
-    // ระบบควบคุมมัลติมีเดีย: แก้ไขระบบสตรีมเสียงจากกูเกิลไดรฟ์ตรงให้กดเล่นได้ทันที
     function initAudioRecorder() {
       const recordBtn = document.getElementById('btn-audio-record');
       const timerSpan = document.getElementById('audio-timer');
@@ -1218,7 +1273,6 @@
         lastSnapshotData = snapshot.val();
         
         if (initialLoadComplete && lastSnapshotData) {
-          // แจ้งเตือนเมื่อมีข้อความใหม่เข้ามา
           const sound = document.getElementById('global-noti-sound');
           sound.play().catch(e => console.log("แจ้งเตือนเสียงถูกบล็อกชั่วคราวครับ: ", e));
         }
@@ -1294,7 +1348,6 @@
       });
     };
 
-    // บรรจุฟังก์ชันเปิดหน้าเมนูป๊อปอัพควบคุม ไว้กึ่งกลางหน้าจออย่างสมบูรณ์แบบ
     function bindMessageActionEvents(element, msgKey, msgFileId, textContent) {
       let touchTimer = null;
       
@@ -1406,7 +1459,6 @@
     function renderAllMessagesWithTemps() {
       const body = document.getElementById('chat-body');
       const isAtBottom = body.scrollHeight - body.scrollTop <= body.clientHeight + 100;
-      const isMultiSelectModeActive = document.getElementById('chat-interface').classList.contains('multi-select-mode');
       
       body.innerHTML = '';
       let lastRenderedDate = ""; 
@@ -1432,15 +1484,14 @@
           const row = document.createElement('div');
           row.className = `msg-row flex gap-2 sm:gap-3 max-w-[90%] sm:max-w-[80%] w-fit relative items-end group mb-2 ${isSelf ? 'self flex-row-reverse ml-auto' : 'other mr-auto text-left'}`;
           
-          // ตัวคอมโพเนนต์เช็กบ็อกซ์เลือกรายการในโหมดแชร์หลายไฟล์
+          // ตรวจสอบเช็กบ็อกซ์สถานะเลือกหลายรายการ
           const isChecked = selectedMessageItems[key] ? 'checked' : '';
-          let shareSummaryText = msg.content || `[ไฟล์แนบ: ${msg.filename || 'ไม่ระบุชื่อ'}]`;
           
           const checkBoxEl = document.createElement('input');
           checkBoxEl.type = 'checkbox';
           checkBoxEl.className = 'msg-checkbox accent-blue-500 w-4 h-4 mb-3 cursor-pointer shrink-0';
           if(isChecked) checkBoxEl.checked = true;
-          checkBoxEl.onchange = () => toggleItemCheckboxState(key, `[${msg.senderName}]: ${shareSummaryText}`);
+          checkBoxEl.onchange = () => toggleItemCheckboxState(key, msg); // ส่งวัตถุข้อความดิบเข้าไปบันทึกเพื่อใช้ในการดึงโครงสร้างดาวน์โหลด
           row.appendChild(checkBoxEl);
 
           const resolvedAvatar = globalAvatarMap[msg.senderName] || msg.senderAvatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
@@ -1483,7 +1534,6 @@
               bubble.style.padding = '0'; bubble.style.background = 'none'; bubble.style.boxShadow = 'none';
               bindMessageActionEvents(bubble, key, msg.fileId, null);
             } else if(msg.type === 'video') {
-              // ดึงผ่าน API กึ่งสตรีมเพื่ออนุญาตสิทธิ์เล่นคลิปวิดีโอในหน้าแอปพลิเคชันได้ตรงตัว
               const customVideoSrc = `https://drive.google.com/uc?export=download&id=${msg.fileId}`;
               bubble.innerHTML = `
                 <video src="${customVideoSrc}" controls preload="metadata" class="max-w-[240px] rounded-xl border border-white/20 shadow-md bg-black"></video>
