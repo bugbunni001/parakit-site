@@ -60,6 +60,12 @@
       width: 100%; display: flex; align-items: center; gap: 12px; padding: 14px 18px; 
       border-radius: 16px; font-size: 14px; font-weight: 500; transition: all 0.2s ease; margin-bottom: 8px;
     }
+    /* คลาสพิเศษเพื่อเคลียร์ Padding ของเล่นภาพใหญ่ */
+    .swal-spotlight-popup {
+      padding: 0 !important;
+      background: transparent !important;
+      box-shadow: none !important;
+    }
   </style>
 </head>
 <body class="h-[100dvh] w-screen flex items-center justify-center p-0 sm:p-4 md:p-6 overflow-hidden select-none">
@@ -212,7 +218,6 @@
       } catch (e) { console.error("ไม่สามารถซิงค์ข้อมูลรูปโปรไฟล์ได้", e); }
     }
 
-    // ฟังก์ชันเปิดสถานะอ่านแบบ Realtime (LINE Receipts)
     function setupUserPresence() {
       if (!currentUser) return;
       const myPresenceRef = ref(db, `status/${currentUser.username}`);
@@ -222,7 +227,6 @@
       });
       onDisconnect(myPresenceRef).remove();
 
-      // ฟังก์ชันเฝ้าติดตามคนกำลังใช้งานเพื่อคำนวณ Read Count
       onValue(ref(db, 'status'), (snapshot) => {
         currentActiveUsers = snapshot.val() || {};
         renderAllMessagesWithTemps(); 
@@ -816,30 +820,28 @@
       }
     };
 
-    // ฟังก์ชันสำหรับคลิกดูรูปโปรไฟล์คนอื่นขนาดใหญ่
+    // ฟังก์ชันสำหรับคลิกดูรูปโปรไฟล์คนอื่นขนาดใหญ่ (ไม่มีชื่อรูปภาพ, ใช้ปุ่มกากบาทปิด, กดด้านนอกปิดได้)
     window.viewUserProfileImage = function(avatarUrl, displayName) {
       Swal.fire({
-        title: `โปรไฟล์ของ ${displayName}`,
         imageUrl: avatarUrl,
         imageWidth: 260,
         imageHeight: 260,
         imageAlt: displayName,
-        confirmButtonText: 'ปิดหน้าต่าง',
-        confirmButtonColor: '#64748b',
-        customClass: { title: 'swal-premium-title', popup: 'rounded-3xl' }
+        showConfirmButton: false,
+        showCloseButton: true,
+        allowOutsideClick: true,
+        customClass: { popup: 'rounded-3xl p-6 bg-white' }
       });
     };
 
     function renderAllMessagesWithTemps() {
       const body = document.getElementById('chat-body');
       
-      // จดจำตำแหน่ง Scroll เพื่อไม่ให้หน้าจอเด้งเวลาอัปเดตสถานะอ่านแล้ว
       const isAtBottom = body.scrollHeight - body.scrollTop <= body.clientHeight + 100;
       
       body.innerHTML = '';
       let lastRenderedDate = ""; 
       
-      // นับจำนวนคนที่ออนไลน์อยู่ ณ ขณะนั้น (ไม่รวมตัวเราเอง) เพื่อนำไปคำนวณป้าย "อ่านแล้ว"
       const totalActiveOthers = Object.keys(currentActiveUsers).filter(k => k !== currentUser.username).length;
 
       if(lastSnapshotData) {
@@ -863,14 +865,12 @@
           const row = document.createElement('div');
           row.className = `msg-row flex gap-2 sm:gap-3 max-w-[85%] sm:max-w-[75%] width-fit relative items-end group mb-2 ${isSelf ? 'self align-self-end flex-row-reverse ml-auto' : 'other align-self-flex-start'}`;
           
-          // ดึง URL รูปโปรไฟล์ล่าสุดจาก Map Memory
           const resolvedAvatar = globalAvatarMap[msg.senderName] || msg.senderAvatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
 
           if(!isSelf) {
             const img = document.createElement('img');
             img.className = 'msg-avatar w-8 h-8 rounded-full object-cover shadow-sm self-start mt-1 shrink-0 cursor-pointer hover:scale-105 transition-transform';
             img.src = resolvedAvatar;
-            // ผูกฟังก์ชันกดดูรูปโปรไฟล์เมื่อคลิก
             img.onclick = () => window.viewUserProfileImage(resolvedAvatar, msg.senderName);
             row.appendChild(img);
           }
@@ -952,7 +952,6 @@
 
           wrapper.appendChild(bubble);
           
-          // ตัวบอกเวลาส่งข้อความ
           const timeSpan = document.createElement('span');
           timeSpan.className = 'text-[9px] text-slate-400 self-end font-medium px-0.5 mb-1 shrink-0';
           timeSpan.innerText = new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
@@ -960,7 +959,6 @@
           row.appendChild(wrapper);
           row.appendChild(timeSpan);
 
-          // ส่วนแสดงสถานะ "อ่านแล้ว X คน" สำหรับข้อความที่เราส่ง (แสดงแบบ LINE)
           if (isSelf && !msg.deleted && totalActiveOthers > 0) {
             const readStatusSpan = document.createElement('span');
             readStatusSpan.className = 'text-[9px] text-emerald-400 font-bold self-end mb-1 mr-1 select-none';
@@ -982,14 +980,21 @@
       }
     }
 
+    // ฟังก์ชันดูรูปภาพในห้องแชทขนาดใหญ่ (ไม่มีชื่อรูปภาพ, ใช้ปุ่มกากบาทปิด, กดพื้นที่ด้านนอกปิดได้)
     window.viewSpotlightImage = function(url, filename) {
       Swal.fire({
-        title: filename,
-        imageUrl: url,
-        imageAlt: filename,
-        confirmButtonText: 'ปิดหน้าต่าง',
-        confirmButtonColor: '#64748b',
-        customClass: { title: 'swal-premium-title', htmlContainer: 'swal-premium-html' }
+        html: `
+          <div class="relative flex items-center justify-center max-w-full max-h-[90vh]">
+            <img src="${url}" class="max-w-full max-h-[85vh] rounded-2xl object-contain shadow-2xl border border-white/20">
+          </div>
+        `,
+        showConfirmButton: false,
+        showCloseButton: true,
+        allowOutsideClick: true,
+        customClass: {
+          popup: 'swal-spotlight-popup',
+          closeButton: 'text-white hover:text-slate-300 focus:shadow-none'
+        }
       });
     }
 
