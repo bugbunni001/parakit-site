@@ -54,6 +54,7 @@
     .swal-input-box:focus { outline: none; border-color: #10b981; background-color: #fff; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15); }
     .swal2-popup { border-radius: 24px !important; padding: 2rem !important; }
     
+    /* เมนูกลางหน้าจอ ป้องกันตกขอบ */
     .centered-context-modal {
       position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.95);
       z-index: 2000; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(15px);
@@ -63,7 +64,7 @@
     }
     .centered-context-modal.active { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1); }
     .context-backdrop {
-      position: fixed; inset: 0; bg: rgba(0,0,0,0.4); backdrop-filter: blur(4px);
+      position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px);
       z-index: 1999; opacity: 0; pointer-events: none; transition: opacity 0.2s ease;
     }
     .context-backdrop.active { opacity: 1; pointer-events: auto; }
@@ -82,6 +83,11 @@
       position: absolute; bottom: 100%; left: 0; right: 0; background: rgba(255, 255, 255, 0.95);
       backdrop-filter: blur(10px); border: 1px solid rgba(0,0,0,0.1); border-radius: 16px;
       max-height: 180px; overflow-y: auto; z-index: 60; box-shadow: 0 -10px 25px rgba(0,0,0,0.1);
+    }
+    .audio-player-container {
+      background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(8px);
+      border: 1px solid rgba(0, 0, 0, 0.05); border-radius: 16px; padding: 10px 14px;
+      display: flex; align-items: center; gap: 12px; min-width: 240px; max-width: 300px;
     }
   </style>
 </head>
@@ -124,10 +130,6 @@
       <button id="btn-open-register" class="w-full py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-2xl transition-all duration-200 text-sm">
         <i class="fa-solid fa-user-plus mr-2"></i> สร้างบัญชีผู้ใช้ใหม่
       </button>
-      
-      <div class="flex justify-center items-center text-xs pt-1">
-        <button id="btn-forgot-pwd" class="text-slate-400 hover:text-green-600 transition-colors"><i class="fa-solid fa-circle-question mr-1"></i>ลืมรหัสผ่าน?</button>
-      </div>
     </div>
   </div>
 
@@ -136,14 +138,14 @@
     <div class="drag-overlay" id="drop-zone-overlay">
       <div class="text-center text-white bg-slate-900/80 p-6 rounded-2xl backdrop-blur-md">
         <i class="fa-solid fa-cloud-arrow-up text-4xl text-green-400 mb-2 animate-bounce"></i>
-        <p class="font-bold text-lg">วางไฟล์ที่นี่เพื่อส่งเข้าแชท</p>
-        <p class="text-xs text-slate-300">สามารถส่งได้สูงสุด 20 ไฟล์พร้อมกันครับ</p>
+        <p class="font-bold text-lg">วางไฟล์ลงที่นี่เพื่อเตรียมส่งแชท</p>
+        <p class="text-xs text-slate-300">จำกัดจำนวนสูงสุด 20 ไฟล์ต่อครั้งครับ</p>
       </div>
     </div>
 
     <div class="p-3 bg-slate-900/95 text-white flex items-center justify-between border-b border-white/10 z-10 shadow-lg shrink-0">
       <div class="flex items-center gap-2 sm:gap-3 overflow-hidden mr-2">
-        <div class="relative group cursor-pointer shrink-0" id="avatar-container" title="คลิกเพื่อเปลี่ยนรูปโปรไฟล์">
+        <div class="relative group cursor-pointer shrink-0" id="avatar-container">
           <img id="my-avatar-img" class="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 border-green-400 object-cover shadow-md hover:scale-105 transition-all" src="https://cdn-icons-png.flaticon.com/512/149/149071.png">
           <div class="absolute inset-0 bg-black/40 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all">
             <i class="fa-solid fa-camera text-[10px] text-white"></i>
@@ -168,7 +170,7 @@
       </div>
     </div>
     
-    <div id="multi-select-bar" class="bg-slate-800/95 text-white p-3 px-6 flex items-center justify-between border-b border-white/10 hidden animate-fade-in z-20">
+    <div id="multi-select-bar" class="bg-slate-800/95 text-white p-3 px-6 flex items-center justify-between border-b border-white/10 hidden z-20">
       <span class="text-xs font-medium text-slate-300" id="lbl-select-count">เลือกแล้ว 0 รายการ</span>
       <div class="flex gap-2">
         <button id="btn-multi-share" class="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-xl text-xs font-bold flex items-center gap-1 transition-all"><i class="fa-solid fa-share-nodes"></i> แชร์ไปยังแอปอื่น</button>
@@ -187,18 +189,17 @@
       <div class="flex items-center justify-between px-1">
         <div class="flex items-center gap-4 text-slate-500 w-full justify-between">
           <div class="flex items-center gap-4">
-            <label class="cursor-pointer hover:text-green-500 transition-colors flex items-center gap-1.5 text-sm font-medium" title="แนบไฟล์หรือรูปภาพ (สูงสุด 20 ไฟล์)">
+            <label class="cursor-pointer hover:text-green-500 transition-colors flex items-center gap-1.5 text-sm font-medium" title="แนบไฟล์ (สูงสุด 20 ไฟล์)">
               <i class="fa-solid fa-circle-plus text-lg sm:text-xl text-green-500"></i>
-              <span class="text-xs text-slate-400 hidden sm:inline">ส่งไฟล์/รูปภาพ (สูงสุด 20)</span>
+              <span class="text-xs text-slate-400 hidden sm:inline">แนบไฟล์/รูปภาพ (สูงสุด 20)</span>
               <input type="file" id="file-input" class="hidden" multiple onchange="handleMultipleFilesSelect(event)">
             </label>
             <button id="tool-emoji" class="hover:text-amber-500 transition-colors text-lg sm:text-xl"><i class="fa-regular fa-face-smile-wink"></i></button>
             <button id="tool-sticker" class="hover:text-blue-500 transition-colors text-lg sm:text-xl"><i class="fa-regular fa-images"></i></button>
-            <button id="tool-custom-sticker" class="hover:text-purple-500 transition-colors text-lg sm:text-xl" title="สร้างสติ๊กเกอร์ของตัวเองแบบไดคัท"><i class="fa-solid fa-wand-magic-sparkles"></i></button>
           </div>
           <div class="flex items-center gap-2">
             <span id="audio-timer" class="text-xs font-bold text-red-500 hidden animate-pulse">0:00</span>
-            <button id="btn-audio-record" class="w-9 h-9 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center transition-all hover:bg-red-50 hover:text-red-500 shadow-sm" title="กดเพื่ออัดเสียงส่งเข้า Drive">
+            <button id="btn-audio-record" class="w-9 h-9 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center transition-all hover:bg-red-50 hover:text-red-500 shadow-sm" title="กดอัดเสียงส่งบันทึกลงคลาวด์ไดร์ฟ">
               <i class="fa-solid fa-microphone text-sm"></i>
             </button>
           </div>
@@ -206,19 +207,18 @@
       </div>
       
       <div class="flex items-center gap-2 items-end">
-        <textarea id="msg-input" rows="1" placeholder="พิมพ์ข้อความ... ใส่ @ เพื่อแท็กเพื่อน (Shift+Enter ขึ้นบรรทัดใหม่)" class="flex-1 p-2.5 sm:p-3.5 px-4 sm:px-5 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 font-medium text-slate-800 placeholder-slate-400 shadow-sm transition-all no-scrollbar"></textarea>
+        <textarea id="msg-input" rows="1" placeholder="พิมพ์ข้อความ... ใส่ @ เพื่อแท็กเพื่อน (Shift + Enter ขึ้นบรรทัดใหม่)" class="flex-1 p-2.5 sm:p-3.5 px-4 sm:px-5 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 font-medium text-slate-800 placeholder-slate-400 shadow-sm transition-all no-scrollbar"></textarea>
         <button id="btn-send" class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-green-500/20 transform active:scale-95 transition-all shrink-0 mb-0.5">
           <i class="fa-solid fa-paper-plane text-xs sm:text-sm"></i>
         </button>
       </div>
       
       <div class="emoji-picker glass-card shadow-2xl grid grid-cols-6 gap-2 sm:gap-3 p-3 sm:p-4 hidden absolute bottom-24 left-2 right-2 sm:left-4 sm:right-auto sm:min-w-[300px] sm:max-w-[340px] max-h-[180px] rounded-2xl overflow-y-auto z-50 text-xl sm:text-2xl select-none cursor-pointer" id="emoji-picker"></div>
-      <div class="sticker-picker glass-card shadow-2xl grid grid-cols-4 gap-2 sm:gap-3 p-3 sm:p-4 hidden absolute bottom-24 left-2 right-2 sm:left-14 sm:right-auto sm:min-w-[320px] sm:max-w-[360px] max-h-[220px] rounded-2xl overflow-y-auto z-50 select-none" id="sticker-picker"></div>
+      <div class="sticker-picker glass-card shadow-2xl grid grid-cols-3 gap-2 sm:gap-3 p-3 sm:p-4 hidden absolute bottom-24 left-2 right-2 sm:left-14 sm:right-auto sm:min-w-[300px] sm:max-w-[340px] max-h-[180px] rounded-2xl overflow-y-auto z-50 select-none" id="sticker-picker"></div>
     </div>
     
     <input type="file" id="avatar-input" class="hidden" accept="image/*" onchange="uploadUserAvatarToDrive(event)">
     <input type="file" id="bg-input" class="hidden" accept="image/*" onchange="uploadUserBgToDrive(event)">
-    <input type="file" id="custom-sticker-raw-input" class="hidden" accept="image/*" onchange="processAndUploadCustomSticker(event)">
   </div>
 
   <div id="viewer-hidden-container" class="hidden">
@@ -227,9 +227,9 @@
 
   <div class="context-backdrop" id="ctx-backdrop-overlay"></div>
   <div class="centered-context-modal flex flex-col gap-2.5" id="centered-action-modal">
-    <h4 class="text-sm font-bold text-slate-800 border-b border-slate-100 pb-2 flex items-center gap-1.5"><i class="fa-solid fa-bars-staggered text-green-500"></i> จัดการข้อความแชท</h4>
+    <h4 class="text-xs font-bold text-slate-800 border-b border-slate-100 pb-2 flex items-center gap-1.5"><i class="fa-solid fa-bars-staggered text-green-500"></i> ตัวเลือกข้อความแชท</h4>
     <div class="flex flex-col gap-1" id="centered-modal-buttons"></div>
-    <button onclick="closeCenteredActionModal()" class="w-full mt-1 py-2 text-center text-xs font-semibold text-slate-500 hover:bg-slate-100 rounded-xl transition-all">ปิดหน้าต่างควบคุม</button>
+    <button onclick="closeCenteredActionModal()" class="w-full mt-1 py-2 text-center text-xs font-semibold text-slate-500 hover:bg-slate-100 rounded-xl transition-all">ปิดคำสั่ง</button>
   </div>
 
   <audio id="global-noti-sound" src="https://raw.githubusercontent.com/unique-pu/sound/main/messenger.mp3" preload="auto"></audio>
@@ -252,7 +252,7 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyr2jmuvwut3hgjUJ34z8RauglInGk-F3--HA2XQOIgm5Cv5DAmiPjw_hqxWRmSGXDs/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwAYQLbYKCR7b5PFNfnPq9kLVmsFTiGfQmm7vkiKLaISvVDrObFngBX81r7GzehBscX/exec";
     let currentUser = null;
     let activeTempUploads = {}; 
     let globalAvatarMap = {}; 
@@ -269,13 +269,10 @@
     let selectedMessageKeys = [];
     let pendingUploadFilesQueue = [];
 
-    // รายการสติกเกอร์ครบ 50 อัน ภาพคมชัด แสดงผลได้ทุกลิงก์
-    const stickers = [];
-    for(let i=1; i<=50; i++) {
-      stickers.push(`https://raw.githubusercontent.com/unique-pu/stickers/main/stk_${i}.png`);
-    }
-
     const emojis = ["😀","😂","🥰","😎","🤩","😏","👍","👌","🙏","🎉","🔥","❤️","😭","😱","😡","🤫","💩","✨","👀","💯","🎂","🚀","👏","🥳","🥺","💔","💖","🌟","🍀","🍺","☕️","🍙","🎮","🐱","🐶","🦊","👑","💸","ชิว","เซ็ง","สู้ๆ","งอน"];
+    const stickers = [
+      "https://cdn-icons-png.flaticon.com/512/4735/4735419.png","https://cdn-icons-png.flaticon.com/512/4735/4735431.png","https://cdn-icons-png.flaticon.com/512/4735/4735465.png","https://cdn-icons-png.flaticon.com/512/4735/4735515.png","https://fonts.gstatic.com/s/e/notoemoji/latest/1f431/512.webp","https://fonts.gstatic.com/s/e/notoemoji/latest/1f436/512.webp","https://fonts.gstatic.com/s/e/notoemoji/latest/1f98a/512.webp","https://fonts.gstatic.com/s/e/notoemoji/latest/1f42a/512.webp","https://cdn-icons-png.flaticon.com/512/616/616408.png","https://cdn-icons-png.flaticon.com/512/616/616430.png","https://cdn-icons-png.flaticon.com/512/924/924514.png","https://cdn-icons-png.flaticon.com/512/1998/1998614.png"
+    ];
 
     window.addEventListener('DOMContentLoaded', () => {
       initUIEvents();
@@ -291,7 +288,7 @@
       audio.play().then(() => {
         audio.pause();
         audio.currentTime = 0;
-      }).catch(e => console.log("Audio context unlock retry:", e));
+      }).catch(e => console.log("Audio Context ปลดล็อกสำรองสำเร็จ:", e));
     }
 
     function initGlobalViewer() {
@@ -310,94 +307,7 @@
       globalViewerInstance.show();
     };
 
-    async function syncAvatarsFromServer() {
-      try {
-        let res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getAllAvatars' }) });
-        let result = await res.json();
-        if (result.status === 'success') {
-          globalAvatarMap = result.avatars;
-          if (currentUser && globalAvatarMap[currentUser.displayName]) {
-            currentUser.avatar = globalAvatarMap[currentUser.displayName];
-            document.getElementById('my-avatar-img').src = currentUser.avatar;
-            localStorage.setItem('parakit_chat_user', JSON.stringify(currentUser));
-          }
-        }
-      } catch (e) { console.error("ไม่สามารถซิงค์รูปโปรไฟล์ได้", e); }
-    }
-
-    function setupUserPresence() {
-      if (!currentUser) return;
-      const myPresenceRef = ref(db, `status/${currentUser.username}`);
-      set(myPresenceRef, { displayName: currentUser.displayName, username: currentUser.username, lastActive: Date.now() });
-      onDisconnect(myPresenceRef).remove();
-
-      onValue(ref(db, 'status'), (snapshot) => {
-        currentActiveUsers = snapshot.val() || {};
-        syncAvatarsFromServer().then(() => renderAllMessagesWithTemps());
-      });
-    }
-
-    async function checkSavedLogin() {
-      const savedUser = localStorage.getItem('parakit_chat_user');
-      if (savedUser) {
-        currentUser = JSON.parse(savedUser);
-        document.getElementById('login-screen').style.display = 'none';
-        const chatUI = document.getElementById('chat-interface');
-        chatUI.style.display = 'flex';
-        
-        document.getElementById('my-display-name').innerText = currentUser.displayName;
-        if(currentUser.avatar) document.getElementById('my-avatar-img').src = currentUser.avatar;
-        
-        const savedBg = currentUser.bgUrl || localStorage.getItem(`parakit_chat_bg_${currentUser.username}`);
-        if (savedBg) {
-          const chatBody = document.getElementById('chat-body');
-          chatBody.style.backgroundImage = `url('${savedBg}')`;
-          chatBody.style.backgroundSize = 'cover';
-        }
-        
-        setupUserPresence();
-        await syncAvatarsFromServer();
-        listenChatMessages();
-      }
-    }
-
-    function initUIEvents() {
-      document.getElementById('btn-open-register').addEventListener('click', openRegisterModal);
-      document.getElementById('btn-login').addEventListener('click', () => {
-        unlockAudioContext();
-        handleLogin();
-      });
-      
-      document.getElementById('login-username').addEventListener('keypress', (e) => { if(e.key === 'Enter') document.getElementById('login-password').focus(); });
-      document.getElementById('login-password').addEventListener('keypress', (e) => { if(e.key === 'Enter') { unlockAudioContext(); handleLogin(); } });
-
-      document.getElementById('btn-forgot-pwd').addEventListener('click', handleForgotPwd);
-      document.getElementById('btn-open-settings').addEventListener('click', openSettingsModal);
-      document.getElementById('btn-send').addEventListener('click', sendTextMessage);
-      
-      document.getElementById('btn-toggle-select-mode').addEventListener('click', toggleMultiSelectMode);
-      document.getElementById('btn-cancel-select').addEventListener('click', exitMultiSelectMode);
-      document.getElementById('btn-multi-share').addEventListener('click', handleMultiShareAction);
-      document.getElementById('tool-custom-sticker').addEventListener('click', () => document.getElementById('custom-sticker-raw-input').click());
-
-      const msgInput = document.getElementById('msg-input');
-      msgInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey && window.innerWidth > 640) {
-          e.preventDefault();
-          sendTextMessage();
-        }
-      });
-      
-      msgInput.addEventListener('input', function() {
-        this.style.height = 'auto';
-        this.style.height = (this.scrollHeight) + 'px';
-        handleMentionSearch(this);
-      });
-      
-      document.getElementById('avatar-container').addEventListener('click', () => document.getElementById('avatar-input').click());
-    }
-
-    // ฟังก์ชันจัดตำแหน่งเปิด Context Menu ไว้กลางจอ (ป้องกันปัญหาตกขอบหน้าจอ)
+    // เปิดตัวเลือกดำเนินการแชทกลางจอ (ข้อ 1)
     window.openCenteredActionModal = function(buttonsHTML) {
       document.getElementById('centered-modal-buttons').innerHTML = buttonsHTML;
       document.getElementById('ctx-backdrop-overlay').classList.add('active');
@@ -411,30 +321,29 @@
 
     document.getElementById('ctx-backdrop-overlay').addEventListener('click', closeCenteredActionModal);
 
-    // ฟังก์ชันสตรีมดาวน์โหลดไฟล์จาก Drive ตรงลงคอม/มือถือทันที โดยไม่ผ่านหน้าล็อกอินเว็บ
+    // ดาวน์โหลดไฟล์ตรงจาก Apps Script เว็บบล็อกอิน Gmail (ข้อ 6)
     window.directDownloadFromDrive = function(fileId, filename) {
-      if(!fileId) return Swal.fire('ผิดพลาด', 'ไม่พบรหัสไฟล์สำหรับดาวน์โหลดครับ', 'error');
+      if(!fileId) return Swal.fire('ผิดพลาด', 'ไม่พบรหัสคิวข้อมูลไฟล์', 'error');
       
       Swal.fire({
-        title: 'กำลังเตรียมการดาวน์โหลด...',
-        html: 'ระบบกำลังดึงข้อมูลเนื้อหาไฟล์จากคลาวด์ไดร์ฟให้คุณโดยตรงครับ',
+        title: 'กำลังเตรียมไฟล์ดาวน์โหลด...',
+        html: 'ระบบกำลังดึงข้อมูลต้นฉบับตรงลงอุปกรณ์ให้คุณทันทีโดยไม่ต้องเข้าสู่ระบบ Gmail ครับ',
         allowOutsideClick: false,
         didOpen: () => { Swal.showLoading(); }
       });
 
       const proxyDownloadUrl = `${SCRIPT_URL}?action=directStreamDownload&fileId=${fileId}`;
-      
-      const link = document.createElement('a');
-      link.href = proxyDownloadUrl;
-      link.download = filename || "downloaded_file";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      const a = document.createElement("a");
+      a.href = proxyDownloadUrl;
+      a.download = filename || "downloaded_file";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
       
       setTimeout(() => { Swal.close(); }, 2000);
     };
 
-    // เปิด-ปิดระบบ Multi-select บันทึกเลือกแชทหลายรายการพร้อมกันแบบไลน์
+    // เปิดโหมดเลือกหลายข้อความเพื่อส่งแชร์ต่อ (ข้อ 2)
     function toggleMultiSelectMode() {
       isMultiSelectMode = !isMultiSelectMode;
       if(isMultiSelectMode) {
@@ -469,19 +378,19 @@
       updateSelectCountLabel();
     };
 
-    // ฟังก์ชันระบบแชร์ข้อความเดี่ยว/หรือหลายข้อความรวมกัน ไปยังแอปภายนอก (Line, Messenger, IG, FB)
+    // ส่งชุดข้อมูลตัวเลือกแชร์ไปยังแอปอื่น (ข้อ 2)
     async function handleMultiShareAction() {
       if(selectedMessageKeys.length === 0) {
-        return Swal.fire('โปรดเลือกข้อความ', 'กรุณาเลือกข้อความหรือรูปภาพที่ต้องการแชร์อย่างน้อย 1 รายการครับ', 'warning');
+        return Swal.fire('โปรดเลือกข้อความ', 'กรุณาเลือกรายการที่ต้องการแชร์ต่ออย่างน้อย 1 รายการครับ', 'warning');
       }
 
-      let combinedText = "[แชร์ข้อความจาก Parakit Connect]\n";
+      let combinedText = "[แชร์บันทึกข้อความ Parakit Connect]\n";
       selectedMessageKeys.forEach(key => {
         const m = lastSnapshotData[key];
         if(m && !m.deleted) {
           if(m.type === 'text') combinedText += `${m.senderName}: ${m.content}\n`;
           else if(m.type === 'image' || m.type === 'file') combinedText += `${m.senderName} ส่งไฟล์: ${m.content}\n`;
-          else if(m.type === 'sticker') combinedText += `${m.senderName} ส่งสติ๊กเกอร์: ${m.content}\n`;
+          else if(m.type === 'sticker') combinedText += `${m.senderName} ส่งสติ๊กเกอร์\n`;
         }
       });
 
@@ -489,45 +398,41 @@
         try {
           await navigator.share({ title: 'แชร์ข้อความ Parakit Chat', text: combinedText });
           exitMultiSelectMode();
-        } catch (err) { console.log("Native Share Cancelled/Error", err); }
+        } catch (err) { console.log("Native share api call error/cancelled", err); }
       } else {
-        // เมนูทางเลือกสำหรับเว็บบนคอมพิวเตอร์ที่ไม่มี Native share API
         Swal.fire({
           title: 'เลือกแอปพลิเคชันเพื่อแชร์',
           html: `
             <div class="grid grid-cols-2 gap-3 mt-2">
               <a href="https://social-plugins.line.me/lineit/share?text=${encodeURIComponent(combinedText)}" target="_blank" class="flex items-center gap-2 p-3 bg-green-500 text-white rounded-xl font-bold justify-center text-xs"><i class="fa-brands fa-line text-lg"></i> LINE</a>
               <a href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}&quote=${encodeURIComponent(combinedText)}" target="_blank" class="flex items-center gap-2 p-3 bg-blue-600 text-white rounded-xl font-bold justify-center text-xs"><i class="fa-brands fa-facebook text-lg"></i> Facebook</a>
-              <button id="btn-copy-share-text" class="col-span-2 flex items-center gap-2 p-3 bg-slate-800 text-white rounded-xl font-bold justify-center text-xs"><i class="fa-regular fa-copy text-lg"></i> คัดลอกข้อความทั้งหมดเพื่อไปวางเอง</button>
+              <button id="btn-copy-share-text" class="col-span-2 flex items-center gap-2 p-3 bg-slate-800 text-white rounded-xl font-bold justify-center text-xs"><i class="fa-regular fa-copy text-lg"></i> คัดลอกเนื้อหาแชทเพื่อไปวางด้วยตัวเอง</button>
             </div>
           `,
-          showConfirmButton: false,
-          showCancelButton: true,
-          cancelButtonText: 'ปิดหน้าต่าง',
-          customClass: { popup: 'rounded-3xl' },
+          showConfirmButton: false, showCancelButton: true, cancelButtonText: 'ปิดหน้าต่าง', customClass: { popup: 'rounded-3xl' },
           didOpen: () => {
             document.getElementById('btn-copy-share-text').onclick = () => {
               navigator.clipboard.writeText(combinedText);
-              Swal.fire('คัดลอกแล้ว', 'คัดลอกข้อความชุดนี้ลงคลิปบอร์ดเสร็จแล้วครับ สามารถนำไปวางส่งต่อใน Messenger, IG หรือ TikTok ได้เลยครับ', 'success');
+              Swal.fire('คัดลอกสำเร็จ', 'สามารถนำไปวางในแอป Messenger, IG หรือ TikTok ได้เลยครับ', 'success');
             };
           }
         });
       }
     }
 
-    // ระบบตรวจจับการลากไฟล์มาวางบนห้องแชท (Drag and Drop สูงสุด 20 ไฟล์)
+    // เปิดรองรับระบบลากวางไฟล์ลงช่องแชท (ข้อ 4)
     function initDragAndDropEvents() {
       const chatInterface = document.getElementById('chat-interface');
       
-      ['dragenter', 'dragover'].forEach(eventName => {
-        chatInterface.addEventListener(eventName, (e) => {
+      ['dragenter', 'dragover'].forEach(name => {
+        chatInterface.addEventListener(name, (e) => {
           e.preventDefault(); e.stopPropagation();
           chatInterface.classList.add('drag-active');
         }, false);
       });
 
-      ['dragleave', 'drop'].forEach(eventName => {
-        chatInterface.addEventListener(eventName, (e) => {
+      ['dragleave', 'drop'].forEach(name => {
+        chatInterface.addEventListener(name, (e) => {
           e.preventDefault(); e.stopPropagation();
           chatInterface.classList.remove('drag-active');
         }, false);
@@ -536,9 +441,7 @@
       chatInterface.addEventListener('drop', (e) => {
         const dt = e.dataTransfer;
         const files = Array.from(dt.files);
-        if(files.length > 0) {
-          processBatchFiles(files);
-        }
+        if(files.length > 0) { processBatchFiles(files); }
       }, false);
     }
 
@@ -547,10 +450,10 @@
       processBatchFiles(files);
     };
 
-    // ประมวลผลคิวไฟล์และสร้างอินเทอร์เฟซ Preview ยืนยันพรีวิวก่อนกดส่งเข้า Drive ส่วนกลาง
+    // พรีวิวพิกัดรูปภาพและข้อมูลคิวก่อนกดยืนยันส่งจริง (ข้อ 3 และ 4)
     function processBatchFiles(files) {
       if(files.length > 20) {
-        return Swal.fire('จำกัดจำนวนไฟล์', 'ระบบรองรับการแนบและอัปโหลดไฟล์สูงสุดทีละ 20 ไฟล์ต่อครั้งครับ', 'warning');
+        return Swal.fire('เกิดข้อผิดพลาด', 'จำกัดสิทธิ์รองรับไฟล์สูงสุดไม่เกิน 20 ไฟล์ต่อครั้งครับ', 'warning');
       }
       
       pendingUploadFilesQueue = files;
@@ -559,41 +462,34 @@
       previewArea.classList.remove('hidden');
 
       pendingUploadFilesQueue.forEach((file, index) => {
-        const itemWrapper = document.createElement('div');
-        itemWrapper.className = 'relative min-w-[90px] max-w-[100px] bg-white p-2 rounded-xl border border-slate-300 flex flex-col items-center text-center text-xs shrink-0';
+        const div = document.createElement('div');
+        div.className = 'relative min-w-[90px] max-w-[100px] bg-white p-2 rounded-xl border flex flex-col items-center text-center text-xs shrink-0 shadow-sm';
         
         if (/\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(file.name)) {
-          const url = URL.createObjectURL(file);
-          itemWrapper.innerHTML = `
-            <img src="${url}" class="w-14 h-14 object-cover rounded-lg mb-1">
+          const u = URL.createObjectURL(file);
+          div.innerHTML = `
+            <img src="${u}" class="w-14 h-14 object-cover rounded-lg mb-1">
             <span class="text-[10px] text-slate-500 truncate w-full">${file.name}</span>
-            <button onclick="removeFileFromQueue(${index})" class="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-[10px] shadow"><i class="fa-solid fa-xmark"></i></button>
+            <button onclick="removeFileFromQueue(${index})" class="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-[10px]"><i class="fa-solid fa-xmark"></i></button>
           `;
         } else {
-          itemWrapper.innerHTML = `
+          div.innerHTML = `
             <div class="w-14 h-14 bg-emerald-50 border border-emerald-200 rounded-lg flex items-center justify-center text-emerald-500 mb-1"><i class="fa-solid fa-file-lines text-xl"></i></div>
             <span class="text-[10px] text-slate-500 truncate w-full">${file.name}</span>
-            <button onclick="removeFileFromQueue(${index})" class="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-[10px] shadow"><i class="fa-solid fa-xmark"></i></button>
+            <button onclick="removeFileFromQueue(${index})" class="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-[10px]"><i class="fa-solid fa-xmark"></i></button>
           `;
         }
-        previewArea.appendChild(itemWrapper);
+        previewArea.appendChild(div);
       });
 
       if(files.length > 0) {
         Swal.fire({
-          title: 'ยืนยันอัปโหลดชุดไฟล์?',
-          text: `พบไฟล์ที่เลือกทั้งหมดจำนวน ${files.length} ไฟล์ คุณต้องการอัปโหลดพร้อมกันเลยหรือไม่ครับ`,
-          icon: 'question',
-          showCancelButton: true,
-          confirmButtonColor: '#10b981',
-          confirmButtonText: 'ใช่, ส่งไฟล์ทั้งหมด',
-          cancelButtonText: 'ยกเลิก'
+          title: 'ยืนยันอัปโหลดไฟล์แชท?',
+          text: `ตรวจพบไฟล์ที่แนบทั้งหมดจำนวน ${files.length} รายการ ต้องการยืนยันนำส่งเข้า Drive ใช่หรือไม่ครับ`,
+          icon: 'question', showCancelButton: true, confirmButtonColor: '#10b981', confirmButtonText: 'ยืนยันส่งข้อมูล', cancelButtonText: 'ยกเลิก'
         }).then((res) => {
-          if(res.isConfirmed) {
-            executeBatchUploadQueue();
-          } else {
-            clearUploadQueue();
-          }
+          if(res.isConfirmed) { executeBatchUploadQueue(); }
+          else { clearUploadQueue(); }
         });
       }
     }
@@ -609,7 +505,7 @@
       document.getElementById('upload-preview-area').classList.add('hidden');
     }
 
-    // วนลูปอัปโหลดคิวไฟล์ทั้งหมดแบบ Async อัตโนมัติสูงสุด 20 ไฟล์เรียงลำดับ
+    // วนลูปดำเนินการประมวลผลอัปโหลดรายการคิวไฟล์แบบต่อเนื่อง (สูงสุด 20 ไฟล์)
     async function executeBatchUploadQueue() {
       const filesToUpload = [...pendingUploadFilesQueue];
       clearUploadQueue();
@@ -653,7 +549,7 @@
                   deleted: false
                 });
               }
-            } catch (err) { console.error("Batch upload cell index processing broken: ", err); }
+            } catch (err) { console.error("Batch index dynamic processing item broken: ", err); }
             delete activeTempUploads[uploadId];
             renderAllMessagesWithTemps();
             resolve();
@@ -663,55 +559,7 @@
       }
     }
 
-    // ฟังก์ชันระบบสร้างสติ๊กเกอร์ใช้เอง ดีไซน์แบบไดร์คัทขอบมนจากภาพในมือถือ/คอมพิวเตอร์
-    window.processAndUploadCustomSticker = function(e) {
-      const file = e.target.files[0];
-      if(!file) return;
-
-      Swal.fire({
-        title: 'กำลังทำการไดคัทสติ๊กเกอร์ของคุณ...',
-        html: 'ระบบกำลังตัดสัดส่วนวงกลมขอบมนนุ่มนวลแบบซอฟต์ UI ให้คุณครับ',
-        allowOutsideClick: false,
-        didOpen: () => Swal.showLoading()
-      });
-
-      const reader = new FileReader();
-      reader.onload = function(event) {
-        const img = new Image();
-        img.onload = async function() {
-          const canvas = document.createElement('canvas');
-          const ctx = canvas.getContext('2d');
-          const size = Math.min(img.width, img.height);
-          canvas.width = size;
-          canvas.height = size;
-
-          // สร้างรูปทรงวงกลมไดคัทนุ่มนวล
-          ctx.beginPath();
-          ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
-          ctx.clip();
-          ctx.drawImage(img, (img.width - size) / 2, (img.height - size) / 2, size, size, 0, 0, size, size);
-
-          const croppedBase64 = canvas.toDataURL('image/png');
-
-          try {
-            let res = await fetch(SCRIPT_URL, {
-              method: 'POST',
-              body: JSON.stringify({ action: 'uploadFile', filename: `custom_sticker_${Date.now()}.png`, base64: croppedBase64 })
-            });
-            let result = await res.json();
-            if(result.status === 'success') {
-              let directStickerUrl = result.viewUrl || result.url;
-              sendSticker(directStickerUrl);
-              Swal.fire({ title: 'สำเร็จ!', text: 'ส่งสติ๊กเกอร์ไดคัทส่วนตัวสำเร็จแล้วครับ', icon: 'success', timer: 1200, showConfirmButton: false });
-            } else { Swal.fire('ล้มเหลว', 'เซิร์ฟเวอร์ปฏิเสธการเซฟสติกเกอร์ครับ', 'error'); }
-          } catch(err) { Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อคลาวด์ได้ครับ', 'error'); }
-        };
-        img.src = event.target.result;
-      };
-      reader.readAsDataURL(file);
-    };
-
-    // ฟังก์ชันสำหรับระบบ @Tag สมาชิกภายในแชท ดึงค่าตามชื่อผู้ใช้ออนไลน์จริง
+    // ระบบประมวลผลแท็กสมาชิกอัตโนมัติเมื่อพิมพ์คีย์เวิร์ด @ (ข้อ 11)
     function handleMentionSearch(textarea) {
       const text = textarea.value;
       const caretPos = textarea.selectionStart;
@@ -722,13 +570,12 @@
       if (mentionIndex !== -1 && mentionIndex >= textBeforeCaret.length - 20) {
         const query = textBeforeCaret.substring(mentionIndex + 1).toLowerCase();
         const activeUsersList = Object.values(currentActiveUsers);
-        
         const filtered = activeUsersList.filter(u => u.displayName.toLowerCase().includes(query));
         
         if(filtered.length > 0) {
           popup.innerHTML = filtered.map(u => `
-            <div onclick="insertMentionTag('${u.displayName}', ${mentionIndex})" class="p-2.5 px-4 hover:bg-slate-100 font-semibold text-xs text-slate-700 cursor-pointer flex items-center gap-2 border-b border-slate-100 last:border-none">
-              <span class="w-2 h-2 bg-green-500 rounded-full"></span> @${u.displayName} (${u.username})
+            <div onclick="insertMentionTag('${u.displayName}', ${mentionIndex})" class="p-2.5 px-4 hover:bg-slate-100 font-semibold text-xs text-slate-700 cursor-pointer flex items-center gap-2 border-b last:border-none">
+              <span class="w-2 h-2 bg-green-500 rounded-full"></span> @${u.displayName}
             </div>
           `).join('');
           popup.classList.remove('hidden');
@@ -740,7 +587,6 @@
       const textarea = document.getElementById('msg-input');
       const text = textarea.value;
       const caretPos = textarea.selectionStart;
-      
       const textBeforeMention = text.substring(0, mentionIndex);
       const textAfterCaret = text.substring(caretPos);
       
@@ -749,7 +595,7 @@
       textarea.focus();
     };
 
-    // ตัวนับเวลาถอยหลังการทำงานไฟล์มีเดีย (รองรับทั้งวิดีโอและเสียงในระบบหน้าแชท)
+    // ตัวนับเวลานับถอยหลังการเล่นไฟล์เสียง/วิดีโอ (ข้อ 7)
     window.initAudioTracker = function(audioElement, durationId) {
       const updateDisplay = () => {
         const total = audioElement.duration || 0;
@@ -767,7 +613,7 @@
       });
     };
 
-    // ฟังก์ชันเปิดการทำงานไมโครโฟนบันทึกเสียงยาวสูงสุด 1 นาที บันทึกเข้าคลาวด์ไดร์ฟและส่งลิงก์เล่นสด
+    // ระบบอัดไฟล์เสียงบันทึกลง Drive (ข้อ 7)
     function initAudioRecorder() {
       const recordBtn = document.getElementById('btn-audio-record');
       const timerSpan = document.getElementById('audio-timer');
@@ -779,15 +625,12 @@
               const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
               mediaRecorder = new MediaRecorder(stream);
               audioChunks = [];
-              
               mediaRecorder.ondataavailable = (e) => { audioChunks.push(e.data); };
               
               mediaRecorder.onstop = async () => {
                 const audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
-                if (audioBlob.size > 100) {
-                  await uploadAudioAndSend(audioBlob);
-                }
-                stream.getTracks().forEach(track => track.stop());
+                if (audioBlob.size > 100) { await uploadAudioAndSend(audioBlob); }
+                stream.getTracks().forEach(t => t.stop());
               };
               
               mediaRecorder.start();
@@ -802,11 +645,9 @@
                 let mins = Math.floor(recordDuration / 60);
                 let secs = recordDuration % 60;
                 timerSpan.innerText = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-                
                 if (recordDuration >= 60) { stopAudioRecording(); }
               }, 1000);
-              
-            } catch (err) { Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเข้าถึงไมโครโฟนได้ครับ', 'error'); }
+            } catch (err) { Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเข้าถึงไมค์ได้ครับ', 'error'); }
           }
         } else { stopAudioRecording(); }
       });
@@ -846,11 +687,7 @@
             push(ref(db, 'global_messages'), {
               senderName: currentUser.displayName,
               senderAvatar: currentUser.avatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png',
-              type: 'audio',
-              content: finalUrl,
-              fileId: result.fileId,
-              timestamp: Date.now(),
-              deleted: false
+              type: 'audio', content: finalUrl, fileId: result.fileId, timestamp: Date.now(), deleted: false
             });
           }
         } catch (e) { console.error(e); }
@@ -863,17 +700,15 @@
     function linkify(text) {
       if (!text) return "";
       const urlRegex = /(https?:\/\/[^\s]+)/g;
-      let html = text.replace(urlRegex, function(url) {
-        return `<a href="${url}" target="_blank" class="text-blue-600 font-medium underline break-all hover:text-blue-800">${url}</a>`;
+      let html = text.replace(urlRegex, function(u) {
+        return `<a href="${u}" target="_blank" class="text-blue-600 font-medium underline break-all hover:text-blue-800">${u}</a>`;
       });
       
-      // แปลงแท็กสมาขิก @Name ให้เป็น Badge ไฮไลท์สีสันโดดเด่นสะดุดตา
       const activeUsersList = Object.values(currentActiveUsers).map(u => u.displayName);
       activeUsersList.forEach(name => {
         const regexMention = new RegExp(`@${name}\\b`, 'g');
         html = html.replace(regexMention, `<span class="mention-badge">@${name}</span>`);
       });
-
       return html.replace(/\n/g, '<br>');
     }
 
@@ -887,10 +722,9 @@
         
         if (initialLoadComplete && lastSnapshotData) {
           const sound = document.getElementById('global-noti-sound');
-          sound.play().catch(e => console.log("แจ้งเตือนถูกบล็อก: ", e));
+          sound.play().catch(e => console.log("สัญญาณเสียงถูกบล็อกบล็อก: ", e));
         }
         initialLoadComplete = true;
-
         checkAndMarkAsRead();
         renderAllMessagesWithTemps();
       });
@@ -908,11 +742,10 @@
       });
     }
 
-    // เมนูแก้ไขเปลี่ยนแปลงสิทธิ์การแสดงข้อความแชทเดี่ยว
     window.triggerDeleteMessageAction = function(key, fileId) {
       Swal.fire({
-        title: 'ยกเลิกการส่งข้อความนี้?',
-        text: "คุณต้องการลบข้อความนี้ออกจากระบบ พร้อมเคลียร์ข้อมูลไฟล์ถาวรหรือไม่ครับ",
+        title: 'ยกเลิกการส่งข้อความ?',
+        text: "คุณต้องการลบข้อความนี้ออกจากห้องแชท และลบไฟล์บนคลาวด์ถาวรใช่หรือไม่",
         icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'ยืนยันลบ', cancelButtonText: 'ยกเลิก'
       }).then((res) => {
         if(res.isConfirmed) { 
@@ -925,56 +758,49 @@
     };
 
     window.triggerCenteredMenuOptions = function(msgKey, msgFileId, textContent, isMyMsg) {
-      let buttonsHTML = '';
+      let html = '';
       if(textContent) {
-        buttonsHTML += `
-          <button onclick="navigator.clipboard.writeText('${textContent.replace(/'/g, "\\'")}'); closeCenteredActionModal(); Swal.fire('สำเร็จ','คัดลอกลงคลิปบอร์ดแล้วครับ','success');" class="w-full text-left flex items-center gap-2 px-4 py-3 hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-semibold transition-all">
+        html += `
+          <button onclick="navigator.clipboard.writeText('${textContent.replace(/'/g, "\\'")}'); closeCenteredActionModal(); Swal.fire('สำเร็จ','คัดลอกข้อความแล้วครับ','success');" class="w-full text-left flex items-center gap-2 px-4 py-3 hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-semibold transition-all">
             <i class="fa-regular fa-copy text-green-500"></i> คัดลอกข้อความ
           </button>
         `;
       }
       if(isMyMsg) {
-        buttonsHTML += `
+        html += `
           <button onclick="closeCenteredActionModal(); window.triggerDeleteMessageAction('${msgKey}', '${msgFileId || ''}');" class="w-full text-left flex items-center gap-2 px-4 py-3 hover:bg-rose-50 text-rose-600 rounded-xl text-xs font-semibold transition-all">
-            <i class="fa-solid fa-trash-can text-red-500"></i> ยกเลิกการส่งข้อความนี้ (ลบแชท)
+            <i class="fa-solid fa-trash-can text-red-500"></i> ยกเลิกการส่งข้อความ (ลบแชท)
           </button>
         `;
       }
-      openCenteredActionModal(buttonsHTML);
+      openCenteredActionModal(html);
     };
 
     window.viewUserProfileImage = function(avatarUrl, displayName) {
-      Swal.fire({
-        imageUrl: avatarUrl, imageWidth: 260, imageHeight: 260, imageAlt: displayName, title: displayName,
-        showConfirmButton: false, showCloseButton: true, customClass: { title: 'swal-premium-title' }
-      });
+      Swal.fire({ imageUrl: avatarUrl, imageWidth: 260, imageHeight: 260, imageAlt: displayName, title: displayName, showConfirmButton: false, showCloseButton: true });
     };
 
     window.showWhoReadThisMessage = function(readByObj) {
       if (!readByObj) return;
       const readNames = Object.values(readByObj)
-        .map(name => `<li class="flex items-center gap-2 py-2 border-b border-slate-100 last:border-none text-slate-700 text-xs font-semibold"><span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span> ${name}</li>`)
+        .map(name => `<li class="flex items-center gap-2 py-2 border-b last:border-none text-slate-700 text-xs font-semibold"><span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span> ${name}</li>`)
         .join('');
-
       Swal.fire({
-        title: '👥 สมาชิกที่อ่านข้อความนี้แล้ว',
+        title: '👥 รายชื่อผู้อ่านข้อความ',
         html: `<div class="max-h-[220px] overflow-y-auto text-left px-2 no-scrollbar"><ul class="space-y-1">${readNames}</ul></div>`,
-        confirmButtonText: 'ปิด', confirmButtonColor: '#64748b', customClass: { title: 'swal-premium-title', htmlContainer: 'swal-premium-html' }
+        confirmButtonText: 'ปิด', confirmButtonColor: '#64748b'
       });
     };
 
-    // ฟังก์ชันหลักในการเรนเดอร์ข้อมูลหน้าแชททั้งหมด
     function renderAllMessagesWithTemps() {
       const body = document.getElementById('chat-body');
       const isAtBottom = body.scrollHeight - body.scrollTop <= body.clientHeight + 120;
-      
       body.innerHTML = '';
       let lastRenderedDate = ""; 
 
       if(lastSnapshotData) {
         Object.keys(lastSnapshotData).forEach(key => {
           const msg = lastSnapshotData[key];
-          
           if (msg.timestamp) {
             const msgDateObj = new Date(msg.timestamp);
             const msgDateStr = msgDateObj.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
@@ -991,7 +817,6 @@
           const row = document.createElement('div');
           row.className = `msg-row flex gap-2 sm:gap-3 max-w-[85%] sm:max-w-[75%] w-fit relative items-end group mb-2 ${isSelf ? 'self flex-row-reverse ml-auto' : 'other mr-auto text-left'}`;
           
-          // ติ๊กเลือก Checkbox ด้านหน้าสไตล์แอป Line ยอดนิยม
           if(isMultiSelectMode && !msg.deleted) {
             const chk = document.createElement('input');
             chk.type = 'checkbox';
@@ -1018,7 +843,6 @@
             const nameSpan = document.createElement('span');
             nameSpan.className = 'msg-name text-[11px] text-slate-400 font-bold mb-1 px-1 cursor-pointer hover:underline';
             nameSpan.innerText = msg.senderName;
-            // คลิกที่ชื่อเพื่อดำเนินการ แท็กหาบุคคลอื่น (@Mention) อัตโนมัติ
             nameSpan.onclick = () => {
               const tx = document.getElementById('msg-input');
               tx.value += `@${msg.senderName} `;
@@ -1031,28 +855,26 @@
           bubble.className = 'msg-bubble p-2.5 px-3.5 sm:p-3 sm:px-4 rounded-2xl text-sm leading-relaxed flex flex-col gap-2 break-words cursor-pointer';
 
           if(msg.deleted) {
-            bubble.innerText = 'ข้อความถูกยกเลิกการส่ง';
+            bubble.innerText = 'ข้อความถูกลบเรียบร้อย';
             bubble.className += ' msg-deleted text-slate-400 italic bg-white/10 border border-dashed text-xs';
           } else {
-            // ดึงไฟล์ภาพมาแสดงผลขนาดออริจินัล 100% ความคมชัดสูงสุด
-            const isImageLink = msg.type === 'image';
-            
-            if(isImageLink) {
+            // ดึงลิงก์รูปภาพแสดงผลขนาดออริจินัล ความละเอียดต้นฉบับคมชัดสูงสุด (ข้อ 5)
+            if(msg.type === 'image') {
               bubble.innerHTML = `
-                <img src="${msg.content}" class="max-w-[180px] sm:max-w-[240px] rounded-xl object-contain cursor-pointer border border-white/20 shadow-md transform hover:scale-[1.01] transition-all select-none" referrerpolicy="no-referrer" onclick="window.openImageInZoomViewer('${msg.content}')">
+                <img src="${msg.content}" class="max-w-[180px] sm:max-w-[240px] rounded-xl object-contain border shadow-md" onclick="window.openImageInZoomViewer('${msg.content}')">
                 <div class="flex items-center gap-1.5 mt-1.5 w-full justify-center">
-                  <a href="https://drive.google.com/file/d/${msg.fileId}/view" target="_blank" class="px-2 py-1 bg-slate-800/80 hover:bg-slate-900 text-[10px] text-white rounded-md font-medium transition-colors flex items-center gap-1"><i class="fa-regular fa-eye"></i> ดูไฟล์บน Drive</a>
-                  <button onclick="window.directDownloadFromDrive('${msg.fileId}', '${msg.filename || 'image.png'}')" class="px-2 py-1 bg-green-600 hover:bg-green-700 text-[10px] text-white rounded-md font-bold transition-colors flex items-center gap-1"><i class="fa-solid fa-download"></i> ดาวน์โหลดลงเครื่อง</button>
+                  <a href="https://drive.google.com/file/d/${msg.fileId}/view" target="_blank" class="px-2 py-1 bg-slate-800/80 hover:bg-slate-900 text-[10px] text-white rounded-md font-medium"><i class="fa-regular fa-eye"></i> ดูบน Drive</a>
+                  <button onclick="window.directDownloadFromDrive('${msg.fileId}', '${msg.filename || 'image.png'}')" class="px-2 py-1 bg-green-600 hover:bg-green-700 text-[10px] text-white rounded-md font-bold"><i class="fa-solid fa-download"></i> ดาวน์โหลด</button>
                 </div>
               `;
               bubble.style.padding = '0'; bubble.style.background = 'none'; bubble.style.boxShadow = 'none';
             } else if(msg.type === 'video') {
               const videoDurationId = `vid_dur_${key}`;
               bubble.innerHTML = `
-                <video src="${msg.content}" controls preload="metadata" onloadstart="window.initAudioTracker(this, '${videoDurationId}')" class="max-w-[240px] rounded-xl border border-white/20 shadow-md"></video>
+                <video src="${msg.content}" controls preload="metadata" onloadstart="window.initAudioTracker(this, '${videoDurationId}')" class="max-w-[240px] rounded-xl border shadow-md"></video>
                 <div class="flex items-center justify-between gap-1.5 mt-1 px-1">
                   <span id="${videoDurationId}" class="text-[10px] text-white bg-slate-900/60 px-1.5 py-0.5 rounded-md font-bold">0:00</span>
-                  <button onclick="window.directDownloadFromDrive('${msg.fileId}', '${msg.filename || 'video.mp4'}')" class="px-2 py-1 bg-green-600 hover:bg-green-700 text-[10px] text-white rounded-md font-bold flex items-center gap-1"><i class="fa-solid fa-download"></i> ดาวน์โหลด</button>
+                  <button onclick="window.directDownloadFromDrive('${msg.fileId}', '${msg.filename || 'video.mp4'}')" class="px-2 py-1 bg-green-600 hover:bg-green-700 text-[10px] text-white rounded-md font-bold"><i class="fa-solid fa-download"></i> ดาวน์โหลด</button>
                 </div>
               `;
               bubble.style.padding = '0'; bubble.style.background = 'none'; bubble.style.boxShadow = 'none';
@@ -1066,7 +888,7 @@
                     <span class="text-[10px] text-slate-500 font-bold">ข้อความเสียง</span>
                     <span id="${durationId}" class="text-xs font-semibold text-slate-800">0:00</span>
                   </div>
-                  <button onclick="window.directDownloadFromDrive('${msg.fileId}', 'audio.mp3')" class="text-slate-400 hover:text-green-500 px-1" title="เซฟลงเครื่อง"><i class="fa-solid fa-download text-xs"></i></button>
+                  <button onclick="window.directDownloadFromDrive('${msg.fileId}', 'audio.mp3')" class="text-slate-400 hover:text-green-500 px-1"><i class="fa-solid fa-download text-xs"></i></button>
                 </div>
               `;
               bubble.style.padding = '0'; bubble.style.background = 'none'; bubble.style.boxShadow = 'none';
@@ -1079,8 +901,8 @@
                   <i class="fa-solid fa-file-lines text-lg sm:text-xl text-emerald-500 shrink-0"></i> ${msg.filename || 'ไฟล์แนบ'}
                 </div>
                 <div class="flex items-center gap-2 mt-1 border-t border-slate-100 pt-1.5 justify-start">
-                  <a href="https://drive.google.com/file/d/${msg.fileId}/view" target="_blank" class="px-1.5 py-0.5 bg-slate-100 hover:bg-slate-200 text-[10px] text-slate-600 rounded-md font-medium"><i class="fa-regular fa-eye"></i> ดูบนไดร์ฟ</a>
-                  <button onclick="window.directDownloadFromDrive('${msg.fileId}', '${msg.filename}')" class="px-1.5 py-0.5 bg-green-50 hover:bg-green-100 text-[10px] text-green-600 rounded-md font-bold"><i class="fa-solid fa-download"></i> ดาวน์โหลดลงเครื่อง</button>
+                  <a href="https://drive.google.com/file/d/${msg.fileId}/view" target="_blank" class="px-1.5 py-0.5 bg-slate-100 text-[10px] text-slate-600 rounded-md font-medium"><i class="fa-regular fa-eye"></i> ดูบน Drive</a>
+                  <button onclick="window.directDownloadFromDrive('${msg.fileId}', '${msg.filename}')" class="px-1.5 py-0.5 bg-green-50 text-[10px] text-green-600 rounded-md font-bold"><i class="fa-solid fa-download"></i> ดาวน์โหลด</button>
                 </div>
               `;
               bubble.className += ' bg-white text-slate-800 rounded-2xl shadow-sm';
@@ -1089,14 +911,12 @@
               bubble.style.padding = '0'; bubble.style.background = 'none'; bubble.style.boxShadow = 'none';
             }
 
-            // ผูกฟังก์ชันเรียกเปิดหน้าต่างจัดการแชทกลางจอ (ทั้งคลิกขวา และกดค้างบนจอมือถือ)
             bubble.onclick = () => {
               if(!isMultiSelectMode) {
                 window.triggerCenteredMenuOptions(key, msg.fileId || null, msg.type === 'text' ? msg.content : null, isSelf);
               }
             };
           }
-
           wrapper.appendChild(bubble);
           
           const metaContainer = document.createElement('div');
@@ -1105,7 +925,7 @@
           const totalReadsCount = msg.readBy ? Object.keys(msg.readBy).length : 0;
           if (isSelf && !msg.deleted && totalReadsCount > 0) {
             const readStatusSpan = document.createElement('span');
-            readStatusSpan.className = 'text-emerald-400 font-bold mb-0.5 select-none cursor-pointer hover:underline';
+            readStatusSpan.className = 'text-emerald-400 font-bold mb-0.5 cursor-pointer hover:underline';
             readStatusSpan.innerText = `อ่านแล้ว ${totalReadsCount}`;
             readStatusSpan.onclick = (e) => { e.stopPropagation(); window.showWhoReadThisMessage(msg.readBy); };
             metaContainer.appendChild(readStatusSpan);
@@ -1121,11 +941,7 @@
         });
       }
       
-      Object.keys(activeTempUploads).forEach(id => {
-        const tempMsg = activeTempUploads[id];
-        body.appendChild(createTempRow(tempMsg));
-      });
-      
+      Object.keys(activeTempUploads).forEach(id => { row.appendChild(createTempRow(activeTempUploads[id])); });
       if (isAtBottom) { body.scrollTop = body.scrollHeight; }
     }
 
@@ -1134,9 +950,9 @@
       row.className = "msg-row flex gap-3 max-w-[85%] sm:max-w-[75%] w-fit align-self-end flex-row-reverse ml-auto mb-2 opacity-75 text-right";
       let inner = '';
       if(msg.type === 'text') inner = `<div class="msg-bubble p-3 rounded-2xl text-sm bg-[#7CE68E] text-slate-900 shadow-sm">${msg.content}</div>`;
-      else if(msg.type === 'sticker') inner = `<img src="${msg.content}" class="w-20 h-20 object-contain">`;
-      else if(msg.type === 'optimistic-image') inner = `<img src="${msg.content}" class="max-w-[160px] rounded-xl object-cover opacity-60 border"><span class="text-[9px] block text-emerald-400">กำลังส่ง...</span>`;
-      else if(msg.type === 'optimistic-video') inner = `<div class="p-3 rounded-2xl bg-slate-800 text-xs text-white"><i class="fa-solid fa-spinner animate-spin mr-1"></i> กำลังประมวลผลวิดีโอ...</div>`;
+      else if(msg.type === 'sticker') inner = `<img src="${msg.content}" class="w-20 object-contain">`;
+      else if(msg.type === 'optimistic-image') inner = `<img src="${msg.content}" class="max-w-[160px] rounded-xl object-cover opacity-60 border"><span class="text-[9px] text-emerald-400">กำลังส่ง...</span>`;
+      else if(msg.type === 'optimistic-video') inner = `<div class="p-3 rounded-2xl bg-slate-800 text-xs text-white"><i class="fa-solid fa-spinner animate-spin mr-1"></i> กำลังส่งวิดีโอ...</div>`;
       else if(msg.type === 'optimistic-file') inner = `<div class="p-3 rounded-2xl bg-white border text-xs text-slate-500"><i class="fa-solid fa-spinner animate-spin text-green-500 mr-1"></i> กำลังส่งไฟล์: ${msg.filename}</div>`;
       row.innerHTML = inner;
       return row;
@@ -1150,7 +966,7 @@
             <div class="grid grid-cols-1 gap-3">
               <div class="swal-settings-card p-3 rounded-2xl bg-slate-50 border flex flex-col gap-2">
                 <span class="text-xs font-bold text-slate-500 px-1"><i class="fa-solid fa-user-gear text-blue-500 mr-1"></i> ข้อมูลโปรไฟล์ผู้ใช้งาน</span>
-                <button id="swal-menu-change-name" class="w-full flex items-center justify-between p-3 bg-white hover:bg-blue-50 rounded-xl text-xs font-semibold text-slate-700 transition-all border border-slate-200">
+                <button id="swal-menu-change-name" class="w-full flex items-center justify-between p-3 bg-white hover:bg-blue-50 rounded-xl text-xs font-semibold text-slate-700 border">
                   <div class="flex items-center gap-3">
                     <div class="w-7 h-7 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600"><i class="fa-solid fa-signature"></i></div>
                     <span>เปลี่ยนชื่อเล่นของคุณ (Display Name)</span>
@@ -1158,10 +974,9 @@
                   <i class="fa-solid fa-chevron-right text-slate-400"></i>
                 </button>
               </div>
-
               <div class="swal-settings-card p-3 rounded-2xl bg-slate-50 border flex flex-col gap-2">
                 <span class="text-xs font-bold text-slate-500 px-1"><i class="fa-solid fa-wand-magic-sparkles text-emerald-500 mr-1"></i> ความสวยงาม</span>
-                <button id="swal-menu-bg" class="w-full flex items-center justify-between p-3 bg-white hover:bg-emerald-50 rounded-xl text-xs font-semibold text-slate-700 transition-all border border-slate-200">
+                <button id="swal-menu-bg" class="w-full flex items-center justify-between p-3 bg-white hover:bg-emerald-50 rounded-xl text-xs font-semibold text-slate-700 border">
                   <div class="flex items-center gap-3">
                     <div class="w-7 h-7 bg-emerald-100 rounded-lg flex items-center justify-center text-emerald-600"><i class="fa-solid fa-image"></i></div>
                     <span>เปลี่ยนภาพพื้นหลังวอลเปเปอร์</span>
@@ -1169,10 +984,8 @@
                   <i class="fa-solid fa-chevron-right text-slate-400"></i>
                 </button>
               </div>
-
-              <button id="swal-menu-logout" class="w-full mt-1 flex items-center justify-center gap-2 p-3 bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs rounded-xl transition-all shadow-md">
-                <i class="fa-solid fa-power-off text-rose-400"></i>
-                <span>ออกจากระบบบัญชีปัจจุบัน</span>
+              <button id="swal-menu-logout" class="w-full mt-1 flex items-center justify-center gap-2 p-3 bg-slate-900 text-white font-medium text-xs rounded-xl shadow-md">
+                <i class="fa-solid fa-power-off text-rose-400"></i> ออกจากระบบบัญชีปัจจุบัน
               </button>
             </div>
           </div>
@@ -1192,7 +1005,7 @@
       });
     }
 
-    // ฟังก์ชันย่อยระบบแก้ไขเปลี่ยนชื่อเล่น (Display Name) ของผู้ใช้งาน อัปเดตลง Sheet และ Firebase ทันที
+    // ฟังก์ชันย่อยระบบแก้ไขเปลี่ยนชื่อเล่น (Display Name) ของผู้ใช้งาน อัปเดตลง Sheet และ Firebase ทันที (ข้อ 12)
     async function handleUserChangeDisplayNameFlow() {
       Swal.close();
       const { value: newName } = await Swal.fire({
@@ -1200,10 +1013,7 @@
         input: 'text',
         inputLabel: 'ระบุชื่อเล่นแสดงในแชทใหม่ของคุณ',
         inputValue: currentUser.displayName,
-        placeholder: 'กรอกชื่อเล่นที่ต้องการ...',
-        showCancelButton: true,
-        confirmButtonColor: '#10b981',
-        cancelButtonText: 'ยกเลิก',
+        showCancelButton: true, confirmButtonColor: '#10b981', cancelButtonText: 'ยกเลิก',
         inputValidator: (value) => { if (!value.trim()) return 'กรุณาระบุชื่อเล่นด้วยครับ!' }
       });
 
@@ -1250,12 +1060,6 @@
       });
     }
 
-    function validatePassword(pwd) {
-      if (pwd.length < 8) return false;
-      if (/^\d+$/.test(pwd)) return false; 
-      return true;
-    }
-
     async function openRegisterModal() {
       const { value: formValues } = await Swal.fire({
         title: 'สร้างบัญชีผู้ใช้ใหม่',
@@ -1266,13 +1070,12 @@
             <label class="block text-xs font-semibold text-slate-500 mb-1 mt-2">Username</label>
             <input id="swal-user" class="swal-input-box" placeholder="สำหรับใช้ล็อกอิน">
             <label class="block text-xs font-semibold text-slate-500 mb-1 mt-2">Password</label>
-            <input id="swal-pass" type="password" class="swal-input-box" placeholder="ขั้นต่ำ 8 ตัว (ห้ามเลขล้วน)">
+            <input id="swal-pass" type="password" class="swal-input-box">
             <label class="block text-xs font-semibold text-slate-500 mb-1 mt-2">Email</label>
-            <input id="swal-email" type="email" class="swal-input-box" placeholder="ตัวอย่าง: name@gmail.com">
+            <input id="swal-email" type="email" class="swal-input-box" placeholder="name@gmail.com">
           </div>
         `,
-        focusConfirm: false, confirmButtonText: 'สมัครสมาชิก', confirmButtonColor: '#10b981',
-        showCancelButton: true, cancelButtonText: 'ยกเลิก',
+        focusConfirm: false, confirmButtonText: 'สมัครสมาชิก', confirmButtonColor: '#10b981', showCancelButton: true,
         preConfirm: () => {
           return {
             displayName: document.getElementById('swal-name').value.trim(),
@@ -1282,33 +1085,20 @@
           }
         }
       });
-
       if (!formValues) return;
-      if (!formValues.displayName || !formValues.username || !formValues.password || !formValues.email) {
-        return Swal.fire('ข้อมูลไม่ครบ', 'กรุณากรอกข้อมูลให้ครบทุกช่องครับ', 'warning');
-      }
-      if (!formValues.email.endsWith('@gmail.com')) {
-        return Swal.fire('ผิดพลาด', 'ระบบรองรับเฉพาะบัญชี @gmail.com เท่านั้นครับ', 'warning');
-      }
-      if (!validatePassword(formValues.password)) {
-        return Swal.fire('รหัสผ่านไม่ปลอดภัย', 'รหัสผ่านต้องยาวอย่างน้อย 8 ตัว มีผสมตัวอักษรและตัวเลข (ห้ามเป็นตัวเลขล้วน)', 'warning');
-      }
-
       Swal.showLoading();
       try {
         let res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'register', ...formValues }) });
         let result = await res.json();
-        if(result.status === 'success') {
-          Swal.fire('สำเร็จ', 'สร้างบัญชีเข้าใช้งานเรียบร้อยแล้วครับ โปรดเข้าสู่ระบบ', 'success');
-        } else { Swal.fire('ล้มเหลว', result.message, 'error'); }
+        if(result.status === 'success') { Swal.fire('สำเร็จ', 'สร้างบัญชีเรียบร้อยแล้ว เข้าสู่ระบบได้เลยครับ', 'success'); }
+        else { Swal.fire('ล้มเหลว', result.message, 'error'); }
       } catch(e) { Swal.fire('ข้อผิดพลาด', 'ติดต่อคลาวด์ไม่สำเร็จ', 'error'); }
     }
 
     async function handleLogin() {
       const userVal = document.getElementById('login-username').value.trim();
       const passVal = document.getElementById('login-password').value;
-      if(!userVal || !passVal) return Swal.fire('ระบุข้อมูล', 'กรุณาระบุ Username และ Password ให้ครบถ้วนครับ', 'warning');
-
+      if(!userVal || !passVal) return Swal.fire('ระบุข้อมูล', 'กรุณาระบุบัญชีและรหัสผ่านให้ครบถ้วนครับ', 'warning');
       Swal.showLoading();
       try {
         let res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'login', username: userVal, password: passVal }) });
@@ -1316,19 +1106,16 @@
         if(result.status === 'success') {
           currentUser = result.user;
           localStorage.setItem('parakit_chat_user', JSON.stringify(currentUser));
-          
           document.getElementById('login-screen').style.display = 'none';
           document.getElementById('chat-interface').style.display = 'flex';
-          
           document.getElementById('my-display-name').innerText = currentUser.displayName;
           if(currentUser.avatar) document.getElementById('my-avatar-img').src = currentUser.avatar;
-          
           setupUserPresence();
           await syncAvatarsFromServer();
           Swal.close();
           listenChatMessages();
-        } else { Swal.fire('ข้อผิดพลาด', result.message || 'ข้อมูลเข้าสู่ระบบไม่ถูกต้องครับ', 'error'); }
-      } catch(e) { Swal.fire('ข้อผิดพลาด', 'การยืนยันตัวตนขัดข้อง', 'error'); }
+        } else { Swal.fire('ข้อผิดพลาด', result.message, 'error'); }
+      } catch(e) { Swal.fire('ข้อผิดพลาด', 'ยืนยันสิทธิ์ล้มเหลว', 'error'); }
     }
 
     async function handleForgotPwd() {
@@ -1337,16 +1124,15 @@
         html: `
           <div class="text-left max-w-xs mx-auto">
             <label class="block text-xs font-semibold text-slate-500 mb-1">Username ของคุณ</label>
-            <input id="forgot-user" class="swal-input-box" placeholder="ระบุ Username">
+            <input id="forgot-user" class="swal-input-box">
             <label class="block text-xs font-semibold text-slate-500 mb-1 mt-3">Gmail ที่ลงทะเบียน</label>
-            <input id="forgot-email" type="email" class="swal-input-box" placeholder="example@gmail.com">
+            <input id="forgot-email" type="email" class="swal-input-box">
           </div>
         `,
         confirmButtonText: 'รับรหัส OTP', confirmButtonColor: '#10b981', showCancelButton: true,
         preConfirm: () => { return { username: document.getElementById('forgot-user').value.trim(), email: document.getElementById('forgot-email').value.trim() } }
       });
-
-      if(!info || !info.username || !info.email) return;
+      if(!info) return;
       Swal.showLoading();
       try {
         let res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'sendOTP', ...info }) });
@@ -1358,29 +1144,27 @@
           html: `
             <div class="text-left max-w-xs mx-auto">
               <label class="block text-xs font-semibold text-slate-500 mb-1">รหัส OTP 6 หลัก</label>
-              <input id="reset-otp" class="swal-input-box text-center tracking-widest font-bold" maxlength="6">
+              <input id="reset-otp" class="swal-input-box text-center font-bold" maxlength="6">
               <label class="block text-xs font-semibold text-slate-500 mb-1 mt-3">รหัสผ่านใหม่</label>
-              <input id="reset-newpass" type="password" class="swal-input-box" placeholder="ขั้นต่ำ 8 ตัว">
+              <input id="reset-newpass" type="password" class="swal-input-box">
             </div>
           `,
           confirmButtonText: 'ยืนยันเปลี่ยนรหัส', confirmButtonColor: '#10b981', showCancelButton: true,
           preConfirm: () => { return { otp: document.getElementById('reset-otp').value.trim(), newPassword: document.getElementById('reset-newpass').value } }
         });
-
-        if(!resetData.otp || !resetData.newPassword) return;
+        if(!resetData) return;
         Swal.showLoading();
         let res2 = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'resetPassword', username: info.username, ...resetData }) });
         let result2 = await res2.json();
-        if(result2.status === 'success') {
-          Swal.fire('สำเร็จ', 'เปลี่ยนรหัสผ่านเสร็จสิ้น ล็อกอินได้เลยครับ', 'success');
-        } else { Swal.fire('ล้มเหลว', result2.message, 'error'); }
-      } catch(e) { Swal.fire('ผิดพลาด', 'คำขอถูกปฏิเสธ', 'error'); }
+        if(result2.status === 'success') { Swal.fire('สำเร็จ', 'แก้ไขเปลี่ยนรหัสเสร็จสมบูรณ์', 'success'); }
+        else { Swal.fire('ล้มเหลว', result2.message, 'error'); }
+      } catch(e) { Swal.fire('ผิดพลาด', 'ระบบขัดข้อง', 'error'); }
     }
 
     window.uploadUserAvatarToDrive = function(e) {
       const file = e.target.files[0];
       if(!file) return;
-      Swal.fire({ title: 'กำลังอัปโหลดโปรไฟล์...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+      Swal.fire({ title: 'กำลังเปลี่ยนรูปโปรไฟล์...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
       const reader = new FileReader();
       reader.onloadend = async () => {
         try {
@@ -1404,22 +1188,21 @@
     window.uploadUserBgToDrive = function(e) {
       const file = e.target.files[0];
       if(!file) return;
-      Swal.fire({ title: 'กำลังเปลี่ยนพื้นหลัง...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+      Swal.fire({ title: 'กำลังอัปโหลดพื้นหลัง...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
       const reader = new FileReader();
       reader.onloadend = async () => {
         try {
           let res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'uploadFile', filename: `bg_${currentUser.username}.png`, base64: reader.result }) });
           let result = await res.json();
           if(result.status === 'success') {
-            let directBgUrl = result.viewUrl || result.url;
-            const chatBody = document.getElementById('chat-body');
-            chatBody.style.backgroundImage = `url('${directBgUrl}')`;
-            currentUser.bgUrl = directBgUrl;
+            let bgUrl = result.viewUrl || result.url;
+            document.getElementById('chat-body').style.backgroundImage = `url('${bgUrl}')`;
+            currentUser.bgUrl = bgUrl;
             localStorage.setItem('parakit_chat_user', JSON.stringify(currentUser));
-            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'updateUserBg', username: currentUser.username, bgUrl: directBgUrl }) });
-            Swal.fire('สำเร็จ', 'เปลี่ยนพื้นหลังวอลเปเปอร์สำเร็จครับ', 'success');
+            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'updateUserBg', username: currentUser.username, bgUrl: bgUrl }) });
+            Swal.fire('สำเร็จ', 'เปลี่ยนภาพพื้นหลังวอลเปเปอร์สำเร็จครับ', 'success');
           }
-        } catch(err) { Swal.fire('ผิดพลาด', 'เชื่อมต่อคลาวด์ล้มเหลว', 'error'); }
+        } catch(err) { Swal.fire('ผิดพลาด', 'คลาวด์ขัดข้อง', 'error'); }
       };
       reader.readAsDataURL(file);
     };
@@ -1428,7 +1211,7 @@
       const ep = document.getElementById('emoji-picker');
       emojis.forEach(emo => {
         let span = document.createElement('span'); 
-        span.className = 'flex items-center justify-center p-1 hover:scale-125 transition-transform'; 
+        span.className = 'flex items-center justify-center p-1 hover:scale-125 transition-transform cursor-pointer'; 
         span.innerText = emo;
         span.onclick = (e) => { e.stopPropagation(); document.getElementById('msg-input').value += emo; ep.classList.add('hidden'); };
         ep.appendChild(span);
@@ -1436,16 +1219,14 @@
       document.getElementById('tool-emoji').addEventListener('click', (e) => { e.stopPropagation(); ep.classList.toggle('hidden'); document.getElementById('sticker-picker').classList.add('hidden'); });
 
       const sp = document.getElementById('sticker-picker');
-      stickers.forEach((stk, idx) => {
+      stickers.forEach((stk) => {
         let img = document.createElement('img'); 
         img.src = stk; 
         img.className = 'w-14 h-14 object-contain hover:scale-110 transition-transform p-1 cursor-pointer';
-        img.onerror = () => { img.src = "https://cdn-icons-png.flaticon.com/512/25/25284.png"; };
         img.onclick = (e) => { e.stopPropagation(); sendSticker(stk); sp.classList.add('hidden'); };
         sp.appendChild(img);
       });
       document.getElementById('tool-sticker').addEventListener('click', (e) => { e.stopPropagation(); sp.classList.toggle('hidden'); ep.classList.add('hidden'); });
-
       document.addEventListener('click', () => { ep.classList.add('hidden'); sp.classList.add('hidden'); document.getElementById('mention-list-popup').classList.add('hidden'); });
     }
   </script>
