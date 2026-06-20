@@ -56,9 +56,8 @@
     .swal-input-box:focus { outline: none; border-color: #10b981; background-color: #fff; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15); }
     .swal2-popup { border-radius: 24px !important; padding: 2rem !important; }
     
-    /* สไตล์คัสตอมสำหรับปุ่มการตั้งค่าภายในเมนู Pop-up */
     .swal-menu-btn {
-      width: 100%; display: flex; items-center: center; gap: 12px; padding: 14px 18px; 
+      width: 100%; display: flex; align-items: center; gap: 12px; padding: 14px 18px; 
       border-radius: 16px; font-size: 14px; font-weight: 500; transition: all 0.2s ease; margin-bottom: 8px;
     }
   </style>
@@ -110,7 +109,6 @@
   </div>
 
   <div id="chat-interface" class="w-full h-full md:max-w-5xl md:h-[85vh] glass-panel md:rounded-3xl shadow-2xl flex flex-col border-none overflow-hidden transition-all duration-300" style="display: none;">
-    
     <div class="p-3 bg-slate-900/95 text-white flex items-center justify-between border-b border-white/10 z-10 shadow-lg shrink-0">
       <div class="flex items-center gap-2 sm:gap-3 overflow-hidden mr-2">
         <div class="relative group cursor-pointer shrink-0" id="avatar-container" title="คลิกเพื่อเปลี่ยนรูปโปรไฟล์ผ่านกูเกิลไดรฟ์">
@@ -127,8 +125,8 @@
       </div>
       
       <div class="shrink-0">
-        <button id="btn-open-settings" title="การตั้งค่าระบบแชท" class="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white flex items-center justify-center gap-1.5 transition-all text-xs font-semibold border border-white/10 shadow-md transform active:scale-95">
-          <i class="fa-solid fa-gear text-sm animate-spin-slow"></i>
+        <button id="btn-open-settings" title="การตั้งค่าระบบแชท" class="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white flex items-center justify-center gap-1.5 transition-all text-xs font-semibold border border-white/10 shadow-md">
+          <i class="fa-solid fa-gear text-sm"></i>
           <span>ตั้งค่า</span>
         </button>
       </div>
@@ -182,9 +180,10 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbydCHqLFw-dQWBWEHvbWyxTgJ-bObc2AkM_KSVUyQFL1ErN0lcND1iAhrM8IhE0B7tl/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw_-h8lZhXY2T_h4two_4KosBNlq0CXpwgsVBoHgZ0ZK5P-m8A2HT7yk2V8iQ9RMa_W/exec";
     let currentUser = null;
     let activeTempUploads = {}; 
+    let globalAvatarMap = {}; // ตัวแปรเก็บแมปรูปโปรไฟล์ล่าสุดของทุกคนในแชท
 
     const emojis = [
       "😀","😂","🥰","😎","🤩","😏","👍","👌","🙏","🎉","🔥","❤️",
@@ -214,7 +213,24 @@
       checkSavedLogin();
     });
 
-    function checkSavedLogin() {
+    // ดึงข้อมูลรูปภาพโปรไฟล์ชุดล่าสุดจากชีทมาอัปเดต Map Client
+    async function syncAvatarsFromServer() {
+      try {
+        let res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getAllAvatars' }) });
+        let result = await res.json();
+        if (result.status === 'success') {
+          globalAvatarMap = result.avatars;
+          // อัปเดตรูปตัวเองบนหัวเว็บ
+          if (currentUser && globalAvatarMap[currentUser.displayName]) {
+            currentUser.avatar = globalAvatarMap[currentUser.displayName];
+            document.getElementById('my-avatar-img').src = currentUser.avatar;
+            localStorage.setItem('parakit_chat_user', JSON.stringify(currentUser));
+          }
+        }
+      } catch (e) { console.error("ไม่สามารถซิงค์ข้อมูลรูปโปรไฟล์ได้", e); }
+    }
+
+    async function checkSavedLogin() {
       const savedUser = localStorage.getItem('parakit_chat_user');
       if (savedUser) {
         currentUser = JSON.parse(savedUser);
@@ -232,6 +248,7 @@
           chatBody.style.backgroundSize = 'cover';
         }
         
+        await syncAvatarsFromServer();
         listenChatMessages();
       }
     }
@@ -244,17 +261,13 @@
       document.getElementById('login-password').addEventListener('keypress', (e) => { if(e.key === 'Enter') handleLogin(); });
 
       document.getElementById('btn-forgot-pwd').addEventListener('click', handleForgotPwd);
-      
-      // ผูกอีเวนต์เปิดหน้าต่าง Pop-up บัญชีและการตั้งค่า
       document.getElementById('btn-open-settings').addEventListener('click', openSettingsModal);
-
       document.getElementById('btn-send').addEventListener('click', sendTextMessage);
       document.getElementById('msg-input').addEventListener('keypress', (e) => { if(e.key === 'Enter') sendTextMessage(); });
       
       document.getElementById('avatar-container').addEventListener('click', () => document.getElementById('avatar-input').click());
     }
 
-    // ฟังก์ชันสร้างหน้าต่างการตั้งค่าส่วนกลางรวมทุกคำสั่งไว้ในจุดเดียว
     async function openSettingsModal() {
       Swal.fire({
         title: 'การตั้งค่าระบบแชท',
@@ -281,7 +294,6 @@
         cancelButtonColor: '#64748b',
         customClass: { title: 'swal-premium-title', htmlContainer: 'swal-premium-html' },
         didOpen: () => {
-          // ผูกคำสั่งย่อยแต่ละฟังก์ชันภายใน Pop-up
           document.getElementById('swal-menu-bg').addEventListener('click', () => {
             Swal.close();
             document.getElementById('bg-input').click();
@@ -290,7 +302,7 @@
           document.getElementById('swal-menu-clear').addEventListener('click', () => {
             Swal.close();
             document.getElementById('chat-body').innerHTML = '';
-            Swal.fire({ title: 'สำเร็จ', text: 'ล้างข้อมูลหน้าจอภายในเครื่องสำหรับคุณแล้ว', icon: 'success', timer: 1500, showConfirmButton: false });
+            Swal.fire({ title: 'สำเร็จ', text: 'ล้างหน้าจอภายในแอปพลิเคชันสำหรับคุณแล้วครับ', icon: 'success', timer: 1500, showConfirmButton: false });
           });
           
           document.getElementById('swal-menu-deleteall').addEventListener('click', () => {
@@ -386,6 +398,7 @@
           document.getElementById('my-display-name').innerText = currentUser.displayName;
           document.getElementById('my-avatar-img').src = currentUser.avatar;
           
+          await syncAvatarsFromServer();
           Swal.close();
           listenChatMessages();
         } else { 
@@ -424,6 +437,7 @@
             chatBody.style.backgroundSize = 'cover';
           }
 
+          await syncAvatarsFromServer();
           Swal.close();
           listenChatMessages();
         } else {
@@ -622,7 +636,11 @@
             localStorage.setItem('parakit_chat_user', JSON.stringify(currentUser));
             
             await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'updateAvatar', username: currentUser.username, avatarUrl: directUrl }) });
+            // บันทึกรูปใหม่ลง Cache Map ของเครื่องทันที
+            globalAvatarMap[currentUser.displayName] = directUrl;
+            
             Swal.fire({ title: 'สำเร็จ!', text: 'เปลี่ยนรูปโปรไฟล์ผ่านคลาวด์ไดร์ฟเรียบร้อยครับ', icon: 'success', confirmButtonColor: '#10b981' });
+            renderAllMessagesWithTemps(); // สั่งเรนเดอร์ข้อความใหม่ให้รูปตัวเองเปลี่ยนทันที
           } else {
             Swal.fire('ล้มเหลว', 'เกิดข้อผิดพลาดจากเซิร์ฟเวอร์ไดร์ฟ', 'error');
           }
@@ -680,6 +698,7 @@
       input.value = '';
       push(ref(db, 'global_messages'), {
         senderName: currentUser.displayName,
+        // ส่งรูปสำรองไปใน Database แต่ไคลเอนต์จริงจะดึงจาก dynamic map แทน
         senderAvatar: currentUser.avatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png',
         type: 'text', content: text, timestamp: localTimestamp, deleted: false
       });
@@ -845,7 +864,9 @@
           if(!isSelf) {
             const img = document.createElement('img');
             img.className = 'msg-avatar w-8 h-8 rounded-full object-cover shadow-sm self-start mt-1 shrink-0';
-            img.src = msg.senderAvatar;
+            
+            // แก้ไขตรงนี้สำคัญ: ดึงรูปภาพเวอร์ชันล่าสุดแบบ Realtime จาก globalAvatarMap ส่วนกลาง หากไม่พบค่อยใช้ค่าเริ่มต้น
+            img.src = globalAvatarMap[msg.senderName] || msg.senderAvatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
             row.appendChild(img);
           }
 
