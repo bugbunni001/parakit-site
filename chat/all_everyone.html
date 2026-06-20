@@ -183,7 +183,6 @@
     <div id="upload-preview-area" class="p-2 bg-slate-100 border-t border-slate-200 flex gap-3 overflow-x-auto no-scrollbar hidden"></div>
 
     <div class="p-3 bg-white border-t border-slate-200/80 flex flex-col gap-2 shadow-inner shrink-0 relative pb-safe">
-      
       <div id="mention-list-popup" class="mention-dropdown hidden"></div>
 
       <div class="flex items-center justify-between px-1">
@@ -199,7 +198,7 @@
           </div>
           <div class="flex items-center gap-2">
             <span id="audio-timer" class="text-xs font-bold text-red-500 hidden animate-pulse">0:00</span>
-            <button id="btn-audio-record" class="w-9 h-9 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center transition-all hover:bg-red-50 hover:text-red-500 shadow-sm" title="กดอัดเสียงส่งบันทึกลงคลาวด์ไดร์ฟ">
+            <button id="btn-audio-record" class="w-9 h-9 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center transition-all hover:bg-red-50 hover:text-red-500 shadow-sm">
               <i class="fa-solid fa-microphone text-sm"></i>
             </button>
           </div>
@@ -252,7 +251,7 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwAYQLbYKCR7b5PFNfnPq9kLVmsFTiGfQmm7vkiKLaISvVDrObFngBX81r7GzehBscX/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyysveZ3DFz73UtN_tBk-8hXO5Lr1dyHGtPfGjdRwf30KHvXetsSxy56u1-u58U0tSs/exec";
     let currentUser = null;
     let activeTempUploads = {}; 
     let globalAvatarMap = {}; 
@@ -288,7 +287,7 @@
       audio.play().then(() => {
         audio.pause();
         audio.currentTime = 0;
-      }).catch(e => console.log("Audio Context ปลดล็อกสำรองสำเร็จ:", e));
+      }).catch(e => console.log("Audio contextual system sync error:", e));
     }
 
     function initGlobalViewer() {
@@ -307,7 +306,6 @@
       globalViewerInstance.show();
     };
 
-    // เปิดตัวเลือกดำเนินการแชทกลางจอ (ข้อ 1)
     window.openCenteredActionModal = function(buttonsHTML) {
       document.getElementById('centered-modal-buttons').innerHTML = buttonsHTML;
       document.getElementById('ctx-backdrop-overlay').classList.add('active');
@@ -321,29 +319,18 @@
 
     document.getElementById('ctx-backdrop-overlay').addEventListener('click', closeCenteredActionModal);
 
-    // ดาวน์โหลดไฟล์ตรงจาก Apps Script เว็บบล็อกอิน Gmail (ข้อ 6)
     window.directDownloadFromDrive = function(fileId, filename) {
-      if(!fileId) return Swal.fire('ผิดพลาด', 'ไม่พบรหัสคิวข้อมูลไฟล์', 'error');
-      
+      if(!fileId) return Swal.fire('ผิดพลาด', 'ไม่พบรหัสไฟล์แชท', 'error');
       Swal.fire({
-        title: 'กำลังเตรียมไฟล์ดาวน์โหลด...',
-        html: 'ระบบกำลังดึงข้อมูลต้นฉบับตรงลงอุปกรณ์ให้คุณทันทีโดยไม่ต้องเข้าสู่ระบบ Gmail ครับ',
+        title: 'กำลังดาวน์โหลด...',
+        html: 'ระบบกำลังดึงข้อมูลลงสู่อุปกรณ์โดยตรงโดยไม่ต้องล็อกอินบัญชี Gmail ครับ',
         allowOutsideClick: false,
         didOpen: () => { Swal.showLoading(); }
       });
-
-      const proxyDownloadUrl = `${SCRIPT_URL}?action=directStreamDownload&fileId=${fileId}`;
-      const a = document.createElement("a");
-      a.href = proxyDownloadUrl;
-      a.download = filename || "downloaded_file";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      
+      window.location.href = `${SCRIPT_URL}?action=directStreamDownload&fileId=${fileId}`;
       setTimeout(() => { Swal.close(); }, 2000);
     };
 
-    // เปิดโหมดเลือกหลายข้อความเพื่อส่งแชร์ต่อ (ข้อ 2)
     function toggleMultiSelectMode() {
       isMultiSelectMode = !isMultiSelectMode;
       if(isMultiSelectMode) {
@@ -378,12 +365,10 @@
       updateSelectCountLabel();
     };
 
-    // ส่งชุดข้อมูลตัวเลือกแชร์ไปยังแอปอื่น (ข้อ 2)
     async function handleMultiShareAction() {
       if(selectedMessageKeys.length === 0) {
-        return Swal.fire('โปรดเลือกข้อความ', 'กรุณาเลือกรายการที่ต้องการแชร์ต่ออย่างน้อย 1 รายการครับ', 'warning');
+        return Swal.fire('โปรดเลือกข้อความ', 'กรุณาเลือกรายการแชทที่ต้องการแชร์ต่ออย่างน้อย 1 รายการครับ', 'warning');
       }
-
       let combinedText = "[แชร์บันทึกข้อความ Parakit Connect]\n";
       selectedMessageKeys.forEach(key => {
         const m = lastSnapshotData[key];
@@ -398,7 +383,7 @@
         try {
           await navigator.share({ title: 'แชร์ข้อความ Parakit Chat', text: combinedText });
           exitMultiSelectMode();
-        } catch (err) { console.log("Native share api call error/cancelled", err); }
+        } catch (err) { console.log(err); }
       } else {
         Swal.fire({
           title: 'เลือกแอปพลิเคชันเพื่อแชร์',
@@ -406,38 +391,28 @@
             <div class="grid grid-cols-2 gap-3 mt-2">
               <a href="https://social-plugins.line.me/lineit/share?text=${encodeURIComponent(combinedText)}" target="_blank" class="flex items-center gap-2 p-3 bg-green-500 text-white rounded-xl font-bold justify-center text-xs"><i class="fa-brands fa-line text-lg"></i> LINE</a>
               <a href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}&quote=${encodeURIComponent(combinedText)}" target="_blank" class="flex items-center gap-2 p-3 bg-blue-600 text-white rounded-xl font-bold justify-center text-xs"><i class="fa-brands fa-facebook text-lg"></i> Facebook</a>
-              <button id="btn-copy-share-text" class="col-span-2 flex items-center gap-2 p-3 bg-slate-800 text-white rounded-xl font-bold justify-center text-xs"><i class="fa-regular fa-copy text-lg"></i> คัดลอกเนื้อหาแชทเพื่อไปวางด้วยตัวเอง</button>
+              <button id="btn-copy-share-text" class="col-span-2 flex items-center gap-2 p-3 bg-slate-800 text-white rounded-xl font-bold justify-center text-xs"><i class="fa-regular fa-copy text-lg"></i> คัดลอกเนื้อหาแชททั้งหมด</button>
             </div>
           `,
-          showConfirmButton: false, showCancelButton: true, cancelButtonText: 'ปิดหน้าต่าง', customClass: { popup: 'rounded-3xl' },
+          showConfirmButton: false, showCancelButton: true, cancelButtonText: 'ปิดหน้าต่าง',
           didOpen: () => {
             document.getElementById('btn-copy-share-text').onclick = () => {
               navigator.clipboard.writeText(combinedText);
-              Swal.fire('คัดลอกสำเร็จ', 'สามารถนำไปวางในแอป Messenger, IG หรือ TikTok ได้เลยครับ', 'success');
+              Swal.fire('คัดลอกสำเร็จ', 'นำไปวางแชร์ในแอป Messenger, IG หรือ TikTok ได้เลยครับ', 'success');
             };
           }
         });
       }
     }
 
-    // เปิดรองรับระบบลากวางไฟล์ลงช่องแชท (ข้อ 4)
     function initDragAndDropEvents() {
       const chatInterface = document.getElementById('chat-interface');
-      
       ['dragenter', 'dragover'].forEach(name => {
-        chatInterface.addEventListener(name, (e) => {
-          e.preventDefault(); e.stopPropagation();
-          chatInterface.classList.add('drag-active');
-        }, false);
+        chatInterface.addEventListener(name, (e) => { e.preventDefault(); e.stopPropagation(); chatInterface.classList.add('drag-active'); }, false);
       });
-
       ['dragleave', 'drop'].forEach(name => {
-        chatInterface.addEventListener(name, (e) => {
-          e.preventDefault(); e.stopPropagation();
-          chatInterface.classList.remove('drag-active');
-        }, false);
+        chatInterface.addEventListener(name, (e) => { e.preventDefault(); e.stopPropagation(); chatInterface.classList.remove('drag-active'); }, false);
       });
-
       chatInterface.addEventListener('drop', (e) => {
         const dt = e.dataTransfer;
         const files = Array.from(dt.files);
@@ -450,12 +425,10 @@
       processBatchFiles(files);
     };
 
-    // พรีวิวพิกัดรูปภาพและข้อมูลคิวก่อนกดยืนยันส่งจริง (ข้อ 3 และ 4)
     function processBatchFiles(files) {
       if(files.length > 20) {
-        return Swal.fire('เกิดข้อผิดพลาด', 'จำกัดสิทธิ์รองรับไฟล์สูงสุดไม่เกิน 20 ไฟล์ต่อครั้งครับ', 'warning');
+        return Swal.fire('เกิดข้อผิดพลาด', 'ระบบจำกัดส่งไฟล์พร้อมกันสูงสุด 20 ไฟล์ต่อครั้งครับ', 'warning');
       }
-      
       pendingUploadFilesQueue = files;
       const previewArea = document.getElementById('upload-preview-area');
       previewArea.innerHTML = '';
@@ -464,7 +437,6 @@
       pendingUploadFilesQueue.forEach((file, index) => {
         const div = document.createElement('div');
         div.className = 'relative min-w-[90px] max-w-[100px] bg-white p-2 rounded-xl border flex flex-col items-center text-center text-xs shrink-0 shadow-sm';
-        
         if (/\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(file.name)) {
           const u = URL.createObjectURL(file);
           div.innerHTML = `
@@ -484,9 +456,9 @@
 
       if(files.length > 0) {
         Swal.fire({
-          title: 'ยืนยันอัปโหลดไฟล์แชท?',
-          text: `ตรวจพบไฟล์ที่แนบทั้งหมดจำนวน ${files.length} รายการ ต้องการยืนยันนำส่งเข้า Drive ใช่หรือไม่ครับ`,
-          icon: 'question', showCancelButton: true, confirmButtonColor: '#10b981', confirmButtonText: 'ยืนยันส่งข้อมูล', cancelButtonText: 'ยกเลิก'
+          title: 'ยืนยันส่งไฟล์แชท?',
+          text: `ตรวจพบไฟล์แนบรวมทั้งหมดจำนวน ${files.length} รายการ ต้องการยืนยันส่งข้อมูลใช่หรือไม่ครับ`,
+          icon: 'question', showCancelButton: true, confirmButtonColor: '#10b981', confirmButtonText: 'ยืนยันส่ง', cancelButtonText: 'ยกเลิก'
         }).then((res) => {
           if(res.isConfirmed) { executeBatchUploadQueue(); }
           else { clearUploadQueue(); }
@@ -505,7 +477,6 @@
       document.getElementById('upload-preview-area').classList.add('hidden');
     }
 
-    // วนลูปดำเนินการประมวลผลอัปโหลดรายการคิวไฟล์แบบต่อเนื่อง (สูงสุด 20 ไฟล์)
     async function executeBatchUploadQueue() {
       const filesToUpload = [...pendingUploadFilesQueue];
       clearUploadQueue();
@@ -549,7 +520,7 @@
                   deleted: false
                 });
               }
-            } catch (err) { console.error("Batch index dynamic processing item broken: ", err); }
+            } catch (err) { console.error(err); }
             delete activeTempUploads[uploadId];
             renderAllMessagesWithTemps();
             resolve();
@@ -559,7 +530,6 @@
       }
     }
 
-    // ระบบประมวลผลแท็กสมาชิกอัตโนมัติเมื่อพิมพ์คีย์เวิร์ด @ (ข้อ 11)
     function handleMentionSearch(textarea) {
       const text = textarea.value;
       const caretPos = textarea.selectionStart;
@@ -595,7 +565,6 @@
       textarea.focus();
     };
 
-    // ตัวนับเวลานับถอยหลังการเล่นไฟล์เสียง/วิดีโอ (ข้อ 7)
     window.initAudioTracker = function(audioElement, durationId) {
       const updateDisplay = () => {
         const total = audioElement.duration || 0;
@@ -613,7 +582,6 @@
       });
     };
 
-    // ระบบอัดไฟล์เสียงบันทึกลง Drive (ข้อ 7)
     function initAudioRecorder() {
       const recordBtn = document.getElementById('btn-audio-record');
       const timerSpan = document.getElementById('audio-timer');
@@ -647,7 +615,7 @@
                 timerSpan.innerText = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
                 if (recordDuration >= 60) { stopAudioRecording(); }
               }, 1000);
-            } catch (err) { Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเข้าถึงไมค์ได้ครับ', 'error'); }
+            } catch (err) { Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเข้าถึงไมโครโฟนได้ครับ', 'error'); }
           }
         } else { stopAudioRecording(); }
       });
@@ -703,7 +671,6 @@
       let html = text.replace(urlRegex, function(u) {
         return `<a href="${u}" target="_blank" class="text-blue-600 font-medium underline break-all hover:text-blue-800">${u}</a>`;
       });
-      
       const activeUsersList = Object.values(currentActiveUsers).map(u => u.displayName);
       activeUsersList.forEach(name => {
         const regexMention = new RegExp(`@${name}\\b`, 'g');
@@ -719,10 +686,9 @@
       const chatRef = ref(db, 'global_messages');
       onValue(chatRef, (snapshot) => {
         lastSnapshotData = snapshot.val();
-        
         if (initialLoadComplete && lastSnapshotData) {
           const sound = document.getElementById('global-noti-sound');
-          sound.play().catch(e => console.log("สัญญาณเสียงถูกบล็อกบล็อก: ", e));
+          sound.play().catch(e => console.log("แจ้งเตือนระบบเสียงถูกบล็อก: ", e));
         }
         initialLoadComplete = true;
         checkAndMarkAsRead();
@@ -745,8 +711,8 @@
     window.triggerDeleteMessageAction = function(key, fileId) {
       Swal.fire({
         title: 'ยกเลิกการส่งข้อความ?',
-        text: "คุณต้องการลบข้อความนี้ออกจากห้องแชท และลบไฟล์บนคลาวด์ถาวรใช่หรือไม่",
-        icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'ยืนยันลบ', cancelButtonText: 'ยกเลิก'
+        text: "คุณต้องการลบข้อความนี้ออกจากแชทใช่หรือไม่",
+        icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'ใช่, ลบข้อความ', cancelButtonText: 'ยกเลิก'
       }).then((res) => {
         if(res.isConfirmed) { 
           update(ref(db, `global_messages/${key}`), { deleted: true }); 
@@ -769,7 +735,7 @@
       if(isMyMsg) {
         html += `
           <button onclick="closeCenteredActionModal(); window.triggerDeleteMessageAction('${msgKey}', '${msgFileId || ''}');" class="w-full text-left flex items-center gap-2 px-4 py-3 hover:bg-rose-50 text-rose-600 rounded-xl text-xs font-semibold transition-all">
-            <i class="fa-solid fa-trash-can text-red-500"></i> ยกเลิกการส่งข้อความ (ลบแชท)
+            <i class="fa-solid fa-trash-can text-red-500"></i> ยกเลิกการส่งข้อความ
           </button>
         `;
       }
@@ -777,7 +743,7 @@
     };
 
     window.viewUserProfileImage = function(avatarUrl, displayName) {
-      Swal.fire({ imageUrl: avatarUrl, imageWidth: 260, imageHeight: 260, imageAlt: displayName, title: displayName, showConfirmButton: false, showCloseButton: true });
+      Swal.fire({ imageUrl: avatarUrl, imageWidth: 260, imageHeight: 260, title: displayName, showConfirmButton: false, showCloseButton: true });
     };
 
     window.showWhoReadThisMessage = function(readByObj) {
@@ -794,7 +760,8 @@
 
     function renderAllMessagesWithTemps() {
       const body = document.getElementById('chat-body');
-      const isAtBottom = body.scrollHeight - body.scrollTop <= body.clientHeight + 120;
+      if (!body) return;
+      const isAtBottom = body.scrollHeight - body.scrollTop <= body.clientHeight + 150;
       body.innerHTML = '';
       let lastRenderedDate = ""; 
 
@@ -827,7 +794,6 @@
           }
 
           const resolvedAvatar = globalAvatarMap[msg.senderName] || msg.senderAvatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
-
           if(!isSelf) {
             const img = document.createElement('img');
             img.className = 'msg-avatar w-8 h-8 rounded-full object-cover shadow-sm self-start mt-1 shrink-0 cursor-pointer hover:scale-105 transition-transform';
@@ -838,7 +804,6 @@
 
           const wrapper = document.createElement('div');
           wrapper.className = 'msg-content-wrapper flex flex-col overflow-hidden';
-          
           if(!isSelf) {
             const nameSpan = document.createElement('span');
             nameSpan.className = 'msg-name text-[11px] text-slate-400 font-bold mb-1 px-1 cursor-pointer hover:underline';
@@ -858,13 +823,12 @@
             bubble.innerText = 'ข้อความถูกลบเรียบร้อย';
             bubble.className += ' msg-deleted text-slate-400 italic bg-white/10 border border-dashed text-xs';
           } else {
-            // ดึงลิงก์รูปภาพแสดงผลขนาดออริจินัล ความละเอียดต้นฉบับคมชัดสูงสุด (ข้อ 5)
             if(msg.type === 'image') {
               bubble.innerHTML = `
                 <img src="${msg.content}" class="max-w-[180px] sm:max-w-[240px] rounded-xl object-contain border shadow-md" onclick="window.openImageInZoomViewer('${msg.content}')">
                 <div class="flex items-center gap-1.5 mt-1.5 w-full justify-center">
-                  <a href="https://drive.google.com/file/d/${msg.fileId}/view" target="_blank" class="px-2 py-1 bg-slate-800/80 hover:bg-slate-900 text-[10px] text-white rounded-md font-medium"><i class="fa-regular fa-eye"></i> ดูบน Drive</a>
-                  <button onclick="window.directDownloadFromDrive('${msg.fileId}', '${msg.filename || 'image.png'}')" class="px-2 py-1 bg-green-600 hover:bg-green-700 text-[10px] text-white rounded-md font-bold"><i class="fa-solid fa-download"></i> ดาวน์โหลด</button>
+                  <a href="https://drive.google.com/file/d/${msg.fileId}/view" target="_blank" class="px-2 py-1 bg-slate-800/80 text-[10px] text-white rounded-md font-medium"><i class="fa-regular fa-eye"></i> ดูบน Drive</a>
+                  <button onclick="window.directDownloadFromDrive('${msg.fileId}', '${msg.filename || 'image.png'}')" class="px-2 py-1 bg-green-600 text-[10px] text-white rounded-md font-bold"><i class="fa-solid fa-download"></i> ดาวน์โหลด</button>
                 </div>
               `;
               bubble.style.padding = '0'; bubble.style.background = 'none'; bubble.style.boxShadow = 'none';
@@ -874,7 +838,7 @@
                 <video src="${msg.content}" controls preload="metadata" onloadstart="window.initAudioTracker(this, '${videoDurationId}')" class="max-w-[240px] rounded-xl border shadow-md"></video>
                 <div class="flex items-center justify-between gap-1.5 mt-1 px-1">
                   <span id="${videoDurationId}" class="text-[10px] text-white bg-slate-900/60 px-1.5 py-0.5 rounded-md font-bold">0:00</span>
-                  <button onclick="window.directDownloadFromDrive('${msg.fileId}', '${msg.filename || 'video.mp4'}')" class="px-2 py-1 bg-green-600 hover:bg-green-700 text-[10px] text-white rounded-md font-bold"><i class="fa-solid fa-download"></i> ดาวน์โหลด</button>
+                  <button onclick="window.directDownloadFromDrive('${msg.fileId}', '${msg.filename || 'video.mp4'}')" class="px-2 py-1 bg-green-600 text-[10px] text-white rounded-md font-bold"><i class="fa-solid fa-download"></i> ดาวน์โหลด</button>
                 </div>
               `;
               bubble.style.padding = '0'; bubble.style.background = 'none'; bubble.style.boxShadow = 'none';
@@ -910,7 +874,6 @@
               bubble.innerHTML = `<img src="${msg.content}" class="w-20 h-20 sm:w-24 sm:h-24 object-contain select-none">`;
               bubble.style.padding = '0'; bubble.style.background = 'none'; bubble.style.boxShadow = 'none';
             }
-
             bubble.onclick = () => {
               if(!isMultiSelectMode) {
                 window.triggerCenteredMenuOptions(key, msg.fileId || null, msg.type === 'text' ? msg.content : null, isSelf);
@@ -941,7 +904,10 @@
         });
       }
       
-      Object.keys(activeTempUploads).forEach(id => { row.appendChild(createTempRow(activeTempUploads[id])); });
+      // บั๊กชุดก่อนถูกแก้ตรงนี้: เปลี่ยนจาก row.appendChild เป็น body.appendChild เพื่อไม่ให้โค้ดค้างแน่นิ่ง
+      Object.keys(activeTempUploads).forEach(id => { 
+        body.appendChild(createTempRow(activeTempUploads[id])); 
+      });
       if (isAtBottom) { body.scrollTop = body.scrollHeight; }
     }
 
@@ -956,6 +922,72 @@
       else if(msg.type === 'optimistic-file') inner = `<div class="p-3 rounded-2xl bg-white border text-xs text-slate-500"><i class="fa-solid fa-spinner animate-spin text-green-500 mr-1"></i> กำลังส่งไฟล์: ${msg.filename}</div>`;
       row.innerHTML = inner;
       return row;
+    }
+
+    async function syncAvatarsFromServer() {
+      try {
+        let res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getAllAvatars' }) });
+        let result = await res.json();
+        if (result.status === 'success') {
+          globalAvatarMap = result.avatars;
+          if (currentUser && globalAvatarMap[currentUser.displayName]) {
+            currentUser.avatar = globalAvatarMap[currentUser.displayName];
+            document.getElementById('my-avatar-img').src = currentUser.avatar;
+            localStorage.setItem('parakit_chat_user', JSON.stringify(currentUser));
+          }
+        }
+      } catch (e) { console.error(e); }
+    }
+
+    function setupUserPresence() {
+      if (!currentUser) return;
+      const myPresenceRef = ref(db, `status/${currentUser.username}`);
+      set(myPresenceRef, { displayName: currentUser.displayName, lastActive: Date.now() });
+      onDisconnect(myPresenceRef).remove();
+      onValue(ref(db, 'status'), (snapshot) => {
+        currentActiveUsers = snapshot.val() || {};
+        syncAvatarsFromServer().then(() => renderAllMessagesWithTemps());
+      });
+    }
+
+    async function checkSavedLogin() {
+      const savedUser = localStorage.getItem('parakit_chat_user');
+      if (savedUser) {
+        currentUser = JSON.parse(savedUser);
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('chat-interface').style.display = 'flex';
+        document.getElementById('my-display-name').innerText = currentUser.displayName;
+        if(currentUser.avatar) document.getElementById('my-avatar-img').src = currentUser.avatar;
+        const savedBg = currentUser.bgUrl || localStorage.getItem(`parakit_chat_bg_${currentUser.username}`);
+        if (savedBg) {
+          const chatBody = document.getElementById('chat-body');
+          chatBody.style.backgroundImage = `url('${savedBg}')`;
+          chatBody.style.backgroundSize = 'cover';
+        }
+        setupUserPresence();
+        await syncAvatarsFromServer();
+        listenChatMessages();
+      }
+    }
+
+    function initUIEvents() {
+      document.getElementById('btn-open-register').addEventListener('click', openRegisterModal);
+      document.getElementById('btn-login').addEventListener('click', () => { unlockAudioContext(); handleLogin(); });
+      document.getElementById('btn-open-settings').addEventListener('click', openSettingsModal);
+      document.getElementById('btn-send').addEventListener('click', sendTextMessage);
+      document.getElementById('btn-toggle-select-mode').addEventListener('click', toggleMultiSelectMode);
+      document.getElementById('btn-cancel-select').addEventListener('click', exitMultiSelectMode);
+      document.getElementById('btn-multi-share').addEventListener('click', handleMultiShareAction);
+      
+      const msgInput = document.getElementById('msg-input');
+      msgInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey && window.innerWidth > 640) { e.preventDefault(); sendTextMessage(); }
+      });
+      msgInput.addEventListener('input', function() {
+        this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px';
+        handleMentionSearch(this);
+      });
+      document.getElementById('avatar-container').addEventListener('click', () => document.getElementById('avatar-input').click());
     }
 
     async function openSettingsModal() {
@@ -1005,7 +1037,6 @@
       });
     }
 
-    // ฟังก์ชันย่อยระบบแก้ไขเปลี่ยนชื่อเล่น (Display Name) ของผู้ใช้งาน อัปเดตลง Sheet และ Firebase ทันที (ข้อ 12)
     async function handleUserChangeDisplayNameFlow() {
       Swal.close();
       const { value: newName } = await Swal.fire({
@@ -1016,7 +1047,6 @@
         showCancelButton: true, confirmButtonColor: '#10b981', cancelButtonText: 'ยกเลิก',
         inputValidator: (value) => { if (!value.trim()) return 'กรุณาระบุชื่อเล่นด้วยครับ!' }
       });
-
       if (newName && newName.trim() !== currentUser.displayName) {
         Swal.fire({ title: 'กำลังอัปเดตข้อมูล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
         try {
@@ -1032,32 +1062,8 @@
             setupUserPresence();
             Swal.fire('สำเร็จ', 'เปลี่ยนชื่อเล่นของคุณเรียบร้อยแล้วครับ', 'success');
           } else { Swal.fire('ล้มเหลว', result.message, 'error'); }
-        } catch(err) { Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อคลาวด์เพื่อบันทึกชื่อได้ครับ', 'error'); }
+        } catch(err) { Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อคลาวด์ได้ครับ', 'error'); }
       }
-    }
-
-    function sendTextMessage() {
-      const input = document.getElementById('msg-input');
-      const text = input.value.trim();
-      if(!text) return;
-      const localTimestamp = Date.now();
-      input.value = '';
-      input.style.height = 'auto';
-      push(ref(db, 'global_messages'), {
-        senderName: currentUser.displayName,
-        senderAvatar: currentUser.avatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png',
-        type: 'text', content: text, timestamp: localTimestamp, deleted: false
-      });
-    }
-
-    function sendSticker(url) {
-      const localTimestamp = Date.now();
-      document.getElementById('sticker-picker').classList.add('hidden');
-      push(ref(db, 'global_messages'), {
-        senderName: currentUser.displayName,
-        senderAvatar: currentUser.avatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png',
-        type: 'sticker', content: url, timestamp: localTimestamp, deleted: false
-      });
     }
 
     async function openRegisterModal() {
@@ -1116,49 +1122,6 @@
           listenChatMessages();
         } else { Swal.fire('ข้อผิดพลาด', result.message, 'error'); }
       } catch(e) { Swal.fire('ข้อผิดพลาด', 'ยืนยันสิทธิ์ล้มเหลว', 'error'); }
-    }
-
-    async function handleForgotPwd() {
-      const { value: info } = await Swal.fire({
-        title: 'กู้คืนรหัสผ่านด้วยบัญชี',
-        html: `
-          <div class="text-left max-w-xs mx-auto">
-            <label class="block text-xs font-semibold text-slate-500 mb-1">Username ของคุณ</label>
-            <input id="forgot-user" class="swal-input-box">
-            <label class="block text-xs font-semibold text-slate-500 mb-1 mt-3">Gmail ที่ลงทะเบียน</label>
-            <input id="forgot-email" type="email" class="swal-input-box">
-          </div>
-        `,
-        confirmButtonText: 'รับรหัส OTP', confirmButtonColor: '#10b981', showCancelButton: true,
-        preConfirm: () => { return { username: document.getElementById('forgot-user').value.trim(), email: document.getElementById('forgot-email').value.trim() } }
-      });
-      if(!info) return;
-      Swal.showLoading();
-      try {
-        let res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'sendOTP', ...info }) });
-        let result = await res.json();
-        if(result.status !== 'success') return Swal.fire('ล้มเหลว', result.message, 'error');
-        
-        const { value: resetData } = await Swal.fire({
-          title: 'ตั้งรหัสผ่านใหม่',
-          html: `
-            <div class="text-left max-w-xs mx-auto">
-              <label class="block text-xs font-semibold text-slate-500 mb-1">รหัส OTP 6 หลัก</label>
-              <input id="reset-otp" class="swal-input-box text-center font-bold" maxlength="6">
-              <label class="block text-xs font-semibold text-slate-500 mb-1 mt-3">รหัสผ่านใหม่</label>
-              <input id="reset-newpass" type="password" class="swal-input-box">
-            </div>
-          `,
-          confirmButtonText: 'ยืนยันเปลี่ยนรหัส', confirmButtonColor: '#10b981', showCancelButton: true,
-          preConfirm: () => { return { otp: document.getElementById('reset-otp').value.trim(), newPassword: document.getElementById('reset-newpass').value } }
-        });
-        if(!resetData) return;
-        Swal.showLoading();
-        let res2 = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'resetPassword', username: info.username, ...resetData }) });
-        let result2 = await res2.json();
-        if(result2.status === 'success') { Swal.fire('สำเร็จ', 'แก้ไขเปลี่ยนรหัสเสร็จสมบูรณ์', 'success'); }
-        else { Swal.fire('ล้มเหลว', result2.message, 'error'); }
-      } catch(e) { Swal.fire('ผิดพลาด', 'ระบบขัดข้อง', 'error'); }
     }
 
     window.uploadUserAvatarToDrive = function(e) {
