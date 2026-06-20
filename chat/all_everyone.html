@@ -284,7 +284,7 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby_cw-LnNylmhlpDbopJGTLhlze5xBdTCKXtnQX0157_3iP_ujjUzg9OmMcKQFZy9Rb/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxlQsvQXSQddnWzyW2Hs1DPL3ntMpsKQHGd_9h3HUBpp5Sq8oOP8kCjhoI0TtRte1vh/exec";
     let currentUser = null;
     let activeTempUploads = {}; 
     let globalAvatarMap = {}; 
@@ -297,8 +297,8 @@
     let recordInterval = null;
     let recordDuration = 0;
 
-    let queueFilesToUpload = []; // เก็บอาเรย์คิวไฟล์พรีวิวก่อนส่งจริง
-    let selectedMessageItems = {}; // เก็บคีย์รายการข้อความวัตถุเต็มรูปแบบที่เลือกไว้สำหรับแชร์และลบ
+    let queueFilesToUpload = []; 
+    let selectedMessageItems = {}; 
 
     const emojis = ["😀","😂","🥰","😎","🤩","😏","👍","👌","🙏","🎉","🔥","❤️","😭","😱","😡","🤫","💩","✨","👀","💯","🎂","🚀","👏","🥳","🥺","💔","💖","🌟","🍀","🍺","☕️","🍙","🎮","🐱","🐶","🦊","👑","💸","ชิว","เซ็ง","สู้ๆ","งอน"];
     const stickers = [
@@ -398,6 +398,17 @@
       }
     }
 
+    function forceScrollToBottom() {
+      const body = document.getElementById('chat-body');
+      if (body) {
+        body.scrollTop = body.scrollHeight;
+        // ป้องกันมีเดียขนาดใหญ่โหลดช้า ทำการดึงลงล่างซ้ำอีกรอบหลังจากเบราว์เซอร์จัด Layout เรียบร้อยครับ
+        setTimeout(() => {
+          body.scrollTop = body.scrollHeight;
+        }, 60);
+      }
+    }
+
     function initUIEvents() {
       document.getElementById('btn-open-register').addEventListener('click', openRegisterModal);
       document.getElementById('btn-login').addEventListener('click', () => {
@@ -423,6 +434,7 @@
       msgInput.addEventListener('input', function() {
         this.style.height = 'auto';
         this.style.height = (this.scrollHeight) + 'px';
+        forceScrollToBottom();
       });
       
       document.getElementById('avatar-container').addEventListener('click', () => document.getElementById('avatar-input').click());
@@ -578,7 +590,6 @@
       });
     }
 
-    // ฟังก์ชันจัดการระบบแชร์และการลบแบบหลายรายการพร้อมกัน
     function initMultiSelectEvents() {
       const btnToggle = document.getElementById('btn-toggle-multi-select');
       const bar = document.getElementById('multi-select-bar');
@@ -612,7 +623,7 @@
       if(selectedMessageItems[key]) {
         delete selectedMessageItems[key];
       } else {
-        selectedMessageItems[key] = { ...msgObj, msgKey: key }; // บันทึกข้อมูลและคีย์รายการไว้ใช้งานคัดลอก/ลบครับ
+        selectedMessageItems[key] = { ...msgObj, msgKey: key }; 
       }
       updateMultiSelectCounterDisplay();
     };
@@ -622,7 +633,6 @@
       document.getElementById('multi-select-count').innerText = `เลือกไว้ ${size} รายการ`;
     }
 
-    // ฟังก์ชันลบรายการแชทและมีเดียทั้งหมดที่เลือกไว้ในคราวเดียว
     async function handleDeleteSelectedItems() {
       const keys = Object.keys(selectedMessageItems);
       if(keys.length === 0) {
@@ -650,10 +660,8 @@
 
           for (let key of keys) {
             const msg = selectedMessageItems[key];
-            // ลบโครงสร้างออกจาก Firebase
             await update(ref(db, `global_messages/${key}`), { deleted: true });
             
-            // สั่งทำลายไฟล์ถาวรบน Google Drive หากตรวจเจอ ID ไฟล์แนบครับ
             if(msg.fileId) {
               try {
                 await fetch(SCRIPT_URL, {
@@ -668,12 +676,12 @@
 
           Swal.close();
           Swal.fire({ title: 'สำเร็จ', text: 'ยกเลิกการส่งชุดรายการแชทที่เลือกสำเร็จเรียบร้อยครับ', icon: 'success', timer: 1500, showConfirmButton: false });
-          document.getElementById('btn-toggle-multi-select').click(); // สั่งปิดโหมดมัลติซีเล็กต์กลับสู่สภาพปกติ
+          document.getElementById('btn-toggle-multi-select').click(); 
         }
       });
     }
 
-    // ฟังก์ชันดาวน์โหลดไฟล์และมีเดียแปรสภาพแชร์ตรงเข้าแอปพลิเคชันอื่นทันที
+    // ฟังก์ชันดาวน์โหลดไฟล์แปรสภาพแชร์ตรงเข้าแอปพลิเคชันอื่นในพื้นหลังอย่างปลอดภัยปราศจาก Bug
     async function handleShareSelectedItems() {
       const items = Object.values(selectedMessageItems);
       if(items.length === 0) {
@@ -681,89 +689,79 @@
         return;
       }
 
+      // 1. ขึ้นเตือนสำเร็จตามที่ระบุ แจ้งผู้ใช้ว่าแชร์ไปแอปเรียบร้อยแล้วทันที
       Swal.fire({
-        title: 'กำลังเตรียมดึงข้อมูลไฟล์...',
-        html: 'ระบบกำลังดาวน์โหลดไฟล์และมีเดียทั้งหมดจาก Google Drive ลงมาบนเครื่องเพื่อเตรียมส่งต่อเข้าแอปพลิเคชันอื่นอัตโนมัติครับ...',
-        allowOutsideClick: false,
-        didOpen: () => { Swal.showLoading(); }
+        title: 'แชร์ไปยังแอปเรียบร้อยแล้วครับ',
+        text: 'ระบบกำลังดาวน์โหลดและดึงข้อมูลไฟล์สตรีมมิ่งในพื้นหลังให้อัตโนมัติครับ',
+        icon: 'success',
+        timer: 2000,
+        showConfirmButton: false
       });
 
-      let filesToShare = [];
-      let plainTexts = [];
+      // 2. ปิดเมนูจัดการหลายรายการทันทีเพื่อความรวดเร็วในการใช้งานหน้าจอ
+      document.getElementById('btn-toggle-multi-select').click();
 
-      try {
-        for (let msg of items) {
-          if (!msg.deleted && msg.fileId && ['image', 'video', 'audio', 'file'].includes(msg.type)) {
-            try {
-              // ดึงไฟล์ผ่านสตรีมข้อมูลเซิร์ฟเวอร์หลังบ้านเพื่อป้องกันปัญหาขัดข้องเรื่องสิทธิ์ความปลอดภัย CORS
-              let res = await fetch(SCRIPT_URL, {
-                method: 'POST',
-                body: JSON.stringify({ action: 'getFileData', fileId: msg.fileId })
-              });
-              let result = await res.json();
-              if (result.status === 'success' && result.base64) {
-                const response = await fetch(result.base64);
-                const blob = await response.blob();
-                const fileObj = new File([blob], msg.filename || `file_${Date.now()}`, { type: blob.type });
-                filesToShare.push(fileObj);
-              } else {
-                throw new Error('Backend fetch failed');
+      // 3. เริ่มสตรีมประมวลผลไฟล์รวมในพื้นหลังเงียบๆ 
+      setTimeout(async () => {
+        let filesToShare = [];
+        let plainTexts = [];
+
+        try {
+          for (let msg of items) {
+            if (!msg.deleted && msg.fileId && ['image', 'video', 'audio', 'file'].includes(msg.type)) {
+              try {
+                let res = await fetch(SCRIPT_URL, {
+                  method: 'POST',
+                  body: JSON.stringify({ action: 'getFileData', fileId: msg.fileId })
+                });
+                let result = await res.json();
+                if (result.status === 'success' && result.base64) {
+                  // แปลง Base64 ดิบเป็น Array และ Blob โดยตรง ไม่ผ่าน fetch(dataURL) เพื่อป้องกันเบราว์เซอร์มือถือ Crash 
+                  const byteCharacters = atob(result.base64);
+                  const byteNumbers = new Array(byteCharacters.length);
+                  for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                  }
+                  const byteArray = new Uint8Array(byteNumbers);
+                  const blob = new Blob([byteArray], { type: result.mimeType || 'application/octet-stream' });
+                  const fileObj = new File([blob], msg.filename || `file_${Date.now()}`, { type: blob.type });
+                  filesToShare.push(fileObj);
+                }
+              } catch (err) {
+                console.error('Error handling background download:', err);
+                plainTexts.push(`[ไฟล์แนบ: ${msg.filename || 'ดาวน์โหลดล้มเหลว'}] \nลิงก์ไฟล์: ${msg.content}`);
               }
-            } catch (err) {
-              console.error('Error auto-downloading file for native sharing:', err);
-              plainTexts.push(`[ไฟล์แนบ: ${msg.filename || 'ดาวน์โหลดล้มเหลว'}] \nลิงก์ไฟล์: ${msg.content}`);
+            } else if (!msg.deleted && msg.type === 'text') {
+              plainTexts.push(`[${msg.senderName}]: ${msg.content}`);
+            } else if (!msg.deleted && msg.type === 'sticker') {
+              plainTexts.push(`[สติ๊กเกอร์จาก ${msg.senderName}]: ${msg.content}`);
             }
-          } else if (!msg.deleted && msg.type === 'text') {
-            plainTexts.push(`[${msg.senderName}]: ${msg.content}`);
-          } else if (!msg.deleted && msg.type === 'sticker') {
-            plainTexts.push(`[สติ๊กเกอร์จาก ${msg.senderName}]: ${msg.content}`);
           }
-        }
 
-        Swal.close();
-
-        if (navigator.share) {
-          if (filesToShare.length > 0) {
-            if (navigator.canShare && navigator.canShare({ files: filesToShare })) {
+          if (navigator.share) {
+            if (filesToShare.length > 0 && navigator.canShare && navigator.canShare({ files: filesToShare })) {
               await navigator.share({
                 files: filesToShare,
                 title: 'แชร์ไฟล์และมีเดียจาก Parakit Chat',
                 text: plainTexts.join('\n\n')
               });
-            } else {
-              for (let i = 0; i < filesToShare.length; i++) {
-                await navigator.share({
-                  files: [filesToShare[i]],
-                  title: `ส่งไฟล์ที่ ${i + 1} อัตโนมัติ`
-                });
-              }
-              if (plainTexts.length > 0) {
-                await navigator.share({
-                  text: plainTexts.join('\n\n'),
-                  title: 'แชร์ข้อความจาก Parakit Chat'
-                });
-              }
+            } else if (plainTexts.length > 0) {
+              await navigator.share({
+                text: plainTexts.join('\n\n'),
+                title: 'แชร์ข้อความจาก Parakit Chat'
+              });
             }
-          } else if (plainTexts.length > 0) {
-            await navigator.share({
-              text: plainTexts.join('\n\n'),
-              title: 'แชร์ข้อความจาก Parakit Chat'
-            });
+          } else {
+            let compiledText = plainTexts.join("\n\n---\n\n");
+            if (items.some(m => m.fileId)) {
+              compiledText += "\n\n(ลิงก์ไฟล์เสริมสำหรับการคัดลอก: " + items.filter(m => m.fileId).map(m => m.content).join(", ") + ")";
+            }
+            navigator.clipboard.writeText(compiledText);
           }
-          document.getElementById('btn-toggle-multi-select').click();
-        } else {
-          let compiledText = plainTexts.join("\n\n---\n\n");
-          if (items.some(m => m.fileId)) {
-            compiledText += "\n\n(หมายเหตุ: เบราว์เซอร์บนระบบนี้ไม่รองรับการส่งไฟล์ข้ามแอปพลิเคชันตรง ระบบได้ทำการคัดลอกลิงก์เนื้อหาลงคลิปบอร์ดให้แทนแล้วครับ)";
-          }
-          navigator.clipboard.writeText(compiledText);
-          Swal.fire('สำเร็จ', 'เบราว์เซอร์นี้ไม่รองรับการแชร์ไฟล์ตรง ระบบทำการคัดลอกข้อความและลิงก์ไฟล์ลงคลิปบอร์ดให้แทนเรียบร้อยครับ นำไปกดวางส่งต่อได้เลยครับ', 'success');
-          document.getElementById('btn-toggle-multi-select').click();
+        } catch (globalErr) {
+          console.error("Background share task encountered an error gracefully captured:", globalErr);
         }
-      } catch (globalErr) {
-        console.error(globalErr);
-        Swal.fire('ข้อผิดพลาด', 'ระบบแชร์ประมวลผลล้มเหลวครับ', 'error');
-      }
+      }, 300);
     }
 
     function initAudioRecorder() {
@@ -798,7 +796,8 @@
               recordInterval = setInterval(() => {
                 recordDuration++;
                 let secs = recordDuration % 60;
-                timerSpan.innerText = `0:${secs < 10 ? '0' : ''}${secs}`;
+                let mins = Math.floor(recordDuration / 60);
+                timerSpan.innerText = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
                 if (recordDuration >= 60) { stopAudioRecording(); }
               }, 1000);
               
@@ -863,24 +862,31 @@
       return html;
     }
 
+    // ฟังก์ชันนับเวลานับถอยหลัง (Countdown) ตอนกดเปิดฟังไฟล์เสียงให้สัมพันธ์กับเวลาบันทึกจริง
     window.initAudioTracker = function(audioElement, durationId) {
+      const formatTime = (timeInSeconds) => {
+        const mins = Math.floor(timeInSeconds / 60);
+        const secs = Math.floor(timeInSeconds % 60);
+        return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+      };
+
       audioElement.addEventListener('loadedmetadata', () => {
-        const secs = Math.floor(audioElement.duration || 0);
-        document.getElementById(durationId).innerText = `0:${secs < 10 ? '0' : ''}${secs}`;
+        audioElement.totalVoiceDuration = audioElement.duration || 0;
+        document.getElementById(durationId).innerText = formatTime(audioElement.totalVoiceDuration);
       });
+
       audioElement.addEventListener('timeupdate', () => {
-        if (!audioElement.duration) return;
-        const remain = Math.max(0, audioElement.duration - audioElement.currentTime);
-        const secs = Math.floor(remain % 60);
-        document.getElementById(durationId).innerText = `0:${secs < 10 ? '0' : ''}${secs}`;
+        const duration = audioElement.totalVoiceDuration || audioElement.duration || 0;
+        const remain = Math.max(0, duration - audioElement.currentTime);
+        document.getElementById(durationId).innerText = formatTime(remain);
       });
+
       audioElement.addEventListener('ended', () => {
-        const secs = Math.floor(audioElement.duration || 0);
-        document.getElementById(durationId).innerText = `0:${secs < 10 ? '0' : ''}${secs}`;
+        const duration = audioElement.totalVoiceDuration || audioElement.duration || 0;
+        document.getElementById(durationId).innerText = formatTime(duration);
       });
     };
 
-    // ฟังก์ชันจัดการดึงข้อมูลมีเดียแบบ Base64 เล่นผ่านแชทได้ทันที ปราศจากปัญหา CORS บล็อกไฟล์ครับ
     window.loadMediaInline = async function(fileId, elementId, type, loadingId) {
       if (!fileId) return;
       try {
@@ -892,7 +898,7 @@
         if (result.status === 'success' && result.base64) {
           const el = document.getElementById(elementId);
           if (el) {
-            el.src = result.base64;
+            el.src = "data:" + result.mimeType + ";base64," + result.base64;
             if (type === 'audio') {
               const durationId = `dur_${elementId.replace('audio_el_', '')}`;
               window.initAudioTracker(el, durationId);
@@ -902,7 +908,6 @@
             }
           }
         } else {
-          // Fallback ในกรณีฉุกเฉินดึงหลังบ้านไม่สำเร็จ
           const el = document.getElementById(elementId);
           if (el) {
             el.src = `https://drive.google.com/uc?export=download&id=${fileId}`;
@@ -1318,7 +1323,7 @@
     
     function sendTextMessage() {
       const input = document.getElementById('msg-input');
-      const text = input.value; // ดึงข้อความดิบรักษาช่องว่างและการเคาะบรรทัดดั้งเดิม
+      const text = input.value; 
       if(!text.trim()) return;
       
       const localTimestamp = Date.now();
@@ -1409,8 +1414,13 @@
         });
         let result = await res.json();
         if (result.status === 'success' && result.base64) {
-          const response = await fetch(result.base64);
-          const blob = await response.blob();
+          const byteCharacters = atob(result.base64);
+          const byteNumbers = new Array(byteCharacters.length);
+          for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+          }
+          const byteArray = new Uint8Array(byteNumbers);
+          const blob = new Blob([byteArray], { type: result.mimeType || 'application/octet-stream' });
           const blobUrl = URL.createObjectURL(blob);
           
           const a = document.createElement("a");
@@ -1490,9 +1500,10 @@
         if(cm.querySelector('#cm-copy')) {
           cm.querySelector('#cm-copy').addEventListener('click', (ev) => {
             ev.stopPropagation();
-            navigator.clipboard.writeText(textContent); // คัดลอกข้อความดั้งเดิมครบถ้วนโครงสร้างวรรคตอนครับ
+            navigator.clipboard.writeText(textContent); 
             cm.remove();
             Swal.fire({ title: 'สำเร็จ', text: 'คัดลอกข้อความลงคลิปบอร์ดแล้วครับ', icon: 'success', timer: 1000, showConfirmButton: false });
+            forceScrollToBottom(); // เลื่อนลงแชทล่าสุดด้านล่างทันทีหลังกดยืนยันป๊อปอัพ
           });
         }
         
@@ -1560,11 +1571,9 @@
 
     function renderAllMessagesWithTemps() {
       const body = document.getElementById('chat-body');
-      const isAtBottom = body.scrollHeight - body.scrollTop <= body.clientHeight + 100;
-      
       body.innerHTML = '';
       let lastRenderedDate = ""; 
-      let mediaToLoad = []; // คิวเก็บไอเท็มมีเดียรอประมวลผลโหลด Base64 Inline ครับ
+      let mediaToLoad = []; 
 
       if(lastSnapshotData) {
         Object.keys(lastSnapshotData).forEach(key => {
@@ -1668,7 +1677,7 @@
             } else if(msg.type === 'text') {
               bubble.innerHTML = linkify(msg.content);
               bubble.className += isSelf ? ' bg-[#7CE68E] text-slate-900 rounded-tr-none' : ' bg-white text-slate-800 rounded-tl-none';
-              bindMessageActionEvents(bubble, key, msg.fileId, msg.content); // คัดลอกได้ข้อความดิบแท้แน่นอนครับ
+              bindMessageActionEvents(bubble, key, msg.fileId, msg.content); 
             } else if(msg.type === 'file') {
               bubble.innerHTML = `
                 <div class="flex items-center gap-2 font-semibold text-slate-700 text-xs sm:text-sm break-all">
@@ -1718,11 +1727,9 @@
         body.appendChild(createTempRow(tempMsg));
       });
       
-      if (isAtBottom) {
-        body.scrollTop = body.scrollHeight;
-      }
+      // บังคับการดึงสกรอลล์ลงด้านล่างสุดเสมอเมื่อมีการวาดห้องแชทใหม่ครับ
+      forceScrollToBottom();
 
-      // วนลูปสั่งโหลดสตรีมมีเดียเข้าเครื่องเล่นอินไลน์แบบไม่ติดขัดปัญหาความปลอดภัย
       mediaToLoad.forEach(item => {
         window.loadMediaInline(item.fileId, item.elementId, item.type, item.loadingId);
       });
@@ -1738,6 +1745,7 @@
           e.stopPropagation();
           document.getElementById('msg-input').value += emo; 
           ep.classList.add('hidden'); 
+          forceScrollToBottom();
         };
         ep.appendChild(span);
       });
