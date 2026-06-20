@@ -47,7 +47,6 @@
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
       transition: all 0.2s ease;
     }
-    .msg-row:hover .action-box { opacity: 1; }
     
     .swal-premium-title { font-family: 'Prompt', sans-serif !important; font-weight: 700 !important; color: #1e293b !important; }
     .swal-premium-html { font-family: 'Prompt', sans-serif !important; }
@@ -65,9 +64,27 @@
       border: 1px solid rgba(255, 255, 255, 0.5);
     }
     
-    /* สไตล์คัสตอมซ่อนโครงสร้างหลัก Viewer ชั่วคราวเพื่อให้เรียกใช้ง่ายขึ้น */
     #viewer-hidden-container { display: none; }
-    .viewer-title { display: none !important; } /* เอาหัวชื่อรูปภาพออกตามบรีฟเก่า */
+    .viewer-title { display: none !important; }
+    
+    /* สไตล์ของเมนูคลิกขวา (Custom Context Menu) บนคอม */
+    .custom-cm {
+      position: fixed;
+      z-index: 1000;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+      padding: 6px;
+      min-width: 160px;
+      animation: cmScale 0.15s ease-out;
+    }
+    @keyframes cmScale {
+      from { transform: scale(0.92); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
   </style>
 </head>
 <body class="h-[100dvh] w-screen flex items-center justify-center p-0 sm:p-4 md:p-6 overflow-hidden select-none">
@@ -140,7 +157,7 @@
       </div>
     </div>
     
-    <div class="chat-area flex-1 p-3 sm:p-4 md:p-6 overflow-y-auto no-scrollbar space-y-4" id="chat-body"></div>
+    <div class="chat-area flex-1 p-3 sm:p-4 md:p-6 overflow-y-auto no-scrollbar space-y-4 font-normal" id="chat-body"></div>
     
     <div class="p-3 bg-white border-t border-slate-200/80 flex flex-col gap-2 shadow-inner shrink-0 relative pb-safe">
       <div class="flex items-center justify-between px-1">
@@ -197,7 +214,7 @@
     let activeTempUploads = {}; 
     let globalAvatarMap = {}; 
     let currentActiveUsers = {}; 
-    let globalViewerInstance = null; // เก็บ Instance ป้องกันการเปิดซ้อน
+    let globalViewerInstance = null;
 
     const emojis = ["😀","😂","🥰","😎","🤩","😏","👍","👌","🙏","🎉","🔥","❤️","😭","😱","😡","🤫","💩","✨","👀","💯","🎂","🚀","👏","🥳","🥺","💔","💖","🌟","🍀","🍺","☕️","🍙","🎮","🐱","🐶","🦊","👑","💸","ชิว","เซ็ง","สู้ๆ","งอน"];
     const stickers = [
@@ -209,44 +226,31 @@
       initPickers();
       checkSavedLogin();
       initGlobalViewer();
+      initContextMenuDismissal();
     });
 
-    // เริ่มต้นตัวประมวลผล Viewer.js ครอบคลุมฟังก์ชันการจีบและการกดควบคุมซูม
     function initGlobalViewer() {
       const imgTarget = document.getElementById('viewer-target-image');
       globalViewerInstance = new Viewer(imgTarget, {
-        inline: false,
-        button: true,
-        navbar: false,
-        title: false,
-        toolbar: {
-          zoomIn: 4,
-          zoomOut: 4,
-          oneToOne: 4,
-          reset: 4,
-          rotateLeft: 4,
-          rotateRight: 4,
-          flipHorizontal: 4,
-          flipVertical: 4,
-        },
-        tooltip: true,
-        movable: true,
-        zoomable: true,
-        rotatable: true,
-        scalable: true,
-        transition: true,
-        fullscreen: true,
-        keyboard: true
+        inline: false, button: true, navbar: false, title: false,
+        toolbar: { zoomIn: 4, zoomOut: 4, oneToOne: 4, reset: 4, rotateLeft: 4, rotateRight: 4, flipHorizontal: 4, flipVertical: 4 },
+        tooltip: true, movable: true, zoomable: true, rotatable: true, scalable: true, transition: true, fullscreen: true, keyboard: true
       });
     }
 
-    // ฟังก์ชันเรียกขยายภาพใดๆ ด้วย Viewer.js แบบไร้หัวข้อเรื่อง
     window.openImageInZoomViewer = function(url) {
       const imgTarget = document.getElementById('viewer-target-image');
       imgTarget.src = url;
       globalViewerInstance.update();
       globalViewerInstance.show();
     };
+
+    function initContextMenuDismissal() {
+      document.addEventListener('click', () => {
+        const existCm = document.getElementById('custom-context-menu');
+        if(existCm) existCm.remove();
+      });
+    }
 
     async function syncAvatarsFromServer() {
       try {
@@ -266,10 +270,7 @@
     function setupUserPresence() {
       if (!currentUser) return;
       const myPresenceRef = ref(db, `status/${currentUser.username}`);
-      set(myPresenceRef, {
-        displayName: currentUser.displayName,
-        lastActive: Date.now()
-      });
+      set(myPresenceRef, { displayName: currentUser.displayName, lastActive: Date.now() });
       onDisconnect(myPresenceRef).remove();
 
       onValue(ref(db, 'status'), (snapshot) => {
@@ -317,7 +318,6 @@
       document.getElementById('avatar-container').addEventListener('click', () => document.getElementById('avatar-input').click());
     }
 
-    // ฟังก์ชันปรับโฉมหน้าต่างตั้งค่าแบบ Professional ระดับสูง (Glassmorphism Tabs Layout)
     async function openSettingsModal() {
       Swal.fire({
         title: '⚙️ ควบคุมและการตั้งค่าระบบ',
@@ -364,11 +364,7 @@
             </div>
           </div>
         `,
-        showConfirmButton: false,
-        showCancelButton: true,
-        cancelButtonText: 'ปิดเมนูการตั้งค่า',
-        cancelButtonColor: '#64748b',
-        showCloseButton: true,
+        showConfirmButton: false, showCancelButton: true, cancelButtonText: 'ปิดเมนูการตั้งค่า', cancelButtonColor: '#64748b', showCloseButton: true,
         customClass: { title: 'swal-premium-title', htmlContainer: 'swal-premium-html', popup: 'rounded-3xl max-w-sm' },
         didOpen: () => {
           document.getElementById('swal-menu-bg').addEventListener('click', () => { Swal.close(); document.getElementById('bg-input').click(); });
@@ -405,12 +401,8 @@
             <input id="swal-email" type="email" class="swal-input-box" placeholder="ตัวอย่าง: name@gmail.com">
           </div>
         `,
-        focusConfirm: false,
-        confirmButtonText: '<i class="fa-solid fa-user-plus mr-1"></i> สมัครและเข้าสู่ระบบ',
-        confirmButtonColor: '#10b981',
-        showCancelButton: true,
-        cancelButtonText: 'ยกเลิก',
-        cancelButtonColor: '#64748b',
+        focusConfirm: false, confirmButtonText: '<i class="fa-solid fa-user-plus mr-1"></i> สมัครและเข้าสู่ระบบ', confirmButtonColor: '#10b981',
+        showCancelButton: true, cancelButtonText: 'ยกเลิก', cancelButtonColor: '#64748b',
         customClass: { title: 'swal-premium-title', htmlContainer: 'swal-premium-html' },
         didOpen: () => {
           const inputs = ['swal-name', 'swal-user', 'swal-pass', 'swal-email'];
@@ -446,11 +438,8 @@
         
         if(result.status === 'success') {
           currentUser = {
-            username: formValues.username,
-            email: formValues.email,
-            displayName: formValues.displayName,
-            avatar: 'https://cdn-icons-png.flaticon.com/512/149/149071.png',
-            bgUrl: ''
+            username: formValues.username, email: formValues.email, displayName: formValues.displayName,
+            avatar: 'https://cdn-icons-png.flaticon.com/512/149/149071.png', bgUrl: ''
           };
           localStorage.setItem('parakit_chat_user', JSON.stringify(currentUser));
           
@@ -478,10 +467,7 @@
 
       Swal.showLoading();
       try {
-        let res = await fetch(SCRIPT_URL, { 
-          method: 'POST', 
-          body: JSON.stringify({ action: 'login', username: userVal, password: passVal }) 
-        });
+        let res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'login', username: userVal, password: passVal }) });
         let result = await res.json();
         if(result.status === 'success') {
           currentUser = result.user;
@@ -522,12 +508,8 @@
             <input id="forgot-email" type="email" class="swal-input-box" placeholder="example@gmail.com">
           </div>
         `,
-        focusConfirm: false,
-        confirmButtonText: 'รับรหัส OTP <i class="fa-solid fa-paper-plane ml-1"></i>',
-        confirmButtonColor: '#10b981',
-        showCancelButton: true,
-        cancelButtonText: 'ปิด',
-        cancelButtonColor: '#64748b',
+        focusConfirm: false, confirmButtonText: 'รับรหัส OTP <i class="fa-solid fa-paper-plane ml-1"></i>', confirmButtonColor: '#10b981',
+        showCancelButton: true, cancelButtonText: 'ปิด', cancelButtonColor: '#64748b',
         customClass: { title: 'swal-premium-title', htmlContainer: 'swal-premium-html' },
         didOpen: () => {
           document.getElementById('forgot-user').addEventListener('keypress', (e) => { if (e.key === 'Enter') document.getElementById('forgot-email').focus(); });
@@ -555,12 +537,8 @@
               <input id="reset-newpass" type="password" class="swal-input-box" placeholder="ขั้นต่ำ 8 ตัว ห้ามเลขล้วน">
             </div>
           `,
-          focusConfirm: false,
-          confirmButtonText: '<i class="fa-solid fa-key mr-1"></i> ยืนยันเปลี่ยนรหัสผ่าน',
-          confirmButtonColor: '#10b981',
-          showCancelButton: true,
-          cancelButtonText: 'ยกเลิก',
-          cancelButtonColor: '#64748b',
+          focusConfirm: false, confirmButtonText: '<i class="fa-solid fa-key mr-1"></i> ยืนยันเปลี่ยนรหัสผ่าน', confirmButtonColor: '#10b981',
+          showCancelButton: true, cancelButtonText: 'ยกเลิก', cancelButtonColor: '#64748b',
           customClass: { title: 'swal-premium-title', htmlContainer: 'swal-premium-html' },
           didOpen: () => {
             document.getElementById('reset-otp').addEventListener('keypress', (e) => { if (e.key === 'Enter') document.getElementById('reset-newpass').focus(); });
@@ -595,12 +573,8 @@
             <button id="btn-admin-forgot-link" class="text-xs text-blue-500 hover:underline mt-1 block text-right w-full font-medium">ลืมรหัสผ่านแอดมิน?</button>
           </div>
         `,
-        focusConfirm: false,
-        confirmButtonText: '<i class="fa-solid fa-circle-check"></i> ยืนยันล้างระบบ',
-        confirmButtonColor: '#ef4444',
-        showCancelButton: true,
-        cancelButtonText: 'ยกเลิก',
-        cancelButtonColor: '#64748b',
+        focusConfirm: false, confirmButtonText: '<i class="fa-solid fa-circle-check"></i> ยืนยันล้างระบบ', confirmButtonColor: '#ef4444',
+        showCancelButton: true, cancelButtonText: 'ยกเลิก', cancelButtonColor: '#64748b',
         customClass: { title: 'swal-premium-title', htmlContainer: 'swal-premium-html' },
         didOpen: () => {
           document.getElementById('admin-pass-input').focus();
@@ -608,9 +582,7 @@
             if (e.key === 'Enter') Swal.clickConfirm();
           });
           document.getElementById('btn-admin-forgot-link').addEventListener('click', (e) => {
-            e.preventDefault();
-            Swal.close();
-            handleAdminForgotFlow();
+            e.preventDefault(); Swal.close(); handleAdminForgotFlow();
           });
         },
         preConfirm: () => { return document.getElementById('admin-pass-input').value; }
@@ -651,12 +623,8 @@
               <input id="admin-newpass" type="password" class="swal-input-box" placeholder="ระบุรหัสผ่านแอดมินใหม่">
             </div>
           `,
-          focusConfirm: false,
-          confirmButtonText: 'อัปเดตรหัสแอดมิน',
-          confirmButtonColor: '#10b981',
-          showCancelButton: true,
-          cancelButtonText: 'ยกเลิก',
-          cancelButtonColor: '#64748b',
+          focusConfirm: false, confirmButtonText: 'อัปเดตรหัสแอดมิน', confirmButtonColor: '#10b981',
+          showCancelButton: true, cancelButtonText: 'ยกเลิก', cancelButtonColor: '#64748b',
           didOpen: () => {
             document.getElementById('admin-otp').addEventListener('keypress', (e) => { if (e.key === 'Enter') document.getElementById('admin-newpass').focus(); });
             document.getElementById('admin-newpass').addEventListener('keypress', (e) => { if (e.key === 'Enter') Swal.clickConfirm(); });
@@ -864,9 +832,7 @@
       if(!fileId) return Swal.fire({ title: 'ผิดพลาด', text: 'ไม่พบรหัสไฟล์สำหรับดาวน์โหลด', icon: 'error', confirmButtonColor: '#10b981' });
       
       Swal.fire({
-        title: 'กำลังเตรียมไฟล์...',
-        html: 'ระบบกำลังดึงข้อมูลไฟล์จากไดร์ฟโดยตรง',
-        allowOutsideClick: false,
+        title: 'กำลังเตรียมไฟล์...', html: 'ระบบกำลังดึงข้อมูลไฟล์จากไดร์ฟโดยตรง', allowOutsideClick: false,
         didOpen: () => { Swal.showLoading(); }
       });
 
@@ -893,14 +859,86 @@
       }
     };
 
+    // ฟังก์ชันสั่งการลบข้อความส่วนกลาง (ดึงออกมาไว้ภายนอกเพื่อให้เรียกใช้งานจาก Context Menu และ Long Press ได้)
+    window.triggerDeleteMessageAction = function(key, fileId) {
+      Swal.fire({
+        title: 'ยกเลิกการส่ง?',
+        text: "คุณต้องการลบข้อความนี้ออกจากห้องแชท และลบไฟล์บนคลาวด์ถาวรใช่หรือไม่",
+        icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', cancelButtonColor: '#64748b', confirmButtonText: 'ใช่, ลบข้อความ',
+        customClass: { title: 'swal-premium-title', htmlContainer: 'swal-premium-html' }
+      }).then((res) => {
+        if(res.isConfirmed) { 
+          update(ref(db, `global_messages/${key}`), { deleted: true }); 
+          if(fileId) {
+            fetch(SCRIPT_URL, {
+              method: 'POST',
+              body: JSON.stringify({ action: 'deleteFile', fileId: fileId })
+            }).then(res => res.json()).catch(err => console.error(err));
+          }
+        }
+      });
+    };
+
+    // ฟังก์ชันจัดการผูก Event สิทธิ์การคลิกขวา (PC) และกดค้าง (Mobile) ให้กับกล่องข้อความ
+    function bindMessageActionEvents(element, msgKey, msgFileId) {
+      let touchTimer = null;
+      
+      // 1. รองรับการคลิกขวาสำหรับบน Desktop
+      element.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // ลบเมนูเดิมออกก่อนถ้าเกิดมีค้างอยู่
+        const existCm = document.getElementById('custom-context-menu');
+        if(existCm) existCm.remove();
+        
+        const cm = document.createElement('div');
+        cm.id = 'custom-context-menu';
+        cm.className = 'custom-cm';
+        cm.style.top = `${e.clientY}px`;
+        cm.style.left = `${e.clientX}px`;
+        
+        cm.innerHTML = `
+          <button class="w-full text-left flex items-center gap-2 px-3 py-2 hover:bg-rose-50 text-rose-600 rounded-lg text-xs font-semibold transition-all">
+            <i class="fa-solid fa-trash-can"></i> ยกเลิกการส่งข้อความ
+          </button>
+        `;
+        
+        cm.querySelector('button').addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          cm.remove();
+          window.triggerDeleteMessageAction(msgKey, msgFileId);
+        });
+        
+        document.body.appendChild(cm);
+      });
+
+      // 2. รองรับการกดค้าง (Long Press) สำหรับบนสมาร์ตโฟน/แท็บเล็ต
+      element.addEventListener('touchstart', (e) => {
+        touchTimer = setTimeout(() => {
+          if (window.navigator.vibrate) window.navigator.vibrate(40); // สั่นเตือนเบาๆ จำลองการกด haptic 
+          window.triggerDeleteMessageAction(msgKey, msgFileId);
+        }, 600); // ตั้งเวลาสำหรับกดค้างไว้ที่ 600ms
+      }, { passive: true });
+
+      element.addEventListener('touchend', () => { if(touchTimer) clearTimeout(touchTimer); });
+      element.addEventListener('touchmove', () => { if(touchTimer) clearTimeout(touchTimer); });
+    }
+
+    window.viewUserProfileImage = function(avatarUrl, displayName) {
+      Swal.fire({
+        imageUrl: avatarUrl, imageWidth: 260, imageHeight: 260, imageAlt: displayName,
+        showConfirmButton: false, showCloseButton: true, allowOutsideClick: true,
+        customClass: { popup: 'rounded-3xl p-6 bg-white' }
+      });
+    };
+
     function renderAllMessagesWithTemps() {
       const body = document.getElementById('chat-body');
-      
       const isAtBottom = body.scrollHeight - body.scrollTop <= body.clientHeight + 100;
       
       body.innerHTML = '';
       let lastRenderedDate = ""; 
-      
       const totalActiveOthers = Object.keys(currentActiveUsers).filter(k => k !== currentUser.username).length;
 
       if(lastSnapshotData) {
@@ -930,7 +968,6 @@
             const img = document.createElement('img');
             img.className = 'msg-avatar w-8 h-8 rounded-full object-cover shadow-sm self-start mt-1 shrink-0 cursor-pointer hover:scale-105 transition-transform';
             img.src = resolvedAvatar;
-            // ปลุกฟังก์ชัน Viewer.js ขยายรูปโปรไฟล์เพื่อจีบย่อ-ขยาย
             img.onclick = () => window.openImageInZoomViewer(resolvedAvatar);
             row.appendChild(img);
           }
@@ -958,7 +995,7 @@
             
             if(isImageLink) {
               bubble.innerHTML = `
-                <img src="${msg.content}" class="max-w-[160px] sm:max-w-[200px] rounded-xl object-cover cursor-pointer border border-white/20 shadow-md transform hover:scale-[1.02] transition-all" referrerpolicy="no-referrer" onerror="this.src='https://cdn-icons-png.flaticon.com/512/16/16410.png'; this.className='w-12 h-12 opacity-50';" onclick="window.openImageInZoomViewer('${msg.content}')">
+                <img src="${msg.content}" class="max-w-[160px] sm:max-w-[200px] rounded-xl object-cover cursor-pointer border border-white/20 shadow-md transform hover:scale-[1.02] transition-all select-none" referrerpolicy="no-referrer" onerror="this.src='https://cdn-icons-png.flaticon.com/512/16/16410.png'; this.className='w-12 h-12 opacity-50';" onclick="window.openImageInZoomViewer('${msg.content}')">
                 <div class="flex items-center gap-1.5 mt-1 w-full justify-center">
                   <a href="https://drive.google.com/file/d/${msg.fileId || ''}/view" target="_blank" class="px-2 py-1 bg-slate-800/80 hover:bg-slate-900 text-[10px] text-white rounded-md font-medium transition-colors flex items-center gap-1 shadow-sm"><i class="fa-regular fa-eye"></i> ดูไฟล์</a>
                   <button onclick="directDownloadFromDrive('${msg.fileId || ''}', '${msg.filename || 'image.png'}')" class="px-2 py-1 bg-green-600 hover:bg-green-700 text-[10px] text-white rounded-md font-medium transition-colors flex items-center gap-1 shadow-sm"><i class="fa-solid fa-download"></i> ดาวน์โหลด</button>
@@ -984,29 +1021,9 @@
               bubble.style.padding = '0'; bubble.style.background = 'none'; bubble.style.boxShadow = 'none';
             }
 
+            // ถ้าเป็นข้อความของตัวเราเอง และยังไม่ได้ถูกลบ ให้เปิดใช้งานระบบตรวจจับคลิกขวา/กดค้างเพื่อแสดงเมนูลบ
             if(isSelf) {
-              const actionBox = document.createElement('button');
-              actionBox.className = 'action-box text-rose-500 hover:text-rose-600 bg-rose-50 p-1.5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 self-center mx-1 sm:mx-2 shrink-0';
-              actionBox.innerHTML = '<i class="fa-solid fa-trash-can text-xs sm:text-sm"></i>';
-              actionBox.onclick = () => {
-                Swal.fire({
-                  title: 'ยกเลิกการส่ง?',
-                  text: "คุณต้องการลบข้อความนี้ออกจากห้องแชท และลบไฟล์บนคลาวด์ถาวรใช่หรือไม่",
-                  icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', cancelButtonColor: '#64748b', confirmButtonText: 'ใช่, ลบข้อความ',
-                  customClass: { title: 'swal-premium-title', htmlContainer: 'swal-premium-html' }
-                }).then((res) => {
-                  if(res.isConfirmed) { 
-                    update(ref(db, `global_messages/${key}`), { deleted: true }); 
-                    if(msg.fileId) {
-                      fetch(SCRIPT_URL, {
-                        method: 'POST',
-                        body: JSON.stringify({ action: 'deleteFile', fileId: msg.fileId })
-                      }).then(res => res.json()).catch(err => console.error(err));
-                    }
-                  }
-                });
-              };
-              row.appendChild(actionBox);
+              bindMessageActionEvents(bubble, key, msg.fileId);
             }
           }
 
