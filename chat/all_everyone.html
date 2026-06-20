@@ -12,6 +12,9 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/viewerjs/1.11.6/viewer.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/viewerjs/1.11.6/viewer.min.js"></script>
+  
   <style>
     body {
       font-family: 'Prompt', sans-serif;
@@ -56,16 +59,15 @@
     .swal-input-box:focus { outline: none; border-color: #10b981; background-color: #fff; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15); }
     .swal2-popup { border-radius: 24px !important; padding: 2rem !important; }
     
-    .swal-menu-btn {
-      width: 100%; display: flex; align-items: center; gap: 12px; padding: 14px 18px; 
-      border-radius: 16px; font-size: 14px; font-weight: 500; transition: all 0.2s ease; margin-bottom: 8px;
+    .swal-settings-card {
+      background: rgba(255, 255, 255, 0.65);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.5);
     }
-    /* คลาสพิเศษเพื่อเคลียร์ Padding ของเล่นภาพใหญ่ */
-    .swal-spotlight-popup {
-      padding: 0 !important;
-      background: transparent !important;
-      box-shadow: none !important;
-    }
+    
+    /* สไตล์คัสตอมซ่อนโครงสร้างหลัก Viewer ชั่วคราวเพื่อให้เรียกใช้ง่ายขึ้น */
+    #viewer-hidden-container { display: none; }
+    .viewer-title { display: none !important; } /* เอาหัวชื่อรูปภาพออกตามบรีฟเก่า */
   </style>
 </head>
 <body class="h-[100dvh] w-screen flex items-center justify-center p-0 sm:p-4 md:p-6 overflow-hidden select-none">
@@ -168,6 +170,10 @@
     <input type="file" id="bg-input" class="hidden" accept="image/*" onchange="uploadUserBgToDrive(event)">
   </div>
 
+  <div id="viewer-hidden-container">
+    <img id="viewer-target-image" src="" alt="Chat Content Image">
+  </div>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
     import { getDatabase, ref, push, onValue, update, remove, onDisconnect, set } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-database.js";
@@ -191,6 +197,7 @@
     let activeTempUploads = {}; 
     let globalAvatarMap = {}; 
     let currentActiveUsers = {}; 
+    let globalViewerInstance = null; // เก็บ Instance ป้องกันการเปิดซ้อน
 
     const emojis = ["😀","😂","🥰","😎","🤩","😏","👍","👌","🙏","🎉","🔥","❤️","😭","😱","😡","🤫","💩","✨","👀","💯","🎂","🚀","👏","🥳","🥺","💔","💖","🌟","🍀","🍺","☕️","🍙","🎮","🐱","🐶","🦊","👑","💸","ชิว","เซ็ง","สู้ๆ","งอน"];
     const stickers = [
@@ -201,7 +208,45 @@
       initUIEvents();
       initPickers();
       checkSavedLogin();
+      initGlobalViewer();
     });
+
+    // เริ่มต้นตัวประมวลผล Viewer.js ครอบคลุมฟังก์ชันการจีบและการกดควบคุมซูม
+    function initGlobalViewer() {
+      const imgTarget = document.getElementById('viewer-target-image');
+      globalViewerInstance = new Viewer(imgTarget, {
+        inline: false,
+        button: true,
+        navbar: false,
+        title: false,
+        toolbar: {
+          zoomIn: 4,
+          zoomOut: 4,
+          oneToOne: 4,
+          reset: 4,
+          rotateLeft: 4,
+          rotateRight: 4,
+          flipHorizontal: 4,
+          flipVertical: 4,
+        },
+        tooltip: true,
+        movable: true,
+        zoomable: true,
+        rotatable: true,
+        scalable: true,
+        transition: true,
+        fullscreen: true,
+        keyboard: true
+      });
+    }
+
+    // ฟังก์ชันเรียกขยายภาพใดๆ ด้วย Viewer.js แบบไร้หัวข้อเรื่อง
+    window.openImageInZoomViewer = function(url) {
+      const imgTarget = document.getElementById('viewer-target-image');
+      imgTarget.src = url;
+      globalViewerInstance.update();
+      globalViewerInstance.show();
+    };
 
     async function syncAvatarsFromServer() {
       try {
@@ -272,31 +317,59 @@
       document.getElementById('avatar-container').addEventListener('click', () => document.getElementById('avatar-input').click());
     }
 
+    // ฟังก์ชันปรับโฉมหน้าต่างตั้งค่าแบบ Professional ระดับสูง (Glassmorphism Tabs Layout)
     async function openSettingsModal() {
       Swal.fire({
-        title: 'การตั้งค่าระบบแชท',
+        title: '⚙️ ควบคุมและการตั้งค่าระบบ',
         html: `
-          <div class="p-1 text-left max-w-xs mx-auto">
-            <button id="swal-menu-bg" class="swal-menu-btn bg-slate-100 hover:bg-slate-200 text-slate-700">
-              <i class="fa-solid fa-image text-emerald-500 text-base"></i> เปลี่ยนวอลเปเปอร์แชท
-            </button>
-            <button id="swal-menu-clear" class="swal-menu-btn bg-slate-100 hover:bg-slate-200 text-slate-700">
-              <i class="fa-solid fa-broom text-amber-500 text-base"></i> ล้างหน้าจอตัวเอง
-            </button>
-            <button id="swal-menu-deleteall" class="swal-menu-btn bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200/50">
-              <i class="fa-solid fa-trash-can text-rose-500 text-base"></i> ลบแชททั้งหมด (เฉพาะแอดมิน)
-            </button>
-            <div class="my-3 border-t border-slate-200"></div>
-            <button id="swal-menu-logout" class="swal-menu-btn bg-slate-800 hover:bg-slate-900 text-white">
-              <i class="fa-solid fa-power-off text-rose-400 text-base"></i> ออกจากระบบ
-            </button>
+          <div class="w-full text-slate-800 text-left mt-2">
+            <p class="text-[11px] text-slate-400 mb-4 bg-slate-100 p-2 rounded-xl border border-slate-200"><i class="fa-solid fa-circle-info mr-1 text-blue-500"></i> ปรับแต่งวอลเปเปอร์ จัดการข้อความ หรือการเชื่อมต่อเซสชันผู้ใช้ของคุณได้ที่นี่ครับ</p>
+            
+            <div class="grid grid-cols-1 gap-3">
+              <div class="swal-settings-card p-3 rounded-2xl flex flex-col gap-2">
+                <span class="text-xs font-bold text-slate-500 tracking-wide px-1"><i class="fa-solid fa-wand-magic-sparkles text-emerald-500 mr-1"></i> ความสวยงามและหน้าจอ</span>
+                <button id="swal-menu-bg" class="w-full flex items-center justify-between p-3 bg-white/80 hover:bg-emerald-50 rounded-xl text-xs font-semibold text-slate-700 transition-all border border-slate-200/60 shadow-sm group">
+                  <div class="flex items-center gap-3.5">
+                    <div class="w-7 h-7 bg-emerald-100 rounded-lg flex items-center justify-center text-emerald-600 group-hover:bg-emerald-200 transition-all"><i class="fa-solid fa-image text-sm"></i></div>
+                    <span>เปลี่ยนภาพพื้นหลังแชท (Wallpaper)</span>
+                  </div>
+                  <i class="fa-solid fa-chevron-right text-slate-400 text-[10px]"></i>
+                </button>
+              </div>
+
+              <div class="swal-settings-card p-3 rounded-2xl flex flex-col gap-2">
+                <span class="text-xs font-bold text-slate-500 tracking-wide px-1"><i class="fa-solid fa-shield-halved text-amber-500 mr-1"></i> จัดการฐานข้อมูลส่วนแชท</span>
+                
+                <button id="swal-menu-clear" class="w-full flex items-center justify-between p-3 bg-white/80 hover:bg-amber-50 rounded-xl text-xs font-semibold text-slate-700 transition-all border border-slate-200/60 shadow-sm group mb-1">
+                  <div class="flex items-center gap-3.5">
+                    <div class="w-7 h-7 bg-amber-100 rounded-lg flex items-center justify-center text-amber-600 group-hover:bg-amber-200 transition-all"><i class="fa-solid fa-broom text-sm"></i></div>
+                    <span>ล้างการแสดงผลหน้าจอตัวเอง (Clear Screen)</span>
+                  </div>
+                  <i class="fa-solid fa-chevron-right text-slate-400 text-[10px]"></i>
+                </button>
+
+                <button id="swal-menu-deleteall" class="w-full flex items-center justify-between p-3 bg-rose-50 hover:bg-rose-100 rounded-xl text-xs font-semibold text-rose-700 transition-all border border-rose-200/60 shadow-sm group">
+                  <div class="flex items-center gap-3.5">
+                    <div class="w-7 h-7 bg-rose-200/60 rounded-lg flex items-center justify-center text-rose-600 group-hover:bg-rose-300/60 transition-all"><i class="fa-solid fa-trash-can text-sm"></i></div>
+                    <span>ลบประวัติแชทส่วนกลางทั้งหมด (เฉพาะแอดมิน)</span>
+                  </div>
+                  <i class="fa-solid fa-chevron-right text-rose-400 text-[10px]"></i>
+                </button>
+              </div>
+
+              <button id="swal-menu-logout" class="w-full mt-1 flex items-center justify-center gap-2 p-3 bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs rounded-xl transition-all shadow-md">
+                <i class="fa-solid fa-power-off text-rose-400 text-sm"></i>
+                <span>ออกจากระบบบัญชีผู้ใช้ปัจจุบัน</span>
+              </button>
+            </div>
           </div>
         `,
         showConfirmButton: false,
         showCancelButton: true,
-        cancelButtonText: 'ปิดหน้าต่าง',
+        cancelButtonText: 'ปิดเมนูการตั้งค่า',
         cancelButtonColor: '#64748b',
-        customClass: { title: 'swal-premium-title', htmlContainer: 'swal-premium-html' },
+        showCloseButton: true,
+        customClass: { title: 'swal-premium-title', htmlContainer: 'swal-premium-html', popup: 'rounded-3xl max-w-sm' },
         didOpen: () => {
           document.getElementById('swal-menu-bg').addEventListener('click', () => { Swal.close(); document.getElementById('bg-input').click(); });
           document.getElementById('swal-menu-clear').addEventListener('click', () => { Swal.close(); document.getElementById('chat-body').innerHTML = ''; Swal.fire({ title: 'สำเร็จ', text: 'ล้างหน้าจอภายในแอปพลิเคชันสำหรับคุณแล้วครับ', icon: 'success', timer: 1500, showConfirmButton: false }); });
@@ -820,20 +893,6 @@
       }
     };
 
-    // ฟังก์ชันสำหรับคลิกดูรูปโปรไฟล์คนอื่นขนาดใหญ่ (ไม่มีชื่อรูปภาพ, ใช้ปุ่มกากบาทปิด, กดด้านนอกปิดได้)
-    window.viewUserProfileImage = function(avatarUrl, displayName) {
-      Swal.fire({
-        imageUrl: avatarUrl,
-        imageWidth: 260,
-        imageHeight: 260,
-        imageAlt: displayName,
-        showConfirmButton: false,
-        showCloseButton: true,
-        allowOutsideClick: true,
-        customClass: { popup: 'rounded-3xl p-6 bg-white' }
-      });
-    };
-
     function renderAllMessagesWithTemps() {
       const body = document.getElementById('chat-body');
       
@@ -871,7 +930,8 @@
             const img = document.createElement('img');
             img.className = 'msg-avatar w-8 h-8 rounded-full object-cover shadow-sm self-start mt-1 shrink-0 cursor-pointer hover:scale-105 transition-transform';
             img.src = resolvedAvatar;
-            img.onclick = () => window.viewUserProfileImage(resolvedAvatar, msg.senderName);
+            // ปลุกฟังก์ชัน Viewer.js ขยายรูปโปรไฟล์เพื่อจีบย่อ-ขยาย
+            img.onclick = () => window.openImageInZoomViewer(resolvedAvatar);
             row.appendChild(img);
           }
 
@@ -898,7 +958,7 @@
             
             if(isImageLink) {
               bubble.innerHTML = `
-                <img src="${msg.content}" class="max-w-[160px] sm:max-w-[200px] rounded-xl object-cover cursor-pointer border border-white/20 shadow-md transform hover:scale-[1.02] transition-all" referrerpolicy="no-referrer" onerror="this.src='https://cdn-icons-png.flaticon.com/512/16/16410.png'; this.className='w-12 h-12 opacity-50';" onclick="viewSpotlightImage('${msg.content}', '${msg.filename || 'Image'}')">
+                <img src="${msg.content}" class="max-w-[160px] sm:max-w-[200px] rounded-xl object-cover cursor-pointer border border-white/20 shadow-md transform hover:scale-[1.02] transition-all" referrerpolicy="no-referrer" onerror="this.src='https://cdn-icons-png.flaticon.com/512/16/16410.png'; this.className='w-12 h-12 opacity-50';" onclick="window.openImageInZoomViewer('${msg.content}')">
                 <div class="flex items-center gap-1.5 mt-1 w-full justify-center">
                   <a href="https://drive.google.com/file/d/${msg.fileId || ''}/view" target="_blank" class="px-2 py-1 bg-slate-800/80 hover:bg-slate-900 text-[10px] text-white rounded-md font-medium transition-colors flex items-center gap-1 shadow-sm"><i class="fa-regular fa-eye"></i> ดูไฟล์</a>
                   <button onclick="directDownloadFromDrive('${msg.fileId || ''}', '${msg.filename || 'image.png'}')" class="px-2 py-1 bg-green-600 hover:bg-green-700 text-[10px] text-white rounded-md font-medium transition-colors flex items-center gap-1 shadow-sm"><i class="fa-solid fa-download"></i> ดาวน์โหลด</button>
@@ -978,24 +1038,6 @@
       if (isAtBottom) {
         body.scrollTop = body.scrollHeight;
       }
-    }
-
-    // ฟังก์ชันดูรูปภาพในห้องแชทขนาดใหญ่ (ไม่มีชื่อรูปภาพ, ใช้ปุ่มกากบาทปิด, กดพื้นที่ด้านนอกปิดได้)
-    window.viewSpotlightImage = function(url, filename) {
-      Swal.fire({
-        html: `
-          <div class="relative flex items-center justify-center max-w-full max-h-[90vh]">
-            <img src="${url}" class="max-w-full max-h-[85vh] rounded-2xl object-contain shadow-2xl border border-white/20">
-          </div>
-        `,
-        showConfirmButton: false,
-        showCloseButton: true,
-        allowOutsideClick: true,
-        customClass: {
-          popup: 'swal-spotlight-popup',
-          closeButton: 'text-white hover:text-slate-300 focus:shadow-none'
-        }
-      });
     }
 
     function initPickers() {
