@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" href="favicon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2 family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -70,7 +70,7 @@
     .custom-cm {
       position: fixed;
       z-index: 1000;
-      background: rgba(255, 255, 255, 0.85);
+      background: rgba(255, 255, 255, 0.9);
       backdrop-filter: blur(15px);
       -webkit-backdrop-filter: blur(15px);
       border: 1px solid rgba(255, 255, 255, 0.4);
@@ -83,6 +83,19 @@
     @keyframes cmScale {
       from { transform: scale(0.92); opacity: 0; }
       to { transform: scale(1); opacity: 1; }
+    }
+    
+    .audio-player-container {
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      border-radius: 16px;
+      padding: 8px 12px;
+      display: flex;
+      items-center: center;
+      gap: 10px;
+      min-width: 220px;
+      max-width: 280px;
     }
   </style>
 </head>
@@ -148,7 +161,7 @@
         </div>
       </div>
       
-      <div class="shrink-0">
+      <div class="shrink-0 flex items-center gap-2">
         <button id="btn-open-settings" title="การตั้งค่าระบบแชท" class="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white flex items-center justify-center gap-1.5 transition-all text-xs font-semibold border border-white/10 shadow-md">
           <i class="fa-solid fa-gear text-sm"></i>
           <span>ตั้งค่า</span>
@@ -156,22 +169,26 @@
       </div>
     </div>
     
-    <div class="chat-area flex-1 p-3 sm:p-4 md:p-6 overflow-y-auto no-scrollbar space-y-4 font-normal" id="chat-body"></div>
+    <div class="chat-area flex-1 p-3 sm:p-4 md:p-6 overflow-y-auto no-scrollbar space-y-4 font-normal flex flex-col" id="chat-body"></div>
     
     <div class="p-3 bg-white border-t border-slate-200/80 flex flex-col gap-2 shadow-inner shrink-0 relative pb-safe">
       <div class="flex items-center justify-between px-1">
-        <div class="flex items-center gap-4 text-slate-500">
-          <label class="cursor-pointer hover:text-green-500 transition-colors flex items-center gap-1.5 text-sm font-medium" title="แนบไฟล์หรือรูปภาพ">
-            <i class="fa-solid fa-circle-plus text-lg sm:text-xl text-green-500"></i>
-            <span class="text-xs text-slate-400 hidden sm:inline">รูปภาพ / ไฟล์</span>
-            <input type="file" id="file-input" class="hidden" onchange="uploadFileAndSend(event)">
-          </label>
-          <button id="btn-voice-record" class="hover:text-red-500 text-slate-500 transition-colors text-lg sm:text-xl flex items-center gap-1" title="อัดเสียงส่งแชทสูงสุด 1 นาที">
-            <i class="fa-solid fa-microphone" id="mic-icon"></i>
-            <span id="voice-timer" class="text-xs font-bold text-red-500 hidden">01:00</span>
-          </button>
-          <button id="tool-emoji" class="hover:text-amber-500 transition-colors text-lg sm:text-xl" title="ส่งคีย์บอร์ดอิโมจิ"><i class="fa-regular fa-face-smile-wink"></i></button>
-          <button id="tool-sticker" class="hover:text-blue-500 transition-colors text-lg sm:text-xl" title="ส่งสติ๊กเกอร์ด่วน"><i class="fa-regular fa-images"></i></button>
+        <div class="flex items-center gap-4 text-slate-500 w-full justify-between">
+          <div class="flex items-center gap-4">
+            <label class="cursor-pointer hover:text-green-500 transition-colors flex items-center gap-1.5 text-sm font-medium" title="แนบไฟล์หรือรูปภาพ">
+              <i class="fa-solid fa-circle-plus text-lg sm:text-xl text-green-500"></i>
+              <span class="text-xs text-slate-400 hidden sm:inline">รูปภาพ / วิดีโอ / ไฟล์</span>
+              <input type="file" id="file-input" class="hidden" onchange="uploadFileAndSend(event)">
+            </label>
+            <button id="tool-emoji" class="hover:text-amber-500 transition-colors text-lg sm:text-xl" title="ส่งคีย์บอร์ดอิโมจิ"><i class="fa-regular fa-face-smile-wink"></i></button>
+            <button id="tool-sticker" class="hover:text-blue-500 transition-colors text-lg sm:text-xl" title="ส่งสติ๊กเกอร์ด่วน"><i class="fa-regular fa-images"></i></button>
+          </div>
+          <div class="flex items-center gap-2">
+            <span id="audio-timer" class="text-xs font-bold text-red-500 hidden animate-pulse">0:00</span>
+            <button id="btn-audio-record" class="w-9 h-9 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center transition-all hover:bg-red-50 hover:text-red-500 shadow-sm" title="กดเพื่ออัดเสียงสูงสุด 1 นาที">
+              <i class="fa-solid fa-microphone text-sm"></i>
+            </button>
+          </div>
         </div>
       </div>
       
@@ -193,6 +210,8 @@
   <div id="viewer-hidden-container">
     <img id="viewer-target-image" src="" alt="Chat Content Image">
   </div>
+
+  <audio id="global-noti-sound" src="https://assets.mixkit.co/active_storage/sfx/2357/2357-84.wav" preload="auto"></audio>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
@@ -218,84 +237,18 @@
     let globalAvatarMap = {}; 
     let currentActiveUsers = {}; 
     let globalViewerInstance = null;
-    let isInitialLoad = true;
-    let lastSnapshotData = null;
-
-    // ระบบอัดเสียง
+    
+    // ตัวแปรสำหรับฟังก์ชันอัดเสียง
     let mediaRecorder = null;
     let audioChunks = [];
     let isRecording = false;
-    let recordTimerInterval = null;
-    let recordTimeLeft = 60;
-
-    if (localStorage.getItem('parakit_sound_enabled') === null) localStorage.setItem('parakit_sound_enabled', 'true');
-    if (localStorage.getItem('parakit_sound_type') === null) localStorage.setItem('parakit_sound_type', '0');
+    let recordInterval = null;
+    let recordDuration = 0;
 
     const emojis = ["😀","😂","🥰","😎","🤩","😏","👍","👌","🙏","🎉","🔥","❤️","😭","😱","😡","🤫","💩","✨","👀","💯","🎂","🚀","👏","🥳","🥺","💔","💖","🌟","🍀","🍺","☕️","🍙","🎮","🐱","🐶","🦊","👑","💸","ชิว","เซ็ง","สู้ๆ","งอน"];
     const stickers = [
       "https://cdn-icons-png.flaticon.com/512/4735/4735419.png","https://cdn-icons-png.flaticon.com/512/4735/4735431.png","https://cdn-icons-png.flaticon.com/512/4735/4735465.png","https://cdn-icons-png.flaticon.com/512/4735/4735515.png","https://fonts.gstatic.com/s/e/notoemoji/latest/1f431/512.webp","https://fonts.gstatic.com/s/e/notoemoji/latest/1f436/512.webp","https://fonts.gstatic.com/s/e/notoemoji/latest/1f98a/512.webp","https://fonts.gstatic.com/s/e/notoemoji/latest/1f42a/512.webp","https://cdn-icons-png.flaticon.com/512/616/616408.png","https://cdn-icons-png.flaticon.com/512/616/616430.png","https://cdn-icons-png.flaticon.com/512/924/924514.png","https://cdn-icons-png.flaticon.com/512/1998/1998614.png"
     ];
-
-    const soundNames = [
-      "เสียงที่ 1: คลาสสิกป๊อป (Soft Pop)",
-      "เสียงที่ 2: ดิจิตอลใส (Crystal Chime)",
-      "เสียงที่ 3: ดับเบิ้ลคลิกด่วน (Double Click)",
-      "เสียงที่ 4: เตือนเกมมิ่ง (Retro Arcade)",
-      "เสียงที่ 5: นุ่มนวลผ่อนคลาย (Acoustic Ring)",
-      "เสียงที่ 6: ไซไฟอนาคต (Future Blip)",
-      "เสียงที่ 7: ก้องกังวาน (Echo Bell)",
-      "เสียงที่ 8: แจ้งเตือนสั้น (Minimal Tick)",
-      "เสียงที่ 9: อวกาศหรูหรา (Cosmic Alert)",
-      "เสียงที่ 10: แจ้งเตือนด่วนกระชับ (High Ping)"
-    ];
-
-    window.playSystemNotificationSound = function(typeIndex) {
-      if (localStorage.getItem('parakit_sound_enabled') !== 'true') return;
-      try {
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
-        if (!AudioContext) return;
-        const ctx = new AudioContext();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        
-        const now = ctx.currentTime;
-        const idx = parseInt(typeIndex || localStorage.getItem('parakit_sound_type') || '0');
-        
-        if (idx === 0) {
-          osc.type = 'sine'; osc.frequency.setValueAtTime(587.33, now); osc.frequency.exponentialRampToValueAtTime(880, now + 0.1);
-          gain.gain.setValueAtTime(0.2, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25); osc.start(now); osc.stop(now + 0.25);
-        } else if (idx === 1) {
-          osc.type = 'triangle'; osc.frequency.setValueAtTime(1200, now); osc.frequency.exponentialRampToValueAtTime(600, now + 0.15);
-          gain.gain.setValueAtTime(0.15, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2); osc.start(now); osc.stop(now + 0.2);
-        } else if (idx === 2) {
-          osc.type = 'sine'; osc.frequency.setValueAtTime(800, now); osc.frequency.setValueAtTime(1000, now + 0.05);
-          gain.gain.setValueAtTime(0.2, now); gain.gain.setValueAtTime(0.2, now + 0.05); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15); osc.start(now); osc.stop(now + 0.15);
-        } else if (idx === 3) {
-          osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, now); osc.frequency.linearRampToValueAtTime(600, now + 0.2);
-          gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25); osc.start(now); osc.stop(now + 0.25);
-        } else if (idx === 4) {
-          osc.type = 'sine'; osc.frequency.setValueAtTime(440, now); osc.frequency.exponentialRampToValueAtTime(554.37, now + 0.08); osc.frequency.exponentialRampToValueAtTime(659.25, now + 0.16);
-          gain.gain.setValueAtTime(0.2, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35); osc.start(now); osc.stop(now + 0.35);
-        } else if (idx === 5) {
-          osc.type = 'sine'; osc.frequency.setValueAtTime(900, now); osc.frequency.exponentialRampToValueAtTime(1800, now + 0.08);
-          gain.gain.setValueAtTime(0.15, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15); osc.start(now); osc.stop(now + 0.15);
-        } else if (idx === 6) {
-          osc.type = 'triangle'; osc.frequency.setValueAtTime(300, now); osc.frequency.exponentialRampToValueAtTime(1200, now + 0.25);
-          gain.gain.setValueAtTime(0.2, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3); osc.start(now); osc.stop(now + 0.3);
-        } else if (idx === 7) {
-          osc.type = 'sine'; osc.frequency.setValueAtTime(1000, now);
-          gain.gain.setValueAtTime(0.15, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.06); osc.start(now); osc.stop(now + 0.06);
-        } else if (idx === 8) {
-          osc.type = 'sine'; osc.frequency.setValueAtTime(700, now); osc.frequency.exponentialRampToValueAtTime(400, now + 0.2); osc.frequency.exponentialRampToValueAtTime(900, now + 0.3);
-          gain.gain.setValueAtTime(0.15, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4); osc.start(now); osc.stop(now + 0.4);
-        } else if (idx === 9) {
-          osc.type = 'sine'; osc.frequency.setValueAtTime(1500, now); osc.frequency.exponentialRampToValueAtTime(1300, now + 0.08);
-          gain.gain.setValueAtTime(0.2, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12); osc.start(now); osc.stop(now + 0.12);
-        }
-      } catch (err) { console.error("Audio Context ขัดข้อง", err); }
-    };
 
     window.addEventListener('DOMContentLoaded', () => {
       initUIEvents();
@@ -303,17 +256,17 @@
       checkSavedLogin();
       initGlobalViewer();
       initContextMenuDismissal();
-
-      // สั่งการอัปเดตรูปแบบ Real-time จาก node avatars ของ Firebase
-      onValue(ref(db, 'avatars'), (snapshot) => {
-        globalAvatarMap = snapshot.val() || {};
-        if (currentUser && globalAvatarMap[currentUser.username]) {
-          currentUser.avatar = globalAvatarMap[currentUser.username];
-          document.getElementById('my-avatar-img').src = currentUser.avatar;
-        }
-        if (!isInitialLoad) renderAllMessagesWithTemps();
-      });
+      initAudioRecorder();
     });
+
+    // ปลดล็อกเสียงแจ้งเตือน
+    function unlockAudioContext() {
+      const audio = document.getElementById('global-noti-sound');
+      audio.play().then(() => {
+        audio.pause();
+        audio.currentTime = 0;
+      }).catch(e => console.log("Audio unlock retry:", e));
+    }
 
     function initGlobalViewer() {
       const imgTarget = document.getElementById('viewer-target-image');
@@ -343,10 +296,9 @@
         let res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getAllAvatars' }) });
         let result = await res.json();
         if (result.status === 'success') {
-          // ผสานอาวาทาร์ร่วมกับ Firebase Map
-          Object.assign(globalAvatarMap, result.avatars);
-          if (currentUser && globalAvatarMap[currentUser.username]) {
-            currentUser.avatar = globalAvatarMap[currentUser.username];
+          globalAvatarMap = result.avatars;
+          if (currentUser && globalAvatarMap[currentUser.displayName]) {
+            currentUser.avatar = globalAvatarMap[currentUser.displayName];
             document.getElementById('my-avatar-img').src = currentUser.avatar;
             localStorage.setItem('parakit_chat_user', JSON.stringify(currentUser));
           }
@@ -362,6 +314,8 @@
 
       onValue(ref(db, 'status'), (snapshot) => {
         currentActiveUsers = snapshot.val() || {};
+        // ทุกครั้งที่ User มีการ Update Presence ให้ทำการซิงค์อัปเดตรูป Real-time ไปด้วย
+        syncAvatarsFromServer().then(() => renderAllMessagesWithTemps());
       });
     }
 
@@ -391,10 +345,13 @@
 
     function initUIEvents() {
       document.getElementById('btn-open-register').addEventListener('click', openRegisterModal);
-      document.getElementById('btn-login').addEventListener('click', handleLogin);
+      document.getElementById('btn-login').addEventListener('click', () => {
+        unlockAudioContext();
+        handleLogin();
+      });
       
       document.getElementById('login-username').addEventListener('keypress', (e) => { if(e.key === 'Enter') document.getElementById('login-password').focus(); });
-      document.getElementById('login-password').addEventListener('keypress', (e) => { if(e.key === 'Enter') handleLogin(); });
+      document.getElementById('login-password').addEventListener('keypress', (e) => { if(e.key === 'Enter') { unlockAudioContext(); handleLogin(); } });
 
       document.getElementById('btn-forgot-pwd').addEventListener('click', handleForgotPwd);
       document.getElementById('btn-open-settings').addEventListener('click', openSettingsModal);
@@ -402,96 +359,183 @@
       document.getElementById('msg-input').addEventListener('keypress', (e) => { if(e.key === 'Enter') sendTextMessage(); });
       
       document.getElementById('avatar-container').addEventListener('click', () => document.getElementById('avatar-input').click());
-      document.getElementById('btn-voice-record').addEventListener('click', toggleVoiceRecording);
     }
 
-    async function openSettingsModal() {
-      const currentSoundEnabled = localStorage.getItem('parakit_sound_enabled') === 'true';
-      const currentSoundIdx = parseInt(localStorage.getItem('parakit_sound_type') || '0');
+    // ฟังก์ชันจัดการอัดเสียงความยาวสูงสุด 1 นาที
+    function initAudioRecorder() {
+      const recordBtn = document.getElementById('btn-audio-record');
+      const timerSpan = document.getElementById('audio-timer');
       
-      let soundOptionsHtml = '';
-      soundNames.forEach((name, index) => {
-        soundOptionsHtml += `<option value="${index}" ${index === currentSoundIdx ? 'selected' : ''}>${name}</option>`;
-      });
-
-      Swal.fire({
-        title: '💎 แผงควบคุมระบบพรีเมียม',
-        html: `
-          <div class="w-full text-slate-800 text-left mt-1 space-y-4">
-            <p class="text-[11px] text-slate-500 font-medium text-center bg-slate-100/80 p-2 rounded-xl border border-slate-200/50"><i class="fa-solid fa-wand-magic-sparkles text-amber-500 mr-1"></i> จัดการปรับแต่งความสวยงามและการแจ้งเตือนระบบส่วนตัวครับบอย</p>
-            
-            <div class="swal-settings-card p-4 shadow-sm flex flex-col gap-2.5">
-              <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block px-1"><i class="fa-solid fa-palette text-blue-500 mr-1"></i> ความสวยงามหน้าจอ</span>
-              <button id="swal-menu-bg" class="w-full flex items-center justify-between p-3 bg-white/90 hover:bg-slate-50 border border-slate-200/80 rounded-xl text-xs font-semibold text-slate-700 transition-all shadow-sm group">
-                <div class="flex items-center gap-3">
-                  <div class="w-7 h-7 bg-blue-50 group-hover:bg-blue-100/70 rounded-lg flex items-center justify-center text-blue-500 transition-colors"><i class="fa-solid fa-image text-sm"></i></div>
-                  <span>เปลี่ยนภาพวอลเปเปอร์แชท (Wallpaper)</span>
-                </div>
-                <i class="fa-solid fa-chevron-right text-slate-400 text-[10px]"></i>
-              </button>
-            </div>
-
-            <div class="swal-settings-card p-4 shadow-sm flex flex-col gap-3">
-              <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block px-1"><i class="fa-solid fa-volume-high text-emerald-500 mr-1"></i> ระบบเสียงและการแจ้งเตือน</span>
+      recordBtn.addEventListener('click', async () => {
+        if (!isRecording) {
+          // เริ่มอัดเสียง
+          if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            try {
+              const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+              mediaRecorder = new MediaRecorder(stream);
+              audioChunks = [];
               
-              <div class="flex items-center justify-between p-2.5 bg-white/90 border border-slate-200/80 rounded-xl text-xs font-semibold text-slate-700 shadow-sm">
-                <div class="flex items-center gap-3">
-                  <div class="w-7 h-7 bg-emerald-50 rounded-lg flex items-center justify-center text-emerald-500"><i class="fa-solid fa-bell text-sm"></i></div>
-                  <span>เปิดใช้งานเสียงแจ้งเตือนแชทเข้า</span>
-                </div>
-                <label class="relative inline-flex items-center cursor-pointer select-none">
-                  <input type="checkbox" id="swal-toggle-sound" class="sr-only peer" ${currentSoundEnabled ? 'checked' : ''}>
-                  <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
-                </label>
+              mediaRecorder.ondataavailable = (e) => {
+                audioChunks.push(e.data);
+              };
+              
+              mediaRecorder.onstop = async () => {
+                const audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
+                if (audioBlob.size > 100) {
+                  await uploadAudioAndSend(audioBlob);
+                }
+                stream.getTracks().forEach(track => track.stop());
+              };
+              
+              mediaRecorder.start();
+              isRecording = true;
+              recordBtn.innerHTML = `<i class="fa-solid fa-square text-red-500 animate-pulse"></i>`;
+              timerSpan.classList.remove('hidden');
+              recordDuration = 0;
+              timerSpan.innerText = "0:00";
+              
+              recordInterval = setInterval(() => {
+                recordDuration++;
+                let secs = recordDuration % 60;
+                timerSpan.innerText = `0:${secs < 10 ? '0' : ''}${secs}`;
+                
+                if (recordDuration >= 60) {
+                  stopAudioRecording();
+                }
+              }, 1000);
+              
+            } catch (err) {
+              Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเข้าถึงไมโครโฟนของคุณได้ครับ', 'error');
+            }
+          }
+        } else {
+          stopAudioRecording();
+        }
+      });
+    }
+
+    function stopAudioRecording() {
+      if (recordInterval) clearInterval(recordInterval);
+      if (mediaRecorder && isRecording) {
+        mediaRecorder.stop();
+      }
+      isRecording = false;
+      document.getElementById('btn-audio-record').innerHTML = `<i class="fa-solid fa-microphone text-sm"></i>`;
+      document.getElementById('audio-timer').classList.add('hidden');
+    }
+
+    async function uploadAudioAndSend(blob) {
+      const localTimestamp = Date.now();
+      const uploadId = "upload_audio_" + localTimestamp;
+      
+      activeTempUploads[uploadId] = {
+        senderName: currentUser.displayName,
+        senderAvatar: currentUser.avatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png',
+        type: 'optimistic-file',
+        filename: 'ข้อความเสียง.mp3',
+        timestamp: localTimestamp
+      };
+      renderAllMessagesWithTemps();
+      
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        try {
+          let res = await fetch(SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'uploadFile', filename: `audio_${currentUser.username}_${localTimestamp}.mp3`, base64: reader.result })
+          });
+          let result = await res.json();
+          if (result.status === 'success') {
+            let finalUrl = result.viewUrl || result.url;
+            push(ref(db, 'global_messages'), {
+              senderName: currentUser.displayName,
+              senderAvatar: currentUser.avatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png',
+              type: 'audio',
+              content: finalUrl,
+              fileId: result.fileId,
+              timestamp: Date.now(),
+              deleted: false
+            });
+          }
+        } catch (e) { console.error(e); }
+        delete activeTempUploads[uploadId];
+        renderAllMessagesWithTemps();
+      };
+      reader.readAsDataURL(blob);
+    }
+
+    // แปลงลิงก์ URL ในข้อความอัตโนมัติ
+    function linkify(text) {
+      const urlRegex = /(https?:\/\/[^\s]+)/g;
+      return text.replace(urlRegex, function(url) {
+        return `<a href="${url}" target="_blank" class="text-blue-600 font-medium underline break-all hover:text-blue-800">${url}</a>`;
+      });
+    }
+
+    // ตัวนับเวลานับถอยหลังของเครื่องเล่นเสียงแจ้งเตือนแบบย่อในตัวแชท
+    window.initAudioTracker = function(audioElement, durationId) {
+      audioElement.addEventListener('timeupdate', () => {
+        const remain = Math.max(0, audioElement.duration - audioElement.currentTime);
+        const secs = Math.floor(remain % 60);
+        document.getElementById(durationId).innerText = `0:${secs < 10 ? '0' : ''}${secs}`;
+      });
+      audioElement.addEventListener('ended', () => {
+        const secs = Math.floor(audioElement.duration || 0);
+        document.getElementById(durationId).innerText = `0:${secs < 10 ? '0' : ''}${secs}`;
+      });
+    };
+
+    async function openSettingsModal() {
+      Swal.fire({
+        title: '⚙️ ควบคุมและการตั้งค่าระบบ',
+        html: `
+          <div class="w-full text-slate-800 text-left mt-2">
+            <p class="text-[11px] text-slate-400 mb-4 bg-slate-100 p-2 rounded-xl border border-slate-200"><i class="fa-solid fa-circle-info mr-1 text-blue-500"></i> ปรับแต่งวอลเปเปอร์ จัดการข้อความ หรือการเชื่อมต่อเซสชันผู้ใช้ของคุณได้ที่นี่ครับ</p>
+            
+            <div class="grid grid-cols-1 gap-3">
+              <div class="swal-settings-card p-3 rounded-2xl flex flex-col gap-2">
+                <span class="text-xs font-bold text-slate-500 tracking-wide px-1"><i class="fa-solid fa-wand-magic-sparkles text-emerald-500 mr-1"></i> ความสวยงามและหน้าจอ</span>
+                <button id="swal-menu-bg" class="w-full flex items-center justify-between p-3 bg-white/80 hover:bg-emerald-50 rounded-xl text-xs font-semibold text-slate-700 transition-all border border-slate-200/60 shadow-sm group">
+                  <div class="flex items-center gap-3.5">
+                    <div class="w-7 h-7 bg-emerald-100 rounded-lg flex items-center justify-center text-emerald-600 group-hover:bg-emerald-200 transition-all"><i class="fa-solid fa-image text-sm"></i></div>
+                    <span>เปลี่ยนภาพพื้นหลังแชท (Wallpaper)</span>
+                  </div>
+                  <i class="fa-solid fa-chevron-right text-slate-400 text-[10px]"></i>
+                </button>
               </div>
 
-              <div class="flex flex-col gap-1.5 p-2.5 bg-white/90 border border-slate-200/80 rounded-xl text-xs font-semibold text-slate-700 shadow-sm w-full overflow-hidden">
-                <label class="text-[11px] font-bold text-slate-400 flex items-center gap-1.5"><i class="fa-solid fa-music"></i> เลือกรูปแบบเอฟเฟกต์เสียง</label>
-                <div class="flex gap-2 items-center w-full mt-1">
-                  <select id="swal-select-sound-type" class="w-[70%] max-w-[200px] p-2 bg-slate-50 border border-slate-200 rounded-lg text-[11px] outline-none focus:border-emerald-500 transition-all font-medium text-slate-700 truncate">
-                    ${soundOptionsHtml}
-                  </select>
-                  <button id="swal-btn-test-sound" class="w-[30%] px-2 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 border border-emerald-200 rounded-lg text-xs font-bold transition-all shrink-0 text-center"><i class="fa-solid fa-play"></i> ทดสอบ</button>
-                </div>
-              </div>
-            </div>
+              <div class="swal-settings-card p-3 rounded-2xl flex flex-col gap-2">
+                <span class="text-xs font-bold text-slate-500 tracking-wide px-1"><i class="fa-solid fa-shield-halved text-amber-500 mr-1"></i> จัดการฐานข้อมูลส่วนแชท</span>
+                
+                <button id="swal-menu-clear" class="w-full flex items-center justify-between p-3 bg-white/80 hover:bg-amber-50 rounded-xl text-xs font-semibold text-slate-700 transition-all border border-slate-200/60 shadow-sm group mb-1">
+                  <div class="flex items-center gap-3.5">
+                    <div class="w-7 h-7 bg-amber-100 rounded-lg flex items-center justify-center text-amber-600 group-hover:bg-amber-200 transition-all"><i class="fa-solid fa-broom text-sm"></i></div>
+                    <span>ล้างการแสดงผลหน้าจอตัวเอง (Clear Screen)</span>
+                  </div>
+                  <i class="fa-solid fa-chevron-right text-slate-400 text-[10px]"></i>
+                </button>
 
-            <div class="swal-settings-card p-4 shadow-sm flex flex-col gap-2.5">
-              <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block px-1"><i class="fa-solid fa-shield-halved text-rose-500 mr-1"></i> การจัดการฐานข้อมูลส่วนแอดมิน</span>
-              <button id="swal-menu-deleteall" class="w-full flex items-center justify-between p-3 bg-rose-50 hover:bg-rose-100 border border-rose-200/50 rounded-xl text-xs font-semibold text-rose-600 transition-all shadow-sm group">
-                <div class="flex items-center gap-3">
-                  <div class="w-7 h-7 bg-rose-100/60 rounded-lg flex items-center justify-center text-rose-500 group-hover:bg-rose-200/60 transition-colors"><i class="fa-solid fa-trash-can text-sm"></i></div>
-                  <span>ลบประวัติแชทส่วนกลางทั้งหมด (สิทธิ์แอดมิน)</span>
-                </div>
-                <i class="fa-solid fa-chevron-right text-rose-400 text-[10px]"></i>
+                <button id="swal-menu-deleteall" class="w-full flex items-center justify-between p-3 bg-rose-50 hover:bg-rose-100 rounded-xl text-xs font-semibold text-rose-700 transition-all border border-rose-200/60 shadow-sm group">
+                  <div class="flex items-center gap-3.5">
+                    <div class="w-7 h-7 bg-rose-200/60 rounded-lg flex items-center justify-center text-rose-600 group-hover:bg-rose-300/60 transition-all"><i class="fa-solid fa-trash-can text-sm"></i></div>
+                    <span>ลบประวัติแชทส่วนกลางทั้งหมด (เฉพาะแอดมิน)</span>
+                  </div>
+                  <i class="fa-solid fa-chevron-right text-rose-400 text-[10px]"></i>
+                </button>
+              </div>
+
+              <button id="swal-menu-logout" class="w-full mt-1 flex items-center justify-center gap-2 p-3 bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs rounded-xl transition-all shadow-md">
+                <i class="fa-solid fa-power-off text-rose-400 text-sm"></i>
+                <span>ออกจากระบบบัญชีผู้ใช้ปัจจุบัน</span>
               </button>
             </div>
-
-            <button id="swal-menu-logout" class="w-full mt-2 flex items-center justify-center gap-2 p-3.5 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs rounded-xl transition-all shadow-md shadow-slate-900/20">
-              <i class="fa-solid fa-power-off text-rose-400 text-sm"></i>
-              <span>ออกจากระบบบัญชีผู้ใช้ปัจจุบัน</span>
-            </button>
           </div>
         `,
-        showConfirmButton: false, showCancelButton: true, cancelButtonText: 'ปิดเมนูควบคุม', cancelButtonColor: '#64748b', showCloseButton: true,
-        customClass: { title: 'swal-premium-title', htmlContainer: 'swal-premium-html', popup: 'rounded-3xl max-w-sm border border-white/40 shadow-2xl bg-slate-50/95' },
+        showConfirmButton: false, showCancelButton: true, cancelButtonText: 'ปิดเมนูการตั้งค่า', cancelButtonColor: '#64748b', showCloseButton: true,
+        customClass: { title: 'swal-premium-title', htmlContainer: 'swal-premium-html', popup: 'rounded-3xl max-w-sm' },
         didOpen: () => {
           document.getElementById('swal-menu-bg').addEventListener('click', () => { Swal.close(); document.getElementById('bg-input').click(); });
-          
-          const toggleSound = document.getElementById('swal-toggle-sound');
-          toggleSound.addEventListener('change', (e) => {
-            localStorage.setItem('parakit_sound_enabled', e.target.checked ? 'true' : 'false');
-          });
-
-          const selectSoundType = document.getElementById('swal-select-sound-type');
-          selectSoundType.addEventListener('change', (e) => {
-            localStorage.setItem('parakit_sound_type', e.target.value);
-          });
-
-          document.getElementById('swal-btn-test-sound').addEventListener('click', () => {
-            window.playSystemNotificationSound(selectSoundType.value);
-          });
-
+          document.getElementById('swal-menu-clear').addEventListener('click', () => { Swal.close(); document.getElementById('chat-body').innerHTML = ''; Swal.fire({ title: 'สำเร็จ', text: 'ล้างหน้าจอภายในแอปพลิเคชันสำหรับคุณแล้วครับ', icon: 'success', timer: 1500, showConfirmButton: false }); });
           document.getElementById('swal-menu-deleteall').addEventListener('click', () => { Swal.close(); handleAdminDeleteMessages(); });
           document.getElementById('swal-menu-logout').addEventListener('click', () => {
             Swal.close();
@@ -792,11 +836,7 @@
             localStorage.setItem('parakit_chat_user', JSON.stringify(currentUser));
             
             await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'updateAvatar', username: currentUser.username, avatarUrl: directUrl }) });
-            
-            // อัปเดตรูปตัวเองขึ้น Node avatars ในฐานข้อมูล Firebase ทันที เพื่อซิงค์ Real-time
-            set(ref(db, 'avatars/' + currentUser.username), directUrl);
-            globalAvatarMap[currentUser.username] = directUrl;
-
+            globalAvatarMap[currentUser.displayName] = directUrl;
             Swal.fire({ title: 'สำเร็จ!', text: 'เปลี่ยนรูปโปรไฟล์ผ่านคลาวด์ไดร์ฟเรียบร้อยครับ', icon: 'success', confirmButtonColor: '#10b981' });
             renderAllMessagesWithTemps();
           } else {
@@ -855,7 +895,6 @@
       input.value = '';
       push(ref(db, 'global_messages'), {
         senderName: currentUser.displayName,
-        senderUsername: currentUser.username, // แนบฟิลด์ระบุตัวตนที่คงที่สำหรับ Map โปรไฟล์
         senderAvatar: currentUser.avatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png',
         type: 'text', content: text, timestamp: localTimestamp, deleted: false
       });
@@ -866,7 +905,6 @@
       document.getElementById('sticker-picker').classList.add('hidden');
       push(ref(db, 'global_messages'), {
         senderName: currentUser.displayName,
-        senderUsername: currentUser.username,
         senderAvatar: currentUser.avatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png',
         type: 'sticker', content: url, timestamp: localTimestamp, deleted: false
       });
@@ -876,40 +914,16 @@
       const file = e.target.files[0];
       if(!file) return;
       
-      const isVideo = file.type.startsWith('video/');
-      if (isVideo) {
-        // ตรวจสอบความยาววิดีโอไม่เกิน 5 นาที (300 วินาที) ก่อนทำการเบิ้ลอัปโหลดคลาวด์
-        const videoElement = document.createElement('video');
-        videoElement.preload = 'metadata';
-        videoElement.src = URL.createObjectURL(file);
-        videoElement.onloadedmetadata = function() {
-          URL.revokeObjectURL(videoElement.src);
-          if (videoElement.duration > 300) {
-            Swal.fire('ขีดจำกัดวิดีโอ', 'ระบบรองรับไฟล์วิดีโอที่มีความยาวสูงสุดไม่เกิน 5 นาทีครับ', 'warning');
-            return;
-          }
-          processUploadFlow(file, true);
-        };
-      } else {
-        processUploadFlow(file, false);
-      }
-    }
-
-    function processUploadFlow(file, isVideo) {
       const localTimestamp = Date.now();
       const localObjectURL = URL.createObjectURL(file);
       const isImage = /\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(file.name);
+      const isVideo = /\.(mp4|mov|avi|mkv|webm)$/i.test(file.name);
       const uploadId = "upload_" + localTimestamp;
       
-      let tempType = 'optimistic-file';
-      if(isImage) tempType = 'optimistic-image';
-      else if(isVideo) tempType = 'optimistic-video';
-
       activeTempUploads[uploadId] = {
         senderName: currentUser.displayName,
-        senderUsername: currentUser.username,
         senderAvatar: currentUser.avatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png',
-        type: tempType,
+        type: isImage ? 'optimistic-image' : (isVideo ? 'optimistic-video' : 'optimistic-file'),
         content: localObjectURL,
         filename: file.name,
         timestamp: localTimestamp
@@ -920,34 +934,49 @@
       const reader = new FileReader();
       reader.onloadend = async () => {
         try {
-          let res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'uploadFile', filename: file.name, base64: reader.result }) });
-          let result = await res.json();
-          
-          if(result.status === 'success') {
-            let finalUrl = result.viewUrl || result.url;
-            let fileDriveId = result.fileId || '';
-            
-            await push(ref(db, 'global_messages'), {
-              senderName: currentUser.displayName,
-              senderUsername: currentUser.username,
-              senderAvatar: currentUser.avatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png',
-              type: isImage ? 'image' : (isVideo ? 'video' : 'file'), 
-              content: finalUrl, 
-              filename: file.name, 
-              fileId: fileDriveId,
-              timestamp: Date.now(), 
-              deleted: false
-            });
-            
-            delete activeTempUploads[uploadId];
-            renderAllMessagesWithTemps();
+          // หากเป็นวิดีโอ เช็คความยาวไม่เกิน 5 นาที (300 วินาที)
+          if (isVideo) {
+            const tempVideo = document.createElement('video');
+            tempVideo.src = localObjectURL;
+            tempVideo.onloadedmetadata = async function() {
+              if (tempVideo.duration > 300) {
+                Swal.fire('ไฟล์มีขนาดใหญ่เกินไป', 'ระบบรองรับความยาววิดีโอสูงสุดไม่เกิน 5 นาทีครับ', 'error');
+                delete activeTempUploads[uploadId];
+                renderAllMessagesWithTemps();
+                return;
+              }
+              await executeUpload();
+            };
           } else {
+            await executeUpload();
+          }
+
+          async function executeUpload() {
+            let res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'uploadFile', filename: file.name, base64: reader.result }) });
+            let result = await res.json();
+            
+            if(result.status === 'success') {
+              let finalUrl = result.viewUrl || result.url;
+              let fileDriveId = result.fileId || '';
+              
+              await push(ref(db, 'global_messages'), {
+                senderName: currentUser.displayName,
+                senderAvatar: currentUser.avatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png',
+                type: isImage ? 'image' : (isVideo ? 'video' : 'file'), 
+                content: finalUrl, 
+                filename: file.name, 
+                fileId: fileDriveId,
+                timestamp: Date.now(), 
+                deleted: false
+              });
+            } else {
+              Swal.fire({ title: 'อัปโหลดล้มเหลว', text: result.message || 'เกิดข้อผิดพลาดจากเซิร์ฟเวอร์', icon: 'error', confirmButtonColor: '#10b981' });
+            }
             delete activeTempUploads[uploadId];
-            Swal.fire({ title: 'อัปโหลดล้มเหลว', text: result.message || 'เกิดข้อผิดพลาดจากเซิร์ฟเวอร์', icon: 'error', confirmButtonColor: '#10b981' });
             renderAllMessagesWithTemps();
           }
         } catch(err) { 
-          console.error("เบื้องหลังส่งไฟล์ล้มเหลว", err);
+          console.error(err);
           delete activeTempUploads[uploadId];
           renderAllMessagesWithTemps();
         }
@@ -955,94 +984,9 @@
       reader.readAsDataURL(file);
     }
 
-    // ฟังก์ชันเปิด-ปิดและดักสตรีมการทำงานของระบบบันทึกเสียงสูงสุด 1 นาที
-    async function toggleVoiceRecording() {
-      if (isRecording) {
-        // สั่งหยุดอัดเสียง
-        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-          mediaRecorder.stop();
-        }
-        clearInterval(recordTimerInterval);
-        document.getElementById('voice-timer').classList.add('hidden');
-        document.getElementById('mic-icon').className = 'fa-solid fa-microphone text-slate-500';
-        isRecording = false;
-      } else {
-        // ขอสิทธิ์ไมโครโฟน
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-          return Swal.fire('เกิดข้อผิดพลาด', 'เบราว์เซอร์นี้ไม่รองรับสิทธิ์การบันทึกเสียงผ่านเว็บครับ', 'error');
-        }
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-          audioChunks = [];
-          mediaRecorder = new MediaRecorder(stream);
-          
-          mediaRecorder.ondataavailable = (e) => {
-            if (e.data.size > 0) audioChunks.push(e.data);
-          };
-
-          mediaRecorder.onstop = async () => {
-            const audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
-            stream.getTracks().forEach(track => track.stop()); // ปิดไมค์เมื่อบันทึกเสร็จ
-            
-            // ส่งไฟล์เสียงไปบันทึกลง Google Drive ผ่านฟังก์ชันอัปโหลดหลัก
-            const localTimestamp = Date.now();
-            const filename = `voice_${currentUser.username}_${localTimestamp}.mp3`;
-            
-            Swal.fire({ title: 'กำลังประมวลผลเสียง...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-            
-            const reader = new FileReader();
-            reader.onloadend = async () => {
-              try {
-                let res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'uploadFile', filename: filename, base64: reader.result }) });
-                let result = await res.json();
-                if (result.status === 'success') {
-                  let finalAudioUrl = result.viewUrl || result.url;
-                  await push(ref(db, 'global_messages'), {
-                    senderName: currentUser.displayName,
-                    senderUsername: currentUser.username,
-                    senderAvatar: currentUser.avatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png',
-                    type: 'voice',
-                    content: finalAudioUrl,
-                    filename: filename,
-                    fileId: result.fileId || '',
-                    timestamp: Date.now(),
-                    deleted: false
-                  });
-                  Swal.close();
-                } else { Swal.fire('ล้มเหลว', 'เซิร์ฟเวอร์คลาวด์ปฏิเสธไฟล์เสียง', 'error'); }
-              } catch(err) { Swal.fire('ผิดพลาด', 'อัปโหลดเสียงไม่สำเร็จ', 'error'); }
-            };
-            reader.readAsDataURL(audioBlob);
-          };
-
-          mediaRecorder.start();
-          isRecording = true;
-          recordTimeLeft = 60;
-          
-          const timerSpan = document.getElementById('voice-timer');
-          timerSpan.innerText = '01:00';
-          timerSpan.classList.remove('hidden');
-          document.getElementById('mic-icon').className = 'fa-solid fa-microphone-lines text-red-500 animate-pulse';
-
-          recordTimerInterval = setInterval(() => {
-            recordTimeLeft--;
-            if (recordTimeLeft <= 0) {
-              toggleVoiceRecording(); // หยุดอัดอัตโนมัติเมื่อครบ 1 นาที
-            } else {
-              const sec = recordTimeLeft < 10 ? '0' + recordTimeLeft : recordTimeLeft;
-              timerSpan.innerText = `00:${sec}`;
-            }
-          }, 1000);
-
-        } catch (err) {
-          Swal.fire('ปฏิเสธการเข้าถึง', 'กรุณาอนุญาตสิทธิ์เข้าถึงไมโครโฟนเพื่ออัดเสียงส่งแชทครับ', 'warning');
-        }
-      }
-    }
-
     function createTempRow(msg) {
       const row = document.createElement('div');
-      row.className = "msg-row self flex gap-3 max-w-[85%] sm:max-w-[75%] w-fit align-self-end flex-row-reverse ml-auto mb-2 opacity-75 text-right";
+      row.className = "msg-row flex gap-3 max-w-[85%] sm:max-w-[75%] w-fit align-self-end flex-row-reverse ml-auto mb-2 opacity-75 text-right";
       
       let inner = '';
       if(msg.type === 'text') inner = `<div class="msg-bubble p-3 rounded-2xl text-sm bg-[#7CE68E] text-slate-900 border-tr-none shadow-sm">${msg.content}</div>`;
@@ -1052,36 +996,28 @@
           <img src="${msg.content}" class="max-w-[160px] sm:max-w-[200px] rounded-xl object-cover border border-white/20 shadow-md">
           <span class="text-[10px] text-emerald-400 mt-1 font-medium bg-slate-900/60 px-2 py-0.5 rounded-full"><i class="fa-solid fa-spinner animate-spin mr-1"></i>กำลังส่งรูป...</span>
         </div>`;
-      else if(msg.type === 'optimistic-video') inner = `
-        <div class="flex flex-col items-end">
-          <div class="w-40 h-24 bg-slate-800 rounded-xl flex items-center justify-center text-white text-xs gap-1"><i class="fa-solid fa-circle-notch animate-spin"></i> กำลังส่งวิดีโอ...</div>
-        </div>`;
+      else if(msg.type === 'optimistic-video') inner = `<div class="p-3 rounded-2xl bg-white border text-xs flex items-center gap-2 text-slate-500 shadow-sm"><i class="fa-solid fa-spinner animate-spin text-green-500"></i> กำลังอัปโหลดวิดีโอ...</div>`;
       else if(msg.type === 'optimistic-file') inner = `<div class="p-3 rounded-2xl bg-white border text-xs flex items-center gap-2 text-slate-500 shadow-sm"><i class="fa-solid fa-spinner animate-spin text-green-500"></i> กำลังอัปโหลดไฟล์: ${msg.filename}</div>`;
       
       row.innerHTML = inner;
       return row;
     }
 
+    let lastSnapshotData = null;
+    let initialLoadComplete = false;
+
     function listenChatMessages() {
       const chatRef = ref(db, 'global_messages');
       onValue(chatRef, (snapshot) => {
-        const newData = snapshot.val();
+        lastSnapshotData = snapshot.val();
         
-        if (!isInitialLoad && newData && lastSnapshotData) {
-          const oldKeys = Object.keys(lastSnapshotData);
-          const newKeys = Object.keys(newData);
-          
-          if (newKeys.length > oldKeys.length) {
-            const addedKey = newKeys.find(k => !oldKeys.includes(k));
-            if (addedKey && newData[addedKey].senderUsername !== currentUser.username && !newData[addedKey].deleted) {
-              window.playSystemNotificationSound();
-            }
-          }
+        // ส่งเสียงแจ้งเตือนเฉพาะเมื่อมีข้อความใหม่สดเข้ามาเท่านั้น
+        if (initialLoadComplete && lastSnapshotData) {
+          const sound = document.getElementById('global-noti-sound');
+          sound.play().catch(e => console.log("แจ้งเตือนเสียงถูกบล็อก: ", e));
         }
-        
-        lastSnapshotData = newData;
-        isInitialLoad = false;
-        
+        initialLoadComplete = true;
+
         checkAndMarkAsRead();
         renderAllMessagesWithTemps();
       });
@@ -1092,7 +1028,7 @@
       
       Object.keys(lastSnapshotData).forEach(key => {
         const msg = lastSnapshotData[key];
-        const isSelf = msg.senderUsername === currentUser.username;
+        const isSelf = msg.senderName === currentUser.displayName;
         const hasRead = msg.readBy && msg.readBy[currentUser.username];
         
         if (!isSelf && !msg.deleted && !hasRead) {
@@ -1152,113 +1088,72 @@
       });
     };
 
-    // ฟังก์ชันคัดลอกเนื้อหาข้อความแชทลง Clipboard ระบบอุปกรณ์
-    window.copyMessageTextToClipboard = function(text) {
-      if (!text) return;
-      navigator.clipboard.writeText(text).then(() => {
-        Swal.fire({ title: 'คัดลอกสำเร็จ', text: 'คัดลอกข้อความลงคลิปบอร์ดแล้วครับบอย', icon: 'success', timer: 1200, showConfirmButton: false });
-      }).catch(err => {
-        // วิธีสำรองกรณี Clipboard API ไม่ถูกเปิดใช้งานบนบราวเซอร์บางรุ่น
-        const textArea = document.createElement("textarea");
-        textArea.value = text;
-        document.body.appendChild(textArea);
-        textArea.select();
-        document.execCommand("copy");
-        document.body.removeChild(textArea);
-        Swal.fire({ title: 'คัดลอกสำเร็จ', text: 'คัดลอกข้อความเรียบร้อยครับ', icon: 'success', timer: 1200, showConfirmButton: false });
-      });
-    };
-
+    // ปรับปรุงฟังก์ชันเมนูคลิกขวา / กดค้าง สไตล์ Line ครอบคลุมฟังก์ชันคัดลอกและลบ
     function bindMessageActionEvents(element, msgKey, msgFileId, textContent) {
       let touchTimer = null;
       
-      // ดักฟังก์ชันคลิกขวา (Desktop)
-      element.addEventListener('contextmenu', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        
+      const showActionMenu = (clientX, clientY) => {
         const existCm = document.getElementById('custom-context-menu');
         if(existCm) existCm.remove();
         
         const cm = document.createElement('div');
         cm.id = 'custom-context-menu';
         cm.className = 'custom-cm flex flex-col gap-1';
-        cm.style.top = `${e.clientY}px`;
-        cm.style.left = `${e.clientX}px`;
+        cm.style.top = `${clientY}px`;
+        cm.style.left = `${clientX}px`;
         
-        let menuItems = '';
+        let menuHTML = '';
         if (textContent) {
-          menuItems += `
-            <button id="cm-copy-btn" class="w-full text-left flex items-center gap-2 px-3 py-2 hover:bg-slate-100 text-slate-700 rounded-lg text-xs font-semibold transition-all">
-              <i class="fa-solid fa-copy"></i> คัดลอกข้อความแชท
+          menuHTML += `
+            <button id="cm-copy" class="w-full text-left flex items-center gap-2 px-3 py-2 hover:bg-slate-100 text-slate-700 rounded-lg text-xs font-semibold transition-all">
+              <i class="fa-regular fa-copy"></i> คัดลอกข้อความ
             </button>
           `;
         }
         
-        // ถ้าเป็นข้อความของเราเอง ให้แสดงปุ่มลบข้อความเพิ่มเข้ามา
-        const isMyOwnMessage = element.closest('.msg-row').classList.contains('self');
-        if (isMyOwnMessage) {
-          menuItems += `
-            <button id="cm-delete-btn" class="w-full text-left flex items-center gap-2 px-3 py-2 hover:bg-rose-50 text-rose-600 rounded-lg text-xs font-semibold transition-all">
+        // เช็คว่าถ้าเป็นข้อความของเราเอง ให้แสดงปุ่มลบได้
+        const isMyMsg = element.closest('.msg-row').classList.contains('self');
+        if(isMyMsg) {
+          menuHTML += `
+            <button id="cm-delete" class="w-full text-left flex items-center gap-2 px-3 py-2 hover:bg-rose-50 text-rose-600 rounded-lg text-xs font-semibold transition-all">
               <i class="fa-solid fa-trash-can"></i> ยกเลิกการส่งข้อความ
             </button>
           `;
         }
         
-        cm.innerHTML = menuItems;
+        cm.innerHTML = menuHTML;
         
-        if (cm.querySelector('#cm-copy-btn')) {
-          cm.querySelector('#cm-copy-btn').addEventListener('click', (ev) => {
-            ev.stopPropagation(); cm.remove(); window.copyMessageTextToClipboard(textContent);
+        if(cm.querySelector('#cm-copy')) {
+          cm.querySelector('#cm-copy').addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            navigator.clipboard.writeText(textContent);
+            cm.remove();
+            Swal.fire({ title: 'สำเร็จ', text: 'คัดลอกข้อความลงคลิปบอร์ดแล้ว', icon: 'success', timer: 1000, showConfirmButton: false });
           });
         }
-        if (cm.querySelector('#cm-delete-btn')) {
-          cm.querySelector('#cm-delete-btn').addEventListener('click', (ev) => {
-            ev.stopPropagation(); cm.remove(); window.triggerDeleteMessageAction(msgKey, msgFileId);
+        
+        if(cm.querySelector('#cm-delete')) {
+          cm.querySelector('#cm-delete').addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            cm.remove();
+            window.triggerDeleteMessageAction(msgKey, msgFileId);
           });
         }
         
         document.body.appendChild(cm);
+      };
+
+      element.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        showActionMenu(e.clientX, e.clientY);
       });
 
-      // ดักฟังก์ชันกดค้าง (Mobile Smartphone)
       element.addEventListener('touchstart', (e) => {
+        const touch = e.touches[0];
         touchTimer = setTimeout(() => {
           if (window.navigator.vibrate) window.navigator.vibrate(40); 
-          
-          let actionOptions = {
-            title: 'จัดการข้อความแชท',
-            showCancelButton: true,
-            cancelButtonText: 'ปิดหน้าต่าง',
-            confirmButtonColor: '#10b981',
-            customClass: { title: 'swal-premium-title' }
-          };
-
-          const isMyOwnMessage = element.closest('.msg-row').classList.contains('self');
-          
-          if (textContent && isMyOwnMessage) {
-            actionOptions.text = "เลือกกระบวนการที่ต้องการทำกับข้อความนี้";
-            actionOptions.showDenyButton = true;
-            actionOptions.confirmButtonText = '<i class="fa-solid fa-copy mr-1"></i> คัดลอกข้อความ';
-            actionOptions.denyButtonText = '<i class="fa-solid fa-trash-can mr-1"></i> ยกเลิกการส่ง';
-            actionOptions.denyButtonColor = '#ef4444';
-            
-            Swal.fire(actionOptions).then((choice) => {
-              if (choice.isConfirmed) window.copyMessageTextToClipboard(textContent);
-              else if (choice.isDenied) window.triggerDeleteMessageAction(msgKey, msgFileId);
-            });
-          } else if (textContent) {
-            actionOptions.confirmButtonText = '<i class="fa-solid fa-copy mr-1"></i> คัดลอกข้อความ';
-            Swal.fire(actionOptions).then((choice) => {
-              if (choice.isConfirmed) window.copyMessageTextToClipboard(textContent);
-            });
-          } else if (isMyOwnMessage) {
-            actionOptions.confirmButtonText = '<i class="fa-solid fa-trash-can mr-1"></i> ยกเลิกการส่งข้อความ';
-            actionOptions.confirmButtonColor = '#ef4444';
-            Swal.fire(actionOptions).then((choice) => {
-              if (choice.isConfirmed) window.triggerDeleteMessageAction(msgKey, msgFileId);
-            });
-          }
+          showActionMenu(touch.clientX, touch.clientY);
         }, 600);
       }, { passive: true });
 
@@ -1295,7 +1190,6 @@
 
     function renderAllMessagesWithTemps() {
       const body = document.getElementById('chat-body');
-      if (!body) return;
       const isAtBottom = body.scrollHeight - body.scrollTop <= body.clientHeight + 100;
       
       body.innerHTML = '';
@@ -1318,18 +1212,19 @@
             }
           }
 
-          const isSelf = msg.senderUsername === currentUser.username;
+          const isSelf = msg.senderName === currentUser.displayName;
           const row = document.createElement('div');
-          row.className = `msg-row flex gap-2 sm:gap-3 max-w-[85%] sm:max-w-[75%] width-fit relative items-end group mb-2 ${isSelf ? 'self align-self-end flex-row-reverse ml-auto' : 'other align-self-flex-start'}`;
+          // บังคับสไตล์แยกฝั่งซ้าย-ขวา ชัดเจนตามผู้ส่ง
+          row.className = `msg-row flex gap-2 sm:gap-3 max-w-[85%] sm:max-w-[75%] w-fit relative items-end group mb-2 ${isSelf ? 'self flex-row-reverse ml-auto' : 'other mr-auto text-left'}`;
           
-          // ดึงพิกัดโปรไฟล์ผูกมัด Real-time ผ่านชื่อ Key บัญชี
-          const resolvedAvatar = globalAvatarMap[msg.senderUsername] || msg.senderAvatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
+          // ดึงรูปโปรไฟล์แมป Realtime ล่าสุดมาแสดงผลแทนแบบเดิม
+          const resolvedAvatar = globalAvatarMap[msg.senderName] || msg.senderAvatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
 
           if(!isSelf) {
             const img = document.createElement('img');
             img.className = 'msg-avatar w-8 h-8 rounded-full object-cover shadow-sm self-start mt-1 shrink-0 cursor-pointer hover:scale-105 transition-transform';
             img.src = resolvedAvatar;
-            img.onclick = () => window.openImageInZoomViewer(resolvedAvatar);
+            img.onclick = () => window.viewUserProfileImage(resolvedAvatar, msg.senderName);
             row.appendChild(img);
           }
 
@@ -1351,7 +1246,7 @@
             bubble.className += ' msg-deleted text-slate-400 italic bg-white/20 border border-dashed text-xs';
           } else {
             const isImageLink = msg.type === 'image' || 
-                               (msg.content && (msg.content.includes('drive.google.com/thumbnail') || msg.content.includes('drive.google.com/uc')) && !msg.filename && msg.type !== 'video' && msg.type !== 'voice');
+                               (msg.content && (msg.content.includes('drive.google.com/thumbnail') || msg.content.includes('drive.google.com/uc')) && !msg.filename && msg.type !== 'video' && msg.type !== 'audio');
             
             if(isImageLink) {
               bubble.innerHTML = `
@@ -1364,29 +1259,32 @@
               bubble.style.padding = '0'; bubble.style.background = 'none'; bubble.style.boxShadow = 'none';
               bindMessageActionEvents(bubble, key, msg.fileId, null);
             } else if(msg.type === 'video') {
-              // แสดงผลวิดีโอ สามารถกดเล่นในแชทได้ทันที
+              // แท็กเครื่องเล่นวิดีโอ
               bubble.innerHTML = `
-                <div class="flex flex-col gap-1 max-w-[240px]">
-                  <video src="${msg.content}" controls class="w-full rounded-xl border shadow-md max-h-[180px] bg-black"></video>
-                  <div class="flex items-center gap-1.5 mt-1 w-full justify-center">
-                    <a href="https://drive.google.com/file/d/${msg.fileId || ''}/view" target="_blank" class="px-2 py-1 bg-slate-800/80 text-[10px] text-white rounded-md flex items-center gap-1"><i class="fa-regular fa-eye"></i> ดูต้นฉบับ</a>
+                <video src="${msg.content}" controls class="max-w-[240px] rounded-xl border border-white/20 shadow-md"></video>
+                <div class="flex items-center gap-1.5 mt-1 w-full justify-start">
+                  <button onclick="directDownloadFromDrive('${msg.fileId || ''}', '${msg.filename || 'video.mp4'}')" class="px-2 py-1 bg-green-600 hover:bg-green-700 text-[10px] text-white rounded-md font-medium transition-colors flex items-center gap-1 shadow-sm"><i class="fa-solid fa-download"></i> ดาวน์โหลด</button>
+                </div>
+              `;
+              bubble.style.padding = '0'; bubble.style.background = 'none'; bubble.style.boxShadow = 'none';
+              bindMessageActionEvents(bubble, key, msg.fileId, null);
+            } else if(msg.type === 'audio') {
+              // แท็กเครื่องเล่นข้อความเสียงพร้อมเวลานับถอยหลัง ปรับขนาดสัดส่วนไม่ให้เกย
+              const durationId = `dur_${key}`;
+              bubble.innerHTML = `
+                <div class="audio-player-container">
+                  <button onclick="this.nextElementSibling.paused ? this.nextElementSibling.play() : this.nextElementSibling.pause()" class="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-sm shrink-0"><i class="fa-solid fa-play text-xs"></i></button>
+                  <audio src="${msg.content}" preload="metadata" onplay="this.previousElementSibling.innerHTML='<i class=\"fa-solid fa-pause text-xs\"></i>'" onpause="this.previousElementSibling.innerHTML='<i class=\"fa-solid fa-play text-xs\"></i>'" onloadstart="window.initAudioTracker(this, '${durationId}')"></audio>
+                  <div class="flex flex-col flex-1">
+                    <span class="text-[10px] text-slate-400 font-bold">ข้อความเสียง</span>
+                    <span id="${durationId}" class="text-xs font-semibold text-slate-700">0:00</span>
                   </div>
                 </div>
               `;
               bubble.style.padding = '0'; bubble.style.background = 'none'; bubble.style.boxShadow = 'none';
               bindMessageActionEvents(bubble, key, msg.fileId, null);
-            } else if(msg.type === 'voice') {
-              // แท่นควบคุมเครื่องเล่นคลิปเสียงส่งด่วนในหน้าแชท
-              bubble.innerHTML = `
-                <div class="flex flex-col p-2 bg-slate-100 rounded-xl border border-slate-200 min-w-[200px] gap-1">
-                  <span class="text-[10px] text-slate-500 font-bold flex items-center gap-1"><i class="fa-solid fa-microphone text-red-500"></i> ข้อความเสียง</span>
-                  <audio src="${msg.content}" controls class="w-full h-8 mt-0.5 text-xs"></audio>
-                </div>
-              `;
-              bubble.style.padding = '0'; bubble.style.background = 'none'; bubble.style.boxShadow = 'none';
-              bindMessageActionEvents(bubble, key, msg.fileId, null);
             } else if(msg.type === 'text') {
-              bubble.innerText = msg.content;
+              bubble.innerHTML = linkify(msg.content);
               bubble.className += isSelf ? ' bg-[#7CE68E] text-slate-900 rounded-tr-none' : ' bg-white text-slate-800 rounded-tl-none';
               bindMessageActionEvents(bubble, key, msg.fileId, msg.content);
             } else if(msg.type === 'file') {
@@ -1419,7 +1317,6 @@
             const readStatusSpan = document.createElement('span');
             readStatusSpan.className = 'text-emerald-400 font-bold mb-0.5 select-none cursor-pointer hover:underline';
             readStatusSpan.innerText = `อ่านแล้ว ${totalReadsCount}`;
-            
             readStatusSpan.onclick = () => window.showWhoReadThisMessage(msg.readBy);
             metaContainer.appendChild(readStatusSpan);
           }
@@ -1430,7 +1327,6 @@
           
           row.appendChild(wrapper);
           row.appendChild(metaContainer);
-
           body.appendChild(row);
         });
       }
