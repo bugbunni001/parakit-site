@@ -164,7 +164,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
-    import { getDatabase, ref, push, onValue, update, remove } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-database.js";
+    import { getDatabase, ref, push, onValue, update, remove, onDisconnect, set } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBrgdTPcYPn5UO64vsi9KkUVexnIIXV6F4",
@@ -183,28 +183,12 @@
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw_-h8lZhXY2T_h4two_4KosBNlq0CXpwgsVBoHgZ0ZK5P-m8A2HT7yk2V8iQ9RMa_W/exec";
     let currentUser = null;
     let activeTempUploads = {}; 
-    let globalAvatarMap = {}; // ตัวแปรเก็บแมปรูปโปรไฟล์ล่าสุดของทุกคนในแชท
+    let globalAvatarMap = {}; 
+    let currentActiveUsers = {}; 
 
-    const emojis = [
-      "😀","😂","🥰","😎","🤩","😏","👍","👌","🙏","🎉","🔥","❤️",
-      "😭","😱","😡","🤫","💩","✨","👀","💯","🎂","🚀","👏","🥳",
-      "🥺","💔","💖","🌟","🍀","🍺","☕️","🍙","🎮","🐱","🐶","🦊",
-      "👑","💸","ชิว","เซ็ง","สู้ๆ","งอน"
-    ];
-    
+    const emojis = ["😀","😂","🥰","😎","🤩","😏","👍","👌","🙏","🎉","🔥","❤️","😭","😱","😡","🤫","💩","✨","👀","💯","🎂","🚀","👏","🥳","🥺","💔","💖","🌟","🍀","🍺","☕️","🍙","🎮","🐱","🐶","🦊","👑","💸","ชิว","เซ็ง","สู้ๆ","งอน"];
     const stickers = [
-      "https://cdn-icons-png.flaticon.com/512/4735/4735419.png",
-      "https://cdn-icons-png.flaticon.com/512/4735/4735431.png",
-      "https://cdn-icons-png.flaticon.com/512/4735/4735465.png",
-      "https://cdn-icons-png.flaticon.com/512/4735/4735515.png",
-      "https://fonts.gstatic.com/s/e/notoemoji/latest/1f431/512.webp",
-      "https://fonts.gstatic.com/s/e/notoemoji/latest/1f436/512.webp",
-      "https://fonts.gstatic.com/s/e/notoemoji/latest/1f98a/512.webp",
-      "https://fonts.gstatic.com/s/e/notoemoji/latest/1f42a/512.webp",
-      "https://cdn-icons-png.flaticon.com/512/616/616408.png",
-      "https://cdn-icons-png.flaticon.com/512/616/616430.png",
-      "https://cdn-icons-png.flaticon.com/512/924/924514.png",
-      "https://cdn-icons-png.flaticon.com/512/1998/1998614.png"
+      "https://cdn-icons-png.flaticon.com/512/4735/4735419.png","https://cdn-icons-png.flaticon.com/512/4735/4735431.png","https://cdn-icons-png.flaticon.com/512/4735/4735465.png","https://cdn-icons-png.flaticon.com/512/4735/4735515.png","https://fonts.gstatic.com/s/e/notoemoji/latest/1f431/512.webp","https://fonts.gstatic.com/s/e/notoemoji/latest/1f436/512.webp","https://fonts.gstatic.com/s/e/notoemoji/latest/1f98a/512.webp","https://fonts.gstatic.com/s/e/notoemoji/latest/1f42a/512.webp","https://cdn-icons-png.flaticon.com/512/616/616408.png","https://cdn-icons-png.flaticon.com/512/616/616430.png","https://cdn-icons-png.flaticon.com/512/924/924514.png","https://cdn-icons-png.flaticon.com/512/1998/1998614.png"
     ];
 
     window.addEventListener('DOMContentLoaded', () => {
@@ -213,14 +197,12 @@
       checkSavedLogin();
     });
 
-    // ดึงข้อมูลรูปภาพโปรไฟล์ชุดล่าสุดจากชีทมาอัปเดต Map Client
     async function syncAvatarsFromServer() {
       try {
         let res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getAllAvatars' }) });
         let result = await res.json();
         if (result.status === 'success') {
           globalAvatarMap = result.avatars;
-          // อัปเดตรูปตัวเองบนหัวเว็บ
           if (currentUser && globalAvatarMap[currentUser.displayName]) {
             currentUser.avatar = globalAvatarMap[currentUser.displayName];
             document.getElementById('my-avatar-img').src = currentUser.avatar;
@@ -228,6 +210,23 @@
           }
         }
       } catch (e) { console.error("ไม่สามารถซิงค์ข้อมูลรูปโปรไฟล์ได้", e); }
+    }
+
+    // ฟังก์ชันเปิดสถานะอ่านแบบ Realtime (LINE Receipts)
+    function setupUserPresence() {
+      if (!currentUser) return;
+      const myPresenceRef = ref(db, `status/${currentUser.username}`);
+      set(myPresenceRef, {
+        displayName: currentUser.displayName,
+        lastActive: Date.now()
+      });
+      onDisconnect(myPresenceRef).remove();
+
+      // ฟังก์ชันเฝ้าติดตามคนกำลังใช้งานเพื่อคำนวณ Read Count
+      onValue(ref(db, 'status'), (snapshot) => {
+        currentActiveUsers = snapshot.val() || {};
+        renderAllMessagesWithTemps(); 
+      });
     }
 
     async function checkSavedLogin() {
@@ -248,6 +247,7 @@
           chatBody.style.backgroundSize = 'cover';
         }
         
+        setupUserPresence();
         await syncAvatarsFromServer();
         listenChatMessages();
       }
@@ -294,24 +294,12 @@
         cancelButtonColor: '#64748b',
         customClass: { title: 'swal-premium-title', htmlContainer: 'swal-premium-html' },
         didOpen: () => {
-          document.getElementById('swal-menu-bg').addEventListener('click', () => {
-            Swal.close();
-            document.getElementById('bg-input').click();
-          });
-          
-          document.getElementById('swal-menu-clear').addEventListener('click', () => {
-            Swal.close();
-            document.getElementById('chat-body').innerHTML = '';
-            Swal.fire({ title: 'สำเร็จ', text: 'ล้างหน้าจอภายในแอปพลิเคชันสำหรับคุณแล้วครับ', icon: 'success', timer: 1500, showConfirmButton: false });
-          });
-          
-          document.getElementById('swal-menu-deleteall').addEventListener('click', () => {
-            Swal.close();
-            handleAdminDeleteMessages();
-          });
-          
+          document.getElementById('swal-menu-bg').addEventListener('click', () => { Swal.close(); document.getElementById('bg-input').click(); });
+          document.getElementById('swal-menu-clear').addEventListener('click', () => { Swal.close(); document.getElementById('chat-body').innerHTML = ''; Swal.fire({ title: 'สำเร็จ', text: 'ล้างหน้าจอภายในแอปพลิเคชันสำหรับคุณแล้วครับ', icon: 'success', timer: 1500, showConfirmButton: false }); });
+          document.getElementById('swal-menu-deleteall').addEventListener('click', () => { Swal.close(); handleAdminDeleteMessages(); });
           document.getElementById('swal-menu-logout').addEventListener('click', () => {
             Swal.close();
+            if(currentUser) remove(ref(db, `status/${currentUser.username}`));
             localStorage.removeItem('parakit_chat_user');
             location.reload();
           });
@@ -350,9 +338,7 @@
         didOpen: () => {
           const inputs = ['swal-name', 'swal-user', 'swal-pass', 'swal-email'];
           inputs.forEach((id) => {
-            document.getElementById(id).addEventListener('keypress', (e) => {
-              if (e.key === 'Enter') Swal.clickConfirm();
-            });
+            document.getElementById(id).addEventListener('keypress', (e) => { if (e.key === 'Enter') Swal.clickConfirm(); });
           });
         },
         preConfirm: () => {
@@ -398,6 +384,7 @@
           document.getElementById('my-display-name').innerText = currentUser.displayName;
           document.getElementById('my-avatar-img').src = currentUser.avatar;
           
+          setupUserPresence();
           await syncAvatarsFromServer();
           Swal.close();
           listenChatMessages();
@@ -437,6 +424,7 @@
             chatBody.style.backgroundSize = 'cover';
           }
 
+          setupUserPresence();
           await syncAvatarsFromServer();
           Swal.close();
           listenChatMessages();
@@ -636,11 +624,9 @@
             localStorage.setItem('parakit_chat_user', JSON.stringify(currentUser));
             
             await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'updateAvatar', username: currentUser.username, avatarUrl: directUrl }) });
-            // บันทึกรูปใหม่ลง Cache Map ของเครื่องทันที
             globalAvatarMap[currentUser.displayName] = directUrl;
-            
             Swal.fire({ title: 'สำเร็จ!', text: 'เปลี่ยนรูปโปรไฟล์ผ่านคลาวด์ไดร์ฟเรียบร้อยครับ', icon: 'success', confirmButtonColor: '#10b981' });
-            renderAllMessagesWithTemps(); // สั่งเรนเดอร์ข้อความใหม่ให้รูปตัวเองเปลี่ยนทันที
+            renderAllMessagesWithTemps();
           } else {
             Swal.fire('ล้มเหลว', 'เกิดข้อผิดพลาดจากเซิร์ฟเวอร์ไดร์ฟ', 'error');
           }
@@ -694,11 +680,9 @@
       if(!text) return;
       
       const localTimestamp = Date.now();
-      
       input.value = '';
       push(ref(db, 'global_messages'), {
         senderName: currentUser.displayName,
-        // ส่งรูปสำรองไปใน Database แต่ไคลเอนต์จริงจะดึงจาก dynamic map แทน
         senderAvatar: currentUser.avatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png',
         type: 'text', content: text, timestamp: localTimestamp, deleted: false
       });
@@ -706,7 +690,6 @@
 
     function sendSticker(url) {
       const localTimestamp = Date.now();
-      
       document.getElementById('sticker-picker').classList.add('hidden');
       push(ref(db, 'global_messages'), {
         senderName: currentUser.displayName,
@@ -833,12 +816,32 @@
       }
     };
 
+    // ฟังก์ชันสำหรับคลิกดูรูปโปรไฟล์คนอื่นขนาดใหญ่
+    window.viewUserProfileImage = function(avatarUrl, displayName) {
+      Swal.fire({
+        title: `โปรไฟล์ของ ${displayName}`,
+        imageUrl: avatarUrl,
+        imageWidth: 260,
+        imageHeight: 260,
+        imageAlt: displayName,
+        confirmButtonText: 'ปิดหน้าต่าง',
+        confirmButtonColor: '#64748b',
+        customClass: { title: 'swal-premium-title', popup: 'rounded-3xl' }
+      });
+    };
+
     function renderAllMessagesWithTemps() {
       const body = document.getElementById('chat-body');
-      body.innerHTML = '';
       
+      // จดจำตำแหน่ง Scroll เพื่อไม่ให้หน้าจอเด้งเวลาอัปเดตสถานะอ่านแล้ว
+      const isAtBottom = body.scrollHeight - body.scrollTop <= body.clientHeight + 100;
+      
+      body.innerHTML = '';
       let lastRenderedDate = ""; 
       
+      // นับจำนวนคนที่ออนไลน์อยู่ ณ ขณะนั้น (ไม่รวมตัวเราเอง) เพื่อนำไปคำนวณป้าย "อ่านแล้ว"
+      const totalActiveOthers = Object.keys(currentActiveUsers).filter(k => k !== currentUser.username).length;
+
       if(lastSnapshotData) {
         Object.keys(lastSnapshotData).forEach(key => {
           const msg = lastSnapshotData[key];
@@ -857,16 +860,18 @@
           }
 
           const isSelf = msg.senderName === currentUser.displayName;
-          
           const row = document.createElement('div');
           row.className = `msg-row flex gap-2 sm:gap-3 max-w-[85%] sm:max-w-[75%] width-fit relative items-end group mb-2 ${isSelf ? 'self align-self-end flex-row-reverse ml-auto' : 'other align-self-flex-start'}`;
           
+          // ดึง URL รูปโปรไฟล์ล่าสุดจาก Map Memory
+          const resolvedAvatar = globalAvatarMap[msg.senderName] || msg.senderAvatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
+
           if(!isSelf) {
             const img = document.createElement('img');
-            img.className = 'msg-avatar w-8 h-8 rounded-full object-cover shadow-sm self-start mt-1 shrink-0';
-            
-            // แก้ไขตรงนี้สำคัญ: ดึงรูปภาพเวอร์ชันล่าสุดแบบ Realtime จาก globalAvatarMap ส่วนกลาง หากไม่พบค่อยใช้ค่าเริ่มต้น
-            img.src = globalAvatarMap[msg.senderName] || msg.senderAvatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
+            img.className = 'msg-avatar w-8 h-8 rounded-full object-cover shadow-sm self-start mt-1 shrink-0 cursor-pointer hover:scale-105 transition-transform';
+            img.src = resolvedAvatar;
+            // ผูกฟังก์ชันกดดูรูปโปรไฟล์เมื่อคลิก
+            img.onclick = () => window.viewUserProfileImage(resolvedAvatar, msg.senderName);
             row.appendChild(img);
           }
 
@@ -947,12 +952,22 @@
 
           wrapper.appendChild(bubble);
           
+          // ตัวบอกเวลาส่งข้อความ
           const timeSpan = document.createElement('span');
           timeSpan.className = 'text-[9px] text-slate-400 self-end font-medium px-0.5 mb-1 shrink-0';
           timeSpan.innerText = new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
           
           row.appendChild(wrapper);
           row.appendChild(timeSpan);
+
+          // ส่วนแสดงสถานะ "อ่านแล้ว X คน" สำหรับข้อความที่เราส่ง (แสดงแบบ LINE)
+          if (isSelf && !msg.deleted && totalActiveOthers > 0) {
+            const readStatusSpan = document.createElement('span');
+            readStatusSpan.className = 'text-[9px] text-emerald-400 font-bold self-end mb-1 mr-1 select-none';
+            readStatusSpan.innerText = `อ่านแล้ว ${totalActiveOthers}`;
+            row.appendChild(readStatusSpan);
+          }
+
           body.appendChild(row);
         });
       }
@@ -962,7 +977,9 @@
         body.appendChild(createTempRow(tempMsg));
       });
       
-      body.scrollTop = body.scrollHeight;
+      if (isAtBottom) {
+        body.scrollTop = body.scrollHeight;
+      }
     }
 
     window.viewSpotlightImage = function(url, filename) {
@@ -970,17 +987,9 @@
         title: filename,
         imageUrl: url,
         imageAlt: filename,
-        showCancelButton: true,
-        confirmButtonText: '<i class="fa-solid fa-cloud-arrow-down mr-1"></i> ดาวน์โหลดรูปนี้',
-        cancelButtonText: 'ปิดหน้าต่าง',
-        confirmButtonColor: '#10b981',
-        cancelButtonColor: '#64748b',
+        confirmButtonText: 'ปิดหน้าต่าง',
+        confirmButtonColor: '#64748b',
         customClass: { title: 'swal-premium-title', htmlContainer: 'swal-premium-html' }
-      }).then((result) => {
-        if (result.isConfirmed) {
-          const a = document.createElement("a"); a.href = url; a.download = filename;
-          document.body.appendChild(a); a.click(); document.body.removeChild(a);
-        }
       });
     }
 
