@@ -67,35 +67,21 @@
     #viewer-hidden-container { display: none; }
     .viewer-title { display: none !important; }
     
-    /* ปรับปรุงเมนู Action คลิกขวา/กดค้าง ให้อยู่กึ่งกลางหน้าจอ สไตล์พรีเมียม ป้องกันการตกขอบ */
-    .custom-cm-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 999;
-      background: rgba(15, 23, 42, 0.4);
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      animation: fadeInOverlay 0.2s ease-out;
-    }
     .custom-cm {
-      background: rgba(255, 255, 255, 0.95);
-      border: 1px solid rgba(255, 255, 255, 0.6);
-      border-radius: 24px;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
-      padding: 10px;
-      width: 85%;
-      max-width: 280px;
-      animation: cmScaleCenter 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+      position: fixed;
+      z-index: 1000;
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+      padding: 6px;
+      min-width: 180px;
+      animation: cmScale 0.15s ease-out;
     }
-    @keyframes fadeInOverlay {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-    @keyframes cmScaleCenter {
-      from { transform: scale(0.85); opacity: 0; }
+    @keyframes cmScale {
+      from { transform: scale(0.92); opacity: 0; }
       to { transform: scale(1); opacity: 1; }
     }
     
@@ -110,6 +96,11 @@
       gap: 10px;
       min-width: 220px;
       max-width: 280px;
+    }
+    /* สไตล์เพิ่มเติมสำหรับปรับขนาด Textarea ส่งข้อความอัตโนมัติ */
+    #msg-input {
+      resize: none;
+      max-height: 120px;
     }
   </style>
 </head>
@@ -199,16 +190,16 @@
           </div>
           <div class="flex items-center gap-2">
             <span id="audio-timer" class="text-xs font-bold text-red-500 hidden animate-pulse">0:00</span>
-            <button id="btn-audio-record" class="w-9 h-9 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center transition-all hover:bg-red-50 hover:text-red-500 shadow-sm" title="กดเพื่ออัดเสียงสูงสุด 2 นาที">
+            <button id="btn-audio-record" class="w-9 h-9 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center transition-all hover:bg-red-50 hover:text-red-500 shadow-sm" title="กดเพื่ออัดเสียงสูงสุด 1 นาที">
               <i class="fa-solid fa-microphone text-sm"></i>
             </button>
           </div>
         </div>
       </div>
       
-      <div class="flex items-center gap-2">
-        <input type="text" id="msg-input" placeholder="พิมพ์ข้อความในห้องแชทรวม..." class="flex-1 p-2.5 sm:p-3.5 px-4 sm:px-5 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 font-medium text-slate-800 placeholder-slate-400 shadow-sm transition-all">
-        <button id="btn-send" class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-green-500/20 transform active:scale-95 transition-all shrink-0">
+      <div class="flex items-center gap-2 items-end">
+        <textarea id="msg-input" rows="1" placeholder="พิมพ์ข้อความในห้องแชทรวม... (Shift + Enter เพื่อขึ้นบรรทัดใหม่)" class="flex-1 p-2.5 sm:p-3.5 px-4 sm:px-5 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 font-medium text-slate-800 placeholder-slate-400 shadow-sm transition-all no-scrollbar"></textarea>
+        <button id="btn-send" class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-green-500/20 transform active:scale-95 transition-all shrink-0 mb-0.5">
           <i class="fa-solid fa-paper-plane text-xs sm:text-sm"></i>
         </button>
       </div>
@@ -225,7 +216,7 @@
     <img id="viewer-target-image" src="" alt="Chat Content Image">
   </div>
 
-  <audio id="global-noti-sound" src="https://drive.google.com/uc?export=download&id=1SsAPcEvbI0gbMCKuw_fvVD1NP_3xI281" preload="auto"></audio>
+  <audio id="global-noti-sound" src="https://assets.mixkit.co/active_storage/sfx/2357/2357-84.wav" preload="auto"></audio>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
@@ -245,7 +236,7 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw_-h8lZhXY2T_h4two_4KosBNlq0CXpwgsVBoHgZ0ZK5P-m8A2HT7yk2V8iQ9RMa_W/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxqvtiPOhLybcg06uVOaRXkky1icn8WtdZwWlwsnuqI_ch6pYSCTbDhfp5_rSZJrnwK/exec";
     let currentUser = null;
     let activeTempUploads = {}; 
     let globalAvatarMap = {}; 
@@ -299,10 +290,9 @@
     };
 
     function initContextMenuDismissal() {
-      document.addEventListener('click', (e) => {
-        // กดนอก Area เมนูเพื่อปิด
-        const overlay = document.getElementById('custom-context-menu-overlay');
-        if(overlay && e.target === overlay) overlay.remove();
+      document.addEventListener('click', () => {
+        const existCm = document.getElementById('custom-context-menu');
+        if(existCm) existCm.remove();
       });
     }
 
@@ -324,12 +314,11 @@
     function setupUserPresence() {
       if (!currentUser) return;
       const myPresenceRef = ref(db, `status/${currentUser.username}`);
-      set(myPresenceRef, { displayName: currentUser.displayName, lastActive: Date.now(), avatar: currentUser.avatar || '' });
+      set(myPresenceRef, { displayName: currentUser.displayName, lastActive: Date.now() });
       onDisconnect(myPresenceRef).remove();
 
       onValue(ref(db, 'status'), (snapshot) => {
         currentActiveUsers = snapshot.val() || {};
-        // ทุกครั้งที่ User มีการ Update Presence ให้ทำการซิงค์อัปเดตรูป Real-time ไปด้วย
         syncAvatarsFromServer().then(() => renderAllMessagesWithTemps());
       });
     }
@@ -371,12 +360,26 @@
       document.getElementById('btn-forgot-pwd').addEventListener('click', handleForgotPwd);
       document.getElementById('btn-open-settings').addEventListener('click', openSettingsModal);
       document.getElementById('btn-send').addEventListener('click', sendTextMessage);
-      document.getElementById('msg-input').addEventListener('keypress', (e) => { if(e.key === 'Enter') sendTextMessage(); });
+      
+      // ปรับจังหวะปุ่ม Enter บนคอมพิวเตอร์ และพฤติกรรมบนมือถือของ Textarea
+      const msgInput = document.getElementById('msg-input');
+      msgInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey && window.innerWidth > 640) {
+          e.preventDefault();
+          sendTextMessage();
+        }
+      });
+      
+      // ปรับขนาดของช่องกรอกข้อความอัตโนมัติเมื่อกดเว้นบรรทัด
+      msgInput.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = (this.scrollHeight) + 'px';
+      });
       
       document.getElementById('avatar-container').addEventListener('click', () => document.getElementById('avatar-input').click());
     }
 
-    // ฟังก์ชันจัดการอัดเสียงความยาวสูงสุด 2 นาที ตามเงื่อนไขใหม่ครับ
+    // ฟังก์ชันจัดการอัดเสียงความยาวสูงสุด 1 นาที
     function initAudioRecorder() {
       const recordBtn = document.getElementById('btn-audio-record');
       const timerSpan = document.getElementById('audio-timer');
@@ -410,12 +413,10 @@
               
               recordInterval = setInterval(() => {
                 recordDuration++;
-                let mins = Math.floor(recordDuration / 60);
                 let secs = recordDuration % 60;
-                timerSpan.innerText = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+                timerSpan.innerText = `0:${secs < 10 ? '0' : ''}${secs}`;
                 
-                // สิ้นสุดการอัดอัตโนมัติเมื่อครบ 2 นาที (120 วินาที)
-                if (recordDuration >= 120) {
+                if (recordDuration >= 60) {
                   stopAudioRecording();
                 }
               }, 1000);
@@ -437,10 +438,9 @@
       }
       isRecording = false;
       document.getElementById('btn-audio-record').innerHTML = `<i class="fa-solid fa-microphone text-sm"></i>`;
-      document.getElementById('audio-timer').className = 'text-xs font-bold text-red-500 hidden';
+      document.getElementById('audio-timer').classList.add('hidden');
     }
 
-    // อัปโหลดไฟล์ข้อความเสียงขึ้น Drive โฟลเดอร์หลักผ่าน GAS ทันที
     async function uploadAudioAndSend(blob) {
       const localTimestamp = Date.now();
       const uploadId = "upload_audio_" + localTimestamp;
@@ -481,24 +481,31 @@
       reader.readAsDataURL(blob);
     }
 
+    // แก้ไขฟังก์ชัน linkify ให้เปลี่ยนเว้นบรรทัด \n เป็น <br> ในตัวแชท
     function linkify(text) {
+      if (!text) return "";
       const urlRegex = /(https?:\/\/[^\s]+)/g;
-      return text.replace(urlRegex, function(url) {
+      let html = text.replace(urlRegex, function(url) {
         return `<a href="${url}" target="_blank" class="text-blue-600 font-medium underline break-all hover:text-blue-800">${url}</a>`;
       });
+      return html.replace(/\n/g, '<br>');
     }
 
     window.initAudioTracker = function(audioElement, durationId) {
+      // ดึงค่าเวลารองรับเมื่อ Metadata เริ่มโหลด
+      audioElement.addEventListener('loadedmetadata', () => {
+        const secs = Math.floor(audioElement.duration || 0);
+        document.getElementById(durationId).innerText = `0:${secs < 10 ? '0' : ''}${secs}`;
+      });
       audioElement.addEventListener('timeupdate', () => {
+        if (!audioElement.duration) return;
         const remain = Math.max(0, audioElement.duration - audioElement.currentTime);
-        const mins = Math.floor(remain / 60);
         const secs = Math.floor(remain % 60);
-        document.getElementById(durationId).innerText = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+        document.getElementById(durationId).innerText = `0:${secs < 10 ? '0' : ''}${secs}`;
       });
       audioElement.addEventListener('ended', () => {
-        const mins = Math.floor((audioElement.duration || 0) / 60);
-        const secs = Math.floor((audioElement.duration || 0) % 60);
-        document.getElementById(durationId).innerText = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+        const secs = Math.floor(audioElement.duration || 0);
+        document.getElementById(durationId).innerText = `0:${secs < 10 ? '0' : ''}${secs}`;
       });
     };
 
@@ -832,6 +839,7 @@
       }
     }
 
+    // แก้ไขฟังก์ชันอัปโหลดและอัปเดตรูปโปรไฟล์ให้ส่ง Key ถูกต้องตามชีท
     window.uploadUserAvatarToDrive = function(e) {
       const file = e.target.files[0];
       if(!file) return;
@@ -852,13 +860,9 @@
             document.getElementById('my-avatar-img').src = directUrl;
             localStorage.setItem('parakit_chat_user', JSON.stringify(currentUser));
             
+            // ปรับแก้คีย์ส่งตัวแปรตรงนี้ให้เข้าคู่กับ Apps script
             await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'updateAvatar', username: currentUser.username, avatarUrl: directUrl }) });
             globalAvatarMap[currentUser.displayName] = directUrl;
-            
-            // อัปเดตข้อมูล Node Presence ใน Firebase ทันทีเพื่อกระตุ้นจอผู้ใช้อื่นให้ดึงรูปไปอัปเดตแบบ Realtime
-            const myPresenceRef = ref(db, `status/${currentUser.username}`);
-            await set(myPresenceRef, { displayName: currentUser.displayName, lastActive: Date.now(), avatar: directUrl });
-            
             Swal.fire({ title: 'สำเร็จ!', text: 'เปลี่ยนรูปโปรไฟล์ผ่านคลาวด์ไดร์ฟเรียบร้อยครับ', icon: 'success', confirmButtonColor: '#10b981' });
             renderAllMessagesWithTemps();
           } else {
@@ -915,6 +919,7 @@
       
       const localTimestamp = Date.now();
       input.value = '';
+      input.style.height = 'auto'; // Reset ความสูง Textarea
       push(ref(db, 'global_messages'), {
         senderName: currentUser.displayName,
         senderAvatar: currentUser.avatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png',
@@ -956,13 +961,12 @@
       const reader = new FileReader();
       reader.onloadend = async () => {
         try {
-          // หากเป็นวิดีโอ เช็คความยาวไม่เกิน 3 นาที (180 วินาที) ตามเงื่อนไขใหม่ครับ
           if (isVideo) {
             const tempVideo = document.createElement('video');
             tempVideo.src = localObjectURL;
             tempVideo.onloadedmetadata = async function() {
-              if (tempVideo.duration > 180) {
-                Swal.fire('ไฟล์มีขนาดใหญ่เกินไป', 'ระบบรองรับความยาววิดีโอสูงสุดไม่เกิน 3 นาทีครับ', 'error');
+              if (tempVideo.duration > 300) {
+                Swal.fire('ไฟล์มีขนาดใหญ่เกินไป', 'ระบบรองรับความยาววิดีโอสูงสุดไม่เกิน 5 นาทีครับ', 'error');
                 delete activeTempUploads[uploadId];
                 renderAllMessagesWithTemps();
                 return;
@@ -1033,7 +1037,6 @@
       onValue(chatRef, (snapshot) => {
         lastSnapshotData = snapshot.val();
         
-        // ส่งเสียงแจ้งเตือนเฉพาะเมื่อมีข้อความใหม่สดเข้ามาเท่านั้น
         if (initialLoadComplete && lastSnapshotData) {
           const sound = document.getElementById('global-noti-sound');
           sound.play().catch(e => console.log("แจ้งเตือนเสียงถูกบล็อก: ", e));
@@ -1110,27 +1113,24 @@
       });
     };
 
-    // ปรับปรุงฟังก์ชันแสดงเมนูกลางหน้าจอ สไตล์พรีเมียม ป้องกันปัญหาตกขอบริมขวาบนมือถือ
     function bindMessageActionEvents(element, msgKey, msgFileId, textContent) {
       let touchTimer = null;
       
-      const showActionMenuCenter = () => {
-        const existOverlay = document.getElementById('custom-context-menu-overlay');
-        if(existOverlay) existOverlay.remove();
-        
-        // สร้าง Backdrop คลุมทั้งหน้าจอเพื่อจัดวางเมนูกลางหน้าจออย่างสมบูรณ์แบบ
-        const overlay = document.createElement('div');
-        overlay.id = 'custom-context-menu-overlay';
-        overlay.className = 'custom-cm-overlay';
+      const showActionMenu = (clientX, clientY) => {
+        const existCm = document.getElementById('custom-context-menu');
+        if(existCm) existCm.remove();
         
         const cm = document.createElement('div');
+        cm.id = 'custom-context-menu';
         cm.className = 'custom-cm flex flex-col gap-1';
+        cm.style.top = `${clientY}px`;
+        cm.style.left = `${clientX}px`;
         
         let menuHTML = '';
         if (textContent) {
           menuHTML += `
-            <button id="cm-copy" class="w-full text-left flex items-center gap-3 px-4 py-3 hover:bg-slate-100 text-slate-700 rounded-xl text-sm font-semibold transition-all">
-              <i class="fa-regular fa-copy text-base text-slate-500"></i> คัดลอกข้อความ
+            <button id="cm-copy" class="w-full text-left flex items-center gap-2 px-3 py-2 hover:bg-slate-100 text-slate-700 rounded-lg text-xs font-semibold transition-all">
+              <i class="fa-regular fa-copy"></i> คัดลอกข้อความ
             </button>
           `;
         }
@@ -1138,20 +1138,19 @@
         const isMyMsg = element.closest('.msg-row').classList.contains('self');
         if(isMyMsg) {
           menuHTML += `
-            <button id="cm-delete" class="w-full text-left flex items-center gap-3 px-4 py-3 hover:bg-rose-50 text-rose-600 rounded-xl text-sm font-semibold transition-all">
-              <i class="fa-solid fa-trash-can text-base text-rose-500"></i> ยกเลิกการส่งข้อความ
+            <button id="cm-delete" class="w-full text-left flex items-center gap-2 px-3 py-2 hover:bg-rose-50 text-rose-600 rounded-lg text-xs font-semibold transition-all">
+              <i class="fa-solid fa-trash-can"></i> ยกเลิกการส่งข้อความ
             </button>
           `;
         }
         
         cm.innerHTML = menuHTML;
-        overlay.appendChild(cm);
         
         if(cm.querySelector('#cm-copy')) {
           cm.querySelector('#cm-copy').addEventListener('click', (ev) => {
             ev.stopPropagation();
             navigator.clipboard.writeText(textContent);
-            overlay.remove();
+            cm.remove();
             Swal.fire({ title: 'สำเร็จ', text: 'คัดลอกข้อความลงคลิปบอร์ดแล้ว', icon: 'success', timer: 1000, showConfirmButton: false });
           });
         }
@@ -1159,24 +1158,25 @@
         if(cm.querySelector('#cm-delete')) {
           cm.querySelector('#cm-delete').addEventListener('click', (ev) => {
             ev.stopPropagation();
-            overlay.remove();
+            cm.remove();
             window.triggerDeleteMessageAction(msgKey, msgFileId);
           });
         }
         
-        document.body.appendChild(overlay);
+        document.body.appendChild(cm);
       };
 
       element.addEventListener('contextmenu', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        showActionMenuCenter();
+        showActionMenu(e.clientX, e.clientY);
       });
 
       element.addEventListener('touchstart', (e) => {
+        const touch = e.touches[0];
         touchTimer = setTimeout(() => {
           if (window.navigator.vibrate) window.navigator.vibrate(40); 
-          showActionMenuCenter();
+          showActionMenu(touch.clientX, touch.clientY);
         }, 600);
       }, { passive: true });
 
@@ -1281,7 +1281,7 @@
               bindMessageActionEvents(bubble, key, msg.fileId, null);
             } else if(msg.type === 'video') {
               bubble.innerHTML = `
-                <video src="${msg.content}" controls class="max-w-[240px] rounded-xl border border-white/20 shadow-md"></video>
+                <video src="${msg.content}" controls preload="metadata" class="max-w-[240px] rounded-xl border border-white/20 shadow-md"></video>
                 <div class="flex items-center gap-1.5 mt-1 w-full justify-start">
                   <button onclick="directDownloadFromDrive('${msg.fileId || ''}', '${msg.filename || 'video.mp4'}')" class="px-2 py-1 bg-green-600 hover:bg-green-700 text-[10px] text-white rounded-md font-medium transition-colors flex items-center gap-1 shadow-sm"><i class="fa-solid fa-download"></i> ดาวน์โหลด</button>
                 </div>
@@ -1296,7 +1296,7 @@
                   <audio src="${msg.content}" preload="metadata" onplay="this.previousElementSibling.innerHTML='<i class=\"fa-solid fa-pause text-xs\"></i>'" onpause="this.previousElementSibling.innerHTML='<i class=\"fa-solid fa-play text-xs\"></i>'" onloadstart="window.initAudioTracker(this, '${durationId}')"></audio>
                   <div class="flex flex-col flex-1">
                     <span class="text-[10px] text-slate-400 font-bold">ข้อความเสียง</span>
-                    <span id="${durationId}" class="text-xs font-semibold text-slate-700">0:00</span>
+                    <span id="${durationId}" class="text-xs font-semibold text-slate-700">--:--</span>
                   </div>
                 </div>
               `;
