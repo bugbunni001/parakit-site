@@ -3,587 +3,960 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Premium Chat Parakit</title>
+  <title>Premium Parakit ChatRoom</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
   <style>
-    body { font-family: 'Prompt', sans-serif; background: #7494c4; }
-    .premium-glass { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.5); }
-    .swal2-popup { font-family: 'Prompt', sans-serif !important; border-radius: 20px !important; }
-    .chat-bg { background-color: #abc1de; background-size: cover; background-position: center; transition: background 0.3s ease; }
+    body {
+      font-family: 'Prompt', sans-serif;
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #311042 100%);
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+    }
+    .glass-panel {
+      background: rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+    .glass-card {
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+    }
+    .chat-area {
+      background: rgba(15, 23, 42, 0.4);
+      background-size: cover;
+      background-position: center;
+      transition: all 0.4s ease;
+    }
     .no-scrollbar::-webkit-scrollbar { display: none; }
+    .msg-bubble {
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+      transition: all 0.2s ease;
+    }
+    .msg-row:hover .action-box { opacity: 1; }
+    
+    .swal-premium-title { font-family: 'Prompt', sans-serif !important; font-weight: 700 !important; color: #1e293b !important; }
+    .swal-premium-html { font-family: 'Prompt', sans-serif !important; }
+    .swal-input-box {
+      width: 100%; max-width: 340px; padding: 12px 16px; margin: 8px auto; display: block;
+      border: 1px solid #cbd5e1; border-radius: 14px; font-size: 14px; font-family: 'Prompt', sans-serif;
+      background-color: #f8fafc; transition: all 0.2s ease;
+    }
+    .swal-input-box:focus { outline: none; border-color: #10b981; background-color: #fff; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15); }
+    .swal2-popup { border-radius: 24px !important; padding: 2rem !important; }
   </style>
 </head>
-<body class="h-screen flex items-center justify-center p-0 md:p-4">
+<body class="h-screen w-screen flex items-center justify-center p-0 md:p-6 overflow-hidden">
 
-  <div class="w-full h-full md:max-w-md md:h-[85vh] premium-glass md:rounded-3xl shadow-2xl flex flex-col overflow-hidden relative">
+  <div id="login-screen" class="glass-card w-full max-w-md rounded-3xl p-8 text-center mx-4 transition-all duration-300">
+    <div class="w-20 h-20 bg-gradient-to-tr from-emerald-400 to-green-600 rounded-2xl mx-auto flex items-center justify-center text-white text-4xl shadow-lg mb-4">
+      <i class="fa-solid fa-comments"></i>
+    </div>
+    <h2 class="text-2xl font-bold text-slate-800 mb-1">Parakit Connect</h2>
+    <p class="text-xs text-slate-400 mb-6">กรอกข้อมูลผู้ใช้งานของคุณเพื่อเข้าสู่ห้องแชทรวม</p>
     
-    <div id="auth-screen" class="absolute inset-0 bg-white z-40 flex flex-col p-6 justify-center">
-      <div class="text-center mb-8">
-        <div class="w-20 h-20 bg-emerald-500 rounded-3xl mx-auto flex items-center justify-center text-white text-4xl shadow-lg mb-4">
-          <i class="fa-solid fa-comments"></i>
+    <div class="space-y-4 text-left">
+      <div>
+        <label class="block text-xs font-semibold text-slate-500 mb-1.5 ml-1">Username</label>
+        <div class="relative">
+          <input type="text" id="login-username" placeholder="กรอก Username" class="w-full p-3.5 pl-11 rounded-2xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 transition-all">
+          <i class="fa-solid fa-user absolute left-4 top-4 text-slate-400 text-sm"></i>
         </div>
-        <h2 class="text-2xl font-bold text-slate-800">Chat Parakit Connect</h2>
-        <p class="text-xs text-slate-400 mt-1">กรุณาเลือกผู้ใช้งานและเข้าสู่ระบบ</p>
+      </div>
+      
+      <div>
+        <label class="block text-xs font-semibold text-slate-500 mb-1.5 ml-1">Password</label>
+        <div class="relative">
+          <input type="password" id="login-password" placeholder="กรอกรหัสผ่านของคุณ" class="w-full p-3.5 pl-11 rounded-2xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 transition-all">
+          <i class="fa-solid fa-lock absolute left-4 top-4 text-slate-400 text-sm"></i>
+        </div>
+      </div>
+      
+      <button id="btn-login" class="w-full py-4 mt-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold rounded-2xl shadow-md transition-all duration-200 hover:opacity-95 shadow-lg shadow-green-500/20">
+        <i class="fa-solid fa-arrow-right-to-bracket mr-2"></i> เข้าสู่ระบบแชท
+      </button>
+
+      <div class="relative flex py-1 items-center">
+        <div class="flex-grow border-t border-slate-200/60"></div>
+        <span class="flex-shrink mx-4 text-xs text-slate-400 font-medium">หรือ</span>
+        <div class="flex-grow border-t border-slate-200/60"></div>
       </div>
 
-      <div class="space-y-4">
-        <div>
-          <label class="block text-xs font-semibold text-slate-500 mb-1.5"><i class="fa-solid fa-user-tag mr-1"></i> เลือก User ในระบบ</label>
-          <select id="user-select" class="w-full p-3 rounded-xl border border-slate-200 bg-slate-50 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500">
-            <option value="">-- กำลังโหลดรายชื่อผู้ใช้ --</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-slate-500 mb-1.5">Username</label>
-          <input type="text" id="login-username" onkeypress="if(event.key==='Enter') handleLogin()" placeholder="กรอกชื่อผู้ใช้" class="w-full p-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-slate-500 mb-1.5">Password</label>
-          <input type="password" id="login-password" onkeypress="if(event.key==='Enter') handleLogin()" placeholder="กรอกรหัสผ่าน" class="w-full p-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
-        </div>
-
-        <button onclick="handleLogin()" class="w-full py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-medium shadow-md transition duration-300">
-          เข้าสู่ระบบแชท
-        </button>
-
-        <div class="flex justify-between items-center text-xs pt-2">
-          <button onclick="handleForgotPasswordOTP()" class="text-slate-400 hover:text-emerald-600"><i class="fa-solid fa-key mr-1"></i>ลืมรหัสผ่าน?</button>
-          <button onclick="openRegisterModal()" class="text-emerald-500 font-semibold hover:underline">สร้างบัญชีใหม่ <i class="fa-solid fa-arrow-right-to-bracket ml-1"></i></button>
-        </div>
+      <button id="btn-open-register" class="w-full py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-2xl transition-all duration-200 text-sm">
+        <i class="fa-solid fa-user-plus mr-2"></i> สร้างบัญชีผู้ใช้ใหม่
+      </button>
+      
+      <div class="flex justify-center items-center text-xs pt-1">
+        <button id="btn-forgot-pwd" class="text-slate-400 hover:text-green-600 transition-colors"><i class="fa-solid fa-circle-question mr-1"></i>ลืมรหัสผ่าน?</button>
       </div>
     </div>
+  </div>
 
-    <div class="p-4 bg-slate-800 text-white flex items-center justify-between shadow-md">
+  <div id="chat-interface" class="w-full h-full md:max-w-4xl md:h-[90vh] glass-panel md:rounded-3xl shadow-2xl flex-col hidden overflow-hidden transition-all duration-300">
+    <div class="p-4 bg-slate-900/90 text-white flex items-center justify-between border-b border-white/10 z-10 shadow-lg">
       <div class="flex items-center gap-3">
-        <div class="relative cursor-pointer" onclick="changeUserAvatar()">
-          <img id="my-avatar" src="" class="w-10 h-10 rounded-full border-2 border-emerald-400 object-cover">
-          <span class="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-slate-800 rounded-full"></span>
+        <div class="relative group cursor-pointer" id="avatar-container" title="คลิกเพื่อเปลี่ยนรูปโปรไฟล์ผ่านกูเกิลไดรฟ์">
+          <img id="my-avatar-img" class="w-12 h-12 rounded-full border-2 border-green-400 object-cover shadow-md hover:scale-105 transition-all" src="https://cdn-icons-png.flaticon.com/512/149/149071.png">
+          <div class="absolute inset-0 bg-black/40 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all">
+            <i class="fa-solid fa-camera text-xs text-white"></i>
+          </div>
+          <span class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 border-2 border-slate-900 rounded-full"></span>
         </div>
         <div>
-          <h3 id="my-name" class="font-semibold text-sm">Username</h3>
-          <p class="text-[10px] text-emerald-400"><i class="fa-solid fa-circle text-[8px] mr-1"></i>ออนไลน์ห้องรวม</p>
+          <h3 id="my-display-name" class="font-bold text-base tracking-wide text-white">Name</h3>
+          <p class="text-[11px] text-green-400 flex items-center gap-1"><span class="w-1.5 h-1.5 bg-green-500 rounded-full inline-block animate-ping"></span> ห้องแชทรวมออนไลน์</p>
         </div>
       </div>
-      <div class="flex items-center gap-4 text-lg text-slate-300">
-        <button onclick="changeChatBgLink()" title="เปลี่ยนพื้นหลังแชทด้วยลิงก์" class="hover:text-white">
-          <i class="fa-solid fa-image"></i>
+      
+      <div class="flex items-center gap-4">
+        <button id="btn-change-bg-upload" title="อัปเดตรูปพื้นหลังแชทจากเครื่องคอมหรือมือถือ" class="w-10 h-10 rounded-full bg-white/5 hover:bg-white/15 text-slate-300 hover:text-white flex items-center justify-center transition-all">
+          <i class="fa-solid fa-image text-base"></i>
         </button>
-        <button onclick="handleLogout()" title="ออกจากระบบ" class="hover:text-rose-400"><i class="fa-solid fa-right-from-bracket"></i></button>
+        <button id="btn-clear-view" title="ล้างหน้าจอแชทสำหรับตัวเอง" class="w-10 h-10 rounded-full bg-white/5 hover:bg-white/15 text-slate-300 hover:text-white flex items-center justify-center transition-all">
+          <i class="fa-solid fa-broom text-base"></i>
+        </button>
+        <button id="btn-delete-all-server" title="ลบข้อมูลแชทส่วนกลางทั้งหมด (เฉพาะแอดมิน)" class="w-10 h-10 rounded-full bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-white flex items-center justify-center transition-all shadow-md">
+          <i class="fa-solid fa-trash-can text-base"></i>
+        </button>
+        <button id="btn-logout" title="ออกจากระบบ" class="w-10 h-10 rounded-full bg-white/5 hover:bg-white/15 text-slate-300 hover:text-white flex items-center justify-center transition-all shadow-md">
+          <i class="fa-solid fa-power-off text-base"></i>
+        </button>
       </div>
     </div>
-
-    <div id="chat-box" class="flex-1 chat-bg p-4 overflow-y-auto no-scrollbar space-y-3"></div>
-
-    <div class="p-3 bg-white border-t border-slate-100 flex flex-col gap-2">
-      <div class="flex items-center gap-3 text-slate-400 text-sm px-1">
-        <button onclick="showEmojiPicker()" class="hover:text-amber-500"><i class="fa-regular fa-face-smile text-lg"></i></button>
-        <button onclick="showStickerPicker()" class="hover:text-blue-500"><i class="fa-regular fa-note-sticky text-lg"></i></button>
-        <label class="cursor-pointer hover:text-emerald-500">
-          <i class="fa-solid fa-paperclip text-lg"></i>
-          <input type="file" id="file-input" class="hidden" onchange="handleFileUpload(event)">
-        </label>
+    
+    <div class="chat-area flex-1 p-4 md:p-6 overflow-y-auto no-scrollbar space-y-4" id="chat-body"></div>
+    
+    <div class="p-4 bg-white border-t border-slate-200/80 flex flex-col gap-3 shadow-inner relative">
+      <div class="flex items-center justify-between px-1">
+        <div class="flex items-center gap-5 text-slate-500">
+          <label class="cursor-pointer hover:text-green-500 transition-colors flex items-center gap-1.5 text-sm font-medium" title="แนบไฟล์หรือรูปภาพ">
+            <i class="fa-solid fa-circle-plus text-xl text-green-500"></i>
+            <span class="text-xs text-slate-400 hidden sm:inline">รูปภาพ / ไฟล์</span>
+            <input type="file" id="file-input" class="hidden" onchange="uploadFileAndSend(event)">
+          </label>
+          <button id="tool-emoji" class="hover:text-amber-500 transition-colors text-xl" title="ส่งคีย์บอร์ดอิโมจิ"><i class="fa-regular fa-face-smile-wink"></i></button>
+          <button id="tool-sticker" class="hover:text-blue-500 transition-colors text-xl" title="ส่งสติ๊กเกอร์ด่วน"><i class="fa-regular fa-images"></i></button>
+        </div>
       </div>
       
       <div class="flex items-center gap-2">
-        <input type="text" id="msg-input" onkeypress="if(event.key==='Enter') sendText()" placeholder="พิมพ์ข้อความที่นี่..." class="flex-1 p-2.5 px-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500">
-        <button onclick="sendText()" class="w-10 h-10 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full flex items-center justify-center shadow-md transition"><i class="fa-solid fa-paper-plane text-xs"></i></button>
+        <input type="text" id="msg-input" placeholder="พิมพ์ข้อความในห้องแชทรวม..." class="flex-1 p-3.5 px-5 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 font-medium text-slate-800 placeholder-slate-400 shadow-sm transition-all">
+        <button id="btn-send" class="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-green-500/20 transform active:scale-95 transition-all">
+          <i class="fa-solid fa-paper-plane text-sm"></i>
+        </button>
       </div>
+      
+      <div class="emoji-picker glass-card shadow-2xl grid grid-cols-6 gap-3 p-4 hidden absolute bottom-24 left-4 min-w-[300px] max-w-[340px] max-h-[250px] rounded-2xl overflow-y-auto z-50 text-2xl select-none cursor-pointer" id="emoji-picker"></div>
+      <div class="sticker-picker glass-card shadow-2xl grid grid-cols-3 gap-3 p-4 hidden absolute bottom-24 left-14 min-w-[300px] max-w-[340px] max-h-[250px] rounded-2xl overflow-y-auto z-50 select-none" id="sticker-picker"></div>
     </div>
-
+    
+    <input type="file" id="avatar-input" class="hidden" accept="image/*" onchange="uploadUserAvatarToDrive(event)">
+    <input type="file" id="bg-input" class="hidden" accept="image/*" onchange="uploadUserBgToDrive(event)">
   </div>
 
-  <script>
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwVG966YS_0-qCA4y7tJzIH2_nPj-9lBpHGYkZMFkPblCnJ-xlsmzjMKAQ_jmpT6nsm_w/exec"; 
-    let currentUser = null;
-    let localLoadedImages = {}; 
-    let lastMessageTimestamp = 0; // เก็บจุดเวลาล่าสุดเพื่อลดแบนด์วิดท์ในการ Sync ข้อความ
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
+    import { getDatabase, ref, push, onValue, update, remove } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-database.js";
 
-    document.addEventListener("DOMContentLoaded", () => {
-      loadUserList();
-      
-      const savedUser = localStorage.getItem("chat_current_user");
-      if (savedUser) {
-        currentUser = JSON.parse(savedUser);
-        document.getElementById("auth-screen").classList.add("hidden");
-        document.getElementById("my-name").innerText = currentUser.username;
-        document.getElementById("my-avatar").src = currentUser.avatar;
-        
-        const savedBg = localStorage.getItem(`chat_bg_${currentUser.username}`);
-        if(savedBg) { document.getElementById("chat-box").style.backgroundImage = `url('${savedBg}')`; }
-        
-        loadMessages();
-      }
-      
-      // ดึงข้อมูลแชทแบบ Real-time ความเร็วสูง
-      setInterval(loadMessages, 2500);
+    const firebaseConfig = {
+      apiKey: "AIzaSyBrgdTPcYPn5UO64vsi9KkUVexnIIXV6F4",
+      authDomain: "chat-f4677.firebaseapp.com",
+      databaseURL: "https://chat-f4677-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "chat-f4677",
+      storageBucket: "chat-f4677.firebasestorage.app",
+      messagingSenderId: "803920396350",
+      appId: "1:803920396350:web:25b6bc0c8d4e51c4d9116f",
+      measurementId: "G-1JMSPXQFFL"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbydCHqLFw-dQWBWEHvbWyxTgJ-bObc2AkM_KSVUyQFL1ErN0lcND1iAhrM8IhE0B7tl/exec";
+    let currentUser = null;
+    let activeTempUploads = {}; 
+
+    const emojis = [
+      "😀","😂","🥰","😎","🤩","😏","👍","👌","🙏","🎉","🔥","❤️",
+      "😭","😱","😡","🤫","💩","✨","👀","💯","🎂","🚀","👏","🥳",
+      "🥺","💔","💖","🌟","🍀","🍺","☕️","🍙","🎮","🐱","🐶","🦊",
+      "👑","💸","ชิว","เซ็ง","สู้ๆ","งอน"
+    ];
+    
+    const stickers = [
+      "https://cdn-icons-png.flaticon.com/512/4735/4735419.png",
+      "https://cdn-icons-png.flaticon.com/512/4735/4735431.png",
+      "https://cdn-icons-png.flaticon.com/512/4735/4735465.png",
+      "https://cdn-icons-png.flaticon.com/512/4735/4735515.png",
+      "https://fonts.gstatic.com/s/e/notoemoji/latest/1f431/512.webp",
+      "https://fonts.gstatic.com/s/e/notoemoji/latest/1f436/512.webp",
+      "https://fonts.gstatic.com/s/e/notoemoji/latest/1f98a/512.webp",
+      "https://fonts.gstatic.com/s/e/notoemoji/latest/1f42a/512.webp",
+      "https://cdn-icons-png.flaticon.com/512/616/616408.png",
+      "https://cdn-icons-png.flaticon.com/512/616/616430.png",
+      "https://cdn-icons-png.flaticon.com/512/924/924514.png",
+      "https://cdn-icons-png.flaticon.com/512/1998/1998614.png"
+    ];
+
+    window.addEventListener('DOMContentLoaded', () => {
+      initUIEvents();
+      initPickers();
+      checkSavedLogin();
     });
 
-    function loadUserList() {
-      fetch(`${WEB_APP_URL}?action=getUsers`)
-        .then(res => res.json())
-        .then(users => {
-          const select = document.getElementById("user-select");
-          if(users.length === 0){
-            select.innerHTML = `<option value="">ยังไม่มี User ในระบบ</option>`;
-            return;
-          }
-          select.innerHTML = users.map(u => `<option value="${u.username}">${u.username}</option>`).join('');
-          document.getElementById("login-username").value = select.value;
-          select.onchange = () => { document.getElementById("login-username").value = select.value; };
-        });
-    }
-
-    function handleLogin() {
-      const username = document.getElementById("login-username").value;
-      const password = document.getElementById("login-password").value;
-      if(!username || !password) return;
-
-      // แสดงสปินเนอร์เพื่อความลื่นไหลแบบทันทีทันใด
-      const btn = document.querySelector("button[onclick='handleLogin()']");
-      btn.disabled = true;
-      btn.innerText = "กำลังตรวจสอบ...";
-
-      fetch(WEB_APP_URL, {
-        method: "POST",
-        body: JSON.stringify({ action: "login", username, password })
-      })
-      .then(res => res.json())
-      .then(res => {
-        btn.disabled = false;
-        btn.innerText = "เข้าสู่ระบบแชท";
-        if(res.success) {
-          currentUser = res.user;
-          localStorage.setItem("chat_current_user", JSON.stringify(currentUser));
-          document.getElementById("auth-screen").classList.add("hidden");
-          document.getElementById("my-name").innerText = currentUser.username;
-          document.getElementById("my-avatar").src = currentUser.avatar;
-          
-          const savedBg = localStorage.getItem(`chat_bg_${currentUser.username}`);
-          if(savedBg) { document.getElementById("chat-box").style.backgroundImage = `url('${savedBg}')`; }
-          
-          loadMessages();
-        } else {
-          Swal.fire({ icon: 'error', title: 'เข้าสู่ระบบล้มเหลว', text: res.message, confirmButtonColor: '#ef4444' });
+    function checkSavedLogin() {
+      const savedUser = localStorage.getItem('parakit_chat_user');
+      if (savedUser) {
+        currentUser = JSON.parse(savedUser);
+        document.getElementById('login-screen').classList.add('hidden');
+        document.getElementById('chat-interface').classList.remove('hidden');
+        document.getElementById('chat-interface').style.display = 'flex';
+        document.getElementById('my-display-name').innerText = currentUser.displayName;
+        if(currentUser.avatar) document.getElementById('my-avatar-img').src = currentUser.avatar;
+        
+        const savedBg = currentUser.bgUrl || localStorage.getItem(`parakit_chat_bg_${currentUser.username}`);
+        if (savedBg) {
+          const chatBody = document.getElementById('chat-body');
+          chatBody.style.backgroundImage = `url('${savedBg}')`;
+          chatBody.style.backgroundSize = 'cover';
         }
+        
+        listenChatMessages();
+      }
+    }
+
+    function initUIEvents() {
+      document.getElementById('btn-open-register').addEventListener('click', openRegisterModal);
+      document.getElementById('btn-login').addEventListener('click', handleLogin);
+      
+      document.getElementById('login-username').addEventListener('keypress', (e) => { if(e.key === 'Enter') document.getElementById('login-password').focus(); });
+      document.getElementById('login-password').addEventListener('keypress', (e) => { if(e.key === 'Enter') handleLogin(); });
+
+      document.getElementById('btn-forgot-pwd').addEventListener('click', handleForgotPwd);
+      
+      document.getElementById('btn-logout').addEventListener('click', () => { 
+        localStorage.removeItem('parakit_chat_user');
+        location.reload(); 
       });
+
+      document.getElementById('btn-send').addEventListener('click', sendTextMessage);
+      document.getElementById('msg-input').addEventListener('keypress', (e) => { if(e.key === 'Enter') sendTextMessage(); });
+      
+      document.getElementById('avatar-container').addEventListener('click', () => document.getElementById('avatar-input').click());
+      document.getElementById('btn-change-bg-upload').addEventListener('click', () => document.getElementById('bg-input').click());
+      
+      document.getElementById('btn-clear-view').addEventListener('click', () => { document.getElementById('chat-body').innerHTML = ''; });
+      document.getElementById('btn-delete-all-server').addEventListener('click', handleAdminDeleteMessages);
     }
 
-    function handleLogout() {
-      localStorage.removeItem("chat_current_user");
-      location.reload();
+    function validatePassword(pwd) {
+      if (pwd.length < 8) return false;
+      if (/^\d+$/.test(pwd)) return false; 
+      return true;
     }
 
-    function openRegisterModal() {
-      Swal.fire({
+    async function openRegisterModal() {
+      const { value: formValues } = await Swal.fire({
         title: 'สร้างบัญชีผู้ใช้ใหม่',
         html: `
-          <input type="text" id="reg-user" class="swal2-input" placeholder="Username" onkeypress="if(event.key==='Enter') Swal.clickConfirm()">
-          <input type="password" id="reg-pass" class="swal2-input" placeholder="Password (ขั้นต่ำ 8 ตัว)" onkeypress="if(event.key==='Enter') Swal.clickConfirm()">
-          <input type="email" id="reg-email" class="swal2-input" placeholder="Email สำหรับรีเซ็ตรหัสผ่าน" onkeypress="if(event.key==='Enter') Swal.clickConfirm()">
-        `,
-        confirmButtonText: 'สมัครสมาชิก',
-        showCancelButton: true,
-        cancelButtonText: 'ยกเลิก',
-        preConfirm: () => {
-          const username = Swal.getPopup().querySelector('#reg-user').value;
-          const password = Swal.getPopup().querySelector('#reg-pass').value;
-          const email = Swal.getPopup().querySelector('#reg-email').value;
-          
-          if (!username || !password || !email) { Swal.showValidationMessage(`กรุณากรอกข้อมูลให้ครบทุกช่องครับ`); return; }
-          if (password.length < 8) { Swal.showValidationMessage(`รหัสผ่านต้องมีความยาวอย่างน้อย 8 ตัวอักษรขึ้นไปครับ`); return; }
-          
-          return { username, password, email }
-        }
-      }).then((result) => {
-        if (result.isConfirmed) {
-          fetch(WEB_APP_URL, {
-            method: "POST",
-            body: JSON.stringify({ action: "register", ...result.value })
-          }).then(res => res.json()).then(data => {
-            Swal.fire(data.success ? 'สำเร็จ!' : 'ล้มเหลว', data.message, data.success ? 'success' : 'error').then(() => loadUserList());
-          });
-        }
-      });
-    }
-
-    // ฟังก์ชันระบบกู้รหัสผ่านผ่าน OTP ป้อนในหน้าเว็บโดยตรง
-    function handleForgotPasswordOTP() {
-      Swal.fire({
-        title: 'ลืมรหัสผ่าน',
-        input: 'text',
-        inputLabel: 'ระบุ Username ของคุณเพื่อรับรหัส OTP ในเมล',
-        inputPlaceholder: 'กรอก Username...',
-        showCancelButton: true,
-        confirmButtonText: 'ส่งรหัส OTP',
-        cancelButtonText: 'ยกเลิก',
-        didOpen: () => {
-          Swal.getInput().addEventListener('keyup', (e) => { if(e.key==='Enter') Swal.clickConfirm(); });
-        }
-      }).then((result) => {
-        if (result.value) {
-          const targetUser = result.value;
-          
-          // หน้าต่างโหลดพื้นหลังทันทีระหว่างยิง OTP เข้าเมล
-          Swal.fire({ title: 'กำลังส่งรหัส OTP เข้าอีเมล...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
-
-          fetch(WEB_APP_URL, {
-            method: "POST",
-            body: JSON.stringify({ action: "sendOTP", username: targetUser })
-          })
-          .then(res => res.json())
-          .then(data => {
-            if(data.success) {
-              // เปิดหน้าต่างกรอกรหัส OTP ทันที
-              Swal.fire({
-                title: 'กรอกรหัส OTP',
-                text: 'กรุณานำรหัส OTP 6 หลักจากอีเมลของคุณมากรอกในช่องด้านล่าง',
-                input: 'text',
-                inputPlaceholder: 'กรอกรหัส 6 หลักที่นี่...',
-                showCancelButton: true,
-                confirmButtonText: 'ยืนยันรหัส',
-                cancelButtonText: 'ยกเลิก',
-                didOpen: () => {
-                  Swal.getInput().addEventListener('keyup', (e) => { if(e.key==='Enter') Swal.clickConfirm(); });
-                },
-                preConfirm: (otpCode) => {
-                  if(!otpCode || otpCode.length !== 6) { Swal.showValidationMessage('กรุณากรอกรหัส OTP ให้ครบ 6 หลักครับ'); return; }
-                  return otpCode;
-                }
-              }).then((otpResult) => {
-                if(otpResult.value) {
-                  // ส่งตรวจสอบความถูกต้องของรหัส OTP
-                  fetch(WEB_APP_URL, {
-                    method: "POST",
-                    body: JSON.stringify({ action: "verifyOTP", username: targetUser, otp: otpResult.value })
-                  })
-                  .then(res => res.json())
-                  .then(verifyData => {
-                    if(verifyData.success) {
-                      // เปิดหน้าต่างรีเซ็ตรหัสผ่านใหม่ทันที
-                      Swal.fire({
-                        title: 'ตั้งรหัสผ่านใหม่',
-                        html: `
-                          <input type="password" id="new-pwd-otp" class="swal2-input" placeholder="ป้อนรหัสผ่านใหม่ (ขั้นต่ำ 8 ตัว)" onkeypress="if(event.key==='Enter') Swal.clickConfirm()">
-                          <input type="password" id="confirm-pwd-otp" class="swal2-input" placeholder="ยืนยันรหัสผ่านอีกครั้ง" onkeypress="if(event.key==='Enter') Swal.clickConfirm()">
-                        `,
-                        confirmButtonText: 'เปลี่ยนรหัสผ่าน',
-                        showCancelButton: true,
-                        cancelButtonText: 'ยกเลิก',
-                        preConfirm: () => {
-                          const p1 = Swal.getPopup().querySelector('#new-pwd-otp').value;
-                          const p2 = Swal.getPopup().querySelector('#confirm-pwd-otp').value;
-                          if(!p1 || !p2) { Swal.showValidationMessage('กรุณากรอกรหัสผ่านให้ครบถ้วนครับ'); return; }
-                          if(p1.length < 8) { Swal.showValidationMessage('รหัสผ่านต้องมีความยาวอย่างน้อย 8 ตัวอักษรขึ้นไปครับ'); return; }
-                          if(p1 !== p2) { Swal.showValidationMessage('รหัสผ่านทั้งสองช่องไม่ตรงกันครับ'); return; }
-                          return p1;
-                        }
-                      }).then((newPwdResult) => {
-                        if(newPwdResult.value) {
-                          // อัปเดตรหัสผ่านใหม่ลงชีตทันที
-                          fetch(WEB_APP_URL, {
-                            method: "POST",
-                            body: JSON.stringify({ action: "resetPasswordOTP", username: targetUser, token: verifyData.token, newPassword: newPwdResult.value })
-                          }).then(res => res.json()).then(finalRes => {
-                            Swal.fire(finalRes.success ? 'สำเร็จ!' : 'ล้มเหลว', finalRes.message, finalRes.success ? 'success' : 'error');
-                          });
-                        }
-                      });
-                    } else {
-                      Swal.fire('ข้อผิดพลาด', verifyData.message, 'error');
-                    }
-                  });
-                }
-              });
-            } else {
-              Swal.fire('ข้อผิดพลาด', data.message, 'error');
-            }
-          });
-        }
-      });
-    }
-
-    // ฟังก์ชันความเร็วสูงยิงข้อความแสดงผลแบบ 0.1 วินาที (Optimistic UI)
-    function sendText() {
-      const input = document.getElementById("msg-input");
-      const content = input.value.trim();
-      if(!content) return;
-      input.value = "";
-      
-      appendOptimisticMessage({ sender: currentUser.username, type: "text", content: content, timeStr: getNowTimeStr(), avatar: currentUser.avatar });
-
-      fetch(WEB_APP_URL, {
-        method: "POST",
-        body: JSON.stringify({ action: "sendMessage", username: currentUser.username, type: "text", content })
-      });
-    }
-
-    function sendSticker(url) {
-      appendOptimisticMessage({ sender: currentUser.username, type: "sticker", content: url, timeStr: getNowTimeStr(), avatar: currentUser.avatar });
-      Swal.close();
-
-      fetch(WEB_APP_URL, {
-        method: "POST",
-        body: JSON.stringify({ action: "sendMessage", username: currentUser.username, type: "sticker", content: url })
-      });
-    }
-
-    function getNowTimeStr() {
-      const n = new Date();
-      return String(n.getHours()).padStart(2, '0') + ":" + String(n.getMinutes()).padStart(2, '0');
-    }
-
-    function appendOptimisticMessage(msg) {
-      const container = document.getElementById("chat-box");
-      const div = document.createElement("div");
-      const isMe = msg.sender === currentUser.username;
-      div.className = `flex items-start gap-2.5 ${isMe ? 'flex-row-reverse' : ''}`;
-      
-      let contentHtml = "";
-      if(msg.type === "text") {
-        contentHtml = `<div class="p-2.5 px-4 rounded-2xl text-sm bg-emerald-400 text-white rounded-tr-none shadow-sm">${msg.content}</div>`;
-      } else if(msg.type === "sticker") {
-        contentHtml = `<img src="${msg.content}" class="w-24 h-24 object-contain">`;
-      } else if(msg.type === "file-preview") {
-        contentHtml = `
-          <div class="relative rounded-2xl border bg-white shadow-sm max-w-[200px]">
-            <img src="${msg.content}" class="max-w-full h-auto rounded-2xl object-cover min-w-[120px]" alt="preview">
-          </div>`;
-      }
-      
-      div.innerHTML = `
-        <img src="${msg.avatar}" class="w-8 h-8 rounded-full object-cover shadow-sm">
-        <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'}">
-          <span class="text-[10px] text-slate-600 mb-0.5">${msg.sender}</span>
-          <div class="flex items-end gap-1.5 ${isMe ? 'flex-row-reverse' : ''}">
-            ${contentHtml}
-            <span class="text-[9px] text-slate-500">${msg.timeStr}</span>
+          <div class="text-left max-w-xs mx-auto">
+            <label class="block text-xs font-semibold text-slate-500 mb-1">ชื่อเล่นแชท (Display Name)</label>
+            <input id="swal-name" class="swal-input-box" placeholder="ชื่อเล่นที่แสดงในแชท">
+            <label class="block text-xs font-semibold text-slate-500 mb-1 mt-2">Username</label>
+            <input id="swal-user" class="swal-input-box" placeholder="สำหรับใช้ล็อกอิน">
+            <label class="block text-xs font-semibold text-slate-500 mb-1 mt-2">Password</label>
+            <input id="swal-pass" type="password" class="swal-input-box" placeholder="ขั้นต่ำ 8 ตัว (ห้ามเลขล้วน)">
+            <label class="block text-xs font-semibold text-slate-500 mb-1 mt-2">Email</label>
+            <input id="swal-email" type="email" class="swal-input-box" placeholder="ตัวอย่าง: name@gmail.com">
           </div>
-        </div>
-      `;
-      container.appendChild(div);
-      container.scrollTop = container.scrollHeight;
-    }
-
-    function loadMessages() {
-      if(!currentUser) return;
-      fetch(`${WEB_APP_URL}?action=getMessages`)
-        .then(res => res.json())
-        .then(messages => {
-          const container = document.getElementById("chat-box");
-          let html = "";
-          messages.forEach(msg => {
-            const isMe = msg.sender === currentUser.username;
-            let contentHtml = "";
-
-            if (msg.type === "text") {
-              contentHtml = `<div class="p-2.5 px-4 rounded-2xl text-sm ${isMe ? 'bg-emerald-400 text-white rounded-tr-none' : 'bg-white text-slate-800 rounded-tl-none'} shadow-sm">${msg.content}</div>`;
-            } else if (msg.type === "sticker") {
-              contentHtml = `<img src="${msg.content}" class="w-24 h-24 object-contain">`;
-            } else if (msg.type === "file") {
-              const isImage = /\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(msg.fileName);
-              
-              if (isImage) {
-                const cachedData = localLoadedImages[msg.content];
-                const imgSrc = cachedData ? cachedData : "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
-                const lazyClass = cachedData ? "" : "lazy-stream-img";
-                
-                contentHtml = `
-                  <div class="relative group cursor-pointer overflow-hidden rounded-2xl border bg-white shadow-sm max-w-[200px]" onclick="previewImageInline('${msg.content}', '${msg.fileName}')">
-                    <img src="${imgSrc}" data-id="${msg.content}" class="${lazyClass} max-w-full h-auto min-w-[120px] min-h-[80px] object-cover" alt="Image">
-                    <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs transition"><i class="fa-solid fa-expand text-sm"></i></div>
-                  </div>
-                `;
-              } else {
-                contentHtml = `
-                  <div onclick="downloadFileInline('${msg.content}', '${msg.fileName}')" class="p-3 rounded-2xl bg-white border flex items-center gap-3 shadow-sm max-w-[240px] cursor-pointer hover:bg-slate-50 transition">
-                    <div class="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600"><i class="fa-solid fa-file-arrow-down text-lg"></i></div>
-                    <div class="overflow-hidden">
-                      <p class="text-xs font-semibold text-slate-700 truncate">${msg.fileName}</p>
-                      <p class="text-[10px] text-slate-400">คลิกเพื่อดาวน์โหลด</p>
-                    </div>
-                  </div>
-                `;
-              }
-            }
-
-            html += `
-              <div class="flex items-start gap-2.5 ${isMe ? 'flex-row-reverse' : ''}">
-                <img src="${msg.avatar}" class="w-8 h-8 rounded-full object-cover shadow-sm">
-                <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'}">
-                  <span class="text-[10px] text-slate-600 mb-0.5">${msg.sender}</span>
-                  <div class="flex items-end gap-1.5 ${isMe ? 'flex-row-reverse' : ''}">
-                    ${contentHtml}
-                    <span class="text-[9px] text-slate-500">${msg.timeStr}</span>
-                  </div>
-                </div>
-              </div>
-            `;
-          });
-          
-          const isScrollBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 200;
-          container.innerHTML = html;
-          
-          lazyLoadStreamImages();
-          if(isScrollBottom) { container.scrollTop = container.scrollHeight; }
-        });
-    }
-
-    function lazyLoadStreamImages() {
-      document.querySelectorAll(".lazy-stream-img").forEach(img => {
-        const fileId = img.getAttribute("data-id");
-        if (fileId && !localLoadedImages[fileId]) {
-          fetch(`${WEB_APP_URL}?action=streamImage&fileId=${fileId}`)
-            .then(res => res.text())
-            .then(base64 => {
-              if(base64) { 
-                const fullSrc = "data:image/jpeg;base64," + base64;
-                img.src = fullSrc;
-                localLoadedImages[fileId] = fullSrc; 
-              }
+        `,
+        focusConfirm: false,
+        confirmButtonText: '<i class="fa-solid fa-user-plus mr-1"></i> สมัครและเข้าสู่ระบบทันที',
+        confirmButtonColor: '#10b981',
+        showCancelButton: true,
+        cancelButtonText: 'ยกเลิก',
+        cancelButtonColor: '#64748b',
+        customClass: { title: 'swal-premium-title', htmlContainer: 'swal-premium-html' },
+        didOpen: () => {
+          const inputs = ['swal-name', 'swal-user', 'swal-pass', 'swal-email'];
+          inputs.forEach((id) => {
+            document.getElementById(id).addEventListener('keypress', (e) => {
+              if (e.key === 'Enter') Swal.clickConfirm();
             });
+          });
+        },
+        preConfirm: () => {
+          return {
+            displayName: document.getElementById('swal-name').value.trim(),
+            username: document.getElementById('swal-user').value.trim(),
+            password: document.getElementById('swal-pass').value,
+            email: document.getElementById('swal-email').value.trim()
+          }
         }
       });
+
+      if (!formValues) return;
+      if (!formValues.displayName || !formValues.username || !formValues.password || !formValues.email) {
+        return Swal.fire({ title: 'เกิดข้อผิดพลาด', text: 'กรุณากรอกข้อมูลให้ครบถ้วนทุกช่องครับ', icon: 'error', confirmButtonColor: '#10b981' });
+      }
+      if (!formValues.email.endsWith('@gmail.com')) {
+        return Swal.fire({ title: 'ข้อมูลไม่ถูกต้อง', text: 'ระบบรองรับการสมัครด้วยบัญชี Gmail เท่านั้นครับ', icon: 'warning', confirmButtonColor: '#10b981' });
+      }
+      if (!validatePassword(formValues.password)) {
+        return Swal.fire({ title: 'รหัสผ่านไม่ปลอดภัย', text: 'รหัสผ่านต้องมีอย่างน้อย 8 ตัว มีส่วนผสมของตัวเลขและตัวอักษร (ห้ามเป็นตัวเลขล้วนครับ)', icon: 'warning', confirmButtonColor: '#10b981' });
+      }
+
+      Swal.showLoading();
+      try {
+        let res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'register', ...formValues }) });
+        let result = await res.json();
+        
+        if(result.status === 'success') {
+          currentUser = {
+            username: formValues.username,
+            email: formValues.email,
+            displayName: formValues.displayName,
+            avatar: 'https://cdn-icons-png.flaticon.com/512/149/149071.png',
+            bgUrl: ''
+          };
+          localStorage.setItem('parakit_chat_user', JSON.stringify(currentUser));
+          
+          document.getElementById('login-screen').classList.add('hidden');
+          document.getElementById('chat-interface').classList.remove('hidden');
+          document.getElementById('chat-interface').style.display = 'flex';
+          document.getElementById('my-display-name').innerText = currentUser.displayName;
+          document.getElementById('my-avatar-img').src = currentUser.avatar;
+          
+          Swal.close();
+          listenChatMessages();
+        } else { 
+          Swal.fire({ title: 'ข้อผิดพลาด', text: result.message, icon: 'error', confirmButtonColor: '#10b981' }); 
+        }
+      } catch(e) { Swal.fire({ title: 'ข้อผิดพลาด', text: 'ไม่สามารถเชื่อมต่อระบบคลาวด์ได้', icon: 'error', confirmButtonColor: '#10b981' }); }
     }
 
-    function previewImageInline(fileId, fileName) {
-      if(localLoadedImages[fileId]) {
-        openSpotlightSwal(localLoadedImages[fileId], fileName);
-      } else {
-        fetch(`${WEB_APP_URL}?action=streamImage&fileId=${fileId}`).then(res => res.text()).then(base64 => {
-          const srcData = "data:image/jpeg;base64," + base64;
-          localLoadedImages[fileId] = srcData;
-          openSpotlightSwal(srcData, fileName);
+    async function handleLogin() {
+      const userVal = document.getElementById('login-username').value.trim();
+      const passVal = document.getElementById('login-password').value;
+      if(!userVal || !passVal) return Swal.fire({ title: 'โปรดกรอกข้อมูล', text: 'กรุณาระบุ Username และ Password ให้ครบถ้วน', icon: 'warning', confirmButtonColor: '#10b981' });
+
+      Swal.showLoading();
+      try {
+        let res = await fetch(SCRIPT_URL, { 
+          method: 'POST', 
+          body: JSON.stringify({ action: 'login', username: userVal, password: passVal }) 
         });
+        let result = await res.json();
+        if(result.status === 'success') {
+          currentUser = result.user;
+          localStorage.setItem('parakit_chat_user', JSON.stringify(currentUser));
+          
+          document.getElementById('login-screen').classList.add('hidden');
+          document.getElementById('chat-interface').classList.remove('hidden');
+          document.getElementById('chat-interface').style.display = 'flex';
+          document.getElementById('my-display-name').innerText = currentUser.displayName;
+          if(currentUser.avatar) document.getElementById('my-avatar-img').src = currentUser.avatar;
+          
+          const savedBg = currentUser.bgUrl || localStorage.getItem(`parakit_chat_bg_${currentUser.username}`);
+          if (savedBg) {
+            const chatBody = document.getElementById('chat-body');
+            chatBody.style.backgroundImage = `url('${savedBg}')`;
+            chatBody.style.backgroundSize = 'cover';
+          }
+
+          Swal.close();
+          listenChatMessages();
+        } else {
+          Swal.fire({ icon: 'error', title: 'ข้อผิดพลาด', text: result.message || 'Username หรือ Password ไม่ถูกต้อง', confirmButtonColor: '#ef4444' });
+        }
+      } catch(e) { Swal.fire({ title: 'ข้อผิดพลาด', text: 'การยืนยันตัวตนขัดข้อง', icon: 'error', confirmButtonColor: '#10b981' }); }
+    }
+
+    async function handleForgotPwd() {
+      const { value: info } = await Swal.fire({
+        title: 'กู้คืนรหัสผ่านด้วยบัญชี',
+        html: `
+          <div class="text-left max-w-xs mx-auto">
+            <label class="block text-xs font-semibold text-slate-500 mb-1">Username ของคุณ</label>
+            <input id="forgot-user" class="swal-input-box" placeholder="ระบุ Username">
+            <label class="block text-xs font-semibold text-slate-500 mb-1 mt-3">Gmail ที่ลงทะเบียน</label>
+            <input id="forgot-email" type="email" class="swal-input-box" placeholder="example@gmail.com">
+          </div>
+        `,
+        focusConfirm: false,
+        confirmButtonText: 'รับรหัส OTP <i class="fa-solid fa-paper-plane ml-1"></i>',
+        confirmButtonColor: '#10b981',
+        showCancelButton: true,
+        cancelButtonText: 'ปิด',
+        cancelButtonColor: '#64748b',
+        customClass: { title: 'swal-premium-title', htmlContainer: 'swal-premium-html' },
+        didOpen: () => {
+          document.getElementById('forgot-user').addEventListener('keypress', (e) => { if (e.key === 'Enter') document.getElementById('forgot-email').focus(); });
+          document.getElementById('forgot-email').addEventListener('keypress', (e) => { if (e.key === 'Enter') Swal.clickConfirm(); });
+        },
+        preConfirm: () => { return { username: document.getElementById('forgot-user').value.trim(), email: document.getElementById('forgot-email').value.trim() } }
+      });
+
+      if(!info || !info.username || !info.email) return;
+      Swal.showLoading();
+      
+      try {
+        let res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'sendOTP', ...info }) });
+        let result = await res.json();
+        if(result.status !== 'success') return Swal.fire({ title: 'ล้มเหลว', text: result.message, icon: 'error', confirmButtonColor: '#10b981' });
+        
+        const { value: resetData } = await Swal.fire({
+          title: 'ตั้งรหัสผ่านใหม่',
+          html: `
+            <div class="text-left max-w-xs mx-auto">
+              <p class="text-[12px] text-emerald-500 mb-3 text-center font-medium bg-emerald-50 py-1.5 rounded-lg border border-emerald-200"><i class="fa-solid fa-circle-check"></i> ส่งรหัส OTP ไปที่เมลสำเร็จแล้ว</p>
+              <label class="block text-xs font-semibold text-slate-500 mb-1">รหัส OTP 6 หลัก</label>
+              <input id="reset-otp" class="swal-input-box text-center tracking-widest font-bold" maxlength="6" placeholder="******">
+              <label class="block text-xs font-semibold text-slate-500 mb-1 mt-3">รหัสผ่านใหม่</label>
+              <input id="reset-newpass" type="password" class="swal-input-box" placeholder="ขั้นต่ำ 8 ตัว ห้ามเลขล้วน">
+            </div>
+          `,
+          focusConfirm: false,
+          confirmButtonText: '<i class="fa-solid fa-key mr-1"></i> ยืนยันเปลี่ยนรหัสผ่าน',
+          confirmButtonColor: '#10b981',
+          showCancelButton: true,
+          cancelButtonText: 'ยกเลิก',
+          cancelButtonColor: '#64748b',
+          customClass: { title: 'swal-premium-title', htmlContainer: 'swal-premium-html' },
+          didOpen: () => {
+            document.getElementById('reset-otp').addEventListener('keypress', (e) => { if (e.key === 'Enter') document.getElementById('reset-newpass').focus(); });
+            document.getElementById('reset-newpass').addEventListener('keypress', (e) => { if (e.key === 'Enter') Swal.clickConfirm(); });
+          },
+          preConfirm: () => { return { otp: document.getElementById('reset-otp').value.trim(), newPassword: document.getElementById('reset-newpass').value } }
+        });
+
+        if(!resetData.otp || !resetData.newPassword) return;
+        if(!validatePassword(resetData.newPassword)) {
+          return Swal.fire({ title: 'ไม่สำเร็จ', text: 'รหัสใหม่ต้องมีความยาว 8 ตัวขึ้นไป โดยต้องผสมระหว่างตัวเลขและตัวอักษร', icon: 'error', confirmButtonColor: '#10b981' });
+        }
+
+        Swal.showLoading();
+        let res2 = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'resetPassword', username: info.username, ...resetData }) });
+        let result2 = await res2.json();
+
+        if(result2.status === 'success') {
+          Swal.fire({ title: 'สำเร็จ', text: 'เปลี่ยนรหัสผ่านในระบบสำเร็จเรียบร้อยแล้ว!', icon: 'success', confirmButtonColor: '#10b981' });
+        } else { Swal.fire({ title: 'ล้มเหลว', text: result2.message, icon: 'error', confirmButtonColor: '#10b981' }); }
+      } catch(e) { Swal.fire({ title: 'ผิดพลาด', text: 'ระบบสั่งส่ง OTP ปฏิเสธการเชื่อมต่อ', icon: 'error', confirmButtonColor: '#10b981' }); }
+    }
+
+    async function handleAdminDeleteMessages() {
+      const { value: adminPassword, isDismissed } = await Swal.fire({
+        title: 'ลบแชทส่วนกลางถาวร',
+        html: `
+          <div class="text-left max-w-xs mx-auto">
+            <p class="text-xs text-rose-500 mb-3 text-center font-medium bg-rose-50 py-1.5 rounded-lg border border-rose-100"><i class="fa-solid fa-triangle-exclamation"></i> เฉพาะแอดมิน: การลบนี้จะมีผลกับผู้ใช้ทุกคนในระบบ</p>
+            <label class="block text-xs font-semibold text-slate-500 mb-1">กรอกรหัสผ่านแอดมิน</label>
+            <input id="admin-pass-input" type="password" class="swal-input-box" placeholder="ระบุรหัสผ่านควบคุม">
+            <button id="btn-admin-forgot-link" class="text-xs text-blue-500 hover:underline mt-1 block text-right w-full font-medium">ลืมรหัสผ่านแอดมิน?</button>
+          </div>
+        `,
+        focusConfirm: false,
+        confirmButtonText: '<i class="fa-solid fa-circle-check"></i> ยืนยันล้างระบบ',
+        confirmButtonColor: '#ef4444',
+        showCancelButton: true,
+        cancelButtonText: 'ยกเลิก',
+        cancelButtonColor: '#64748b',
+        customClass: { title: 'swal-premium-title', htmlContainer: 'swal-premium-html' },
+        didOpen: () => {
+          document.getElementById('admin-pass-input').focus();
+          document.getElementById('admin-pass-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') Swal.clickConfirm();
+          });
+          document.getElementById('btn-admin-forgot-link').addEventListener('click', (e) => {
+            e.preventDefault();
+            Swal.close();
+            handleAdminForgotFlow();
+          });
+        },
+        preConfirm: () => { return document.getElementById('admin-pass-input').value; }
+      });
+
+      if (isDismissed || adminPassword === undefined) return;
+
+      Swal.showLoading();
+      try {
+        let res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'checkAdminPass', password: adminPassword }) });
+        let result = await res.json();
+        if (result.status === 'success') {
+          await remove(ref(db, 'global_messages'));
+          Swal.fire({ title: 'สำเร็จ!', text: 'ล้างข้อมูลการคุยในระบบส่วนกลางเรียบร้อยแล้ว', icon: 'success', confirmButtonColor: '#10b981' });
+        } else {
+          Swal.fire({ title: 'รหัสผ่านไม่ถูกต้อง', text: 'แอดมินปฏิเสธสิทธิ์การเข้าถึงข้อความ', icon: 'error', confirmButtonColor: '#64748b' });
+        }
+      } catch (err) {
+        Swal.fire({ title: 'ล้มเหลว', text: 'ไม่สามารถติดต่อคลาวด์เพื่อยืนยันรหัสแอดมินได้', icon: 'error', confirmButtonColor: '#64748b' });
       }
     }
 
-    function openSpotlightSwal(srcData, fileName) {
-      Swal.fire({
-        title: fileName,
-        imageUrl: srcData,
-        imageAlt: fileName,
-        showCancelButton: true,
-        confirmButtonText: '<i class="fa-solid fa-download"></i> ดาวน์โหลดรูป',
-        cancelButtonText: 'ปิด',
-        confirmButtonColor: '#10b981'
-      }).then((result) => {
-        if (result.isConfirmed) { triggerBinaryDownload(srcData, fileName); }
-      });
-    }
-
-    function downloadFileInline(fileId, fileName) {
-      fetch(`${WEB_APP_URL}?action=streamImage&fileId=${fileId}`)
-        .then(res => res.text())
-        .then(base64 => {
-          triggerBinaryDownload("data:application/octet-stream;base64," + base64, fileName);
-        });
-    }
-
-    function triggerBinaryDownload(dataUrl, fileName) {
-      const a = document.createElement("a");
-      a.href = dataUrl;
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-    }
-
-    function handleFileUpload(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-
-      const isImage = /\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(file.name);
-      const reader = new FileReader();
-      
-      reader.onload = function(event) {
-        const base64Data = event.target.result;
+    async function handleAdminForgotFlow() {
+      Swal.showLoading();
+      try {
+        let res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'sendAdminOTP' }) });
+        let result = await res.json();
+        if (result.status !== 'success') return Swal.fire('ล้มเหลว', result.message, 'error');
         
-        if(isImage) {
-          appendOptimisticMessage({ sender: currentUser.username, type: "file-preview", content: base64Data, timeStr: getNowTimeStr(), avatar: currentUser.avatar });
-        }
-
-        fetch(WEB_APP_URL, {
-          method: "POST",
-          body: JSON.stringify({ action: "uploadFile", base64Data, fileName: file.name, mimeType: file.type })
-        }).then(res => res.json()).then(data => {
-          if(data.success) {
-            fetch(WEB_APP_URL, {
-              method: "POST",
-              body: JSON.stringify({ action: "sendMessage", username: currentUser.username, type: "file", content: data.fileId, fileName: file.name })
-            }).then(() => { loadMessages(); });
-          }
+        const { value: adminResetData } = await Swal.fire({
+          title: 'เปลี่ยนรหัสแอดมิน',
+          html: `
+            <div class="text-left max-w-xs mx-auto">
+              <p class="text-[12px] text-blue-500 mb-3 text-center font-medium bg-blue-50 py-1.5 rounded-lg border border-blue-200"><i class="fa-solid fa-paper-plane"></i> รหัสกู้คืนถูกส่งไปที่ book016boat@gmail.com</p>
+              <label class="block text-xs font-semibold text-slate-500 mb-1">รหัส OTP 6 หลัก</label>
+              <input id="admin-otp" class="swal-input-box text-center font-bold tracking-widest" maxlength="6" placeholder="******">
+              <label class="block text-xs font-semibold text-slate-500 mb-1 mt-3">รหัสผ่านควบคุมใหม่</label>
+              <input id="admin-newpass" type="password" class="swal-input-box" placeholder="ระบุรหัสผ่านแอดมินใหม่">
+            </div>
+          `,
+          focusConfirm: false,
+          confirmButtonText: 'อัปเดตรหัสแอดมิน',
+          confirmButtonColor: '#10b981',
+          showCancelButton: true,
+          cancelButtonText: 'ยกเลิก',
+          cancelButtonColor: '#64748b',
+          didOpen: () => {
+            document.getElementById('admin-otp').addEventListener('keypress', (e) => { if (e.key === 'Enter') document.getElementById('admin-newpass').focus(); });
+            document.getElementById('admin-newpass').addEventListener('keypress', (e) => { if (e.key === 'Enter') Swal.clickConfirm(); });
+          },
+          preConfirm: () => { return { otp: document.getElementById('admin-otp').value.trim(), newPassword: document.getElementById('admin-newpass').value.trim() } }
         });
+
+        if (!adminResetData || !adminResetData.otp || !adminResetData.newPassword) return;
+
+        Swal.showLoading();
+        let res2 = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'resetAdminPassword', ...adminResetData }) });
+        let result2 = await res2.json();
+
+        if (result2.status === 'success') {
+          Swal.fire({ title: 'สำเร็จ', text: 'เปลี่ยนรหัสผ่านแอดมินลงชีท แชท เรียบร้อยครับ!', icon: 'success', confirmButtonColor: '#10b981' });
+        } else {
+          Swal.fire({ title: 'ล้มเหลว', text: result2.message, icon: 'error', confirmButtonColor: '#10b981' });
+        }
+      } catch (err) {
+        Swal.fire('ข้อผิดพลาด', 'ระบบสั่งกู้รหัสขัดข้อง', 'error');
+      }
+    }
+
+    window.uploadUserAvatarToDrive = function(e) {
+      const file = e.target.files[0];
+      if(!file) return;
+
+      Swal.fire({ title: 'กำลังอัปเดตรูปโปรไฟล์...', html: 'ระบบกำลังส่งรูปภาพลงในไดร์ฟหลักของคุณ', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+      
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        try {
+          let res = await fetch(SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'uploadFile', filename: `avatar_${currentUser.username}_${Date.now()}.png`, base64: reader.result })
+          });
+          let result = await res.json();
+          if(result.status === 'success') {
+            let directUrl = result.viewUrl || result.url;
+            currentUser.avatar = directUrl;
+            document.getElementById('my-avatar-img').src = directUrl;
+            localStorage.setItem('parakit_chat_user', JSON.stringify(currentUser));
+            
+            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'updateAvatar', username: currentUser.username, avatarUrl: directUrl }) });
+            Swal.fire({ title: 'สำเร็จ!', text: 'เปลี่ยนรูปโปรไฟล์ผ่านคลาวด์ไดร์ฟเรียบร้อยครับ', icon: 'success', confirmButtonColor: '#10b981' });
+          } else {
+            Swal.fire('ล้มเหลว', 'เกิดข้อผิดพลาดจากเซิร์ฟเวอร์ไดร์ฟ', 'error');
+          }
+        } catch(err) {
+          Swal.fire('ผิดพลาด', 'ไม่สามารถเชื่อมต่อคลาวด์เพื่ออัปโหลดโปรไฟล์ได้', 'error');
+        }
       };
       reader.readAsDataURL(file);
     }
 
-    function showEmojiPicker() {
-      const emojis = ["😀", "😂", "🥰", "😎", "👍", "🙏", "🎉", "🔥", "❤️", "✨"];
-      Swal.fire({
-        title: 'เลือกคีย์บอร์ดอิโมจิ',
-        html: `<div class="grid grid-cols-5 gap-3 text-2xl">${emojis.map(e => `<span onclick="insertEmoji('${e}')" class="cursor-pointer hover:scale-125 transition">${e}</span>`).join('')}</div>`,
-        showConfirmButton: false
-      });
-    }
-    function insertEmoji(e) { document.getElementById("msg-input").value += e; Swal.close(); document.getElementById("msg-input").focus(); }
+    window.uploadUserBgToDrive = function(e) {
+      const file = e.target.files[0];
+      if(!file) return;
 
-    function showStickerPicker() {
-      const stickers = [
-        "https://fonts.gstatic.com/s/e/notoemoji/latest/1f431/512.webp",
-        "https://fonts.gstatic.com/s/e/notoemoji/latest/1f436/512.webp",
-        "https://fonts.gstatic.com/s/e/notoemoji/latest/1f98a/512.webp",
-        "https://fonts.gstatic.com/s/e/notoemoji/latest/1f42a/512.webp"
-      ];
-      Swal.fire({
-        title: 'ส่งสติ๊กเกอร์ด่วน',
-        html: `<div class="grid grid-cols-2 gap-4">${stickers.map(s => `<img src="${s}" onclick="sendSticker('${s}')" class="w-20 h-20 mx-auto cursor-pointer hover:scale-110 transition">`).join('')}</div>`,
-        showConfirmButton: false
-      });
-    }
+      Swal.fire({ title: 'กำลังอัปโหลดพื้นหลังใหม่...', html: 'กำลังส่งข้อมูลภาพบันทึกไปยังระบบคลาวด์ส่วนตัว', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
-    function changeChatBgLink() {
-      Swal.fire({
-        title: 'เปลี่ยนภาพพื้นหลังแชท',
-        input: 'url',
-        inputLabel: 'ใส่ URL ลิงก์รูปภาพพื้นหลังที่คุณต้องการ',
-        inputPlaceholder: 'https://example.com/background.jpg',
-        showCancelButton: true,
-        didOpen: () => { Swal.getInput().addEventListener('keyup', (e) => { if(e.key==='Enter') Swal.clickConfirm(); }); }
-      }).then((result) => {
-        if (result.value) {
-          document.getElementById("chat-box").style.backgroundImage = `url('${result.value}')`;
-          localStorage.setItem(`chat_bg_${currentUser.username}`, result.value);
-          Swal.fire('สำเร็จ', 'ปรับเปลี่ยนภาพพื้นหลังเฉพาะคุณเรียบร้อยแล้วครับ', 'success');
-        }
-      });
-    }
-
-    function changeUserAvatar() {
-      Swal.fire({
-        title: 'เปลี่ยนรูปโปรไฟล์ของคุณ',
-        input: 'url',
-        inputLabel: 'ใส่ URL ลิงก์รูปภาพใหม่ของคุณที่นี่',
-        inputPlaceholder: 'https://example.com/image.jpg',
-        showCancelButton: true,
-        didOpen: () => { Swal.getInput().addEventListener('keyup', (e) => { if(e.key==='Enter') Swal.clickConfirm(); }); }
-      }).then((result) => {
-        if (result.value) {
-          fetch(WEB_APP_URL, {
-            method: "POST",
-            body: JSON.stringify({ action: "updateAvatar", username: currentUser.username, avatarUrl: result.value })
-          }).then(() => {
-            currentUser.avatar = result.value;
-            localStorage.setItem("chat_current_user", JSON.stringify(currentUser));
-            document.getElementById("my-avatar").src = result.value;
-            Swal.fire('สำเร็จ', 'อัปเดตรูปประจำตัวเรียบร้อยแล้วครับ', 'success');
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        try {
+          let res = await fetch(SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'uploadFile', filename: `bg_${currentUser.username}_${Date.now()}.png`, base64: reader.result })
           });
+          let result = await res.json();
+          if(result.status === 'success') {
+            let directBgUrl = result.viewUrl || result.url;
+            
+            const chatBody = document.getElementById('chat-body');
+            chatBody.style.backgroundImage = `url('${directBgUrl}')`;
+            chatBody.style.backgroundSize = 'cover';
+            
+            currentUser.bgUrl = directBgUrl;
+            localStorage.setItem('parakit_chat_user', JSON.stringify(currentUser));
+            localStorage.setItem(`parakit_chat_bg_${currentUser.username}`, directBgUrl);
+            
+            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'updateUserBg', username: currentUser.username, bgUrl: directBgUrl }) });
+            Swal.fire({ title: 'เปลี่ยนพื้นหลังสำเร็จ!', text: 'บันทึกวอลเปเปอร์ลงระบบเก็บข้อมูลเรียบร้อย', icon: 'success', confirmButtonColor: '#10b981' });
+          } else {
+            Swal.fire('ล้มเหลว', 'ระบบอัปโหลดคลาวด์ปฏิเสธคำขอ', 'error');
+          }
+        } catch(err) {
+          Swal.fire('ผิดพลาด', 'ไม่สามารถเชื่อมต่อคลาวด์เพื่อเปลี่ยนพื้นหลังได้', 'error');
         }
+      };
+      reader.readAsDataURL(file);
+    }
+    
+    function sendTextMessage() {
+      const input = document.getElementById('msg-input');
+      const text = input.value.trim();
+      if(!text) return;
+      
+      const localTimestamp = Date.now();
+      
+      input.value = '';
+      push(ref(db, 'global_messages'), {
+        senderName: currentUser.displayName,
+        senderAvatar: currentUser.avatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png',
+        type: 'text', content: text, timestamp: localTimestamp, deleted: false
+      });
+    }
+
+    function sendSticker(url) {
+      const localTimestamp = Date.now();
+      
+      document.getElementById('sticker-picker').classList.add('hidden');
+      push(ref(db, 'global_messages'), {
+        senderName: currentUser.displayName,
+        senderAvatar: currentUser.avatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png',
+        type: 'sticker', content: url, timestamp: localTimestamp, deleted: false
+      });
+    }
+
+    window.uploadFileAndSend = function(e) {
+      const file = e.target.files[0];
+      if(!file) return;
+      
+      const localTimestamp = Date.now();
+      const localObjectURL = URL.createObjectURL(file);
+      const isImage = /\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(file.name);
+      const uploadId = "upload_" + localTimestamp;
+      
+      activeTempUploads[uploadId] = {
+        senderName: currentUser.displayName,
+        senderAvatar: currentUser.avatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png',
+        type: isImage ? 'optimistic-image' : 'optimistic-file',
+        content: localObjectURL,
+        filename: file.name,
+        timestamp: localTimestamp
+      };
+      
+      renderAllMessagesWithTemps();
+
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        try {
+          let res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'uploadFile', filename: file.name, base64: reader.result }) });
+          let result = await res.json();
+          
+          if(result.status === 'success') {
+            let finalUrl = result.viewUrl || result.url;
+            let fileDriveId = result.fileId || '';
+            
+            await push(ref(db, 'global_messages'), {
+              senderName: currentUser.displayName,
+              senderAvatar: currentUser.avatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png',
+              type: isImage ? 'image' : 'file', 
+              content: finalUrl, 
+              filename: file.name, 
+              fileId: fileDriveId,
+              timestamp: Date.now(), 
+              deleted: false
+            });
+            
+            delete activeTempUploads[uploadId];
+            renderAllMessagesWithTemps();
+          } else {
+            delete activeTempUploads[uploadId];
+            Swal.fire({ title: 'อัปโหลดล้มเหลว', text: result.message || 'เกิดข้อผิดพลาดจากเซิร์ฟเวอร์', icon: 'error', confirmButtonColor: '#10b981' });
+            renderAllMessagesWithTemps();
+          }
+        } catch(err) { 
+          console.error("เบื้องหลังส่งไฟล์ล้มเหลว", err);
+          delete activeTempUploads[uploadId];
+          renderAllMessagesWithTemps();
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function createTempRow(msg) {
+      const row = document.createElement('div');
+      row.className = "msg-row self flex gap-3 max-w-[75%] w-fit align-self-end flex-row-reverse ml-auto mb-2 opacity-75 text-right";
+      
+      let inner = '';
+      if(msg.type === 'text') inner = `<div class="msg-bubble p-3 rounded-2xl text-sm bg-[#7CE68E] text-slate-900 border-tr-none shadow-sm">${msg.content}</div>`;
+      else if(msg.type === 'sticker') inner = `<img src="${msg.content}" class="w-24 h-24 object-contain">`;
+      else if(msg.type === 'optimistic-image') inner = `
+        <div class="flex flex-col items-end">
+          <img src="${msg.content}" class="max-w-[200px] rounded-xl object-cover border border-white/20 shadow-md">
+          <span class="text-[10px] text-emerald-400 mt-1 font-medium bg-slate-900/60 px-2 py-0.5 rounded-full"><i class="fa-solid fa-spinner animate-spin mr-1"></i>กำลังส่งรูป...</span>
+        </div>`;
+      else if(msg.type === 'optimistic-file') inner = `<div class="p-3 rounded-2xl bg-white border text-xs flex items-center gap-2 text-slate-500 shadow-sm"><i class="fa-solid fa-spinner animate-spin text-green-500"></i> กำลังอัปโหลดไฟล์: ${msg.filename}</div>`;
+      
+      row.innerHTML = inner;
+      return row;
+    }
+
+    let lastSnapshotData = null;
+
+    function listenChatMessages() {
+      const chatRef = ref(db, 'global_messages');
+      onValue(chatRef, (snapshot) => {
+        lastSnapshotData = snapshot.val();
+        renderAllMessagesWithTemps();
+      });
+    }
+
+    window.directDownloadFromDrive = async function(fileId, filename) {
+      if(!fileId) return Swal.fire({ title: 'ผิดพลาด', text: 'ไม่พบรหัสไฟล์สำหรับดาวน์โหลด', icon: 'error', confirmButtonColor: '#10b981' });
+      
+      Swal.fire({
+        title: 'กำลังเตรียมไฟล์...',
+        html: 'ระบบกำลังดึงข้อมูลไฟล์จากไดร์ฟโดยตรง',
+        allowOutsideClick: false,
+        didOpen: () => { Swal.showLoading(); }
+      });
+
+      try {
+        const downloadApiUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
+        const response = await fetch(downloadApiUrl, { method: 'GET' });
+        if(!response.ok) throw new Error('Network error');
+        
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        
+        const a = document.createElement("a");
+        a.href = blobUrl;
+        a.download = filename || "downloaded_file";
+        document.body.appendChild(a);
+        a.click();
+        
+        document.body.removeChild(a);
+        URL.revokeObjectURL(blobUrl);
+        Swal.close();
+      } catch (err) {
+        window.open(`https://drive.google.com/uc?export=download&id=${fileId}`, '_blank');
+        Swal.close();
+      }
+    };
+
+    function renderAllMessagesWithTemps() {
+      const body = document.getElementById('chat-body');
+      body.innerHTML = '';
+      
+      let lastRenderedDate = ""; // ใช้สำหรับตรวจจับการเปลี่ยนวันของข้อความแรกในวันนั้นๆ
+      
+      if(lastSnapshotData) {
+        Object.keys(lastSnapshotData).forEach(key => {
+          const msg = lastSnapshotData[key];
+          
+          // --- ระบบตรวจจับและสร้างแถบวันที่ (Date Divider) ---
+          if (msg.timestamp) {
+            const msgDateObj = new Date(msg.timestamp);
+            const msgDateStr = msgDateObj.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
+            
+            if (msgDateStr !== lastRenderedDate) {
+              const dateDivider = document.createElement('div');
+              dateDivider.className = "w-full flex justify-center my-3 select-none";
+              dateDivider.innerHTML = `<span class="px-3 py-1 bg-slate-800/40 backdrop-blur-md border border-white/10 text-slate-300 text-[11px] font-medium rounded-full shadow-sm">${msgDateStr}</span>`;
+              body.appendChild(dateDivider);
+              lastRenderedDate = msgDateStr;
+            }
+          }
+          // --------------------------------------------------
+
+          const isSelf = msg.senderName === currentUser.displayName;
+          
+          const row = document.createElement('div');
+          row.className = `msg-row flex gap-3 max-w-[75%] width-fit relative items-end group mb-2 ${isSelf ? 'self align-self-end flex-row-reverse ml-auto' : 'other align-self-flex-start'}`;
+          
+          if(!isSelf) {
+            const img = document.createElement('img');
+            img.className = 'msg-avatar w-9 h-9 rounded-full object-cover shadow-sm self-start mt-1';
+            img.src = msg.senderAvatar;
+            row.appendChild(img);
+          }
+
+          const wrapper = document.createElement('div');
+          wrapper.className = 'msg-content-wrapper flex flex-col';
+          
+          if(!isSelf) {
+            const nameSpan = document.createElement('span');
+            nameSpan.className = 'msg-name text-[11px] text-slate-400 font-medium mb-1';
+            nameSpan.innerText = msg.senderName;
+            wrapper.appendChild(nameSpan);
+          }
+
+          const bubble = document.createElement('div');
+          bubble.className = 'msg-bubble p-3 px-4 rounded-2xl text-sm leading-relaxed flex flex-col gap-2';
+
+          if(msg.deleted) {
+            bubble.innerText = 'ข้อความถูกลบเรียบร้อย';
+            bubble.className += ' msg-deleted text-slate-400 italic bg-white/20 border border-dashed text-xs';
+          } else {
+            const isImageLink = msg.type === 'image' || 
+                               (msg.content && (msg.content.includes('drive.google.com/thumbnail') || msg.content.includes('drive.google.com/uc')) && !msg.filename) ||
+                               (msg.filename && /\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(msg.filename));
+            
+            if(isImageLink) {
+              bubble.innerHTML = `
+                <img src="${msg.content}" class="max-w-[200px] rounded-xl object-cover cursor-pointer border border-white/20 shadow-md transform hover:scale-[1.02] transition-all" referrerpolicy="no-referrer" onerror="this.src='https://cdn-icons-png.flaticon.com/512/16/16410.png'; this.className='w-12 h-12 opacity-50';" onclick="viewSpotlightImage('${msg.content}', '${msg.filename || 'Image'}')">
+                <div class="flex items-center gap-2 mt-1 w-full justify-center">
+                  <a href="https://drive.google.com/file/d/${msg.fileId || ''}/view" target="_blank" class="px-2 py-1 bg-slate-800/80 hover:bg-slate-900 text-[10px] text-white rounded-md font-medium transition-colors flex items-center gap-1 shadow-sm"><i class="fa-regular fa-eye"></i> ดูไฟล์</a>
+                  <button onclick="directDownloadFromDrive('${msg.fileId || ''}', '${msg.filename || 'image.png'}')" class="px-2 py-1 bg-green-600 hover:bg-green-700 text-[10px] text-white rounded-md font-medium transition-colors flex items-center gap-1 shadow-sm"><i class="fa-solid fa-download"></i> ดาวน์โหลด</button>
+                </div>
+              `;
+              bubble.style.padding = '0'; bubble.style.background = 'none'; bubble.style.boxShadow = 'none';
+            } else if(msg.type === 'text') {
+              bubble.innerText = msg.content;
+              bubble.className += isSelf ? ' bg-[#7CE68E] text-slate-900 rounded-tr-none' : ' bg-white text-slate-800 rounded-tl-none';
+            } else if(msg.type === 'file') {
+              bubble.innerHTML = `
+                <div class="flex items-center gap-2 font-semibold text-slate-700 break-all">
+                  <i class="fa-solid fa-file-lines text-xl text-emerald-500"></i> ${msg.filename || 'ไฟล์แนบ'}
+                </div>
+                <div class="flex items-center gap-2 mt-1 border-t border-slate-100 pt-1.5 justify-start">
+                  <a href="https://drive.google.com/file/d/${msg.fileId || ''}/view" target="_blank" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-[10px] text-slate-600 rounded-md font-medium transition-colors flex items-center gap-1"><i class="fa-regular fa-eye"></i> ดูไฟล์</a>
+                  <button onclick="directDownloadFromDrive('${msg.fileId || ''}', '${msg.filename || 'file'}')" class="px-2 py-1 bg-green-50 hover:bg-green-100 text-[10px] text-green-600 rounded-md font-medium transition-colors flex items-center gap-1"><i class="fa-solid fa-download"></i> ดาวน์โหลด</button>
+                </div>
+              `;
+              bubble.className += ' bg-white text-slate-800 rounded-2xl shadow-sm';
+            } else if(msg.type === 'sticker') {
+              bubble.innerHTML = `<img src="${msg.content}" class="w-24 h-24 object-contain select-none">`;
+              bubble.style.padding = '0'; bubble.style.background = 'none'; bubble.style.boxShadow = 'none';
+            }
+
+            if(isSelf) {
+              const actionBox = document.createElement('button');
+              actionBox.className = 'action-box text-rose-500 hover:text-rose-600 bg-rose-50 p-1.5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 self-center mx-2';
+              actionBox.innerHTML = '<i class="fa-solid fa-trash-can text-sm"></i>';
+              actionBox.onclick = () => {
+                Swal.fire({
+                  title: 'ยกเลิกการส่ง?',
+                  text: "คุณต้องการลบข้อความนี้ออกจากห้องแชท และลบไฟล์บนคลาวด์ถาวรใช่หรือไม่",
+                  icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', cancelButtonColor: '#64748b', confirmButtonText: 'ใช่, ลบข้อความ',
+                  customClass: { title: 'swal-premium-title', htmlContainer: 'swal-premium-html' }
+                }).then((res) => {
+                  if(res.isConfirmed) { 
+                    update(ref(db, `global_messages/${key}`), { deleted: true }); 
+                    if(msg.fileId) {
+                      fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({ action: 'deleteFile', fileId: msg.fileId })
+                      }).then(res => res.json()).catch(err => console.error(err));
+                    }
+                  }
+                });
+              };
+              row.appendChild(actionBox);
+            }
+          }
+
+          wrapper.appendChild(bubble);
+          
+          const timeSpan = document.createElement('span');
+          timeSpan.className = 'text-[9px] text-slate-400 self-end font-medium px-1 mb-1';
+          timeSpan.innerText = new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+          
+          row.appendChild(wrapper);
+          row.appendChild(timeSpan);
+          body.appendChild(row);
+        });
+      }
+      
+      Object.keys(activeTempUploads).forEach(id => {
+        const tempMsg = activeTempUploads[id];
+        body.appendChild(createTempRow(tempMsg));
+      });
+      
+      body.scrollTop = body.scrollHeight;
+    }
+
+    window.viewSpotlightImage = function(url, filename) {
+      Swal.fire({
+        title: filename,
+        imageUrl: url,
+        imageAlt: filename,
+        showCancelButton: true,
+        confirmButtonText: '<i class="fa-solid fa-cloud-arrow-down mr-1"></i> ดาวน์โหลดรูปนี้',
+        cancelButtonText: 'ปิดหน้าต่าง',
+        confirmButtonColor: '#10b981',
+        cancelButtonColor: '#64748b',
+        customClass: { title: 'swal-premium-title', htmlContainer: 'swal-premium-html' }
+      }).then((result) => {
+        if (result.isConfirmed) {
+          const a = document.createElement("a"); a.href = url; a.download = filename;
+          document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        }
+      });
+    }
+
+    function initPickers() {
+      const ep = document.getElementById('emoji-picker');
+      emojis.forEach(emo => {
+        let span = document.createElement('span'); 
+        span.className = 'hover:scale-130 transition-transform duration-100 flex items-center justify-center p-1'; 
+        span.innerText = emo;
+        span.onclick = (e) => { 
+          e.stopPropagation();
+          document.getElementById('msg-input').value += emo; 
+          ep.classList.add('hidden'); 
+        };
+        ep.appendChild(span);
+      });
+      
+      document.getElementById('tool-emoji').addEventListener('click', (e) => {
+        e.stopPropagation(); 
+        ep.classList.toggle('hidden');
+        document.getElementById('sticker-picker').classList.add('hidden');
+      });
+
+      const sp = document.getElementById('sticker-picker');
+      stickers.forEach(stk => {
+        let img = document.createElement('img'); 
+        img.src = stk; 
+        img.className = 'w-16 h-16 object-contain hover:scale-115 active:scale-95 transition-all duration-100 p-1 cursor-pointer';
+        img.onclick = (e) => { 
+          e.stopPropagation();
+          sendSticker(stk); 
+          sp.classList.add('hidden'); 
+        };
+        sp.appendChild(img);
+      });
+      
+      document.getElementById('tool-sticker').addEventListener('click', (e) => {
+        e.stopPropagation(); 
+        sp.toggle('hidden');
+        ep.classList.add('hidden');
+      });
+
+      document.addEventListener('click', () => { 
+        ep.classList.add('hidden'); 
+        sp.classList.add('hidden'); 
       });
     }
   </script>
