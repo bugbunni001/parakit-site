@@ -274,7 +274,6 @@
 
       onValue(ref(db, 'status'), (snapshot) => {
         currentActiveUsers = snapshot.val() || {};
-        renderAllMessagesWithTemps(); 
       });
     }
 
@@ -823,7 +822,28 @@
       const chatRef = ref(db, 'global_messages');
       onValue(chatRef, (snapshot) => {
         lastSnapshotData = snapshot.val();
+        
+        // เมื่อมีข้อมูลแชทอัปเดต ให้สั่งเช็คและทำสแตมป์ประวัติการอ่านของตนเองก่อน render
+        checkAndMarkAsRead();
         renderAllMessagesWithTemps();
+      });
+    }
+
+    // ฟังก์ชันเบื้องหลัง: หากมีข้อความของคนอื่นเข้ามาและตัวผู้ใช้ปัจจุบันยังไม่ได้อ่าน ให้ทำการ Push บันทึกประวัติการอ่านลง Firebase
+    function checkAndMarkAsRead() {
+      if (!lastSnapshotData || !currentUser) return;
+      
+      Object.keys(lastSnapshotData).forEach(key => {
+        const msg = lastSnapshotData[key];
+        // ตรวจจับ: ถ้าไม่ใช่ข้อความที่เราส่งเอง + ข้อความยังไม่ถูกลบ + ตัวเรายังไม่เคยมีชื่อในรายชื่อคนอ่าน
+        const isSelf = msg.senderName === currentUser.displayName;
+        const hasRead = msg.readBy && msg.readBy[currentUser.username];
+        
+        if (!isSelf && !msg.deleted && !hasRead) {
+          // สั่งสแตมป์ลง Database ทันทีว่าผู้ใช้นี้อ่านแล้ว
+          const readRef = ref(db, `global_messages/${key}/readBy/${currentUser.username}`);
+          set(readRef, currentUser.displayName);
+        }
       });
     }
 
@@ -927,22 +947,22 @@
       });
     };
 
-    // ฟังก์ชันสร้างหน้าต่างแสดงรายชื่อเพื่อนทั้งหมดที่กดอ่านข้อความนั้นๆ แล้วแบบละเอียด
-    window.showWhoReadThisMessage = function(activeUsersObj) {
-      const activeNames = Object.values(activeUsersObj)
-        .filter(u => u.displayName !== currentUser.displayName)
-        .map(u => `<li class="flex items-center gap-2 py-1.5 border-b border-slate-100 last:border-none text-slate-700 text-xs font-medium"><span class="w-2 h-2 rounded-full bg-green-500 inline-block animate-pulse"></span> ${u.displayName}</li>`)
+    // ฟังก์ชันสร้างหน้าต่างแสดงรายชื่อเพื่อนทั้งหมดที่กดอ่านข้อความนั้นๆ แบบละเอียดถาวร
+    window.showWhoReadThisMessage = function(readByObj) {
+      if (!readByObj) return;
+      const readNames = Object.values(readByObj)
+        .map(name => `<li class="flex items-center gap-2 py-1.5 border-b border-slate-100 last:border-none text-slate-700 text-xs font-medium"><span class="w-2 h-2 rounded-full bg-emerald-500 inline-block shadow-sm"></span> ${name}</li>`)
         .join('');
 
       Swal.fire({
-        title: '👥 รายชื่อผู้อ่านข้อความ',
+        title: '👥 รายชื่อผู้อ่านข้อความนี้',
         html: `
           <div class="max-h-[220px] overflow-y-auto text-left px-2 no-scrollbar">
-            <ul class="space-y-1">${activeNames}</ul>
+            <ul class="space-y-1">${readNames}</ul>
           </div>
         `,
-        confirmButtonText: 'รับทราบ',
-        confirmButtonColor: '#10b981',
+        confirmButtonText: 'ปิดหน้าต่าง',
+        confirmButtonColor: '#64748b',
         customClass: { title: 'swal-premium-title', htmlContainer: 'swal-premium-html', popup: 'rounded-3xl max-w-xs' }
       });
     };
@@ -953,10 +973,6 @@
       
       body.innerHTML = '';
       let lastRenderedDate = ""; 
-      
-      // ดึงรายชื่อคนอื่นที่ออนไลน์อยู่จริงทั้งหมด (ไม่รวมผู้ใช้งานปัจจุบัน)
-      const activeOthersList = Object.keys(currentActiveUsers).filter(k => k !== currentUser.username);
-      const totalActiveOthers = activeOthersList.length;
 
       if(lastSnapshotData) {
         Object.keys(lastSnapshotData).forEach(key => {
@@ -1045,23 +1061,30 @@
 
           wrapper.appendChild(bubble);
           
+          // ตัวห่อจัดเลย์เอาต์กลุ่มข้อมูลเวลาและข้อความอ่านแล้ว
+          const metaContainer = document.createElement('div');
+          metaContainer.className = `flex flex-col text-[9px] text-slate-400 font-medium px-0.5 mb-1 shrink-0 ${isSelf ? 'items-end' : 'items-start'}`;
+
+          // นับจำนวนคนที่กดอ่านจริงจากฐานข้อมูลถาวร (readBy)
+          const totalReadsCount = msg.readBy ? Object.keys(msg.readBy).length : 0;
+
+          // ถ้าเป็นข้อความของเราเอง และมีคนอื่นเข้ามาเปิดอ่านแล้ว ให้ทำการสแตมป์ยอดคนอ่านไว้ที่ตำแหน่ง "ด้านบนของเวลา"
+          if (isSelf && !msg.deleted && totalReadsCount > 0) {
+            const readStatusSpan = document.createElement('span');
+            readStatusSpan.className = 'text-emerald-400 font-bold mb-0.5 select-none cursor-pointer hover:underline';
+            readStatusSpan.innerText = `อ่านแล้ว ${totalReadsCount}`;
+            
+            // คลิกที่ตัวหนังสือเพื่อส่องดูลิสต์คนอ่านย้อนหลังได้ตลอดเวลา
+            readStatusSpan.onclick = () => window.showWhoReadThisMessage(msg.readBy);
+            metaContainer.appendChild(readStatusSpan);
+          }
+          
           const timeSpan = document.createElement('span');
-          timeSpan.className = 'text-[9px] text-slate-400 self-end font-medium px-0.5 mb-1 shrink-0';
           timeSpan.innerText = new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+          metaContainer.appendChild(timeSpan);
           
           row.appendChild(wrapper);
-          row.appendChild(timeSpan);
-
-          // แก้ไข: แสดงสถานะจำนวนคนอ่านข้อความจริง และสามารถกดคลิกเพื่อเปิดดูรายชื่อคนอ่านได้ด้วย
-          if (isSelf && !msg.deleted && totalActiveOthers > 0) {
-            const readStatusSpan = document.createElement('span');
-            readStatusSpan.className = 'text-[9px] text-emerald-400 font-bold self-end mb-1 mr-1 select-none cursor-pointer hover:underline';
-            readStatusSpan.innerText = `อ่านแล้ว ${totalActiveOthers}`;
-            
-            // เมื่อจิ้มที่ข้อความ "อ่านแล้ว X" จะแสดง Modal รายชื่อคนอ่านขึ้นมาอย่างละเอียด
-            readStatusSpan.onclick = () => window.showWhoReadThisMessage(currentActiveUsers);
-            row.appendChild(readStatusSpan);
-          }
+          row.appendChild(metaContainer);
 
           body.appendChild(row);
         });
