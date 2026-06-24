@@ -284,7 +284,7 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz3DsNrXwC0DTmYM70mklBITbsyBpGEh3D3BeRmBlwiVs0gaty-xcUxYXf5QtmrrFd7/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzdGEYbvv1KKjgvj-qXDpow1bja_Kd-PiUpKu-0BTDBOPpZnbimz5m8rhr11pwDUpIV/exec";
     let currentUser = null;
     let activeTempUploads = {}; 
     let globalAvatarMap = {}; 
@@ -481,13 +481,18 @@
         return;
       }
       
-      const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25 MB
       let validFiles = [];
       for(let i = 0; i < files.length; i++) {
-        if (files[i].size > MAX_FILE_SIZE) {
-           Swal.fire('ไฟล์ขนาดใหญ่เกินไป', `ไฟล์ ${files[i].name} มีขนาดใหญ่กว่า 25MB ระบบคลาวด์รับข้อมูลไม่ไหวครับ โปรดบีบอัดไฟล์ก่อนส่ง`, 'warning');
+        // หากเป็นรูปภาพ จะข้ามการเช็คขนาด 25MB ชั่วคราวเนื่องจากเราจะนำไปบีบอัดให้เล็กลงอยู่แล้วครับ
+        if (files[i].type.startsWith('image/')) {
+          validFiles.push(files[i]);
         } else {
-           validFiles.push(files[i]);
+          const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25 MB
+          if (files[i].size > MAX_FILE_SIZE) {
+             Swal.fire('ไฟล์ขนาดใหญ่เกินไป', `ไฟล์ ${files[i].name} มีขนาดใหญ่กว่า 25MB ระบบคลาวด์รับข้อมูลไม่ไหวครับ โปรดบีบอัดไฟล์ก่อนส่ง`, 'warning');
+          } else {
+             validFiles.push(files[i]);
+          }
         }
       }
 
@@ -515,7 +520,7 @@
           ${previewHTML}
           <div class="flex-1 overflow-hidden">
             <p class="text-xs font-bold text-slate-700 truncate">${file.name}</p>
-            <p class="text-[10px] text-slate-400">${(file.size / 1024).toFixed(1)} KB</p>
+            <p class="text-[10px] text-slate-400">${file.type.startsWith('image/') ? 'รูปภาพ (จะถูกบีบอัดอัตโนมัติ)' : (file.size / 1024).toFixed(1) + ' KB'}</p>
           </div>
         `;
         previewListContainer.appendChild(row);
@@ -541,6 +546,46 @@
       document.getElementById('file-input').value = '';
     }
 
+    // ฟังก์ชันบีบอัดรูปภาพฝั่งหน้าบ้าน (Client-Side Compression) เหมือน Line
+    function compressImageProcess(file) {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+          const img = new Image();
+          img.src = event.target.result;
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
+            
+            // จำกัดความกว้างหรือสูงไม่ให้เกิน 1200px
+            const MAX_SIDE = 1200;
+            if (width > height) {
+              if (width > MAX_SIDE) {
+                height *= MAX_SIDE / width;
+                width = MAX_SIDE;
+              }
+            } else {
+              if (height > MAX_SIDE) {
+                width *= MAX_SIDE / height;
+                height = MAX_SIDE;
+              }
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2currentActiveUsers');
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            // บีบอัดภาพให้ออกมาเป็น JPEG ที่ความคมชัด 80% (Quality 0.8) เพื่อลดขนาดไฟล์ลงสูงสุด 80-90%
+            const compressedBase64 = canvas.toDataURL('image/jpeg', 0.8);
+            resolve(compressedBase64);
+          };
+        };
+      });
+    }
+
     async function uploadSingleFileProcess(file) {
       const localTimestamp = Date.now();
       const uploadId = "upload_" + localTimestamp;
@@ -561,43 +606,55 @@
       };
       renderAllMessagesWithTemps(true);
 
-      return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = async () => {
-          try {
-            let res = await fetch(SCRIPT_URL, { 
-              method: 'POST', 
-              body: JSON.stringify({ action: 'uploadFile', filename: file.name, base64: reader.result }) 
-            });
-            let result = await res.json();
-            
-            if(result.status === 'success') {
-              let finalUrl = result.viewUrl || result.url;
-              let fileDriveId = result.fileId || '';
-              let dbMsgType = 'file';
-              
-              if(isImage) dbMsgType = 'image';
-              if(isVideo) dbMsgType = 'video';
-              if(isAudio) dbMsgType = 'audio';
-
-              push(ref(db, 'global_messages'), {
-                senderName: currentUser.displayName,
-                senderAvatar: currentUser.avatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png',
-                type: dbMsgType, content: finalUrl, filename: file.name, fileId: fileDriveId, timestamp: Date.now(), deleted: false
-              });
-            } else {
-              Swal.fire('อัปโหลดล้มเหลว', result.message || 'เกิดข้อผิดพลาดจากเซิร์ฟเวอร์หลังบ้านครับ', 'error');
-            }
-          } catch(err) {
-            console.error('Network Error Upload:', err);
-            Swal.fire('การเชื่อมต่อขัดข้อง', 'โปรดตรวจสอบความเสถียรของอินเทอร์เน็ต ไฟล์อาจมีขนาดใหญ่เกินระบบรับไหวครับ', 'error');
+      try {
+        let base64Payload = "";
+        let finalFilename = file.name;
+        
+        if (isImage) {
+          // สั่งบีบอัดรูปภาพก่อนนำส่ง
+          base64Payload = await compressImageProcess(file);
+          // เปลี่ยนนามสกุลไฟล์ปลายทางให้เป็น .jpg เสมอหลังผ่านการบีบอัด
+          if (!finalFilename.toLowerCase().endsWith('.jpg') && !finalFilename.toLowerCase().endsWith('.jpeg')) {
+            finalFilename = finalFilename.substring(0, finalFilename.lastIndexOf('.')) + '.jpg';
           }
-          delete activeTempUploads[uploadId];
-          renderAllMessagesWithTemps(true);
-          resolve();
-        };
-        reader.readAsDataURL(file);
-      });
+        } else {
+          base64Payload = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.readAsDataURL(file);
+          });
+        }
+        
+        let res = await fetch(SCRIPT_URL, { 
+          method: 'POST', 
+          body: JSON.stringify({ action: 'uploadFile', filename: finalFilename, base64: base64Payload }) 
+        });
+        let result = await res.json();
+        
+        if(result.status === 'success') {
+          let finalUrl = result.viewUrl || result.url;
+          let fileDriveId = result.fileId || '';
+          let dbMsgType = 'file';
+          
+          if(isImage) dbMsgType = 'image';
+          if(isVideo) dbMsgType = 'video';
+          if(isAudio) dbMsgType = 'audio';
+
+          push(ref(db, 'global_messages'), {
+            senderName: currentUser.displayName,
+            senderAvatar: currentUser.avatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png',
+            type: dbMsgType, content: finalUrl, filename: finalFilename, fileId: fileDriveId, timestamp: Date.now(), deleted: false
+          });
+        } else {
+          Swal.fire('อัปโหลดล้มเหลว', result.message || 'เกิดข้อผิดพลาดจากเซิร์ฟเวอร์หลังบ้านครับ', 'error');
+        }
+      } catch(err) {
+        console.error('Network Error Upload:', err);
+        Swal.fire('การเชื่อมต่อขัดข้อง', 'โปรดตรวจสอบความเสถียรของอินเทอร์เน็ต ไฟล์อาจมีขนาดใหญ่เกินระบบรับไหวครับ', 'error');
+      }
+      
+      delete activeTempUploads[uploadId];
+      renderAllMessagesWithTemps(true);
     }
 
     function initMultiSelectEvents() {
@@ -1388,7 +1445,7 @@
       else if(msg.type === 'optimistic-image') inner = `
         <div class="flex flex-col items-end">
           <img src="${msg.content}" class="max-w-[160px] sm:max-w-[200px] rounded-xl object-cover border border-white/20 shadow-md">
-          <span class="text-[10px] text-emerald-400 mt-1 font-medium bg-slate-900/60 px-2 py-0.5 rounded-full"><i class="fa-solid fa-spinner animate-spin mr-1"></i>กำลังส่งรูป...</span>
+          <span class="text-[10px] text-emerald-400 mt-1 font-medium bg-slate-900/60 px-2 py-0.5 rounded-full"><i class="fa-solid fa-spinner animate-spin mr-1"></i>กำลังบีบอัดและส่งรูป...</span>
         </div>`;
       else if(msg.type === 'optimistic-video') inner = `<div class="p-3 rounded-2xl bg-white border text-xs flex items-center gap-2 text-slate-500 shadow-sm"><i class="fa-solid fa-spinner animate-spin text-green-500"></i> กำลังอัปโหลดวิดีโอ...</div>`;
       else if(msg.type === 'optimistic-file') inner = `<div class="p-3 rounded-2xl bg-white border text-xs flex items-center gap-2 text-slate-500 shadow-sm"><i class="fa-solid fa-spinner animate-spin text-green-500"></i> กำลังอัปโหลดไฟล์: ${msg.filename}</div>`;
@@ -1614,12 +1671,10 @@
     function renderAllMessagesWithTemps(forceScrollToBottomFlag = false) {
       const body = document.getElementById('chat-body');
       
-      // เก็บตำแหน่ง scroll ล่าสุดไว้ก่อนเคลียร์หน้าจอ เพื่อนำมาคำนวณ Smart Scroll
       const previousScrollTop = body.scrollTop;
       const previousScrollHeight = body.scrollHeight;
       const previousClientHeight = body.clientHeight;
       
-      // เช็คว่าผู้ใช้เกาะอยู่ล่างสุดของจอแชทหรือไม่ (เผื่อระยะขอบไว้ 120px)
       const isUserAtBottom = (previousScrollHeight - previousScrollTop - previousClientHeight) < 120;
 
       body.innerHTML = '';
@@ -1778,11 +1833,9 @@
         body.appendChild(createTempRow(tempMsg));
       });
       
-      // ควบคุมสกรอลล์ด้วยระบบ Smart Scroll 
       if (forceScrollToBottomFlag || isUserAtBottom) {
         body.scrollTop = body.scrollHeight;
       } else {
-        // บรรทัดสำคัญ: ล็อกตำแหน่งสกรอลล์เดิมของผู้ใช้ไว้ ไม่ให้แชทดีดขึ้นหรือดีดลงครับ
         body.scrollTop = previousScrollTop;
       }
 
