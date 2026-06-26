@@ -545,7 +545,6 @@
       document.getElementById('file-input').value = '';
     }
 
-    // ฟังก์ชันบีบอัดรูปภาพฝั่งหน้าบ้าน (Client-Side Compression) เคลียร์บัคเรียบร้อยครับ
     function compressImageProcess(file) {
       return new Promise((resolve) => {
         const reader = new FileReader();
@@ -573,7 +572,7 @@
             
             canvas.width = width;
             canvas.height = height;
-            const ctx = canvas.getContext('2d'); // แก้ไขตรงนี้ให้ถูกต้องแล้วครับ
+            const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, width, height);
             
             const compressedBase64 = canvas.toDataURL('image/jpeg', 0.8);
@@ -743,6 +742,7 @@
       });
     }
 
+    // แก้ไขระบบแชร์ข้อความแบบเรียลไทม์ (เว้นวรรค/ขึ้นบรรทัดใหม่/อิโมจิครบ ไม่เด้งค้าง) เรียบร้อยครับครับผม!
     async function handleShareSelectedItems() {
       const items = Object.values(selectedMessageItems);
       if(items.length === 0) {
@@ -750,99 +750,48 @@
         return;
       }
 
-      Swal.fire({
-        title: 'กำลังดาวน์โหลด...',
-        html: 'โปรดรอสักครู่ กำลังโหลดข้อมูลเพื่อส่งต่อไปยังแอพพลิเคชั่นอื่น...',
-        allowOutsideClick: false,
-        didOpen: () => { Swal.showLoading(); }
-      });
+      // เรียงข้อความตามเวลาส่งจริงเพื่อให้เนื้อหาเรียงลำดับถูกต้องตามหน้าจอ
+      items.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
 
-      let filesToShare = [];
       let plainTexts = [];
 
-      try {
-        for (let msg of items) {
-          if (!msg.deleted && msg.fileId && ['image', 'video', 'audio', 'file'].includes(msg.type)) {
-            try {
-              let res = await fetch(SCRIPT_URL, {
-                method: 'POST',
-                body: JSON.stringify({ action: 'getFileData', fileId: msg.fileId })
-              });
-              let result = await res.json();
-              if (result.status === 'success' && result.base64) {
-                let cleanBase64 = result.base64;
-                if (cleanBase64.includes(',')) cleanBase64 = cleanBase64.split(',')[1];
-                
-                const dataUrl = `data:${result.mimeType || 'application/octet-stream'};base64,${cleanBase64}`;
-                const fetchRes = await fetch(dataUrl);
-                const blob = await fetchRes.blob();
-                const fileObj = new File([blob], msg.filename || `file_${Date.now()}`, { type: blob.type });
-                filesToShare.push(fileObj);
-              } else {
-                throw new Error('Backend failed');
-              }
-            } catch (err) {
-              console.error('Error handling sync file preparation for share:', err);
-              plainTexts.push(`[ไฟล์แนบ: ${msg.filename || 'ดาวน์โหลดไฟล์มาแชร์ไม่สำเร็จ'}] \nลิงก์ไฟล์: ${msg.content}`);
-            }
-          } else if (!msg.deleted && msg.type === 'text') {
-            plainTexts.push(`[${msg.senderName}]: ${msg.content}`);
-          } else if (!msg.deleted && msg.type === 'sticker') {
-            plainTexts.push(`[สติ๊กเกอร์จาก ${msg.senderName}]: ${msg.content}`);
-          }
+      for (let msg of items) {
+        if (msg.deleted) continue;
+        
+        if (msg.type === 'text') {
+          plainTexts.push(`[${msg.senderName}]: ${msg.content}`);
+        } else if (msg.type === 'sticker') {
+          plainTexts.push(`[สติ๊กเกอร์จาก ${msg.senderName}]: ${msg.content}`);
+        } else if (['image', 'video', 'audio', 'file'].includes(msg.type)) {
+          let typeLabel = "ไฟล์แนบ";
+          if(msg.type === 'image') typeLabel = "รูปภาพ";
+          if(msg.type === 'video') typeLabel = "วิดีโอ";
+          if(msg.type === 'audio') typeLabel = "ข้อความเสียง";
+          
+          plainTexts.push(`[${typeLabel}จาก ${msg.senderName}]: ${msg.filename || 'เปิดดูออนไลน์'}\n🔗 ลิงก์ไฟล์: ${msg.content}`);
         }
-
-        Swal.fire({
-          title: 'ดาวน์โหลดไฟล์สำเร็จ!',
-          text: 'ระบบเตรียมไฟล์และข้อความไว้เรียบร้อยแล้ว กดปุ่มแชร์ด้านล่างเพื่อเลือกแอปส่งต่อได้เลยครับ',
-          icon: 'success',
-          confirmButtonText: '<i class="fa-solid fa-share-nodes mr-1"></i> กดแชร์เลย',
-          confirmButtonColor: '#10b981',
-          allowOutsideClick: false,
-          customClass: { title: 'swal-premium-title' }
-        }).then(async (result) => {
-          if (result.isConfirmed) {
-            try {
-              if (navigator.share) {
-                if (filesToShare.length > 0 && navigator.canShare && navigator.canShare({ files: filesToShare })) {
-                  await navigator.share({
-                    files: filesToShare,
-                    title: 'แชร์ไฟล์จาก Parakit Chat',
-                    text: plainTexts.join('\n\n')
-                  });
-                } else if (filesToShare.length > 0) {
-                  for (let i = 0; i < filesToShare.length; i++) {
-                    await navigator.share({
-                      files: [filesToShare[i]],
-                      title: `ส่งไฟล์แนบรายการที่ ${i + 1}`
-                    });
-                  }
-                  if (plainTexts.length > 0) {
-                    await navigator.share({ text: plainTexts.join('\n\n') });
-                  }
-                } else if (plainTexts.length > 0) {
-                  await navigator.share({ text: plainTexts.join('\n\n') });
-                }
-              } else {
-                throw new Error("ไม่มี API การแชร์ในระบบปฏิบัติการนี้ครับ");
-              }
-            } catch (shareErr) {
-               let compiledText = plainTexts.join("\n\n---\n\n");
-               if (items.some(m => m.fileId)) {
-                 compiledText += "\n\n(ลิงก์แนบไฟล์: " + items.filter(m => m.fileId).map(m => m.content).join(", ") + ")";
-               }
-               navigator.clipboard.writeText(compiledText);
-               Swal.fire('แชร์สำเร็จ', 'ระบบไม่รองรับการส่งแอปตรง แต่ได้คัดลอกข้อความและลิงก์ลงคลิปบอร์ดให้แทนแล้ว นำไปวางส่งได้เลยครับ', 'success');
-            }
-            document.getElementById('btn-toggle-multi-select').click();
-          }
-        });
-
-      } catch (globalErr) {
-        Swal.close();
-        console.error(globalErr);
-        Swal.fire('ข้อผิดพลาด', 'ระบบเตรียมจัดกลุ่มชุดไฟล์แชร์ขัดข้องภายนอกครับ', 'error');
       }
+
+      // เชื่อมข้อความแต่ละข้อความเข้าด้วยกัน โดยเว้นช่องว่างอย่างเป็นระบบเพื่อการอ่านง่าย
+      let compiledShareText = plainTexts.join('\n\n');
+
+      try {
+        if (navigator.share) {
+          await navigator.share({
+            title: 'แชร์ข้อความจาก Parakit Chat',
+            text: compiledShareText
+          });
+        } else {
+          throw new Error("ระบบปฏิบัติการนี้ไม่มี Web Share API");
+        }
+      } catch (shareErr) {
+        // กรณีเปิดบนเบราว์เซอร์คอมพิวเตอร์ หรืออุปกรณ์ที่ API ถูกบล็อก จะใช้วิธีคัดลอกลงคลิปบอร์ดแทนทันที
+        navigator.clipboard.writeText(compiledShareText);
+        Swal.fire('คัดลอกสำเร็จ', 'เบราว์เซอร์หรืออุปกรณ์นี้ไม่สนับสนุนการแชร์แอพตรง ระบบคัดลอกข้อความทั้งหมดพร้อมเว้นบรรทัดและอิโมจิลงคลิปบอร์ดให้แทนแล้ว นำไปวางส่งในแอปอื่นได้เลยครับ', 'success');
+      }
+      
+      // ปิดโหมดเลือกรายการอัตโนมัติหลังจากประมวลผลคำสั่งเสร็จสิ้น
+      document.getElementById('btn-toggle-multi-select').click();
     }
 
     function initAudioRecorder() {
