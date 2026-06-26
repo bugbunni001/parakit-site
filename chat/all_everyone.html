@@ -116,6 +116,49 @@
     .multi-select-mode .msg-checkbox {
       display: block;
     }
+
+    /* Modern Video Player Style Overlay */
+    .video-premium-container {
+      position: relative;
+      max-width: 260px;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+      background: #000;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .video-play-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.3);
+      display: flex;
+      align-items: center;
+      justify-center: center;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+    .video-premium-container:hover .video-play-overlay {
+      background: rgba(0, 0, 0, 0.1);
+    }
+    .video-play-btn {
+      width: 50px;
+      height: 50px;
+      background: rgba(255, 255, 255, 0.25);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 18px;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .video-premium-container:hover .video-play-btn {
+      transform: scale(1.15);
+      background: #10b981;
+      border-color: #10b981;
+    }
   </style>
 </head>
 <body class="h-[100dvh] w-screen flex items-center justify-center p-0 sm:p-4 md:p-6 overflow-hidden select-none">
@@ -284,7 +327,7 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw8YrsgW3E3_uzCLZTONE6cwLY-z5iwoNZIj5QUhj4wQKNWKdFCfbjDaH4g2fLr4hvV/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwWf4VvC0Anar83PbJPRRjKgoaFCfAp83ndv8YTIzG5ydQeYaax6tizOBk51NAWqAoa/exec";
     let currentUser = null;
     let activeTempUploads = {}; 
     let globalAvatarMap = {}; 
@@ -983,6 +1026,7 @@
       return html;
     }
 
+    // แก้ไขฟังก์ชันแสดงผลเวลาของไฟล์เสียงให้ถูกต้อง แม่นยำ ไม่เพี้ยนเป็น NaN หรือ 0:00 ครับ
     window.initAudioTracker = function(audioElement, durationId) {
       const formatTime = (timeInSeconds) => {
         if (isNaN(timeInSeconds) || !isFinite(timeInSeconds)) return "0:00";
@@ -998,11 +1042,15 @@
         if (el) el.innerText = formatTime(audioElement.totalVoiceDuration);
       };
 
+      // เช็กสถานะของตัว Audio Element ทันที
       if (audioElement.readyState >= 1) {
         updateDuration();
       } else {
         audioElement.addEventListener('loadedmetadata', updateDuration);
       }
+
+      // ตรวจสอบเหตุการณ์เพิ่มเติมเพื่อความรวดเร็วบน Mobile Browser
+      audioElement.addEventListener('durationchange', updateDuration);
 
       audioElement.addEventListener('timeupdate', () => {
         const duration = audioElement.totalVoiceDuration || audioElement.duration || 0;
@@ -1712,6 +1760,7 @@
       });
     };
 
+    // ปรับปรุงประสิทธิภาพฟังก์ชัน Render ข้อความ และตกแต่ง UI เครื่องเล่นวิดีโอให้โมเดิร์น
     function renderAllMessagesWithTemps(forceScrollToBottomFlag = false) {
       const body = document.getElementById('chat-body');
       
@@ -1793,16 +1842,20 @@
               bubble.style.padding = '0'; bubble.style.background = 'none'; bubble.style.boxShadow = 'none';
               bindMessageActionEvents(bubble, key, msg.fileId, null);
             } else if(msg.type === 'video') {
+              // ออกแบบโครงสร้างแท็กวีดิโอระดับ Premium ใหม่ซ่อน Control เดิมและทำ Overlay Button แทน
               const videoId = `video_el_${key}`;
               bubble.innerHTML = `
-                <div class="relative max-w-[240px] rounded-xl overflow-hidden border border-white/20 shadow-md bg-black group/video">
-                  <video id="${videoId}" controls preload="metadata" class="w-full max-h-[300px]"></video>
-                  <div id="loading_video_${key}" class="absolute inset-0 flex items-center justify-center bg-black/60 text-white text-[11px] gap-2 p-2 text-center">
-                    <i class="fa-solid fa-spinner animate-spin text-green-400"></i> กำลังโหลดสตรีมวิดีโอ...
+                <div class="video-premium-container">
+                  <video id="${videoId}" preload="metadata" class="w-full max-h-[300px] object-cover" onclick="this.paused ? (this.play(), this.nextElementSibling.style.display='none') : (this.pause(), this.nextElementSibling.style.display='flex')"></video>
+                  <div class="video-play-overlay" onclick="const v = this.previousElementSibling; v.play(); this.style.display='none'; v.controls=true;">
+                    <div class="video-play-btn"><i class="fa-solid fa-play ml-0.5"></i></div>
+                  </div>
+                  <div id="loading_video_${key}" class="absolute inset-0 flex items-center justify-center bg-black/70 text-white text-[11px] gap-2 p-2 text-center pointer-events-none">
+                    <i class="fa-solid fa-circle-notch animate-spin text-emerald-400 text-base"></i> สตรีมข้อมูลจากคลาวด์...
                   </div>
                 </div>
                 <div class="flex items-center gap-1.5 mt-1 w-full justify-start">
-                  <button onclick="directDownloadFromDrive('${msg.fileId || ''}', '${msg.filename || 'video.mp4'}')" class="px-2 py-1 bg-green-600 hover:bg-green-700 text-[10px] text-white rounded-md font-medium transition-colors flex items-center gap-1 shadow-sm"><i class="fa-solid fa-download"></i> ดาวน์โหลด</button>
+                  <button onclick="directDownloadFromDrive('${msg.fileId || ''}', '${msg.filename || 'video.mp4'}')" class="px-2 py-1 bg-green-600 hover:bg-green-700 text-[10px] text-white rounded-md font-medium transition-colors flex items-center gap-1 shadow-sm"><i class="fa-solid fa-download"></i> ดาวน์โหลดวีดิโอ</button>
                 </div>
               `;
               bubble.style.padding = '0'; bubble.style.background = 'none'; bubble.style.boxShadow = 'none';
@@ -1817,7 +1870,7 @@
                   <audio id="${audioId}" preload="metadata" onplay="this.previousElementSibling.innerHTML='<i class=\"fa-solid fa-pause text-xs\"></i>'" onpause="this.previousElementSibling.innerHTML='<i class=\"fa-solid fa-play text-xs\"></i>'"></audio>
                   <div class="flex flex-col flex-1">
                     <span class="text-[10px] text-slate-400 font-bold">ข้อความเสียง</span>
-                    <span id="${durationId}" class="text-xs font-semibold text-slate-700"><i class="fa-solid fa-spinner animate-spin text-emerald-500 mr-1"></i>กำลังโหลด...</span>
+                    <span id="${durationId}" class="text-xs font-semibold text-slate-700"><i class="fa-solid fa-circle-notch animate-spin text-emerald-500 mr-1"></i>กำลังคำนวณ...</span>
                   </div>
                 </div>
                 <div class="flex items-center gap-1.5 mt-1 w-full justify-start">
