@@ -193,23 +193,23 @@
         </button>
         <button id="btn-open-settings" title="การตั้งค่าระบบแชท" class="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white flex items-center justify-center gap-1.5 transition-all text-xs font-semibold border border-white/10 shadow-md">
           <i class="fa-solid fa-gear text-sm"></i>
-          <span>ตั้งค่า</span>
+          <span class="hidden sm:inline">ตั้งค่า</span>
         </button>
       </div>
     </div>
     
     <div class="chat-area flex-1 p-3 sm:p-4 md:p-6 overflow-y-auto no-scrollbar space-y-4 font-normal flex flex-col" id="chat-body"></div>
     
-    <div id="multi-select-bar" class="hidden p-3 bg-slate-900 text-white flex items-center justify-between border-t border-white/10 transition-all">
+    <div id="multi-select-bar" class="hidden p-3 bg-slate-900 text-white flex items-center justify-between border-t border-white/10 transition-all z-20 shrink-0">
       <span id="multi-select-count" class="text-xs font-semibold text-slate-300">เลือกไว้ 0 รายการ</span>
       <div class="flex gap-2">
-        <button id="btn-delete-selected" class="px-3 py-1.5 bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold rounded-lg flex items-center gap-1 transition-colors">
-          <i class="fa-solid fa-trash-can"></i> ลบรายการที่เลือก
+        <button id="btn-delete-selected" class="px-2.5 py-1.5 bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold rounded-lg flex items-center gap-1 transition-colors">
+          <i class="fa-solid fa-trash-can"></i> <span class="hidden sm:inline">ลบรายการที่เลือก</span><span class="sm:hidden">ลบ</span>
         </button>
-        <button id="btn-share-selected" class="px-3 py-1.5 bg-green-500 text-white text-xs font-bold rounded-lg flex items-center gap-1 hover:bg-green-600 transition-colors">
-          <i class="fa-solid fa-share-nodes"></i> แชร์ไปยังแอปอื่น
+        <button id="btn-share-selected" class="px-2.5 py-1.5 bg-green-500 text-white text-xs font-bold rounded-lg flex items-center gap-1 hover:bg-green-600 transition-colors">
+          <i class="fa-solid fa-share-nodes"></i> <span class="hidden sm:inline">แชร์ไปยังแอปอื่น</span><span class="sm:hidden">แชร์</span>
         </button>
-        <button id="btn-cancel-selected" class="px-3 py-1.5 bg-slate-700 text-slate-300 text-xs font-bold rounded-lg hover:bg-slate-600 transition-colors">
+        <button id="btn-cancel-selected" class="px-2.5 py-1.5 bg-slate-700 text-slate-300 text-xs font-bold rounded-lg hover:bg-slate-600 transition-colors">
           ยกเลิก
         </button>
       </div>
@@ -284,7 +284,7 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxEChwL35ByBV6CYw4AM_9D8mRW7z2A3ucnszaRqHii4Jox8Bvg_LrkXhUEl-yzwSeC/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw8YrsgW3E3_uzCLZTONE6cwLY-z5iwoNZIj5QUhj4wQKNWKdFCfbjDaH4g2fLr4hvV/exec";
     let currentUser = null;
     let activeTempUploads = {}; 
     let globalAvatarMap = {}; 
@@ -474,27 +474,65 @@
       }
     };
 
-    function processRawFiles(files) {
+    function checkVideoDuration(file) {
+      return new Promise((resolve) => {
+        if (!file.type.startsWith('video/')) {
+          resolve(true);
+          return;
+        }
+        const video = document.createElement('video');
+        video.preload = 'metadata';
+        video.src = URL.createObjectURL(file);
+        video.onloadedmetadata = function() {
+          URL.revokeObjectURL(video.src);
+          if (video.duration > 180) { 
+            resolve(false);
+          } else {
+            resolve(true);
+          }
+        };
+        video.onerror = function() {
+          resolve(false);
+        };
+      });
+    }
+
+    async function processRawFiles(files) {
       const totalSelected = files.length;
       if(totalSelected > 5) {
         Swal.fire('ข้อจำกัดระบบ', 'สามารถเลือกแนบไฟล์ได้สูงสุดรอบละ 5 ไฟล์พร้อมกันครับ', 'warning');
         return;
       }
       
+      Swal.fire({
+        title: 'กำลังตรวจสอบไฟล์...',
+        allowOutsideClick: false,
+        didOpen: () => { Swal.showLoading(); }
+      });
+
       let validFiles = [];
       for(let i = 0; i < files.length; i++) {
+        if (files[i].type.startsWith('video/')) {
+          const isValidDuration = await checkVideoDuration(files[i]);
+          if (!isValidDuration) {
+            Swal.fire('ไฟล์วิดีโอนานเกินไป', `ไฟล์ ${files[i].name} มีความยาวเกิน 3 นาที ระบบจำกัดความยาวเพื่อประหยัดพื้นที่คลาวด์ครับ`, 'warning');
+            return;
+          }
+        }
+
         if (files[i].type.startsWith('image/')) {
           validFiles.push(files[i]);
         } else {
-          const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25 MB
+          const MAX_FILE_SIZE = 25 * 1024 * 1024; 
           if (files[i].size > MAX_FILE_SIZE) {
-             Swal.fire('ไฟล์ขนาดใหญ่เกินไป', `ไฟล์ ${files[i].name} มีขนาดใหญ่กว่า 25MB ระบบคลาวด์รับข้อมูลไม่ไหวครับ โปรดบีบอัดไฟล์ก่อนส่ง`, 'warning');
+             Swal.fire('ไฟล์ขนาดใหญ่เกินไป', `ไฟล์ ${files[i].name} มีขนาดใหญ่กว่า 25MB ระบบคลาวด์รับข้อมูลไม่ไหวครับ`, 'warning');
           } else {
              validFiles.push(files[i]);
           }
         }
       }
 
+      Swal.close();
       if (validFiles.length === 0) return;
       queueFilesToUpload = validFiles;
 
@@ -519,7 +557,7 @@
           ${previewHTML}
           <div class="flex-1 overflow-hidden">
             <p class="text-xs font-bold text-slate-700 truncate">${file.name}</p>
-            <p class="text-[10px] text-slate-400">${file.type.startsWith('image/') ? 'รูปภาพ (จะถูกบีบอัดอัตโนมัติ)' : (file.size / 1024).toFixed(1) + ' KB'}</p>
+            <p class="text-[10px] text-slate-400">${file.type.startsWith('image/') ? 'รูปภาพ (จะถูกบีบอัดอัตโนมัติ)' : file.type.startsWith('video/') ? 'วิดีโอ (จำกัดไม่เกิน 3 นาที)' : (file.size / 1024).toFixed(1) + ' KB'}</p>
           </div>
         `;
         previewListContainer.appendChild(row);
@@ -644,7 +682,7 @@
         }
       } catch(err) {
         console.error('Network Error Upload:', err);
-        Swal.fire('การเชื่อมต่อขัดข้อง', 'โปรดตรวจสอบความเสถียรของอินเทอร์เน็ต ไฟล์อาจมีขนาดใหญ่เกินระบบรับไหวครับ', 'error');
+        Swal.fire('การเชื่อมต่อขัดข้อง', 'โปรดตรวจสอบความเสถียรของอินเทอร์เน็ตครับ', 'error');
       }
       
       delete activeTempUploads[uploadId];
@@ -742,7 +780,27 @@
       });
     }
 
-    // แก้ไขระบบแชร์ข้อความแบบเรียลไทม์ (เว้นวรรค/ขึ้นบรรทัดใหม่/อิโมจิครบ ไม่เด้งค้าง) เรียบร้อยครับครับผม!
+    // ฟังก์ชันช่วยดึงข้อมูลไฟล์ออกมาเป็น Blob Object เพื่อทำการส่งแชร์เข้า Web Share API
+    async function fetchFileBlobFromBackend(fileId) {
+      let res = await fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'getFileData', fileId: fileId })
+      });
+      let result = await res.json();
+      if (result.status === 'success' && result.base64) {
+        let cleanBase64 = result.base64;
+        if (cleanBase64.includes(',')) cleanBase64 = cleanBase64.split(',')[1];
+        const byteCharacters = atob(cleanBase64);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        return new Blob([byteArray], { type: result.mimeType || 'application/octet-stream' });
+      }
+      throw new Error("ดาวน์โหลดมีเดียขัดข้อง");
+    }
+
     async function handleShareSelectedItems() {
       const items = Object.values(selectedMessageItems);
       if(items.length === 0) {
@@ -750,47 +808,80 @@
         return;
       }
 
-      // เรียงข้อความตามเวลาส่งจริงเพื่อให้เนื้อหาเรียงลำดับถูกต้องตามหน้าจอ
       items.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+      
+      Swal.fire({
+        title: 'กำลังเตรียมข้อมูลแชร์...',
+        html: 'ระบบกำลังดึงไฟล์มีเดียจากคลาวด์เพื่อเตรียมส่งออกไปยังแอปพลิเคชันปลายทางครับ...',
+        allowOutsideClick: false,
+        didOpen: () => { Swal.showLoading(); }
+      });
 
       let plainTexts = [];
-
-      for (let msg of items) {
-        if (msg.deleted) continue;
-        
-        if (msg.type === 'text') {
-          plainTexts.push(`[${msg.senderName}]: ${msg.content}`);
-        } else if (msg.type === 'sticker') {
-          plainTexts.push(`[สติ๊กเกอร์จาก ${msg.senderName}]: ${msg.content}`);
-        } else if (['image', 'video', 'audio', 'file'].includes(msg.type)) {
-          let typeLabel = "ไฟล์แนบ";
-          if(msg.type === 'image') typeLabel = "รูปภาพ";
-          if(msg.type === 'video') typeLabel = "วิดีโอ";
-          if(msg.type === 'audio') typeLabel = "ข้อความเสียง";
-          
-          plainTexts.push(`[${typeLabel}จาก ${msg.senderName}]: ${msg.filename || 'เปิดดูออนไลน์'}\n🔗 ลิงก์ไฟล์: ${msg.content}`);
-        }
-      }
-
-      // เชื่อมข้อความแต่ละข้อความเข้าด้วยกัน โดยเว้นช่องว่างอย่างเป็นระบบเพื่อการอ่านง่าย
-      let compiledShareText = plainTexts.join('\n\n');
+      let shareFilesArray = [];
 
       try {
+        for (let msg of items) {
+          if (msg.deleted) continue;
+          
+          if (msg.type === 'text') {
+            plainTexts.push(`[${msg.senderName}]: ${msg.content}`);
+          } else if (msg.type === 'sticker') {
+            plainTexts.push(`[สติ๊กเกอร์จาก ${msg.senderName}]: ${msg.content}`);
+          } else if (['image', 'video', 'audio', 'file'].includes(msg.type)) {
+            let typeLabel = "ไฟล์แนบ";
+            if(msg.type === 'image') typeLabel = "รูปภาพ";
+            if(msg.type === 'video') typeLabel = "วิดีโอ";
+            if(msg.type === 'audio') typeLabel = "ข้อความเสียง";
+            
+            let filename = msg.filename || (msg.type === 'audio' ? 'voice_message.mp3' : msg.type === 'video' ? 'video_message.mp4' : 'file');
+            plainTexts.push(`[${typeLabel}จาก ${msg.senderName}]: ${filename}\n🔗 ลิงก์ไฟล์: ${msg.content}`);
+            
+            // ถ้ามี fileId จะทำดาวน์โหลดไฟล์จริงมาเก็บเป็น Blob แล้วแปลงใส่เป็น File Object ลงในอาร์เรย์เตรียมแชร์
+            if (msg.fileId) {
+              try {
+                const blobData = await fetchFileBlobFromBackend(msg.fileId);
+                const fileObj = new File([blobData], filename, { type: blobData.type });
+                shareFilesArray.push(fileObj);
+              } catch(mediaErr) {
+                console.error("ไม่สามารถดึงไฟล์ลงอาร์เรย์แชร์ได้: ", mediaErr);
+              }
+            }
+          }
+        }
+
+        let compiledShareText = plainTexts.join('\n\n');
+        Swal.close();
+
+        // เริ่มขั้นตอนการเปิด Web Share API ประจำเครื่องอุปกรณ์
         if (navigator.share) {
-          await navigator.share({
-            title: 'แชร์ข้อความจาก Parakit Chat',
+          let shareData = {
+            title: 'แชร์ข้อมูลจาก Parakit Chat',
             text: compiledShareText
-          });
+          };
+          
+          // ตรวจสอบความพร้อมและแนบไฟล์จริง (รองรับทั้ง รูปภาพ, วีดิโอ, ไฟล์เสียง) เข้าสู่หน้าต่างแชร์
+          if (shareFilesArray.length > 0 && navigator.canShare && navigator.canShare({ files: shareFilesArray })) {
+            shareData.files = shareFilesArray;
+          }
+          
+          await navigator.share(shareData);
         } else {
           throw new Error("ระบบปฏิบัติการนี้ไม่มี Web Share API");
         }
       } catch (shareErr) {
-        // กรณีเปิดบนเบราว์เซอร์คอมพิวเตอร์ หรืออุปกรณ์ที่ API ถูกบล็อก จะใช้วิธีคัดลอกลงคลิปบอร์ดแทนทันที
-        navigator.clipboard.writeText(compiledShareText);
-        Swal.fire('คัดลอกสำเร็จ', 'เบราว์เซอร์หรืออุปกรณ์นี้ไม่สนับสนุนการแชร์แอพตรง ระบบคัดลอกข้อความทั้งหมดพร้อมเว้นบรรทัดและอิโมจิลงคลิปบอร์ดให้แทนแล้ว นำไปวางส่งในแอปอื่นได้เลยครับ', 'success');
+        // หากอุปกรณ์ปลายทางไม่เอื้ออำนวยให้แชร์ไฟล์ตรงๆ ระบบจะคัดลอกลิ้งก์และข้อความลง Clipboard ให้ทันทีแทนครับ
+        let plainTextsBackup = [];
+        for (let msg of items) {
+          if (msg.deleted) continue;
+          if (msg.type === 'text') plainTextsBackup.push(`[${msg.senderName}]: ${msg.content}`);
+          else if (msg.type === 'sticker') plainTextsBackup.push(`[สติ๊กเกอร์จาก ${msg.senderName}]: ${msg.content}`);
+          else plainTextsBackup.push(`[ไฟล์จาก ${msg.senderName}]: ${msg.filename || 'เปิดดูออนไลน์'}\n🔗 ลิงก์: ${msg.content}`);
+        }
+        navigator.clipboard.writeText(plainTextsBackup.join('\n\n'));
+        Swal.fire('คัดลอกสำเร็จ', 'อุปกรณ์ไม่รองรับการแชร์ไฟล์สด ระบบคัดลอกข้อความและลิงก์มีเดียลงคลิปบอร์ดให้แทนแล้ว นำไปวางส่งต่อได้เลยครับ', 'success');
       }
       
-      // ปิดโหมดเลือกรายการอัตโนมัติหลังจากประมวลผลคำสั่งเสร็จสิ้น
       document.getElementById('btn-toggle-multi-select').click();
     }
 
@@ -873,7 +964,7 @@
             push(ref(db, 'global_messages'), {
               senderName: currentUser.displayName,
               senderAvatar: currentUser.avatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png',
-              type: 'audio', content: finalUrl, fileId: result.fileId, timestamp: Date.now(), deleted: false
+              type: 'audio', content: finalUrl, filename: `audio_${localTimestamp}.mp3`, fileId: result.fileId, timestamp: Date.now(), deleted: false
             });
           }
         } catch (e) { console.error(e); }
@@ -894,25 +985,34 @@
 
     window.initAudioTracker = function(audioElement, durationId) {
       const formatTime = (timeInSeconds) => {
+        if (isNaN(timeInSeconds) || !isFinite(timeInSeconds)) return "0:00";
         const mins = Math.floor(timeInSeconds / 60);
         const secs = Math.floor(timeInSeconds % 60);
         return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
       };
 
-      audioElement.addEventListener('loadedmetadata', () => {
+      const el = document.getElementById(durationId);
+
+      const updateDuration = () => {
         audioElement.totalVoiceDuration = audioElement.duration || 0;
-        document.getElementById(durationId).innerText = formatTime(audioElement.totalVoiceDuration);
-      });
+        if (el) el.innerText = formatTime(audioElement.totalVoiceDuration);
+      };
+
+      if (audioElement.readyState >= 1) {
+        updateDuration();
+      } else {
+        audioElement.addEventListener('loadedmetadata', updateDuration);
+      }
 
       audioElement.addEventListener('timeupdate', () => {
         const duration = audioElement.totalVoiceDuration || audioElement.duration || 0;
         const remain = Math.max(0, duration - audioElement.currentTime);
-        document.getElementById(durationId).innerText = formatTime(remain);
+        if (el) el.innerText = formatTime(remain);
       });
 
       audioElement.addEventListener('ended', () => {
         const duration = audioElement.totalVoiceDuration || audioElement.duration || 0;
-        document.getElementById(durationId).innerText = formatTime(duration);
+        if (el) el.innerText = formatTime(duration);
       });
     };
 
@@ -929,7 +1029,7 @@
           if (el) {
             let srcData = result.base64;
             if(!srcData.startsWith('data:')) {
-              srcData = "data:" + (result.mimeType || 'audio/mp3') + ";base64," + srcData;
+              srcData = "data:" + (result.mimeType || (type === 'video' ? 'video/mp4' : 'audio/mp3')) + ";base64," + srcData;
             }
             el.src = srcData;
             if (type === 'audio') {
@@ -1391,7 +1491,7 @@
           <img src="${msg.content}" class="max-w-[160px] sm:max-w-[200px] rounded-xl object-cover border border-white/20 shadow-md">
           <span class="text-[10px] text-emerald-400 mt-1 font-medium bg-slate-900/60 px-2 py-0.5 rounded-full"><i class="fa-solid fa-spinner animate-spin mr-1"></i>กำลังบีบอัดและส่งรูป...</span>
         </div>`;
-      else if(msg.type === 'optimistic-video') inner = `<div class="p-3 rounded-2xl bg-white border text-xs flex items-center gap-2 text-slate-500 shadow-sm"><i class="fa-solid fa-spinner animate-spin text-green-500"></i> กำลังอัปโหลดวิดีโอ...</div>`;
+      else if(msg.type === 'optimistic-video') inner = `<div class="p-3 rounded-2xl bg-white border text-xs flex items-center gap-2 text-slate-500 shadow-sm"><i class="fa-solid fa-spinner animate-spin text-green-500"></i> กำลังอัปโหลดวิดีโอ (ไม่เกิน 3 นาที)...</div>`;
       else if(msg.type === 'optimistic-file') inner = `<div class="p-3 rounded-2xl bg-white border text-xs flex items-center gap-2 text-slate-500 shadow-sm"><i class="fa-solid fa-spinner animate-spin text-green-500"></i> กำลังอัปโหลดไฟล์: ${msg.filename}</div>`;
       
       row.innerHTML = inner;
@@ -1687,7 +1787,7 @@
                 <img src="${msg.content}" class="max-w-[160px] sm:max-w-[200px] rounded-xl object-cover cursor-pointer border border-white/20 shadow-md transform hover:scale-[1.02] transition-all select-none" referrerpolicy="no-referrer" onerror="this.src='https://cdn-icons-png.flaticon.com/512/16/16410.png'; this.className='w-12 h-12 opacity-50';" onclick="window.openImageInZoomViewer('${msg.content}')">
                 <div class="flex items-center gap-1.5 mt-1 w-full justify-center">
                   <a href="https://drive.google.com/file/d/${msg.fileId || ''}/view" target="_blank" class="px-2 py-1 bg-slate-800/80 hover:bg-slate-900 text-[10px] text-white rounded-md font-medium transition-colors flex items-center gap-1 shadow-sm"><i class="fa-regular fa-eye"></i> ดูไฟล์</a>
-                  <button onclick="directDownloadFromDrive('${msg.fileId || ''}', '${msg.filename || 'image.png'}')" class="px-2 py-1 bg-green-600 hover:bg-green-700 text-[10px] text-white rounded-md font-medium transition-colors flex items-center gap-1 shadow-sm"><i class="fa-solid fa-download"></i> ดาวน์โหลด</button>
+                  <button onclick="directDownloadFromDrive('${msg.fileId || ''}', '${msg.filename || 'image.jpg'}')" class="px-2 py-1 bg-green-600 hover:bg-green-700 text-[10px] text-white rounded-md font-medium transition-colors flex items-center gap-1 shadow-sm"><i class="fa-solid fa-download"></i> ดาวน์โหลด</button>
                 </div>
               `;
               bubble.style.padding = '0'; bubble.style.background = 'none'; bubble.style.boxShadow = 'none';
@@ -1696,9 +1796,9 @@
               const videoId = `video_el_${key}`;
               bubble.innerHTML = `
                 <div class="relative max-w-[240px] rounded-xl overflow-hidden border border-white/20 shadow-md bg-black group/video">
-                  <video id="${videoId}" controls preload="metadata" class="w-full h-full"></video>
-                  <div id="loading_video_${key}" class="absolute inset-0 flex items-center justify-center bg-black/60 text-white text-[11px] gap-2">
-                    <i class="fa-solid fa-spinner animate-spin text-green-400"></i> กำลังประมวลผลวิดีโอ...
+                  <video id="${videoId}" controls preload="metadata" class="w-full max-h-[300px]"></video>
+                  <div id="loading_video_${key}" class="absolute inset-0 flex items-center justify-center bg-black/60 text-white text-[11px] gap-2 p-2 text-center">
+                    <i class="fa-solid fa-spinner animate-spin text-green-400"></i> กำลังโหลดสตรีมวิดีโอ...
                   </div>
                 </div>
                 <div class="flex items-center gap-1.5 mt-1 w-full justify-start">
@@ -1719,6 +1819,9 @@
                     <span class="text-[10px] text-slate-400 font-bold">ข้อความเสียง</span>
                     <span id="${durationId}" class="text-xs font-semibold text-slate-700"><i class="fa-solid fa-spinner animate-spin text-emerald-500 mr-1"></i>กำลังโหลด...</span>
                   </div>
+                </div>
+                <div class="flex items-center gap-1.5 mt-1 w-full justify-start">
+                  <button onclick="directDownloadFromDrive('${msg.fileId || ''}', '${msg.filename || 'audio.mp3'}')" class="px-2 py-0.5 bg-green-600/10 hover:bg-green-600/20 text-[10px] text-green-600 rounded-md font-semibold transition-colors flex items-center gap-1"><i class="fa-solid fa-download"></i> เซฟเสียง</button>
                 </div>
               `;
               bubble.style.padding = '0'; bubble.style.background = 'none'; bubble.style.boxShadow = 'none';
