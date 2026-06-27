@@ -133,7 +133,7 @@
       background: rgba(0, 0, 0, 0.3);
       display: flex;
       align-items: center;
-      justify-center: center;
+      justify-content: center;
       transition: all 0.3s ease;
       cursor: pointer;
     }
@@ -158,6 +158,21 @@
       transform: scale(1.15);
       background: #10b981;
       border-color: #10b981;
+    }
+
+    /* Reply Message Box style */
+    .reply-preview-container {
+      background: #f1f5f9;
+      border-left: 4px solid #10b981;
+      border-radius: 8px;
+    }
+    .message-reply-quote {
+      background: rgba(0, 0, 0, 0.05);
+      border-left: 3px solid rgba(0, 0, 0, 0.2);
+    }
+    .self .message-reply-quote {
+      background: rgba(255, 255, 255, 0.25);
+      border-left: 3px solid rgba(255, 255, 255, 0.5);
     }
   </style>
 </head>
@@ -259,6 +274,18 @@
     </div>
 
     <div class="p-3 bg-white border-t border-slate-200/80 flex flex-col gap-2 shadow-inner shrink-0 relative pb-safe">
+      
+      <div id="reply-preview-bar" class="hidden flex items-center justify-between p-2 mb-1 reply-preview-container text-slate-700">
+        <div class="flex items-center gap-2 overflow-hidden mr-2">
+          <i class="fa-solid fa-reply text-xs text-green-500 shrink-0"></i>
+          <div class="text-xs overflow-hidden truncate">
+            <span class="font-bold text-slate-600" id="reply-target-user">User</span>
+            <p class="text-slate-400 truncate text-[11px]" id="reply-target-text">Message Content</p>
+          </div>
+        </div>
+        <button id="btn-cancel-reply" class="text-slate-400 hover:text-rose-500 p-1 px-2"><i class="fa-solid fa-xmark text-sm"></i></button>
+      </div>
+
       <div class="flex items-center justify-between px-1">
         <div class="flex items-center gap-4 text-slate-500 w-full justify-between">
           <div class="flex items-center gap-4">
@@ -327,7 +354,7 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwWf4VvC0Anar83PbJPRRjKgoaFCfAp83ndv8YTIzG5ydQeYaax6tizOBk51NAWqAoa/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzh8HQ9mg6uRDnECY_CW4Wo4kshdBmUJAWI0JVVNKmmP2JIMunqWyJR_ii15rIitHb8/exec";
     let currentUser = null;
     let activeTempUploads = {}; 
     let globalAvatarMap = {}; 
@@ -342,6 +369,7 @@
 
     let queueFilesToUpload = []; 
     let selectedMessageItems = {}; 
+    let currentReplyData = null; // ตัวแปรเก็บสถานะการ Reply ข้อความ
 
     const emojis = ["😀","😂","🥰","😎","🤩","😏","👍","👌","🙏","🎉","🔥","❤️","😭","😱","😡","🤫","💩","✨","👀","💯","🎂","🚀","👏","🥳","🥺","💔","💖","🌟","🍀","🍺","☕️","🍙","🎮","🐱","🐶","🦊","👑","💸","ชิว","เซ็ง","สู้ๆ","งอน"];
     const stickers = [
@@ -462,6 +490,7 @@
       document.getElementById('btn-forgot-pwd').addEventListener('click', handleForgotPwd);
       document.getElementById('btn-open-settings').addEventListener('click', openSettingsModal);
       document.getElementById('btn-send').addEventListener('click', sendTextMessage);
+      document.getElementById('btn-cancel-reply').addEventListener('click', cancelMessageReply);
       
       const msgInput = document.getElementById('msg-input');
       msgInput.addEventListener('keydown', (e) => {
@@ -715,11 +744,18 @@
           if(isVideo) dbMsgType = 'video';
           if(isAudio) dbMsgType = 'audio';
 
-          push(ref(db, 'global_messages'), {
+          let payload = {
             senderName: currentUser.displayName,
             senderAvatar: currentUser.avatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png',
             type: dbMsgType, content: finalUrl, filename: finalFilename, fileId: fileDriveId, timestamp: Date.now(), deleted: false
-          });
+          };
+
+          if(currentReplyData) {
+            payload.replyTo = currentReplyData;
+            cancelMessageReply();
+          }
+
+          push(ref(db, 'global_messages'), payload);
         } else {
           Swal.fire('อัปโหลดล้มเหลว', result.message || 'เกิดข้อผิดพลาดจากเซิร์ฟเวอร์หลังบ้านครับ', 'error');
         }
@@ -823,7 +859,6 @@
       });
     }
 
-    // ฟังก์ชันช่วยดึงข้อมูลไฟล์ออกมาเป็น Blob Object เพื่อทำการส่งแชร์เข้า Web Share API
     async function fetchFileBlobFromBackend(fileId) {
       let res = await fetch(SCRIPT_URL, {
         method: 'POST',
@@ -880,7 +915,6 @@
             let filename = msg.filename || (msg.type === 'audio' ? 'voice_message.mp3' : msg.type === 'video' ? 'video_message.mp4' : 'file');
             plainTexts.push(`[${typeLabel}จาก ${msg.senderName}]: ${filename}\n🔗 ลิงก์ไฟล์: ${msg.content}`);
             
-            // ถ้ามี fileId จะทำดาวน์โหลดไฟล์จริงมาเก็บเป็น Blob แล้วแปลงใส่เป็น File Object ลงในอาร์เรย์เตรียมแชร์
             if (msg.fileId) {
               try {
                 const blobData = await fetchFileBlobFromBackend(msg.fileId);
@@ -896,14 +930,12 @@
         let compiledShareText = plainTexts.join('\n\n');
         Swal.close();
 
-        // เริ่มขั้นตอนการเปิด Web Share API ประจำเครื่องอุปกรณ์
         if (navigator.share) {
           let shareData = {
             title: 'แชร์ข้อมูลจาก Parakit Chat',
             text: compiledShareText
           };
           
-          // ตรวจสอบความพร้อมและแนบไฟล์จริง (รองรับทั้ง รูปภาพ, วีดิโอ, ไฟล์เสียง) เข้าสู่หน้าต่างแชร์
           if (shareFilesArray.length > 0 && navigator.canShare && navigator.canShare({ files: shareFilesArray })) {
             shareData.files = shareFilesArray;
           }
@@ -913,7 +945,6 @@
           throw new Error("ระบบปฏิบัติการนี้ไม่มี Web Share API");
         }
       } catch (shareErr) {
-        // หากอุปกรณ์ปลายทางไม่เอื้ออำนวยให้แชร์ไฟล์ตรงๆ ระบบจะคัดลอกลิ้งก์และข้อความลง Clipboard ให้ทันทีแทนครับ
         let plainTextsBackup = [];
         for (let msg of items) {
           if (msg.deleted) continue;
@@ -1004,11 +1035,19 @@
           let result = await res.json();
           if (result.status === 'success') {
             let finalUrl = result.viewUrl || result.url;
-            push(ref(db, 'global_messages'), {
+
+            let payload = {
               senderName: currentUser.displayName,
               senderAvatar: currentUser.avatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png',
               type: 'audio', content: finalUrl, filename: `audio_${localTimestamp}.mp3`, fileId: result.fileId, timestamp: Date.now(), deleted: false
-            });
+            };
+
+            if(currentReplyData) {
+              payload.replyTo = currentReplyData;
+              cancelMessageReply();
+            }
+
+            push(ref(db, 'global_messages'), payload);
           }
         } catch (e) { console.error(e); }
         delete activeTempUploads[uploadId];
@@ -1026,7 +1065,6 @@
       return html;
     }
 
-    // แก้ไขฟังก์ชันแสดงผลเวลาของไฟล์เสียงให้ถูกต้อง แม่นยำ ไม่เพี้ยนเป็น NaN หรือ 0:00 ครับ
     window.initAudioTracker = function(audioElement, durationId) {
       const formatTime = (timeInSeconds) => {
         if (isNaN(timeInSeconds) || !isFinite(timeInSeconds)) return "0:00";
@@ -1042,14 +1080,12 @@
         if (el) el.innerText = formatTime(audioElement.totalVoiceDuration);
       };
 
-      // เช็กสถานะของตัว Audio Element ทันที
       if (audioElement.readyState >= 1) {
         updateDuration();
       } else {
         audioElement.addEventListener('loadedmetadata', updateDuration);
       }
 
-      // ตรวจสอบเหตุการณ์เพิ่มเติมเพื่อความรวดเร็วบน Mobile Browser
       audioElement.addEventListener('durationchange', updateDuration);
 
       audioElement.addEventListener('timeupdate', () => {
@@ -1106,6 +1142,102 @@
       }
     };
 
+    // ฟังก์ชันย้ายหน้าจอไปหาข้อความเป้าหมายเมื่อคลิกข้อความอ้างอิง Reply
+    window.scrollToMessageAnchor = function(msgKey) {
+      const targetElement = document.getElementById(`msg_anchor_${msgKey}`);
+      if (targetElement) {
+        targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        targetElement.classList.add('ring-4', 'ring-green-400', 'transition-all');
+        setTimeout(() => {
+          targetElement.classList.remove('ring-4', 'ring-green-400');
+        }, 1500);
+      } else {
+        Swal.fire('ข้อมูลระบบ', 'ข้อความดั้งเดิมรายการนี้ เก่าเกินไปหรือถูกลบออกไปแล้วครับ', 'info');
+      }
+    };
+
+    // เปิดโหมด Reply บันทึกสถานะข้อความอ้างอิง
+    window.initiateMessageReplyMode = function(key, sender, contentText, type) {
+      let previewText = contentText || "";
+      if(type === 'image') previewText = "🖼️ รูปภาพ";
+      if(type === 'video') previewText = "🎬 วิดีโอ";
+      if(type === 'audio') previewText = "🎵 ข้อความเสียง";
+      if(type === 'file') previewText = "📁 ไฟล์เอกสาร";
+      if(type === 'sticker') previewText = "✨ สติ๊กเกอร์";
+
+      currentReplyData = {
+        msgKey: key,
+        senderName: sender,
+        text: previewText
+      };
+
+      document.getElementById('reply-target-user').innerText = `ตอบกลับคุณ ${sender}`;
+      document.getElementById('reply-target-text').innerText = previewText;
+      document.getElementById('reply-preview-bar').classList.remove('hidden');
+      document.getElementById('msg-input').focus();
+      forceScrollToBottom();
+    };
+
+    function cancelMessageReply() {
+      currentReplyData = null;
+      document.getElementById('reply-preview-bar').classList.add('hidden');
+    }
+
+    // ฟังก์ชันแก้ไขชื่อตัวเอง Realtime ลง Google Sheet
+    async function handleUpdateDisplayName() {
+      const { value: newName } = await Swal.fire({
+        title: 'เปลี่ยนชื่อเล่นในระบบแชท',
+        input: 'text',
+        inputLabel: 'ระบุชื่อเล่นใหม่ที่คุณต้องการใช้งานจริง',
+        inputValue: currentUser.displayName,
+        placeholder: 'ระบุชื่อเล่นที่นี่...',
+        showCancelButton: true,
+        confirmButtonText: 'บันทึกและเปลี่ยนชื่อ',
+        confirmButtonColor: '#10b981',
+        cancelButtonText: 'ยกเลิก',
+        cancelButtonColor: '#64748b',
+        customClass: { title: 'swal-premium-title', htmlContainer: 'swal-premium-html', popup: 'rounded-3xl' },
+        inputValidator: (value) => {
+          if (!value || !value.trim()) {
+            return 'กรุณาระบุชื่อเล่นใหม่ ห้ามปล่อยว่างครับ!';
+          }
+          if (value.trim().length > 25) {
+            return 'ชื่อเล่นยาวเกินไป จำกัดไม่เกิน 25 ตัวอักษรครับ';
+          }
+        }
+      });
+
+      if (newName && newName.trim() !== currentUser.displayName) {
+        const cleanNewName = newName.trim();
+        Swal.fire({ title: 'กำลังอัปเดตชื่อ Realtime...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        
+        try {
+          let res = await fetch(SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'updateDisplayName', username: currentUser.username, newDisplayName: cleanNewName })
+          });
+          let result = await res.json();
+          
+          if(result.status === 'success') {
+            currentUser.displayName = cleanNewName;
+            localStorage.setItem('parakit_chat_user', JSON.stringify(currentUser));
+            document.getElementById('my-display-name').innerText = cleanNewName;
+            
+            // อัปเดต Presence สเตตัสฝั่ง Firebase ทันทีแบบ Realtime
+            const myPresenceRef = ref(db, `status/${currentUser.username}`);
+            await update(myPresenceRef, { displayName: cleanNewName, lastActive: Date.now() });
+            
+            await syncAvatarsFromServer();
+            Swal.fire({ title: 'สำเร็จครับ!', text: 'เปลี่ยนชื่อเล่นในระบบเรียบร้อยแล้วแบบ Realtime', icon: 'success', timer: 1500, showConfirmButton: false });
+          } else {
+            Swal.fire('ผิดพลาด', result.message || 'ระบบไม่สามารถเข้าจัดระเบียบข้อมูลบน Sheet ได้', 'error');
+          }
+        } catch(err) {
+          Swal.fire('เครือข่ายขัดข้อง', 'ไม่สามารถเชื่อมต่อ Google API ได้', 'error');
+        }
+      }
+    }
+
     async function openSettingsModal() {
       Swal.fire({
         title: '⚙️ ควบคุมและการตั้งค่าระบบ',
@@ -1115,6 +1247,13 @@
             <div class="grid grid-cols-1 gap-3">
               <div class="swal-settings-card p-3 rounded-2xl flex flex-col gap-2">
                 <span class="text-xs font-bold text-slate-500 tracking-wide px-1"><i class="fa-solid fa-wand-magic-sparkles text-emerald-500 mr-1"></i> ความสวยงามและหน้าจอ</span>
+                <button id="swal-menu-editname" class="w-full flex items-center justify-between p-3 bg-white/80 hover:bg-blue-50 rounded-xl text-xs font-semibold text-slate-700 transition-all border border-slate-200/60 shadow-sm group">
+                  <div class="flex items-center gap-3.5">
+                    <div class="w-7 h-7 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 group-hover:bg-blue-200 transition-all"><i class="fa-solid fa-user-pen text-sm"></i></div>
+                    <span>เปลี่ยนชื่อเล่นตัวเอง Realtime (Display Name)</span>
+                  </div>
+                  <i class="fa-solid fa-chevron-right text-slate-400 text-[10px]"></i>
+                </button>
                 <button id="swal-menu-bg" class="w-full flex items-center justify-between p-3 bg-white/80 hover:bg-emerald-50 rounded-xl text-xs font-semibold text-slate-700 transition-all border border-slate-200/60 shadow-sm group">
                   <div class="flex items-center gap-3.5">
                     <div class="w-7 h-7 bg-emerald-100 rounded-lg flex items-center justify-center text-emerald-600 group-hover:bg-emerald-200 transition-all"><i class="fa-solid fa-image text-sm"></i></div>
@@ -1150,6 +1289,7 @@
         showConfirmButton: false, showCancelButton: true, cancelButtonText: 'ปิดเมนูการตั้งค่า', cancelButtonColor: '#64748b', showCloseButton: true,
         customClass: { title: 'swal-premium-title', htmlContainer: 'swal-premium-html', popup: 'rounded-3xl max-w-sm' },
         didOpen: () => {
+          document.getElementById('swal-menu-editname').addEventListener('click', () => { Swal.close(); handleUpdateDisplayName(); });
           document.getElementById('swal-menu-bg').addEventListener('click', () => { Swal.close(); document.getElementById('bg-input').click(); });
           document.getElementById('swal-menu-clear').addEventListener('click', () => { Swal.close(); document.getElementById('chat-body').innerHTML = ''; Swal.fire({ title: 'สำเร็จ', text: 'ล้างหน้าจอภายในแอปพลิเคชันสำหรับคุณแล้วครับ', icon: 'success', timer: 1500, showConfirmButton: false }); });
           document.getElementById('swal-menu-deleteall').addEventListener('click', () => { Swal.close(); handleAdminDeleteMessages(); });
@@ -1451,7 +1591,7 @@
             document.getElementById('my-avatar-img').src = directUrl;
             localStorage.setItem('parakit_chat_user', JSON.stringify(currentUser));
             
-          await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'updateAvatar', username: currentUser.username, avatarUrl: directUrl }) });
+            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'updateAvatar', username: currentUser.username, avatarUrl: directUrl }) });
             globalAvatarMap[currentUser.displayName] = directUrl;
             Swal.fire({ title: 'สำเร็จ!', text: 'เปลี่ยนรูปโปรไฟล์ผ่านคลาวด์ไดร์ฟเรียบร้อยครับ', icon: 'success', confirmButtonColor: '#10b981' });
             renderAllMessagesWithTemps(false);
@@ -1510,21 +1650,37 @@
       const localTimestamp = Date.now();
       input.value = '';
       input.style.height = 'auto';
-      push(ref(db, 'global_messages'), {
+
+      let payload = {
         senderName: currentUser.displayName,
         senderAvatar: currentUser.avatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png',
         type: 'text', content: text, timestamp: localTimestamp, deleted: false
-      });
+      };
+
+      if(currentReplyData) {
+        payload.replyTo = currentReplyData;
+        cancelMessageReply(); // เคลียร์สถานะ Reply ทันทีหลังแนบส่ง
+      }
+
+      push(ref(db, 'global_messages'), payload);
     }
 
     function sendSticker(url) {
       const localTimestamp = Date.now();
       document.getElementById('sticker-picker').classList.add('hidden');
-      push(ref(db, 'global_messages'), {
+
+      let payload = {
         senderName: currentUser.displayName,
         senderAvatar: currentUser.avatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png',
         type: 'sticker', content: url, timestamp: localTimestamp, deleted: false
-      });
+      };
+
+      if(currentReplyData) {
+        payload.replyTo = currentReplyData;
+        cancelMessageReply();
+      }
+
+      push(ref(db, 'global_messages'), payload);
     }
 
     function createTempRow(msg) {
@@ -1652,7 +1808,7 @@
       });
     };
 
-    function bindMessageActionEvents(element, msgKey, msgFileId, textContent) {
+    function bindMessageActionEvents(element, msgKey, msgFileId, textContent, msgSender, msgType) {
       let touchTimer = null;
       
       const showActionMenu = () => {
@@ -1664,7 +1820,18 @@
         cm.className = 'custom-cm flex flex-col gap-2 text-center items-center justify-center';
         
         let menuHTML = `<h4 class="text-xs font-bold text-slate-400 mb-1 border-b pb-1 w-full tracking-wide">จัดการข้อความ</h4>`;
-        if (textContent !== null && textContent !== undefined) {
+        
+        // เมนูตอบกลับข้อความ (ฝังรวมในแถบ Context Menu ตัวเดิม)
+        const isDeleted = element.classList.contains('msg-deleted');
+        if(!isDeleted) {
+          menuHTML += `
+            <button id="cm-reply" class="w-full text-center flex items-center justify-center gap-2 px-3 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-semibold transition-all border border-slate-200/60">
+              <i class="fa-solid fa-reply text-sm text-green-500"></i> ตอบกลับข้อความ
+            </button>
+          `;
+        }
+
+        if (textContent !== null && textContent !== undefined && !isDeleted) {
           menuHTML += `
             <button id="cm-copy" class="w-full text-center flex items-center justify-center gap-2 px-3 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-semibold transition-all border border-slate-200/60">
               <i class="fa-regular fa-copy text-sm text-blue-500"></i> คัดลอกข้อความ
@@ -1673,7 +1840,7 @@
         }
         
         const isMyMsg = element.closest('.msg-row').classList.contains('self');
-        if(isMyMsg) {
+        if(isMyMsg && !isDeleted) {
           menuHTML += `
             <button id="cm-delete" class="w-full text-center flex items-center justify-center gap-2 px-3 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl text-xs font-semibold transition-all border border-rose-200/40">
               <i class="fa-solid fa-trash-can text-sm"></i> ยกเลิกการส่งข้อความ
@@ -1688,6 +1855,14 @@
         `;
         
         cm.innerHTML = menuHTML;
+
+        if(cm.querySelector('#cm-reply')) {
+          cm.querySelector('#cm-reply').addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            cm.remove();
+            window.initiateMessageReplyMode(msgKey, msgSender, textContent, msgType);
+          });
+        }
         
         if(cm.querySelector('#cm-copy')) {
           cm.querySelector('#cm-copy').addEventListener('click', (ev) => {
@@ -1760,7 +1935,6 @@
       });
     };
 
-    // ปรับปรุงประสิทธิภาพฟังก์ชัน Render ข้อความ และตกแต่ง UI เครื่องเล่นวิดีโอให้โมเดิร์น
     function renderAllMessagesWithTemps(forceScrollToBottomFlag = false) {
       const body = document.getElementById('chat-body');
       
@@ -1795,6 +1969,9 @@
           const row = document.createElement('div');
           row.className = `msg-row flex gap-2 sm:gap-3 max-w-[90%] sm:max-w-[80%] w-fit relative items-end group mb-2 ${isSelf ? 'self flex-row-reverse ml-auto' : 'other mr-auto text-left'}`;
           
+          // ตั้ง ID ยึดหลักสำหรับการกระโดด Anchor ของปุ่ม Reply
+          row.id = `msg-row-item-${key}`;
+
           const isChecked = selectedMessageItems[key] ? 'checked' : '';
           
           const checkBoxEl = document.createElement('input');
@@ -1817,11 +1994,23 @@
           const wrapper = document.createElement('div');
           wrapper.className = 'msg-content-wrapper flex flex-col overflow-hidden';
           
+          // ตั้งไอดี Anchor ตรงกล่องครอบคลุมเนื้อหาหลัก
+          wrapper.id = `msg_anchor_${key}`;
+
           if(!isSelf) {
             const nameSpan = document.createElement('span');
             nameSpan.className = 'msg-name text-[11px] text-slate-400 font-medium mb-1 px-1';
             nameSpan.innerText = msg.senderName;
             wrapper.appendChild(nameSpan);
+          }
+
+          // ตรวจสอบข้อมูล Reply อ้างอิงข้อความอื่น
+          if(msg.replyTo && !msg.deleted) {
+            const replyQuoteBox = document.createElement('div');
+            replyQuoteBox.className = `text-[11px] p-2 px-2.5 mb-1 rounded-xl message-reply-quote cursor-pointer truncate max-w-[260px] font-medium`;
+            replyQuoteBox.innerHTML = `<i class="fa-solid fa-quote-left mr-1 text-slate-400"></i> <strong class="opacity-80">${msg.replyTo.senderName}:</strong> ${msg.replyTo.text}`;
+            replyQuoteBox.onclick = () => window.scrollToMessageAnchor(msg.replyTo.msgKey);
+            wrapper.appendChild(replyQuoteBox);
           }
 
           const bubble = document.createElement('div');
@@ -1840,9 +2029,8 @@
                 </div>
               `;
               bubble.style.padding = '0'; bubble.style.background = 'none'; bubble.style.boxShadow = 'none';
-              bindMessageActionEvents(bubble, key, msg.fileId, null);
+              bindMessageActionEvents(bubble, key, msg.fileId, null, msg.senderName, msg.type);
             } else if(msg.type === 'video') {
-              // ออกแบบโครงสร้างแท็กวีดิโอระดับ Premium ใหม่ซ่อน Control เดิมและทำ Overlay Button แทน
               const videoId = `video_el_${key}`;
               bubble.innerHTML = `
                 <div class="video-premium-container">
@@ -1859,7 +2047,7 @@
                 </div>
               `;
               bubble.style.padding = '0'; bubble.style.background = 'none'; bubble.style.boxShadow = 'none';
-              bindMessageActionEvents(bubble, key, msg.fileId, null);
+              bindMessageActionEvents(bubble, key, msg.fileId, null, msg.senderName, msg.type);
               mediaToLoad.push({ fileId: msg.fileId, elementId: videoId, type: 'video', loadingId: `loading_video_${key}` });
             } else if(msg.type === 'audio') {
               const audioId = `audio_el_${key}`;
@@ -1878,12 +2066,12 @@
                 </div>
               `;
               bubble.style.padding = '0'; bubble.style.background = 'none'; bubble.style.boxShadow = 'none';
-              bindMessageActionEvents(bubble, key, msg.fileId, null);
+              bindMessageActionEvents(bubble, key, msg.fileId, null, msg.senderName, msg.type);
               mediaToLoad.push({ fileId: msg.fileId, elementId: audioId, type: 'audio', loadingId: null });
             } else if(msg.type === 'text') {
               bubble.innerHTML = linkify(msg.content);
               bubble.className += isSelf ? ' bg-[#7CE68E] text-slate-900 rounded-tr-none' : ' bg-white text-slate-800 rounded-tl-none';
-              bindMessageActionEvents(bubble, key, msg.fileId, msg.content); 
+              bindMessageActionEvents(bubble, key, msg.fileId, msg.content, msg.senderName, msg.type); 
             } else if(msg.type === 'file') {
               bubble.innerHTML = `
                 <div class="flex items-center gap-2 font-semibold text-slate-700 text-xs sm:text-sm break-all">
@@ -1895,11 +2083,11 @@
                 </div>
               `;
               bubble.className += ' bg-white text-slate-800 rounded-2xl shadow-sm';
-              bindMessageActionEvents(bubble, key, msg.fileId, null);
+              bindMessageActionEvents(bubble, key, msg.fileId, null, msg.senderName, msg.type);
             } else if(msg.type === 'sticker') {
               bubble.innerHTML = `<img src="${msg.content}" class="w-20 h-20 sm:w-24 sm:h-24 object-contain select-none">`;
               bubble.style.padding = '0'; bubble.style.background = 'none'; bubble.style.boxShadow = 'none';
-              bindMessageActionEvents(bubble, key, msg.fileId, null);
+              bindMessageActionEvents(bubble, key, msg.fileId, null, msg.senderName, msg.type);
             }
           }
 
