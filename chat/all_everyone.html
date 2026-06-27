@@ -354,7 +354,7 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzh8HQ9mg6uRDnECY_CW4Wo4kshdBmUJAWI0JVVNKmmP2JIMunqWyJR_ii15rIitHb8/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxB1XKdJMCllg3sTyBOjXC-QLS4CGo5BikVEmjInl1_8w9KfXPcTrvgfJVehAmbdYUW/exec";
     let currentUser = null;
     let activeTempUploads = {}; 
     let globalAvatarMap = {}; 
@@ -369,7 +369,7 @@
 
     let queueFilesToUpload = []; 
     let selectedMessageItems = {}; 
-    let currentReplyData = null; // ตัวแปรเก็บสถานะการ Reply ข้อความ
+    let currentReplyData = null;
 
     const emojis = ["😀","😂","🥰","😎","🤩","😏","👍","👌","🙏","🎉","🔥","❤️","😭","😱","😡","🤫","💩","✨","👀","💯","🎂","🚀","👏","🥳","🥺","💔","💖","🌟","🍀","🍺","☕️","🍙","🎮","🐱","🐶","🦊","👑","💸","ชิว","เซ็ง","สู้ๆ","งอน"];
     const stickers = [
@@ -1142,7 +1142,6 @@
       }
     };
 
-    // ฟังก์ชันย้ายหน้าจอไปหาข้อความเป้าหมายเมื่อคลิกข้อความอ้างอิง Reply
     window.scrollToMessageAnchor = function(msgKey) {
       const targetElement = document.getElementById(`msg_anchor_${msgKey}`);
       if (targetElement) {
@@ -1156,7 +1155,6 @@
       }
     };
 
-    // เปิดโหมด Reply บันทึกสถานะข้อความอ้างอิง
     window.initiateMessageReplyMode = function(key, sender, contentText, type) {
       let previewText = contentText || "";
       if(type === 'image') previewText = "🖼️ รูปภาพ";
@@ -1183,7 +1181,6 @@
       document.getElementById('reply-preview-bar').classList.add('hidden');
     }
 
-    // ฟังก์ชันแก้ไขชื่อตัวเอง Realtime ลง Google Sheet
     async function handleUpdateDisplayName() {
       const { value: newName } = await Swal.fire({
         title: 'เปลี่ยนชื่อเล่นในระบบแชท',
@@ -1223,7 +1220,6 @@
             localStorage.setItem('parakit_chat_user', JSON.stringify(currentUser));
             document.getElementById('my-display-name').innerText = cleanNewName;
             
-            // อัปเดต Presence สเตตัสฝั่ง Firebase ทันทีแบบ Realtime
             const myPresenceRef = ref(db, `status/${currentUser.username}`);
             await update(myPresenceRef, { displayName: cleanNewName, lastActive: Date.now() });
             
@@ -1482,7 +1478,7 @@
         if(result2.status === 'success') {
           Swal.fire({ title: 'สำเร็จ', text: 'เปลี่ยนรหัสผ่านในระบบสำเร็จเรียบร้อยแล้ว!', icon: 'success', confirmButtonColor: '#10b981' });
         } else { Swal.fire({ title: 'ล้มเหลว', text: result2.message, icon: 'error', confirmButtonColor: '#10b981' }); }
-      } catch(e) { Swal.fire({ title: 'ผิดพลาด', text: 'ระบบสั่งส่ง OTP ปฏิเสธการเชื่อมต่อ', icon: 'error', confirmButtonColor: '#10b981' }); }
+      } catch(e) { Swal.fire({ title: 'ผิดพลาด', text: 'ระบบสั่งส่ง OTP ปฏิเสยการเชื่อมต่อ', icon: 'error', confirmButtonColor: '#10b981' }); }
     }
 
     async function handleAdminDeleteMessages() {
@@ -1659,7 +1655,7 @@
 
       if(currentReplyData) {
         payload.replyTo = currentReplyData;
-        cancelMessageReply(); // เคลียร์สถานะ Reply ทันทีหลังแนบส่ง
+        cancelMessageReply();
       }
 
       push(ref(db, 'global_messages'), payload);
@@ -1821,7 +1817,6 @@
         
         let menuHTML = `<h4 class="text-xs font-bold text-slate-400 mb-1 border-b pb-1 w-full tracking-wide">จัดการข้อความ</h4>`;
         
-        // เมนูตอบกลับข้อความ (ฝังรวมในแถบ Context Menu ตัวเดิม)
         const isDeleted = element.classList.contains('msg-deleted');
         if(!isDeleted) {
           menuHTML += `
@@ -1969,7 +1964,6 @@
           const row = document.createElement('div');
           row.className = `msg-row flex gap-2 sm:gap-3 max-w-[90%] sm:max-w-[80%] w-fit relative items-end group mb-2 ${isSelf ? 'self flex-row-reverse ml-auto' : 'other mr-auto text-left'}`;
           
-          // ตั้ง ID ยึดหลักสำหรับการกระโดด Anchor ของปุ่ม Reply
           row.id = `msg-row-item-${key}`;
 
           const isChecked = selectedMessageItems[key] ? 'checked' : '';
@@ -1994,7 +1988,6 @@
           const wrapper = document.createElement('div');
           wrapper.className = 'msg-content-wrapper flex flex-col overflow-hidden';
           
-          // ตั้งไอดี Anchor ตรงกล่องครอบคลุมเนื้อหาหลัก
           wrapper.id = `msg_anchor_${key}`;
 
           if(!isSelf) {
@@ -2004,7 +1997,6 @@
             wrapper.appendChild(nameSpan);
           }
 
-          // ตรวจสอบข้อมูล Reply อ้างอิงข้อความอื่น
           if(msg.replyTo && !msg.deleted) {
             const replyQuoteBox = document.createElement('div');
             replyQuoteBox.className = `text-[11px] p-2 px-2.5 mb-1 rounded-xl message-reply-quote cursor-pointer truncate max-w-[260px] font-medium`;
@@ -2016,9 +2008,35 @@
           const bubble = document.createElement('div');
           bubble.className = 'msg-bubble p-2.5 px-3.5 sm:p-3 sm:px-4 rounded-2xl text-sm leading-relaxed flex flex-col gap-2 break-words';
 
+          // 🕒 ส่วนวิเคราะห์ตรวจสอบอายุไฟล์ (อายุขัยสูงสุด 14 วัน)
+          let isExpired = false;
+          let daysRemainingText = "";
+          const isFileMessage = ['image', 'video', 'audio', 'file'].includes(msg.type);
+
+          if (isFileMessage && msg.timestamp && !msg.deleted) {
+            const fileAgeMs = Date.now() - msg.timestamp;
+            const maxAgeMs = 14 * 24 * 60 * 60 * 1000;
+            const remainingMs = maxAgeMs - fileAgeMs;
+            
+            if (remainingMs <= 0) {
+              isExpired = true;
+            } else {
+              const remainingDays = Math.ceil(remainingMs / (1000 * 60 * 60 * 24));
+              daysRemainingText = `⏱️ เหลือเวลา ${remainingDays} วัน`;
+            }
+          }
+
           if(msg.deleted) {
             bubble.innerText = 'ข้อความถูกลบเรียบร้อย';
             bubble.className += ' msg-deleted text-slate-400 italic bg-white/20 border border-dashed text-xs';
+          } else if(isExpired) {
+            // ⚠️ ปรับ UI ข้อความแจ้งเตือนไฟล์หมดอายุ
+            bubble.innerHTML = `
+              <div class="flex items-center gap-2 p-3 text-rose-500 font-medium text-xs bg-rose-50 rounded-xl border border-rose-100 shadow-inner select-none">
+                <i class="fa-solid fa-circle-exclamation text-base"></i> ไฟล์หมดอายุ (เกิน 14 วัน ระบบทำลายไฟล์ถาวรแล้ว)
+              </div>
+            `;
+            bubble.style.padding = '0'; bubble.style.background = 'none'; bubble.style.boxShadow = 'none';
           } else {
             if(msg.type === 'image') {
               bubble.innerHTML = `
@@ -2104,6 +2122,14 @@
             readStatusSpan.innerText = `อ่านแล้ว ${totalReadsCount}`;
             readStatusSpan.onclick = () => window.showWhoReadThisMessage(msg.readBy);
             metaContainer.appendChild(readStatusSpan);
+          }
+
+          // 💬 แสดงผลตัวอักษรเล็ก ๆ แจ้งจำนวนวันคงเหลือก่อนระบบทำลายไฟล์
+          if (daysRemainingText && !isExpired) {
+            const remainingSpan = document.createElement('span');
+            remainingSpan.className = 'text-amber-500 font-semibold scale-95 mb-0.5 select-none';
+            remainingSpan.innerText = daysRemainingText;
+            metaContainer.appendChild(remainingSpan);
           }
           
           const timeSpan = document.createElement('span');
