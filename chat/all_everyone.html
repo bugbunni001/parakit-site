@@ -354,7 +354,7 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwPhYvKDiXk6OXg73tA5E0Y9no3jjkd4NaOL-V5vJDHFzmhqr94LxBy8ocozKZHQG4/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzCWoPhlYtpKbaKqMTStbJDIRKiMoPMhuSIv7RXmRIyKAdXYFvbUuNfjP6mjd8m23Si/exec";
     let currentUser = null;
     let activeTempUploads = {}; 
     let globalAvatarMap = {}; 
@@ -707,6 +707,7 @@
 
       activeTempUploads[uploadId] = {
         senderName: currentUser.displayName,
+        senderUsername: currentUser.username,
         senderAvatar: currentUser.avatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png',
         type: clientType, content: localObjectURL, filename: file.name, timestamp: localTimestamp
       };
@@ -746,6 +747,7 @@
 
           let payload = {
             senderName: currentUser.displayName,
+            senderUsername: currentUser.username,
             senderAvatar: currentUser.avatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png',
             type: dbMsgType, content: finalUrl, filename: finalFilename, fileId: fileDriveId, timestamp: Date.now(), deleted: false
           };
@@ -1020,6 +1022,7 @@
       
       activeTempUploads[uploadId] = {
         senderName: currentUser.displayName,
+        senderUsername: currentUser.username,
         senderAvatar: currentUser.avatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png',
         type: 'optimistic-file', filename: 'ข้อความเสียง.mp3', timestamp: localTimestamp
       };
@@ -1038,6 +1041,7 @@
 
             let payload = {
               senderName: currentUser.displayName,
+              senderUsername: currentUser.username,
               senderAvatar: currentUser.avatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png',
               type: 'audio', content: finalUrl, filename: `audio_${localTimestamp}.mp3`, fileId: result.fileId, timestamp: Date.now(), deleted: false
             };
@@ -1050,8 +1054,8 @@
             push(ref(db, 'global_messages'), payload);
           }
         } catch (e) { console.error(e); }
-        delete activeTempUploads[uploadId];
-        renderAllMessagesWithTemps(true);
+          delete activeTempUploads[uploadId];
+          renderAllMessagesWithTemps(true);
       };
       reader.readAsDataURL(blob);
     }
@@ -1649,6 +1653,7 @@
 
       let payload = {
         senderName: currentUser.displayName,
+        senderUsername: currentUser.username,
         senderAvatar: currentUser.avatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png',
         type: 'text', content: text, timestamp: localTimestamp, deleted: false
       };
@@ -1667,6 +1672,7 @@
 
       let payload = {
         senderName: currentUser.displayName,
+        senderUsername: currentUser.username,
         senderAvatar: currentUser.avatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png',
         type: 'sticker', content: url, timestamp: localTimestamp, deleted: false
       };
@@ -1712,7 +1718,7 @@
           sound.play().catch(e => console.log("แจ้งเตือนเสียงถูกบล็อกชั่วคราวครับ: ", e));
           
           const lastKey = Object.keys(lastSnapshotData).pop();
-          if(lastSnapshotData[lastKey] && lastSnapshotData[lastKey].senderName === currentUser.displayName) {
+          if(lastSnapshotData[lastKey] && lastSnapshotData[lastKey].senderUsername === currentUser.username) {
             shouldScroll = true;
           }
         } else {
@@ -1730,7 +1736,7 @@
       
       Object.keys(lastSnapshotData).forEach(key => {
         const msg = lastSnapshotData[key];
-        const isSelf = msg.senderName === currentUser.displayName;
+        const isSelf = msg.senderUsername ? (msg.senderUsername === currentUser.username) : (msg.senderName === currentUser.displayName);
         const hasRead = msg.readBy && msg.readBy[currentUser.username];
         
         if (!isSelf && !msg.deleted && !hasRead) {
@@ -1960,7 +1966,9 @@
             }
           }
 
-          const isSelf = msg.senderName === currentUser.displayName;
+          // ตรวจสอบว่าเป็นข้อความของตัวเองหรือไม่ผ่าน Username แทน Display Name
+          const isSelf = msg.senderUsername ? (msg.senderUsername === currentUser.username) : (msg.senderName === currentUser.displayName);
+          
           const row = document.createElement('div');
           row.className = `msg-row flex gap-2 sm:gap-3 max-w-[90%] sm:max-w-[80%] w-fit relative items-end group mb-2 ${isSelf ? 'self flex-row-reverse ml-auto' : 'other mr-auto text-left'}`;
           
@@ -2008,7 +2016,6 @@
           const bubble = document.createElement('div');
           bubble.className = 'msg-bubble p-2.5 px-3.5 sm:p-3 sm:px-4 rounded-2xl text-sm leading-relaxed flex flex-col gap-2 break-words';
 
-          // 🕒 ส่วนวิเคราะห์ตรวจสอบอายุไฟล์ (อายุขัยสูงสุด 14 วัน)
           let isExpired = false;
           let daysRemainingText = "";
           const isFileMessage = ['image', 'video', 'audio', 'file'].includes(msg.type);
@@ -2030,7 +2037,6 @@
             bubble.innerText = 'ข้อความถูกลบเรียบร้อย';
             bubble.className += ' msg-deleted text-slate-400 italic bg-white/20 border border-dashed text-xs';
           } else if(isExpired) {
-            // ⚠️ ปรับ UI ข้อความแจ้งเตือนไฟล์หมดอายุ
             bubble.innerHTML = `
               <div class="flex items-center gap-2 p-3 text-rose-500 font-medium text-xs bg-rose-50 rounded-xl border border-rose-100 shadow-inner select-none">
                 <i class="fa-solid fa-circle-exclamation text-base"></i> ไฟล์หมดอายุ (เกิน 14 วัน ระบบทำลายไฟล์ถาวรแล้ว)
@@ -2124,7 +2130,6 @@
             metaContainer.appendChild(readStatusSpan);
           }
 
-          // 💬 แสดงผลตัวอักษรเล็ก ๆ แจ้งจำนวนวันคงเหลือก่อนระบบทำลายไฟล์
           if (daysRemainingText && !isExpired) {
             const remainingSpan = document.createElement('span');
             remainingSpan.className = 'text-amber-500 font-semibold scale-95 mb-0.5 select-none';
