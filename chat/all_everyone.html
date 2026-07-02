@@ -13,6 +13,8 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/viewerjs/1.11.6/viewer.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/viewerjs/1.11.6/viewer.min.js"></script>
+  <!-- เพิ่ม JSZip สำหรับฟังก์ชันดาวน์โหลดรูปภาพทั้งหมดรวมเป็นกลุ่มไฟล์ ZIP ครับ -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   
   <style>
     body {
@@ -160,18 +162,25 @@
       border-color: #10b981;
     }
 
-    /* Image Group Grid (Album Style) */
+    /* สไตล์ Grid กลุ่มรูปภาพแบบแอป LINE */
     .image-group-grid {
       display: grid;
       gap: 4px;
       border-radius: 16px;
       overflow: hidden;
-      max-width: 260px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+      max-width: 320px;
     }
-    .grid-cols-1-img { grid-template-columns: repeat(1, minmax(0, 1fr)); }
-    .grid-cols-2-img { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .grid-cols-3-img { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .img-grid-item {
+      width: 100%;
+      height: 100%;
+      object-cover: cover;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+    .img-grid-item:hover {
+      transform: scale(1.02);
+      filter: brightness(0.95);
+    }
   </style>
 </head>
 <body class="h-[100dvh] w-screen flex items-center justify-center p-0 sm:p-4 md:p-6 overflow-hidden select-none">
@@ -622,7 +631,7 @@
       document.getElementById('upload-preview-modal').classList.remove('hidden');
     }
 
-    function openUploadPreviewModal() {
+    function closeUploadPreviewModal() {
       document.getElementById('upload-preview-modal').classList.add('hidden');
       queueFilesToUpload = [];
       document.getElementById('file-input').value = '';
@@ -631,15 +640,11 @@
     async function executeQueueUploads() {
       document.getElementById('upload-preview-modal').classList.add('hidden');
       
-      // สร้าง Group ID เฉพาะกิจสำหรับรูปภาพที่ส่งพร้อมกันเป็นล็อตเดียว
-      const imageBatchGroupId = "group_" + Date.now();
-      const totalImagesInBatch = queueFilesToUpload.filter(f => f.type.startsWith('image/')).length;
-      // ให้ถือว่าเป็นกลุ่มหากส่งรูปภาพพร้อมกันตั้งแต่ 2 รูปขึ้นไป
-      const isGroupAlbum = totalImagesInBatch >= 2;
-
+      // สุ่มรหัสกลุ่มสำหรับรูปภาพที่อัปโหลดพร้อมกันรอบนี้ เพื่อนำไปรวมกลุ่มในการ Render ครับ
+      const batchGroupId = "batch_img_" + Date.now() + "_" + Math.floor(Math.random() * 1000);
+      
       for(let file of queueFilesToUpload) {
-        const isThisFileImage = file.type.startsWith('image/');
-        await uploadSingleFileProcess(file, (isThisFileImage && isGroupAlbum) ? imageBatchGroupId : null);
+        await uploadSingleFileProcess(file, batchGroupId);
       }
       
       queueFilesToUpload = [];
@@ -683,7 +688,7 @@
       });
     }
 
-    async function uploadSingleFileProcess(file, batchGroupId = null) {
+    async function uploadSingleFileProcess(file, batchGroupId = "") {
       const localTimestamp = Date.now();
       const uploadId = "upload_" + localTimestamp;
       const localObjectURL = URL.createObjectURL(file);
@@ -739,7 +744,7 @@
             senderName: currentUser.displayName,
             senderAvatar: currentUser.avatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png',
             type: dbMsgType, content: finalUrl, filename: finalFilename, fileId: fileDriveId, timestamp: Date.now(), deleted: false,
-            groupId: batchGroupId // แนบ Group ID ผูกความสัมพันธ์กลุ่มรูปภาพ
+            batchGroupId: isImage ? batchGroupId : "" // ผูก ID กลุ่มเฉพาะข้อความประเภทรูปภาพ
           });
         } else {
           Swal.fire('อัปโหลดล้มเหลว', result.message || 'เกิดข้อผิดพลาดจากเซิร์ฟเวอร์หลังบ้านครับ', 'error');
@@ -837,13 +842,14 @@
             }
           }
 
-          Swal.close();
+          幕Swal.close();
           Swal.fire({ title: 'สำเร็จ', text: 'ยกเลิกการส่งชุดรายการแชทที่เลือกสำเร็จเรียบร้อยครับ', icon: 'success', timer: 1500, showConfirmButton: false });
           document.getElementById('btn-toggle-multi-select').click(); 
         }
       });
     }
 
+    // ฟังก์ชันช่วยดึงข้อมูลไฟล์ออกมาเป็น Blob Object เพื่อทำการส่งแชร์เข้า Web Share API
     async function fetchFileBlobFromBackend(fileId) {
       let res = await fetch(SCRIPT_URL, {
         method: 'POST',
@@ -1248,7 +1254,6 @@
           
           setupUserPresence();
           await syncAvatarsFromServer();
-          document.getElementById('global-noti-sound').play().catch(() => {});
           Swal.close();
           listenChatMessages();
         } else { 
@@ -1286,7 +1291,6 @@
 
           setupUserPresence();
           await syncAvatarsFromServer();
-          document.getElementById('global-noti-sound').play().catch(() => {});
           Swal.close();
           listenChatMessages();
         } else {
@@ -1360,6 +1364,10 @@
       } catch(e) { Swal.fire({ title: 'ผิดพลาด', text: 'ระบบสั่งส่ง OTP ปฏิเสธการเชื่อมต่อ', icon: 'error', confirmButtonColor: '#10b981' }); }
     }
 
+    async function handleApproveClearRoomAll() {
+      // สงวนโครงสร้างไว้
+    }
+
     async function handleAdminDeleteMessages() {
       const { value: adminPassword, isDismissed } = await Swal.fire({
         title: 'ลบแชทส่วนกลางถาวร',
@@ -1380,7 +1388,7 @@
             if (e.key === 'Enter') Swal.clickConfirm();
           });
           document.getElementById('btn-admin-forgot-link').addEventListener('click', (e) => {
-            e.preventDefault(); Swal.close(); handleAdminForgotFlow();
+            viewer_id_clear.preventDefault(); Swal.close(); handleAdminForgotFlow();
           });
         },
         preConfirm: () => { return document.getElementById('admin-pass-input').value; }
@@ -1517,10 +1525,6 @@
       reader.readAsDataURL(file);
     }
     
-    function textCounterLines(text) {
-      return text ? text.split('\n').length : 1;
-    }
-
     function sendTextMessage() {
       const input = document.getElementById('msg-input');
       const text = input.value; 
@@ -1652,59 +1656,61 @@
       }
     };
 
-    // ฟังก์ชันสำหรับดาวน์โหลดรูปภาพยกแก๊ง (คอร์สหลักยิงดาวน์โหลดแบบคู่ขนาน) เหมือน LINE
-    window.downloadEntireImageAlbumGroup = async function(groupIdToken) {
-      if(!lastSnapshotData || !groupIdToken) return;
+    // ฟังก์ชันดาวน์โหลดรูปภาพทั้งหมดภายในกลุ่มออกมาเป็นไฟล์ ZIP แบบคลิกเดียวจบครับ
+    window.downloadAllImagesInBatchGroup = async function(batchGroupId) {
+      if(!batchGroupId || !lastSnapshotData) return;
       
-      const imageTargets = Object.keys(lastSnapshotData)
-        .map(k => lastSnapshotData[k])
-        .filter(m => m.groupId === groupIdToken && m.type === 'image' && !m.deleted);
-
-      if(imageTargets.length === 0) return;
+      const imagesInGroup = Object.keys(lastSnapshotData)
+        .map(k => ({ key: k, ...lastSnapshotData[k] }))
+        .filter(m => m.batchGroupId === batchGroupId && m.type === 'image' && !m.deleted);
+        
+      if(imagesInGroup.length === 0) return;
 
       Swal.fire({
-        title: 'ดาวน์โหลดคลังรูปภาพ...',
-        html: `ระบบกำลังทยอยดึงข้อมูลรูปภาพทั้งหมดในกลุ่มนี้จำนวน <b>${imageTargets.length} รูป</b> ลงสู่เครื่องของคุณครับ...`,
+        title: 'กำลังบีบอัดรูปภาพกลุ่ม...',
+        html: `ระบบกำลังดึงข้อมูลรูปภาพจำนวน ${imagesInGroup.length} รูป มารวมไฟล์ ZIP คับ...`,
         allowOutsideClick: false,
         didOpen: () => { Swal.showLoading(); }
       });
 
-      for(let index = 0; index < imageTargets.length; index++) {
-        const item = imageTargets[index];
-        if(item.fileId) {
-          try {
-            let res = await fetch(SCRIPT_URL, {
-              method: 'POST',
-              body: JSON.stringify({ action: 'getFileData', fileId: item.fileId })
-            });
-            let result = await res.json();
-            if (result.status === 'success' && result.base64) {
-              let cleanBase64 = result.base64;
-              if (cleanBase64.includes(',')) cleanBase64 = cleanBase64.split(',')[1];
-              const byteCharacters = atob(cleanBase64);
-              const byteNumbers = new Array(byteCharacters.length);
-              for (let i = 0; i < byteCharacters.length; i++) {
-                byteNumbers[i] = byteCharacters.charCodeAt(i);
-              }
-              const byteArray = new Uint8Array(byteNumbers);
-              const blob = new Blob([byteArray], { type: result.mimeType || 'image/jpeg' });
-              const blobUrl = URL.createObjectURL(blob);
-              
-              const a = document.createElement("a");
-              a.href = blobUrl;
-              a.download = item.filename || `album_img_${index+1}.jpg`;
-              document.body.appendChild(a);
-              a.click();
-              document.body.removeChild(a);
-              URL.revokeObjectURL(blobUrl);
-            }
-          } catch(e) {
-            console.error("ดาวน์โหลดภาพกลุ่มขัดข้องตัวที่: " + index, e);
+      try {
+        const zip = new JSZip();
+        let currentCount = 0;
+
+        for(let imgMsg of imagesInGroup) {
+          if(!imgMsg.fileId) continue;
+          currentCount++;
+          let res = await fetch(SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'getFileData', fileId: imgMsg.fileId })
+          });
+          let result = await res.json();
+          if(result.status === 'success' && result.base64) {
+            let base64Data = result.base64;
+            if (base64Data.includes(',')) base64Data = base64Data.split(',')[1];
+            
+            let name = imgMsg.filename || `image_${currentCount}.jpg`;
+            zip.file(name, base64Data, { base64: true });
           }
         }
+
+        const content = await zip.generateAsync({ type: "blob" });
+        const blobUrl = URL.createObjectURL(content);
+        
+        const a = document.createElement("a");
+        a.href = blobUrl;
+        a.download = `PhotoBatch_${Date.now()}.zip`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(blobUrl);
+        
+        Swal.close();
+        Swal.fire({ title: 'สำเร็จ', text: 'ดาวน์โหลดอัลบั้มรูปภาพสำเร็จเรียบร้อยครับ', icon: 'success', timer: 1500, showConfirmButton: false });
+      } catch(err) {
+        console.error(err);
+        Swal.fire('เกิดข้อผิดพลาด', 'ไม่สามารถดาวน์โหลดภาพรวมกลุ่มได้ บราวเซอร์บล็อกหรือเน็ตไม่เสถียรครับ', 'error');
       }
-      Swal.close();
-      Swal.fire({ title: 'ดาวน์โหลดเสร็จสิ้น', text: 'บันทึกรูปภาพกลุ่มเข้าสู่อุปกรณ์เรียบร้อยแล้วครับ', icon: 'success', timer: 1500, showConfirmButton: false });
     };
 
     window.triggerDeleteMessageAction = function(key, fileId) {
@@ -1726,35 +1732,32 @@
       });
     };
 
-    // ฟังก์ชันลบภาพยกกลุ่มอัลบั้ม
-    window.triggerDeleteImageGroupAction = function(groupIdToken) {
-      if(!lastSnapshotData || !groupIdToken) return;
+    window.triggerDeleteImageBatchGroupAction = function(batchGroupId) {
+      if(!batchGroupId || !lastSnapshotData) return;
       
-      const records = Object.keys(lastSnapshotData).filter(k => lastSnapshotData[k].groupId === groupIdToken);
+      const imagesInGroup = Object.keys(lastSnapshotData)
+        .map(k => ({ key: k, ...lastSnapshotData[k] }))
+        .filter(m => m.batchGroupId === batchGroupId && m.type === 'image' && !m.deleted);
 
       Swal.fire({
         title: 'ยกเลิกการส่งรูปยกกลุ่ม?',
-        text: `คุณต้องการลบกลุ่มรูปภาพทั้งหมดจำนวน ${records.length} รูปออกจากห้องแชทรวมใช่หรือไม่ครับ`,
-        icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', cancelButtonColor: '#64748b', confirmButtonText: 'ใช่, ลบทั้งกลุ่ม',
+        text: `คุณต้องการลบรูปภาพทั้งหมดในอัลบั้มกลุ่มนี้จำนวน ${imagesInGroup.length} รูปใช่หรือไม่ครับ`,
+        icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', cancelButtonColor: '#64748b', confirmButtonText: 'ใช่, ลบทั้งหมด',
         customClass: { title: 'swal-premium-title', htmlContainer: 'swal-premium-html' }
-      }).then((res) => {
+      }).then(async (res) => {
         if(res.isConfirmed) {
-          records.forEach(key => {
-            const msg = lastSnapshotData[key];
-            update(ref(db, `global_messages/${key}`), { deleted: true });
-            if(msg.fileId) {
-              fetch(SCRIPT_URL, {
-                method: 'POST',
-                body: JSON.stringify({ action: 'deleteFile', fileId: msg.fileId })
-              }).catch(err => console.error(err));
+          for(let img of imagesInGroup) {
+            update(ref(db, `global_messages/${img.key}`), { deleted: true });
+            if(img.fileId) {
+              fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteFile', fileId: img.fileId }) }).catch(err => console.error(err));
             }
-          });
-          Swal.fire({ title: 'สำเร็จ', text: 'ลบรูปภาพยกกลุ่มเรียบร้อยครับ', icon: 'success', timer: 1200, showConfirmButton: false });
+          }
+          Swal.fire({ title: 'สำเร็จ', text: 'ลบกลุ่มรูปภาพเรียบร้อยคับ', icon: 'success', timer: 1200, showConfirmButton: false });
         }
       });
     };
 
-    function bindMessageActionEvents(element, msgKey, msgFileId, textContent, isGroupAlbum = false, groupIdToken = null) {
+    function bindMessageActionEvents(element, msgKey, msgFileId, textContent, isBatchImageGroup = false, batchGroupId = "") {
       let touchTimer = null;
       
       const showActionMenu = () => {
@@ -1776,16 +1779,16 @@
         
         const isMyMsg = element.closest('.msg-row').classList.contains('self');
         if(isMyMsg) {
-          if(isGroupAlbum && groupIdToken) {
+          if(isBatchImageGroup) {
             menuHTML += `
-              <button id="cm-delete-group" class="w-full text-center flex items-center justify-center gap-2 px-3 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl text-xs font-semibold transition-all border border-rose-200/40">
-                <i class="fa-solid fa-layer-group text-sm"></i> ยกเลิกการส่งรูปทั้งกลุ่ม
+              <button id="cm-delete-batch" class="w-full text-center flex items-center justify-center gap-2 px-3 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl text-xs font-semibold transition-all border border-rose-200/40">
+                <i class="fa-solid fa-trash-can"></i> ยกเลิกส่งรูปแบบกลุ่ม
               </button>
             `;
           } else {
             menuHTML += `
               <button id="cm-delete" class="w-full text-center flex items-center justify-center gap-2 px-3 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl text-xs font-semibold transition-all border border-rose-200/40">
-                <i class="fa-solid fa-trash-can text-sm"></i> ยกเลิกการส่งข้อความ
+                <i class="fa-solid fa-trash-can"></i> ยกเลิกการส่งข้อความ
               </button>
             `;
           }
@@ -1816,11 +1819,11 @@
           });
         }
 
-        if(cm.querySelector('#cm-delete-group')) {
-          cm.querySelector('#cm-delete-group').addEventListener('click', (ev) => {
+        if(cm.querySelector('#cm-delete-batch')) {
+          cm.querySelector('#cm-delete-batch').addEventListener('click', (ev) => {
             ev.stopPropagation();
             cm.remove();
-            window.triggerDeleteImageGroupAction(groupIdToken);
+            window.triggerDeleteImageBatchGroupAction(batchGroupId);
           });
         }
 
@@ -1878,7 +1881,6 @@
       });
     };
 
-    // อัลกอริทึม Render ข้อความโฉมใหม่ รวมรูปกลุ่ม (Album Group Grid) และฟังก์ชันดาวน์โหลดทีเดียวตามที่ขอครับ
     function renderAllMessagesWithTemps(forceScrollToBottomFlag = false) {
       const body = document.getElementById('chat-body');
       
@@ -1892,14 +1894,14 @@
       let lastRenderedDate = ""; 
       let mediaToLoad = []; 
 
+      // เก็บประวัติข้อความที่ถูกจัดการจัดกลุ่มรูปภาพแล้ว เพื่อป้องกันการ Render ซ้ำครับ
+      let processedBatchGroupIds = new Set();
+
       if(lastSnapshotData) {
-        // รายการเก็บ Group Token ที่ถูกเรนเดอร์ในลูปไปแล้ว ป้องกันการสับสนมิติ
-        let renderedGroupTokens = {};
-
-        const messageKeysArray = Object.keys(lastSnapshotData);
-
-        for (let index = 0; index < messageKeysArray.length; index++) {
-          const key = messageKeysArray[index];
+        const messageKeys = Object.keys(lastSnapshotData);
+        
+        for (let idx = 0; idx < messageKeys.length; idx++) {
+          const key = messageKeys[idx];
           const msg = lastSnapshotData[key];
           
           if (msg.timestamp) {
@@ -1915,97 +1917,111 @@
             }
           }
 
-          // ตรวจสอบเงื่อนไขการรวมภาพเป็นกลุ่มอัลบั้ม (มัดรูปที่มี groupId เดียวกัน)
-          if(msg.type === 'image' && msg.groupId && !msg.deleted) {
-            if(renderedGroupTokens[msg.groupId]) {
-              continue; // ข้ามลูปหลักไปเลยเนื่องจากโดน Render เหมาแพ็กเกจไปแล้วในรูปแรก
+          const isSelf = msg.senderName === currentUser.displayName;
+
+          // ตรวจสอบเและดึงกลุ่มรูปภาพที่ส่งพร้อมกัน (Batch Image Group) เพื่อนำมาสร้างโครงสร้างตาราง Grid เหมือนแอป LINE คับ
+          if (msg.type === 'image' && msg.batchGroupId && !msg.deleted) {
+            if (processedBatchGroupIds.has(msg.batchGroupId)) {
+              continue; // ข้ามรูปนี้ไปเพราะถูกมัดรวมไปแสดงผลในกล่องหลักของกลุ่มเรียบร้อยแล้วครับ
             }
-            renderedGroupTokens[msg.groupId] = true;
+            processedBatchGroupIds.add(msg.batchGroupId);
 
-            // รวบรวมข้อมูลรูปภาพทั้งหมดที่ใช้ Token กลุ่มก้อนเดียวกัน
-            const albumImagesList = messageKeysArray
-              .map(k => { return { ...lastSnapshotData[k], dbKey: k }; })
-              .filter(m => m.groupId === msg.groupId && m.type === 'image' && !m.deleted);
+            // ดึงเฉพาะรูปภาพทั้งหมดใน Batch Group เดียวกันที่ยังไม่ถูกลบ
+            const imagesInGroup = messageKeys
+              .map(k => ({ key: k, ...lastSnapshotData[k] }))
+              .filter(m => m.batchGroupId === msg.batchGroupId && m.type === 'image' && !m.deleted);
 
-            if(albumImagesList.length >= 2) {
-              const isSelf = msg.senderName === currentUser.displayName;
-              const row = document.createElement('div');
-              row.className = `msg-row flex gap-2 sm:gap-3 max-w-[90%] sm:max-w-[80%] w-fit relative items-end group mb-2 ${isSelf ? 'self flex-row-reverse ml-auto' : 'other mr-auto text-left'}`;
-              
-              // กลไก Checkbox รวมจัดการกลุ่ม
-              const checkBoxEl = document.createElement('input');
-              checkBoxEl.type = 'checkbox';
-              checkBoxEl.className = 'msg-checkbox accent-blue-500 w-4 h-4 mb-3 cursor-pointer shrink-0';
-              checkBoxEl.onchange = () => {
-                albumImagesList.forEach(imgData => {
-                  toggleItemCheckboxState(imgData.dbKey, imgData, checkBoxEl);
-                });
-              }; 
-              row.appendChild(checkBoxEl);
+            const row = document.createElement('div');
+            row.className = `msg-row flex gap-2 sm:gap-3 max-w-[90%] sm:max-w-[80%] w-fit relative items-end group mb-2 ${isSelf ? 'self flex-row-reverse ml-auto' : 'other mr-auto text-left'}`;
+            
+            const checkBoxEl = document.createElement('input');
+            checkBoxEl.type = 'checkbox';
+            checkBoxEl.className = 'msg-checkbox accent-blue-500 w-4 h-4 mb-3 cursor-pointer shrink-0';
+            checkBoxEl.onchange = () => toggleItemCheckboxState(key, msg, checkBoxEl); 
+            row.appendChild(checkBoxEl);
 
-              const resolvedAvatar = globalAvatarMap[msg.senderName] || msg.senderAvatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
-              if(!isSelf) {
-                const img = document.createElement('img');
-                img.className = 'msg-avatar w-8 h-8 rounded-full object-cover shadow-sm self-start mt-1 shrink-0 cursor-pointer hover:scale-105 transition-transform';
-                img.src = resolvedAvatar;
-                img.onclick = () => window.viewUserProfileImage(resolvedAvatar, msg.senderName);
-                row.appendChild(img);
-              }
+            const resolvedAvatar = globalAvatarMap[msg.senderName] || msg.senderAvatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
 
-              const wrapper = document.createElement('div');
-              wrapper.className = 'msg-content-wrapper flex flex-col overflow-hidden';
-              if(!isSelf) {
-                wrapper.innerHTML = `<span class="msg-name text-[11px] text-slate-400 font-medium mb-1 px-1">${msg.senderName}</span>`;
-              }
-
-              const bubble = document.createElement('div');
-              bubble.className = 'flex flex-col gap-1.5';
-
-              // คำนวณ Grid Layout ตามจำนวนรูปภาพ (สไตล์ LINE อัลบั้ม)
-              let gridColsClass = "grid-cols-2-img";
-              if(albumImagesList.length === 3 || albumImagesList.length >= 5) gridColsClass = "grid-cols-3-img";
-
-              let imagesGridHTML = `<div class="image-group-grid ${gridColsClass}">`;
-              albumImagesList.forEach(imgItem => {
-                imagesGridHTML += `
-                  <img src="${imgItem.content}" class="w-full h-24 sm:h-28 object-cover border border-white/10 cursor-pointer hover:opacity-90 active:scale-95 transition-all select-none" referrerpolicy="no-referrer" onclick="window.openImageInZoomViewer('${imgItem.content}')">
-                `;
-              });
-              imagesGridHTML += `</div>`;
-
-              // แผงคอนโทรลสำหรับโหลดรูปยกอัลบั้มในปุ่มเดียว
-              bubble.innerHTML = `
-                ${imagesGridHTML}
-                <div class="flex items-center gap-1.5 mt-0.5 w-full justify-start">
-                  <button onclick="downloadEntireImageAlbumGroup('${msg.groupId}')" class="w-full text-center py-1.5 bg-gradient-to-r from-green-500 to-emerald-600 hover:opacity-95 text-[10px] text-white rounded-xl font-semibold transition-all shadow-sm flex items-center justify-center gap-1"><i class="fa-solid fa-cloud-arrow-down text-xs"></i> ดาวน์โหลดรูปทั้งหมดในกลุ่มนี้ (${albumImagesList.length} รูป)</button>
-                </div>
-              `;
-
-              wrapper.appendChild(bubble);
-              bindMessageActionEvents(bubble, key, msg.fileId, null, true, msg.groupId);
-
-              const metaContainer = document.createElement('div');
-              metaContainer.className = `flex flex-col text-[9px] text-slate-400 font-medium px-0.5 mb-1 shrink-0 ${isSelf ? 'items-end' : 'items-start'}`;
-              
-              const totalReadsCount = msg.readBy ? Object.keys(msg.readBy).length : 0;
-              if (isSelf && totalReadsCount > 0) {
-                metaContainer.innerHTML = `<span class="text-emerald-400 font-bold mb-0.5 select-none cursor-pointer hover:underline" onclick="window.showWhoReadThisMessage(${JSON.stringify(msg.readBy).replace(/"/g, '&quot;')})">อ่านแล้ว ${totalReadsCount}</span>`;
-              }
-              metaContainer.innerHTML += `<span>${new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>`;
-
-              row.appendChild(wrapper);
-              row.appendChild(metaContainer);
-              body.appendChild(row);
-              continue; // เข้าสู่โปรเซสข้อความชิ้นถัดไป
+            if(!isSelf) {
+              const img = document.createElement('img');
+              img.className = 'msg-avatar w-8 h-8 rounded-full object-cover shadow-sm self-start mt-1 shrink-0 cursor-pointer hover:scale-105 transition-transform';
+              img.src = resolvedAvatar;
+              img.onclick = () => window.viewUserProfileImage(resolvedAvatar, msg.senderName);
+              row.appendChild(img);
             }
+
+            const wrapper = document.createElement('div');
+            wrapper.className = 'msg-content-wrapper flex flex-col overflow-hidden';
+            
+            if(!isSelf) {
+              const nameSpan = document.createElement('span');
+              nameSpan.className = 'msg-name text-[11px] text-slate-400 font-medium mb-1 px-1';
+              nameSpan.innerText = msg.senderName;
+              wrapper.appendChild(nameSpan);
+            }
+
+            const bubble = document.createElement('div');
+            bubble.className = 'msg-bubble p-2 rounded-2xl flex flex-col gap-1.5 border border-white/10 bg-white/10 shadow-lg';
+            
+            // ส่วนหัวของกลุ่มรูปภาพแสดงจำนวนรูปภาพ และปุ่มดาวน์โหลดทั้งหมดในคลิกเดียวแบบแอป LINE
+            const batchHeader = document.createElement('div');
+            batchHeader.className = 'flex items-center justify-between text-[11px] px-1 font-semibold text-white/90 border-b border-white/10 pb-1.5 mb-1 gap-4 select-none';
+            batchHeader.innerHTML = `
+              <span><i class="fa-regular fa-images mr-1"></i> ส่งรูปภาพ (${imagesInGroup.length} รูป)</span>
+              <button onclick="downloadAllImagesInBatchGroup('${msg.batchGroupId}')" class="text-green-400 hover:text-green-300 font-bold flex items-center gap-1 transition-colors bg-slate-900/40 px-2 py-0.5 rounded-full border border-green-500/20"><i class="fa-solid fa-download text-[10px]"></i> ดาวน์โหลดทั้งหมด</button>
+            `;
+            bubble.appendChild(batchHeader);
+
+            const gridContainer = document.createElement('div');
+            // กำหนดโครงสร้างคอลัมน์ของ Grid ตามจำนวนภาพที่ส่งพร้อมกันให้สวยงามเหมือน LINE App ครับ
+            let gridCols = 'grid-cols-2';
+            if (imagesInGroup.length === 1) gridCols = 'grid-cols-1';
+            else if (imagesInGroup.length === 3) gridCols = 'grid-cols-3';
+            else if (imagesInGroup.length >= 4) gridCols = 'grid-cols-2';
+            
+            gridContainer.className = `image-group-grid grid ${gridCols}`;
+
+            imagesInGroup.forEach(imgData => {
+              const itemImg = document.createElement('img');
+              itemImg.className = 'img-grid-item max-h-[140px] rounded-lg object-cover border border-white/10 shadow-sm';
+              itemImg.src = imgData.content;
+              itemImg.onclick = () => window.openImageInZoomViewer(imgData.content);
+              gridContainer.appendChild(itemImg);
+            });
+
+            bubble.appendChild(gridContainer);
+            wrapper.appendChild(bubble);
+            
+            const metaContainer = document.createElement('div');
+            metaContainer.className = `flex flex-col text-[9px] text-slate-400 font-medium px-0.5 mb-1 shrink-0 ${isSelf ? 'items-end' : 'items-start'}`;
+
+            const totalReadsCount = msg.readBy ? Object.keys(msg.readBy).length : 0;
+            if (isSelf && totalReadsCount > 0) {
+              const readStatusSpan = document.createElement('span');
+              readStatusSpan.className = 'text-emerald-400 font-bold mb-0.5 select-none cursor-pointer hover:underline';
+              readStatusSpan.innerText = `อ่านแล้ว ${totalReadsCount}`;
+              readStatusSpan.onclick = () => window.showWhoReadThisMessage(msg.readBy);
+              metaContainer.appendChild(readStatusSpan);
+            }
+            
+            const timeSpan = document.createElement('span');
+            timeSpan.innerText = new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            metaContainer.appendChild(timeSpan);
+            
+            row.appendChild(wrapper);
+            row.appendChild(metaContainer);
+            body.appendChild(row);
+
+            // ผูกเหตุการณ์ Context Menu / TouchHold ให้ลบรูปแบบยกกลุ่มได้คับ
+            bindMessageActionEvents(bubble, key, msg.fileId, null, true, msg.batchGroupId);
+            continue;
           }
 
-          // ส่วน Render ข้อความประเภทปกติทั่วไป (Text, Video, Audio, Single Image, Sticker)
-          const isSelf = msg.senderName === currentUser.displayName;
           const row = document.createElement('div');
           row.className = `msg-row flex gap-2 sm:gap-3 max-w-[90%] sm:max-w-[80%] w-fit relative items-end group mb-2 ${isSelf ? 'self flex-row-reverse ml-auto' : 'other mr-auto text-left'}`;
           
           const isChecked = selectedMessageItems[key] ? 'checked' : '';
+          
           const checkBoxEl = document.createElement('input');
           checkBoxEl.type = 'checkbox';
           checkBoxEl.className = 'msg-checkbox accent-blue-500 w-4 h-4 mb-3 cursor-pointer shrink-0';
@@ -2041,6 +2057,7 @@
             bubble.className += ' msg-deleted text-slate-400 italic bg-white/20 border border-dashed text-xs';
           } else {
             if(msg.type === 'image') {
+              // จัดการภาพเดี่ยวที่ไม่มี batchGroupId (คงโครงสร้างเดิม)
               bubble.innerHTML = `
                 <img src="${msg.content}" class="max-w-[160px] sm:max-w-[200px] rounded-xl object-cover cursor-pointer border border-white/20 shadow-md transform hover:scale-[1.02] transition-all select-none" referrerpolicy="no-referrer" onerror="this.src='https://cdn-icons-png.flaticon.com/512/16/16410.png'; this.className='w-12 h-12 opacity-50';" onclick="window.openImageInZoomViewer('${msg.content}')">
                 <div class="flex items-center gap-1.5 mt-1 w-full justify-center">
@@ -2082,7 +2099,7 @@
                   </div>
                 </div>
                 <div class="flex items-center gap-1.5 mt-1 w-full justify-start">
-                  <button onclick="directDownloadFromDrive('${msg.fileId || ''}', '${msg.filename || 'audio.mp3'}')" class="px-2 py-0.5 bg-green-600/10 hover:bg-green-600/20 text-[10px] text-green-600 rounded-md font-semibold transition-colors flex items-center gap-1"><i class="fa-solid fa-download"></i> เซฟเสียง</button>
+                  <button onclick="directDownloadFromDrive('${msg.fileId || ''}', '${msg.filename || 'audio.mp3'}')" class="px-2 py-0.5 bg-green-600/10 hover:bg-green-600/20 text-[10px] text-green-600 rounded-md font-semibold transition-colors flex items-center gap-1"><i class="fa-solid fa-download"></i> นำไปวางส่งต่อได้เลยครับ</button>
                 </div>
               `;
               bubble.style.padding = '0'; bubble.style.background = 'none'; bubble.style.boxShadow = 'none';
