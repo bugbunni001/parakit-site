@@ -13,8 +13,6 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/viewerjs/1.11.6/viewer.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/viewerjs/1.11.6/viewer.min.js"></script>
-  <!-- เพิ่ม JSZip สำหรับฟังก์ชันดาวน์โหลดรูปภาพทั้งหมดรวมเป็นกลุ่มไฟล์ ZIP ครับ -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   
   <style>
     body {
@@ -173,13 +171,21 @@
     .img-grid-item {
       width: 100%;
       height: 100%;
-      object-cover: cover;
+      object-fit: cover;
       cursor: pointer;
       transition: transform 0.2s ease;
     }
     .img-grid-item:hover {
       transform: scale(1.02);
       filter: brightness(0.95);
+    }
+    /* ปุ่มดาวน์โหลดแยกภาพเดี่ยวในกลุ่ม Grid */
+    .single-img-dl-btn {
+      opacity: 0;
+      transition: opacity 0.2s ease, background-color 0.2s ease;
+    }
+    .relative:hover .single-img-dl-btn {
+      opacity: 1;
     }
   </style>
 </head>
@@ -233,7 +239,7 @@
     
     <div id="drop-zone-overlay" class="absolute inset-0 z-50 flex flex-col items-center justify-center text-green-600 gap-2 font-bold pointer-events-none">
       <i class="fa-solid fa-cloud-arrow-up text-6xl animate-bounce"></i>
-      <span class="text-lg">วางไฟล์ลงตรงนี้เพื่อเตรียมส่ง (สูงสุด 5 ไฟล์)</span>
+      <span class="text-lg">วางไฟล์ลงตรงนี้เพื่อเตรียมส่ง (สูงสุด 20 ไฟล์)</span>
     </div>
 
     <div class="p-3 bg-slate-900/95 text-white flex items-center justify-between border-b border-white/10 z-10 shadow-lg shrink-0">
@@ -284,9 +290,9 @@
       <div class="flex items-center justify-between px-1">
         <div class="flex items-center gap-4 text-slate-500 w-full justify-between">
           <div class="flex items-center gap-4">
-            <label class="cursor-pointer hover:text-green-500 transition-colors flex items-center gap-1.5 text-sm font-medium" title="แนบไฟล์หรือรูปภาพ (สูงสุด 5 ไฟล์)">
+            <label class="cursor-pointer hover:text-green-500 transition-colors flex items-center gap-1.5 text-sm font-medium" title="แนบไฟล์หรือรูปภาพ (สูงสุด 20 ไฟล์)">
               <i class="fa-solid fa-circle-plus text-lg sm:text-xl text-green-500"></i>
-              <span class="text-xs text-slate-400 hidden sm:inline">ส่งไฟล์ (สูงสุด 5 ไฟล์พร้อมกัน)</span>
+              <span class="text-xs text-slate-400 hidden sm:inline">ส่งไฟล์ (สูงสุด 20 ไฟล์พร้อมกัน)</span>
               <input type="file" id="file-input" class="hidden" multiple onchange="handleFileSelection(event)">
             </label>
             <button id="tool-emoji" class="hover:text-amber-500 transition-colors text-lg sm:text-xl" title="ส่งคีย์บอร์ดอิโมจิ"><i class="fa-regular fa-face-smile-wink"></i></button>
@@ -317,7 +323,7 @@
   </div>
 
   <div id="upload-preview-modal" class="glass-card fixed inset-0 m-auto w-[90%] max-w-md h-fit p-5 rounded-3xl hidden z-[100] flex flex-col gap-4 border border-white/60 shadow-2xl">
-    <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2 border-b pb-2"><i class="fa-solid fa-file-shield text-green-500 text-base"></i> ตรวจสอบไฟล์ก่อนส่ง (สูงสุด 5 ไฟล์)</h3>
+    <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2 border-b pb-2"><i class="fa-solid fa-file-shield text-green-500 text-base"></i> ตรวจสอบไฟล์ก่อนส่ง (สูงสุด 20 ไฟล์)</h3>
     <div id="preview-list-container" class="flex flex-col gap-3 max-h-[220px] overflow-y-auto no-scrollbar"></div>
     <div class="flex gap-2 justify-end mt-1">
       <button id="btn-close-preview" class="px-4 py-2 bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl hover:bg-slate-300 transition-colors">ยกเลิก</button>
@@ -564,8 +570,8 @@
 
     async function processRawFiles(files) {
       const totalSelected = files.length;
-      if(totalSelected > 5) {
-        Swal.fire('ข้อจำกัดระบบ', 'สามารถเลือกแนบไฟล์ได้สูงสุดรอบละ 5 ไฟล์พร้อมกันครับ', 'warning');
+      if(totalSelected > 20) {
+        Swal.fire('ข้อจำกัดระบบ', 'สามารถเลือกแนบไฟล์ได้สูงสุดรอบละ 20 ไฟล์พร้อมกันครับ', 'warning');
         return;
       }
       
@@ -640,7 +646,6 @@
     async function executeQueueUploads() {
       document.getElementById('upload-preview-modal').classList.add('hidden');
       
-      // สุ่มรหัสกลุ่มสำหรับรูปภาพที่อัปโหลดพร้อมกันรอบนี้ เพื่อนำไปรวมกลุ่มในการ Render ครับ
       const batchGroupId = "batch_img_" + Date.now() + "_" + Math.floor(Math.random() * 1000);
       
       for(let file of queueFilesToUpload) {
@@ -744,7 +749,7 @@
             senderName: currentUser.displayName,
             senderAvatar: currentUser.avatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png',
             type: dbMsgType, content: finalUrl, filename: finalFilename, fileId: fileDriveId, timestamp: Date.now(), deleted: false,
-            batchGroupId: isImage ? batchGroupId : "" // ผูก ID กลุ่มเฉพาะข้อความประเภทรูปภาพ
+            batchGroupId: isImage ? batchGroupId : ""
           });
         } else {
           Swal.fire('อัปโหลดล้มเหลว', result.message || 'เกิดข้อผิดพลาดจากเซิร์ฟเวอร์หลังบ้านครับ', 'error');
@@ -821,7 +826,7 @@
         if(res.isConfirmed) {
           Swal.fire({
             title: 'กำลังทยอยลบข้อมูลคลาวด์...',
-            html: 'ระบบกำลังดำเนินการลบข้อความแชทและทำลายไฟล์มีเดียออกจากสารบบ Google Drive ทั้งหมดครับ...',
+            html: 'ระบบกำลังดืนการลบข้อความแชทและทำลายไฟล์มีเดียออกจากสารบบ Google Drive ทั้งหมดครับ...',
             allowOutsideClick: false,
             didOpen: () => { Swal.showLoading(); }
           });
@@ -842,14 +847,13 @@
             }
           }
 
-          幕Swal.close();
+          Swal.close();
           Swal.fire({ title: 'สำเร็จ', text: 'ยกเลิกการส่งชุดรายการแชทที่เลือกสำเร็จเรียบร้อยครับ', icon: 'success', timer: 1500, showConfirmButton: false });
           document.getElementById('btn-toggle-multi-select').click(); 
         }
       });
     }
 
-    // ฟังก์ชันช่วยดึงข้อมูลไฟล์ออกมาเป็น Blob Object เพื่อทำการส่งแชร์เข้า Web Share API
     async function fetchFileBlobFromBackend(fileId) {
       let res = await fetch(SCRIPT_URL, {
         method: 'POST',
@@ -1364,10 +1368,6 @@
       } catch(e) { Swal.fire({ title: 'ผิดพลาด', text: 'ระบบสั่งส่ง OTP ปฏิเสธการเชื่อมต่อ', icon: 'error', confirmButtonColor: '#10b981' }); }
     }
 
-    async function handleApproveClearRoomAll() {
-      // สงวนโครงสร้างไว้
-    }
-
     async function handleAdminDeleteMessages() {
       const { value: adminPassword, isDismissed } = await Swal.fire({
         title: 'ลบแชทส่วนกลางถาวร',
@@ -1388,7 +1388,7 @@
             if (e.key === 'Enter') Swal.clickConfirm();
           });
           document.getElementById('btn-admin-forgot-link').addEventListener('click', (e) => {
-            viewer_id_clear.preventDefault(); Swal.close(); handleAdminForgotFlow();
+            e.preventDefault(); Swal.close(); handleAdminForgotFlow();
           });
         },
         preConfirm: () => { return document.getElementById('admin-pass-input').value; }
@@ -1422,7 +1422,7 @@
           title: 'เปลี่ยนรหัสแอดมิน',
           html: `
             <div class="text-left max-w-xs mx-auto">
-              <p class="text-[12px] text-blue-500 mb-3 text-center font-medium bg-blue-50 py-1.5 rounded-lg border border-blue-200"><i class="fa-solid fa-paper-plane"></i> รหัสกู้คืนถูกส่งไปที่ book016boat@gmail.com</p>
+              <p class="text-[12px] text-blue-500 mb-3 text-center font-medium bg-blue-50 py-1.5 rounded-lg border border-blue-200"><i class="fa-solid fa-paper-plane"></i> รหัสกู้คืนถูกส่งไปที่เมลผู้ดูแลระบบแล้ว</p>
               <label class="block text-xs font-semibold text-slate-500 mb-1">รหัส OTP 6 หลัก</label>
               <input id="admin-otp" class="swal-input-box text-center font-bold tracking-widest" maxlength="6" placeholder="******">
               <label class="block text-xs font-semibold text-slate-500 mb-1 mt-3">รหัสผ่านควบคุมใหม่</label>
@@ -1474,7 +1474,7 @@
             document.getElementById('my-avatar-img').src = directUrl;
             localStorage.setItem('parakit_chat_user', JSON.stringify(currentUser));
             
-          await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'updateAvatar', username: currentUser.username, avatarUrl: directUrl }) });
+            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'updateAvatar', username: currentUser.username, avatarUrl: directUrl }) });
             globalAvatarMap[currentUser.displayName] = directUrl;
             Swal.fire({ title: 'สำเร็จ!', text: 'เปลี่ยนรูปโปรไฟล์ผ่านคลาวด์ไดร์ฟเรียบร้อยครับ', icon: 'success', confirmButtonColor: '#10b981' });
             renderAllMessagesWithTemps(false);
@@ -1560,9 +1560,9 @@
       else if(msg.type === 'optimistic-image') inner = `
         <div class="flex flex-col items-end">
           <img src="${msg.content}" class="max-w-[160px] sm:max-w-[200px] rounded-xl object-cover border border-white/20 shadow-md">
-          <span class="text-[10px] text-emerald-400 mt-1 font-medium bg-slate-900/60 px-2 py-0.5 rounded-full"><i class="fa-solid fa-spinner animate-spin mr-1"></i>กำลังบีบอัดและส่งรูป...</span>
+          <span class="text-[10px] text-emerald-400 mt-1 font-medium bg-slate-900/60 px-2 py-0.5 rounded-full"><i class="fa-solid fa-spinner animate-spin mr-1"></i>กำลังส่งรูป...</span>
         </div>`;
-      else if(msg.type === 'optimistic-video') inner = `<div class="p-3 rounded-2xl bg-white border text-xs flex items-center gap-2 text-slate-500 shadow-sm"><i class="fa-solid fa-spinner animate-spin text-green-500"></i> กำลังอัปโหลดวิดีโอ (ไม่เกิน 3 นาที)...</div>`;
+      else if(msg.type === 'optimistic-video') inner = `<div class="p-3 rounded-2xl bg-white border text-xs flex items-center gap-2 text-slate-500 shadow-sm"><i class="fa-solid fa-spinner animate-spin text-green-500"></i> กำลังอัปโหลดวิดีโอ...</div>`;
       else if(msg.type === 'optimistic-file') inner = `<div class="p-3 rounded-2xl bg-white border text-xs flex items-center gap-2 text-slate-500 shadow-sm"><i class="fa-solid fa-spinner animate-spin text-green-500"></i> กำลังอัปโหลดไฟล์: ${msg.filename}</div>`;
       
       row.innerHTML = inner;
@@ -1656,7 +1656,7 @@
       }
     };
 
-    // ฟังก์ชันดาวน์โหลดรูปภาพทั้งหมดภายในกลุ่มออกมาเป็นไฟล์ ZIP แบบคลิกเดียวจบครับ
+    // ปรับปรุงฟังก์ชันดาวน์โหลดรูปภาพทั้งหมดในกลุ่ม โดยทยอยโหลดเป็นไฟล์รูปปกติเรียงกัน ไม่บีบเป็นไฟล์ ZIP
     window.downloadAllImagesInBatchGroup = async function(batchGroupId) {
       if(!batchGroupId || !lastSnapshotData) return;
       
@@ -1667,49 +1667,58 @@
       if(imagesInGroup.length === 0) return;
 
       Swal.fire({
-        title: 'กำลังบีบอัดรูปภาพกลุ่ม...',
-        html: `ระบบกำลังดึงข้อมูลรูปภาพจำนวน ${imagesInGroup.length} รูป มารวมไฟล์ ZIP คับ...`,
+        title: 'กำลังดาวน์โหลดรูปภาพกลุ่ม...',
+        html: `ระบบกำลังดึงข้อมูลภาพทั้งหมดจำนวน ${imagesInGroup.length} รูป ทยอยบันทึกลงเครื่องอัตโนมัติครับ...`,
         allowOutsideClick: false,
         didOpen: () => { Swal.showLoading(); }
       });
 
       try {
-        const zip = new JSZip();
         let currentCount = 0;
-
         for(let imgMsg of imagesInGroup) {
           if(!imgMsg.fileId) continue;
           currentCount++;
-          let res = await fetch(SCRIPT_URL, {
-            method: 'POST',
-            body: JSON.stringify({ action: 'getFileData', fileId: imgMsg.fileId })
-          });
-          let result = await res.json();
-          if(result.status === 'success' && result.base64) {
-            let base64Data = result.base64;
-            if (base64Data.includes(',')) base64Data = base64Data.split(',')[1];
-            
-            let name = imgMsg.filename || `image_${currentCount}.jpg`;
-            zip.file(name, base64Data, { base64: true });
+          
+          try {
+            let res = await fetch(SCRIPT_URL, {
+              method: 'POST',
+              body: JSON.stringify({ action: 'getFileData', fileId: imgMsg.fileId })
+            });
+            let result = await res.json();
+            if(result.status === 'success' && result.base64) {
+              let base64Data = result.base64;
+              if (base64Data.includes(',')) base64Data = base64Data.split(',')[1];
+              
+              const byteCharacters = atob(base64Data);
+              const byteNumbers = new Array(byteCharacters.length);
+              for (let i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i);
+              }
+              const byteArray = new Uint8Array(byteNumbers);
+              const blob = new Blob([byteArray], { type: 'image/jpeg' });
+              const blobUrl = URL.createObjectURL(blob);
+              
+              const a = document.createElement("a");
+              a.href = blobUrl;
+              a.download = imgMsg.filename || `image_${batchGroupId}_${currentCount}.jpg`;
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+              URL.revokeObjectURL(blobUrl);
+              
+              // หน่วงเวลาเล็กน้อยเพื่อให้บราวเซอร์เคลียร์คิวการดาวน์โหลดต่อเนื่องได้ทัน
+              await new Promise(r => setTimeout(r, 300));
+            }
+          } catch (e) {
+            console.error("ดาวน์โหลดภาพในกลุ่มขัดข้องตัวที่: " + currentCount, e);
           }
         }
-
-        const content = await zip.generateAsync({ type: "blob" });
-        const blobUrl = URL.createObjectURL(content);
-        
-        const a = document.createElement("a");
-        a.href = blobUrl;
-        a.download = `PhotoBatch_${Date.now()}.zip`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(blobUrl);
         
         Swal.close();
-        Swal.fire({ title: 'สำเร็จ', text: 'ดาวน์โหลดอัลบั้มรูปภาพสำเร็จเรียบร้อยครับ', icon: 'success', timer: 1500, showConfirmButton: false });
+        Swal.fire({ title: 'สำเร็จ', text: 'ดาวน์โหลดรูปภาพกลุ่มลงเครื่องเรียบร้อยครบถ้วนครับ', icon: 'success', timer: 1500, showConfirmButton: false });
       } catch(err) {
         console.error(err);
-        Swal.fire('เกิดข้อผิดพลาด', 'ไม่สามารถดาวน์โหลดภาพรวมกลุ่มได้ บราวเซอร์บล็อกหรือเน็ตไม่เสถียรครับ', 'error');
+        Swal.fire('เกิดข้อผิดพลาด', 'ไม่สามารถประมวลผลการโหลดชุดรูปภาพแบบต่อเนื่องได้ครับ', 'error');
       }
     };
 
@@ -1894,7 +1903,6 @@
       let lastRenderedDate = ""; 
       let mediaToLoad = []; 
 
-      // เก็บประวัติข้อความที่ถูกจัดการจัดกลุ่มรูปภาพแล้ว เพื่อป้องกันการ Render ซ้ำครับ
       let processedBatchGroupIds = new Set();
 
       if(lastSnapshotData) {
@@ -1919,14 +1927,13 @@
 
           const isSelf = msg.senderName === currentUser.displayName;
 
-          // ตรวจสอบเและดึงกลุ่มรูปภาพที่ส่งพร้อมกัน (Batch Image Group) เพื่อนำมาสร้างโครงสร้างตาราง Grid เหมือนแอป LINE คับ
+          // โครงสร้างกลุ่มรูปภาพ Grid (Batch Image Group) สไตล์ LINE App
           if (msg.type === 'image' && msg.batchGroupId && !msg.deleted) {
             if (processedBatchGroupIds.has(msg.batchGroupId)) {
-              continue; // ข้ามรูปนี้ไปเพราะถูกมัดรวมไปแสดงผลในกล่องหลักของกลุ่มเรียบร้อยแล้วครับ
+              continue;
             }
             processedBatchGroupIds.add(msg.batchGroupId);
 
-            // ดึงเฉพาะรูปภาพทั้งหมดใน Batch Group เดียวกันที่ยังไม่ถูกลบ
             const imagesInGroup = messageKeys
               .map(k => ({ key: k, ...lastSnapshotData[k] }))
               .filter(m => m.batchGroupId === msg.batchGroupId && m.type === 'image' && !m.deleted);
@@ -1963,7 +1970,6 @@
             const bubble = document.createElement('div');
             bubble.className = 'msg-bubble p-2 rounded-2xl flex flex-col gap-1.5 border border-white/10 bg-white/10 shadow-lg';
             
-            // ส่วนหัวของกลุ่มรูปภาพแสดงจำนวนรูปภาพ และปุ่มดาวน์โหลดทั้งหมดในคลิกเดียวแบบแอป LINE
             const batchHeader = document.createElement('div');
             batchHeader.className = 'flex items-center justify-between text-[11px] px-1 font-semibold text-white/90 border-b border-white/10 pb-1.5 mb-1 gap-4 select-none';
             batchHeader.innerHTML = `
@@ -1973,7 +1979,6 @@
             bubble.appendChild(batchHeader);
 
             const gridContainer = document.createElement('div');
-            // กำหนดโครงสร้างคอลัมน์ของ Grid ตามจำนวนภาพที่ส่งพร้อมกันให้สวยงามเหมือน LINE App ครับ
             let gridCols = 'grid-cols-2';
             if (imagesInGroup.length === 1) gridCols = 'grid-cols-1';
             else if (imagesInGroup.length === 3) gridCols = 'grid-cols-3';
@@ -1981,12 +1986,29 @@
             
             gridContainer.className = `image-group-grid grid ${gridCols}`;
 
+            // วนลูปสร้างกล่องรูปภาพในตาราง Grid พร้อมปุ่มดาวน์โหลดแยกภาพเดี่ยว
             imagesInGroup.forEach(imgData => {
+              const imgWrapper = document.createElement('div');
+              imgWrapper.className = 'relative group/img overflow-hidden rounded-lg border border-white/10 shadow-sm aspect-square bg-slate-900/20';
+
               const itemImg = document.createElement('img');
-              itemImg.className = 'img-grid-item max-h-[140px] rounded-lg object-cover border border-white/10 shadow-sm';
+              itemImg.className = 'img-grid-item w-full h-full object-cover';
               itemImg.src = imgData.content;
               itemImg.onclick = () => window.openImageInZoomViewer(imgData.content);
-              gridContainer.appendChild(itemImg);
+              imgWrapper.appendChild(itemImg);
+
+              // สร้างปุ่มไอคอนดาวน์โหลดแบบโปร่งแสง ลอยอยู่มุมขวาบนของแต่ละภาพเมื่อ Hover
+              const dlBtn = document.createElement('button');
+              dlBtn.className = 'single-img-dl-btn absolute top-1 right-1 w-6 h-6 rounded-full bg-black/60 hover:bg-green-600 text-white flex items-center justify-center text-[10px] transition-all duration-200 z-10 shadow-md';
+              dlBtn.innerHTML = `<i class="fa-solid fa-download"></i>`;
+              dlBtn.title = `ดาวน์โหลดภาพนี้: ${imgData.filename || 'image.jpg'}`;
+              dlBtn.onclick = (e) => {
+                e.stopPropagation(); // ไม่ให้ไปชน event ซูมภาพของรูปหลัก
+                window.directDownloadFromDrive(imgData.fileId || '', imgData.filename || 'image.jpg');
+              };
+              imgWrapper.appendChild(dlBtn);
+
+              gridContainer.appendChild(imgWrapper);
             });
 
             bubble.appendChild(gridContainer);
@@ -2012,7 +2034,6 @@
             row.appendChild(metaContainer);
             body.appendChild(row);
 
-            // ผูกเหตุการณ์ Context Menu / TouchHold ให้ลบรูปแบบยกกลุ่มได้คับ
             bindMessageActionEvents(bubble, key, msg.fileId, null, true, msg.batchGroupId);
             continue;
           }
@@ -2057,7 +2078,6 @@
             bubble.className += ' msg-deleted text-slate-400 italic bg-white/20 border border-dashed text-xs';
           } else {
             if(msg.type === 'image') {
-              // จัดการภาพเดี่ยวที่ไม่มี batchGroupId (คงโครงสร้างเดิม)
               bubble.innerHTML = `
                 <img src="${msg.content}" class="max-w-[160px] sm:max-w-[200px] rounded-xl object-cover cursor-pointer border border-white/20 shadow-md transform hover:scale-[1.02] transition-all select-none" referrerpolicy="no-referrer" onerror="this.src='https://cdn-icons-png.flaticon.com/512/16/16410.png'; this.className='w-12 h-12 opacity-50';" onclick="window.openImageInZoomViewer('${msg.content}')">
                 <div class="flex items-center gap-1.5 mt-1 w-full justify-center">
@@ -2099,7 +2119,7 @@
                   </div>
                 </div>
                 <div class="flex items-center gap-1.5 mt-1 w-full justify-start">
-                  <button onclick="directDownloadFromDrive('${msg.fileId || ''}', '${msg.filename || 'audio.mp3'}')" class="px-2 py-0.5 bg-green-600/10 hover:bg-green-600/20 text-[10px] text-green-600 rounded-md font-semibold transition-colors flex items-center gap-1"><i class="fa-solid fa-download"></i> นำไปวางส่งต่อได้เลยครับ</button>
+                  <button onclick="directDownloadFromDrive('${msg.fileId || ''}', '${msg.filename || 'audio.mp3'}')" class="px-2 py-0.5 bg-green-600/10 hover:bg-green-600/20 text-[10px] text-green-600 rounded-md font-semibold transition-colors flex items-center gap-1"><i class="fa-solid fa-download"></i> ดาวน์โหลดข้อความเสียง</button>
                 </div>
               `;
               bubble.style.padding = '0'; bubble.style.background = 'none'; bubble.style.boxShadow = 'none';
