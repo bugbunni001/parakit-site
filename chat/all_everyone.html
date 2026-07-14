@@ -41,7 +41,23 @@
       background-position: center;
       transition: all 0.4s ease;
     }
-    .no-scrollbar::-webkit-scrollbar { display: none; }
+    
+    /* เปิดให้มี Scrollbar แบบโมเดิร์น สวยงามไม่รกสายตา */
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.1);
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: rgba(16, 185, 129, 0.4);
+      border-radius: 10px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: rgba(16, 185, 129, 0.7);
+    }
+
     .msg-bubble {
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
       transition: all 0.2s ease;
@@ -187,11 +203,21 @@
     .relative:hover .single-img-dl-btn {
       opacity: 1;
     }
+
+    /* ไฮไลท์สำหรับคำที่ค้นหาเจอ */
+    .search-highlight {
+      background-color: #fde047;
+      color: #0f172a;
+      padding: 0 2px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
   </style>
 </head>
-<body class="h-[100dvh] w-screen flex items-center justify-center p-0 sm:p-4 md:p-6 overflow-hidden select-none">
+<!-- ถอดคลาส select-none ออกจากแท็ก body เพื่อไม่ให้บล็อกการลากครอบคัดลอก และปรับไปคุมเฉพาะจุดแทน -->
+<body class="h-[100dvh] w-screen flex items-center justify-center p-0 sm:p-4 md:p-6 overflow-hidden">
 
-  <div id="login-screen" class="glass-card w-full max-w-md rounded-3xl p-6 sm:p-8 text-center mx-4 transition-all duration-300 block z-50">
+  <div id="login-screen" class="glass-card w-full max-w-md rounded-3xl p-6 sm:p-8 text-center mx-4 transition-all duration-300 block z-50 select-none">
     <div class="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-tr from-emerald-400 to-green-600 rounded-2xl mx-auto flex items-center justify-center text-white text-3xl sm:text-4xl shadow-lg mb-4">
       <i class="fa-solid fa-comments"></i>
     </div>
@@ -237,41 +263,64 @@
 
   <div id="chat-interface" class="w-full h-full md:max-w-5xl md:h-[85vh] glass-panel md:rounded-3xl shadow-2xl flex flex-col border-none overflow-hidden transition-all duration-300 relative" style="display: none;">
     
-    <div id="drop-zone-overlay" class="absolute inset-0 z-50 flex flex-col items-center justify-center text-green-600 gap-2 font-bold pointer-events-none">
+    <div id="drop-zone-overlay" class="absolute inset-0 z-50 flex flex-col items-center justify-center text-green-600 gap-2 font-bold pointer-events-none select-none">
       <i class="fa-solid fa-cloud-arrow-up text-6xl animate-bounce"></i>
       <span class="text-lg">วางไฟล์ลงตรงนี้เพื่อเตรียมส่ง (สูงสุด 20 ไฟล์)</span>
     </div>
 
-    <div class="p-3 bg-slate-900/95 text-white flex items-center justify-between border-b border-white/10 z-10 shadow-lg shrink-0">
-      <div class="flex items-center gap-2 sm:gap-3 overflow-hidden mr-2">
-        <div class="relative group cursor-pointer shrink-0" id="avatar-container" title="คลิกเพื่อเปลี่ยนรูปโปรไฟล์ผ่านกูเกิลไดรฟ์">
-          <img id="my-avatar-img" class="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 border-green-400 object-cover shadow-md hover:scale-105 transition-all" src="https://cdn-icons-png.flaticon.com/512/149/149071.png">
-          <div class="absolute inset-0 bg-black/40 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all">
-            <i class="fa-solid fa-camera text-[10px] text-white"></i>
+    <!-- ส่วนหัวของแชท: ปรับปรุงโครงสร้างเพื่อรองรับแถบค้นหาและตัวกรองวันที่ -->
+    <div class="bg-slate-900/95 text-white border-b border-white/10 z-10 shadow-lg shrink-0 flex flex-col select-none">
+      <div class="p-3 flex items-center justify-between">
+        <div class="flex items-center gap-2 sm:gap-3 overflow-hidden mr-2">
+          <div class="relative group cursor-pointer shrink-0" id="avatar-container" title="คลิกเพื่อเปลี่ยนรูปโปรไฟล์ผ่านกูเกิลไดรฟ์">
+            <img id="my-avatar-img" class="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 border-green-400 object-cover shadow-md hover:scale-105 transition-all" src="https://cdn-icons-png.flaticon.com/512/149/149071.png">
+            <div class="absolute inset-0 bg-black/40 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all">
+              <i class="fa-solid fa-camera text-[10px] text-white"></i>
+            </div>
+            <span class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-slate-900 rounded-full"></span>
           </div>
-          <span class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-slate-900 rounded-full"></span>
+          <div class="overflow-hidden">
+            <h3 id="my-display-name" class="font-bold text-sm sm:text-base tracking-wide text-white truncate">Name</h3>
+            <p class="text-[10px] sm:text-[11px] text-green-400 flex items-center gap-1"><span class="w-1.5 h-1.5 bg-green-500 rounded-full inline-block animate-ping"></span> ออนไลน์</p>
+          </div>
         </div>
-        <div class="overflow-hidden">
-          <h3 id="my-display-name" class="font-bold text-sm sm:text-base tracking-wide text-white truncate">Name</h3>
-          <p class="text-[10px] sm:text-[11px] text-green-400 flex items-center gap-1"><span class="w-1.5 h-1.5 bg-green-500 rounded-full inline-block animate-ping"></span> ออนไลน์</p>
+        
+        <div class="shrink-0 flex items-center gap-1.5 sm:gap-2">
+          <!-- ปุ่มสลับเปิด-ปิดกล่องค้นหาข้อมูล -->
+          <button id="btn-toggle-search" title="ค้นหาข้อความ" class="p-2 sm:px-3 sm:py-2 rounded-xl bg-white/5 hover:bg-white/15 text-slate-300 flex items-center justify-center gap-1.5 transition-all text-xs font-semibold border border-white/5 shadow-sm">
+            <i class="fa-solid fa-magnifying-glass text-sm"></i>
+            <span class="hidden md:inline">ค้นหา</span>
+          </button>
+          
+          <button id="btn-toggle-multi-select" title="เลือกจัดการหลายข้อความ" class="px-2.5 py-2 rounded-xl bg-blue-500/20 hover:bg-blue-500/40 text-blue-300 flex items-center gap-1.5 transition-all text-xs font-semibold border border-blue-500/30 shadow-md">
+            <i class="fa-solid fa-list-check"></i>
+            <span id="txt-multi-select" class="hidden sm:inline">เลือกจัดการ</span>
+          </button>
+          <button id="btn-open-settings" title="การตั้งค่าระบบแชท" class="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white flex items-center justify-center gap-1.5 transition-all text-xs font-semibold border border-white/10 shadow-md">
+            <i class="fa-solid fa-gear text-sm"></i>
+            <span class="hidden sm:inline">ตั้งค่า</span>
+          </button>
         </div>
       </div>
-      
-      <div class="shrink-0 flex items-center gap-2">
-        <button id="btn-toggle-multi-select" title="เลือกจัดการหลายข้อความ" class="px-3 py-2 rounded-xl bg-blue-500/20 hover:bg-blue-500/40 text-blue-300 flex items-center gap-1.5 transition-all text-xs font-semibold border border-blue-500/30 shadow-md">
-          <i class="fa-solid fa-list-check"></i>
-          <span id="txt-multi-select">เลือกจัดการ</span>
-        </button>
-        <button id="btn-open-settings" title="การตั้งค่าระบบแชท" class="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white flex items-center justify-center gap-1.5 transition-all text-xs font-semibold border border-white/10 shadow-md">
-          <i class="fa-solid fa-gear text-sm"></i>
-          <span class="hidden sm:inline">ตั้งค่า</span>
-        </button>
+
+      <!-- แถบค้นหาข้อความและข้ามไปยังวันที่ -->
+      <div id="search-filter-bar" class="hidden px-3 pb-3 pt-1 border-t border-white/5 flex flex-col sm:flex-row gap-2 items-center bg-slate-900/40">
+        <div class="relative w-full sm:flex-1">
+          <input type="text" id="chat-search-input" placeholder="พิมพ์ข้อความที่ต้องการค้นหา..." class="w-full bg-slate-800 text-white text-xs pl-8 pr-8 py-2 rounded-xl focus:outline-none focus:ring-1 focus:ring-green-500 border border-slate-700 font-light">
+          <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2.5 text-slate-500 text-[11px]"></i>
+          <button id="btn-clear-search" class="hidden absolute right-2.5 top-2 text-slate-400 hover:text-white text-xs"><i class="fa-solid fa-circle-xmark"></i></button>
+        </div>
+        <div class="relative w-full sm:w-auto flex items-center gap-1.5 shrink-0">
+          <span class="text-[10px] text-slate-400 font-medium shrink-0"><i class="fa-regular fa-calendar-days"></i> ข้ามไปวันที่:</span>
+          <input type="date" id="chat-date-picker" class="bg-slate-800 text-white text-xs px-2.5 py-1.5 rounded-xl focus:outline-none focus:ring-1 focus:ring-green-500 border border-slate-700 font-light cursor-pointer scheme-dark">
+        </div>
       </div>
     </div>
     
-    <div class="chat-area flex-1 p-3 sm:p-4 md:p-6 overflow-y-auto no-scrollbar space-y-4 font-normal flex flex-col" id="chat-body"></div>
+    <!-- พื้นที่แสดงข้อความในแชท สามารถครอบคัดลอกข้อความใน Bubble ได้โดยตรง -->
+    <div class="chat-area flex-1 p-3 sm:p-4 md:p-6 overflow-y-auto custom-scrollbar space-y-4 font-normal flex flex-col" id="chat-body"></div>
     
-    <div id="multi-select-bar" class="hidden p-3 bg-slate-900 text-white flex items-center justify-between border-t border-white/10 transition-all z-20 shrink-0">
+    <div id="multi-select-bar" class="hidden p-3 bg-slate-900 text-white flex items-center justify-between border-t border-white/10 transition-all z-20 shrink-0 select-none">
       <span id="multi-select-count" class="text-xs font-semibold text-slate-300">เลือกไว้ 0 รายการ</span>
       <div class="flex gap-2">
         <button id="btn-delete-selected" class="px-2.5 py-1.5 bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold rounded-lg flex items-center gap-1 transition-colors">
@@ -286,7 +335,7 @@
       </div>
     </div>
 
-    <div class="p-3 bg-white border-t border-slate-200/80 flex flex-col gap-2 shadow-inner shrink-0 relative pb-safe">
+    <div class="p-3 bg-white border-t border-slate-200/80 flex flex-col gap-2 shadow-inner shrink-0 relative pb-safe select-none">
       <div class="flex items-center justify-between px-1">
         <div class="flex items-center gap-4 text-slate-500 w-full justify-between">
           <div class="flex items-center gap-4">
@@ -308,30 +357,30 @@
       </div>
       
       <div class="flex items-center gap-2 items-end">
-        <textarea id="msg-input" rows="1" placeholder="พิมพ์ข้อความของคุณที่นี่..." class="flex-1 p-2.5 sm:p-3.5 px-4 sm:px-5 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 font-medium text-slate-800 placeholder-slate-400 shadow-sm transition-all no-scrollbar"></textarea>
+        <textarea id="msg-input" rows="1" placeholder="พิมพ์ข้อความของคุณที่นี่..." class="flex-1 p-2.5 sm:p-3.5 px-4 sm:px-5 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 font-medium text-slate-800 placeholder-slate-400 shadow-sm transition-all custom-scrollbar select-text"></textarea>
         <button id="btn-send" class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-green-500/20 transform active:scale-95 transition-all shrink-0 mb-0.5">
           <i class="fa-solid fa-paper-plane text-xs sm:text-sm"></i>
         </button>
       </div>
       
-      <div class="emoji-picker glass-card shadow-2xl grid grid-cols-6 gap-2 sm:gap-3 p-3 sm:p-4 hidden absolute bottom-24 left-2 right-2 sm:left-4 sm:right-auto sm:min-w-[300px] sm:max-w-[340px] max-h-[180px] rounded-2xl overflow-y-auto z-50 text-xl sm:text-2xl select-none cursor-pointer" id="emoji-picker"></div>
-      <div class="sticker-picker glass-card shadow-2xl grid grid-cols-3 gap-2 sm:gap-3 p-3 sm:p-4 hidden absolute bottom-24 left-2 right-2 sm:left-14 sm:right-auto sm:min-w-[300px] sm:max-w-[340px] max-h-[180px] rounded-2xl overflow-y-auto z-50 select-none" id="sticker-picker"></div>
+      <div class="emoji-picker glass-card shadow-2xl grid grid-cols-6 gap-2 sm:gap-3 p-3 sm:p-4 hidden absolute bottom-24 left-2 right-2 sm:left-4 sm:right-auto sm:min-w-[300px] sm:max-w-[340px] max-h-[180px] rounded-2xl overflow-y-auto custom-scrollbar z-50 text-xl sm:text-2xl cursor-pointer" id="emoji-picker"></div>
+      <div class="sticker-picker glass-card shadow-2xl grid grid-cols-3 gap-2 sm:gap-3 p-3 sm:p-4 hidden absolute bottom-24 left-2 right-2 sm:left-14 sm:right-auto sm:min-w-[300px] sm:max-w-[340px] max-h-[180px] rounded-2xl overflow-y-auto custom-scrollbar z-50" id="sticker-picker"></div>
     </div>
     
     <input type="file" id="avatar-input" class="hidden" accept="image/*" onchange="uploadUserAvatarToDrive(event)">
     <input type="file" id="bg-input" class="hidden" accept="image/*" onchange="uploadUserBgToDrive(event)">
   </div>
 
-  <div id="upload-preview-modal" class="glass-card fixed inset-0 m-auto w-[90%] max-w-md h-fit p-5 rounded-3xl hidden z-[100] flex flex-col gap-4 border border-white/60 shadow-2xl">
+  <div id="upload-preview-modal" class="glass-card fixed inset-0 m-auto w-[90%] max-w-md h-fit p-5 rounded-3xl hidden z-[100] flex flex-col gap-4 border border-white/60 shadow-2xl select-none">
     <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2 border-b pb-2"><i class="fa-solid fa-file-shield text-green-500 text-base"></i> ตรวจสอบไฟล์ก่อนส่ง (สูงสุด 20 ไฟล์)</h3>
-    <div id="preview-list-container" class="flex flex-col gap-3 max-h-[220px] overflow-y-auto no-scrollbar"></div>
+    <div id="preview-list-container" class="flex flex-col gap-3 max-h-[220px] overflow-y-auto custom-scrollbar"></div>
     <div class="flex gap-2 justify-end mt-1">
       <button id="btn-close-preview" class="px-4 py-2 bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl hover:bg-slate-300 transition-colors">ยกเลิก</button>
       <button id="btn-submit-upload-all" class="px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white text-xs font-semibold rounded-xl shadow-md hover:opacity-95 transition-all">ส่งไฟล์ทั้งหมด</button>
     </div>
   </div>
 
-  <div id="viewer-hidden-container">
+  <div id="viewer-hidden-container" class="select-none">
     <img id="viewer-target-image" src="" alt="Chat Content Image">
   </div>
 
@@ -370,6 +419,9 @@
 
     let queueFilesToUpload = []; 
     let selectedMessageItems = {}; 
+    
+    // ประกาศตัวแปรสำหรับเก็บค่าการค้นหาข้อความ
+    let currentSearchKeyword = "";
 
     const emojis = ["😀","😂","🥰","😎","🤩","😏","👍","👌","🙏","🎉","🔥","❤️","😭","😱","😡","🤫","💩","✨","👀","💯","🎂","🚀","👏","🥳","🥺","💔","💖","🌟","🍀","🍺","☕️","🍙","🎮","🐱","🐶","🦊","👑","💸","ชิว","เซ็ง","สู้ๆ","งอน"];
     const stickers = [
@@ -385,6 +437,7 @@
       initAudioRecorder();
       initDragAndDropEvents();
       initMultiSelectEvents();
+      initSearchAndFilterEvents(); // ลงทะเบียน Event ระบบค้นหาและเลือกวันที่
     });
 
     function unlockAudioContext() {
@@ -508,6 +561,72 @@
       document.getElementById('avatar-container').addEventListener('click', () => document.getElementById('avatar-input').click());
       document.getElementById('btn-close-preview').addEventListener('click', closeUploadPreviewModal);
       document.getElementById('btn-submit-upload-all').addEventListener('click', executeQueueUploads);
+    }
+
+    /* ฟังก์ชันผูกชุดคำสั่งให้กับระบบค้นหาข้อมูลและการข้ามวันที่ */
+    function initSearchAndFilterEvents() {
+      const toggleBtn = document.getElementById('btn-toggle-search');
+      const filterBar = document.getElementById('search-filter-bar');
+      const searchInput = document.getElementById('chat-search-input');
+      const clearSearchBtn = document.getElementById('btn-clear-search');
+      const datePicker = document.getElementById('chat-date-picker');
+
+      // เปิด-ปิด แถบค้นหาข้อมูล
+      toggleBtn.addEventListener('click', () => {
+        filterBar.classList.toggle('hidden');
+        if (!filterBar.classList.contains('hidden')) {
+          searchInput.focus();
+        } else {
+          // ถ้าซ่อนแถบแชท ให้ล้างคำค้นหาเดิมด้วย
+          currentSearchKeyword = "";
+          searchInput.value = "";
+          clearSearchBtn.classList.add('hidden');
+          renderAllMessagesWithTemps(false);
+        }
+      });
+
+      // ดักจับการพิมพ์คำค้นหาแบบ Real-time
+      searchInput.addEventListener('input', (e) => {
+        currentSearchKeyword = e.target.value.trim();
+        if (currentSearchKeyword.length > 0) {
+          clearSearchBtn.classList.remove('hidden');
+        } else {
+          clearSearchBtn.classList.add('hidden');
+        }
+        // รันการแสดงผลแชทใหม่เพื่อกรองและไฮไลท์ข้อความ
+        renderAllMessagesWithTemps(false);
+      });
+
+      // ปุ่มล้างช่อง Input ค้นหา
+      clearSearchBtn.addEventListener('click', () => {
+        searchInput.value = "";
+        currentSearchKeyword = "";
+        clearSearchBtn.classList.add('hidden');
+        renderAllMessagesWithTemps(false);
+        searchInput.focus();
+      });
+
+      // การกระโดดไปยังวันที่เริ่มต้นแชทของวันนั้น
+      datePicker.addEventListener('change', (e) => {
+        const selectedDate = e.target.value; // YYYY-MM-DD
+        if (!selectedDate) return;
+
+        // ค้นหา Element ของ Divider วันที่ หรือกล่องข้อความแรกที่แมตช์กับวันที่เลือก
+        const targets = document.querySelectorAll(`[data-date-anchor="${selectedDate}"]`);
+        if (targets.length > 0) {
+          targets[0].scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else {
+          // แจ้งเตือนสั้นๆ แบบพรีเมียมถ้าไม่มีข้อความในวันนั้น
+          Swal.fire({
+            title: 'ไม่พบประวัติ',
+            text: 'ไม่มีประวัติการคุยแชทในวันที่เลือกครับ',
+            icon: 'info',
+            timer: 1500,
+            showConfirmButton: false,
+            customClass: { popup: 'rounded-3xl' }
+          });
+        }
+      });
     }
 
     function initDragAndDropEvents() {
@@ -725,7 +844,7 @@
         } else {
           base64Payload = await new Promise((resolve) => {
             const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result);
+            resolve(reader.result);
             reader.readAsDataURL(file);
           });
         }
@@ -1050,6 +1169,28 @@
         return `<a href="${url}" target="_blank" class="text-blue-600 font-medium underline break-all hover:text-blue-800">${url}</a>`;
       });
       return html;
+    }
+
+    /* ฟังก์ชันประมวลผลข้อความเพื่อไฮไลท์ส่วนที่ค้นหาเจอ */
+    function highlightSearchKeyword(text, keyword) {
+      if (!text) return "";
+      if (!keyword) return linkify(text);
+      
+      // ทำการ Escape อักขระพิเศษสำหรับ Regex
+      const escapedKeyword = keyword.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+      const regex = new RegExp(`(${escapedKeyword})`, 'gi');
+      
+      // แยกส่วน Link ออกก่อนเพื่อไม่ให้แท็ก HTML ของ A link เสียหาย
+      const parts = text.split(/(https?:\/\/[^\s]+)/g);
+      
+      const processedParts = parts.map(part => {
+        if (part.match(/^https?:\/\//)) {
+          return `<a href="${part}" target="_blank" class="text-blue-600 font-medium underline break-all hover:text-blue-800">${part}</a>`;
+        }
+        return part.replace(regex, '<span class="search-highlight">$1</span>');
+      });
+      
+      return processedParts.join('');
     }
 
     window.initAudioTracker = function(audioElement, durationId) {
@@ -1656,7 +1797,6 @@
       }
     };
 
-    // ปรับปรุงฟังก์ชันดาวน์โหลดรูปภาพทั้งหมดในกลุ่ม โดยทยอยโหลดเป็นไฟล์รูปปกติเรียงกัน ไม่บีบเป็นไฟล์ ZIP
     window.downloadAllImagesInBatchGroup = async function(batchGroupId) {
       if(!batchGroupId || !lastSnapshotData) return;
       
@@ -1706,7 +1846,6 @@
               document.body.removeChild(a);
               URL.revokeObjectURL(blobUrl);
               
-              // หน่วงเวลาเล็กน้อยเพื่อให้บราวเซอร์เคลียร์คิวการดาวน์โหลดต่อเนื่องได้ทัน
               await new Promise(r => setTimeout(r, 300));
             }
           } catch (e) {
@@ -1775,13 +1914,13 @@
         
         const cm = document.createElement('div');
         cm.id = 'custom-context-menu';
-        cm.className = 'custom-cm flex flex-col gap-2 text-center items-center justify-center';
+        cm.className = 'custom-cm flex flex-col gap-2 text-center items-center justify-center select-none';
         
         let menuHTML = `<h4 class="text-xs font-bold text-slate-400 mb-1 border-b pb-1 w-full tracking-wide">จัดการข้อความ</h4>`;
         if (textContent !== null && textContent !== undefined) {
           menuHTML += `
             <button id="cm-copy" class="w-full text-center flex items-center justify-center gap-2 px-3 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-semibold transition-all border border-slate-200/60">
-              <i class="fa-regular fa-copy text-sm text-blue-500"></i> คัดลอกข้อความ
+              <i class="fa-regular fa-copy text-sm text-blue-500"></i> คัดลอกข้อความทั้งหมด
             </button>
           `;
         }
@@ -1846,6 +1985,10 @@
 
       element.addEventListener('contextmenu', (e) => {
         if(document.getElementById('chat-interface').classList.contains('multi-select-mode')) return;
+        
+        // ตรวจสอบว่ามีการลาก cursor ไฮไลท์ข้อความอยู่หรือไม่ ถ้ามี ให้ยกเว้นการเปิดเมนูด่วนเพื่อให้ Copy ปกติได้
+        if (window.getSelection().toString().trim() !== "") return;
+
         e.preventDefault();
         e.stopPropagation();
         showActionMenu();
@@ -1854,6 +1997,7 @@
       element.addEventListener('touchstart', (e) => {
         if(document.getElementById('chat-interface').classList.contains('multi-select-mode')) return;
         touchTimer = setTimeout(() => {
+          if (window.getSelection().toString().trim() !== "") return;
           if (window.navigator.vibrate) window.navigator.vibrate(40); 
           showActionMenu();
         }, 600);
@@ -1912,13 +2056,28 @@
           const key = messageKeys[idx];
           const msg = lastSnapshotData[key];
           
+          // ระบบการกรองข้อมูลด้วยกล่องค้นหา (Filter text & filename)
+          if (currentSearchKeyword) {
+            let matched = false;
+            if (msg.type === 'text' && msg.content && msg.content.toLowerCase().includes(currentSearchKeyword.toLowerCase())) {
+              matched = true;
+            } else if (msg.filename && msg.filename.toLowerCase().includes(currentSearchKeyword.toLowerCase())) {
+              matched = true;
+            }
+            if (!matched) continue; // ข้ามข้อความที่ไม่แมตช์คำค้นหา
+          }
+
+          let msgISO = "";
           if (msg.timestamp) {
             const msgDateObj = new Date(msg.timestamp);
+            msgISO = msgDateObj.toISOString().split('T')[0]; // แปลงเป็นรูปแบบ YYYY-MM-DD สำหรับสมอ Anchor ค้นหาวันที่
             const msgDateStr = msgDateObj.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
             
             if (msgDateStr !== lastRenderedDate) {
               const dateDivider = document.createElement('div');
               dateDivider.className = "w-full flex justify-center my-3 select-none";
+              // ฝัง Data Attribute เพื่อทำ Anchor ข้ามไปหาวันที่นั้นๆ
+              dateDivider.setAttribute('data-date-anchor', msgISO);
               dateDivider.innerHTML = `<span class="px-3 py-1 bg-slate-800/40 backdrop-blur-md border border-white/10 text-slate-300 text-[11px] font-medium rounded-full shadow-sm">${msgDateStr}</span>`;
               body.appendChild(dateDivider);
               lastRenderedDate = msgDateStr;
@@ -1940,7 +2099,8 @@
 
             const row = document.createElement('div');
             row.className = `msg-row flex gap-2 sm:gap-3 max-w-[90%] sm:max-w-[80%] w-fit relative items-end group mb-2 ${isSelf ? 'self flex-row-reverse ml-auto' : 'other mr-auto text-left'}`;
-            
+            if (msgISO) row.setAttribute('data-date-anchor', msgISO); // กรณีไม่ชน Divider ให้ผูกไว้ที่ Row แทน
+
             const checkBoxEl = document.createElement('input');
             checkBoxEl.type = 'checkbox';
             checkBoxEl.className = 'msg-checkbox accent-blue-500 w-4 h-4 mb-3 cursor-pointer shrink-0';
@@ -1951,7 +2111,7 @@
 
             if(!isSelf) {
               const img = document.createElement('img');
-              img.className = 'msg-avatar w-8 h-8 rounded-full object-cover shadow-sm self-start mt-1 shrink-0 cursor-pointer hover:scale-105 transition-transform';
+              img.className = 'msg-avatar w-8 h-8 rounded-full object-cover shadow-sm self-start mt-1 shrink-0 cursor-pointer hover:scale-105 transition-transform select-none';
               img.src = resolvedAvatar;
               img.onclick = () => window.viewUserProfileImage(resolvedAvatar, msg.senderName);
               row.appendChild(img);
@@ -1962,7 +2122,7 @@
             
             if(!isSelf) {
               const nameSpan = document.createElement('span');
-              nameSpan.className = 'msg-name text-[11px] text-slate-400 font-medium mb-1 px-1';
+              nameSpan.className = 'msg-name text-[11px] text-slate-400 font-medium mb-1 px-1 select-none';
               nameSpan.innerText = msg.senderName;
               wrapper.appendChild(nameSpan);
             }
@@ -1986,24 +2146,22 @@
             
             gridContainer.className = `image-group-grid grid ${gridCols}`;
 
-            // วนลูปสร้างกล่องรูปภาพในตาราง Grid พร้อมปุ่มดาวน์โหลดแยกภาพเดี่ยว
             imagesInGroup.forEach(imgData => {
               const imgWrapper = document.createElement('div');
               imgWrapper.className = 'relative group/img overflow-hidden rounded-lg border border-white/10 shadow-sm aspect-square bg-slate-900/20';
 
               const itemImg = document.createElement('img');
-              itemImg.className = 'img-grid-item w-full h-full object-cover';
+              itemImg.className = 'img-grid-item w-full h-full object-cover select-none';
               itemImg.src = imgData.content;
               itemImg.onclick = () => window.openImageInZoomViewer(imgData.content);
               imgWrapper.appendChild(itemImg);
 
-              // สร้างปุ่มไอคอนดาวน์โหลดแบบโปร่งแสง ลอยอยู่มุมขวาบนของแต่ละภาพเมื่อ Hover
               const dlBtn = document.createElement('button');
-              dlBtn.className = 'single-img-dl-btn absolute top-1 right-1 w-6 h-6 rounded-full bg-black/60 hover:bg-green-600 text-white flex items-center justify-center text-[10px] transition-all duration-200 z-10 shadow-md';
+              dlBtn.className = 'single-img-dl-btn absolute top-1 right-1 w-6 h-6 rounded-full bg-black/60 hover:bg-green-600 text-white flex items-center justify-center text-[10px] transition-all duration-200 z-10 shadow-md select-none';
               dlBtn.innerHTML = `<i class="fa-solid fa-download"></i>`;
               dlBtn.title = `ดาวน์โหลดภาพนี้: ${imgData.filename || 'image.jpg'}`;
               dlBtn.onclick = (e) => {
-                e.stopPropagation(); // ไม่ให้ไปชน event ซูมภาพของรูปหลัก
+                e.stopPropagation(); 
                 window.directDownloadFromDrive(imgData.fileId || '', imgData.filename || 'image.jpg');
               };
               imgWrapper.appendChild(dlBtn);
@@ -2015,7 +2173,7 @@
             wrapper.appendChild(bubble);
             
             const metaContainer = document.createElement('div');
-            metaContainer.className = `flex flex-col text-[9px] text-slate-400 font-medium px-0.5 mb-1 shrink-0 ${isSelf ? 'items-end' : 'items-start'}`;
+            metaContainer.className = `flex flex-col text-[9px] text-slate-400 font-medium px-0.5 mb-1 shrink-0 select-none ${isSelf ? 'items-end' : 'items-start'}`;
 
             const totalReadsCount = msg.readBy ? Object.keys(msg.readBy).length : 0;
             if (isSelf && totalReadsCount > 0) {
@@ -2040,7 +2198,8 @@
 
           const row = document.createElement('div');
           row.className = `msg-row flex gap-2 sm:gap-3 max-w-[90%] sm:max-w-[80%] w-fit relative items-end group mb-2 ${isSelf ? 'self flex-row-reverse ml-auto' : 'other mr-auto text-left'}`;
-          
+          if (msgISO) row.setAttribute('data-date-anchor', msgISO);
+
           const isChecked = selectedMessageItems[key] ? 'checked' : '';
           
           const checkBoxEl = document.createElement('input');
@@ -2054,7 +2213,7 @@
 
           if(!isSelf) {
             const img = document.createElement('img');
-            img.className = 'msg-avatar w-8 h-8 rounded-full object-cover shadow-sm self-start mt-1 shrink-0 cursor-pointer hover:scale-105 transition-transform';
+            img.className = 'msg-avatar w-8 h-8 rounded-full object-cover shadow-sm self-start mt-1 shrink-0 cursor-pointer hover:scale-105 transition-transform select-none';
             img.src = resolvedAvatar;
             img.onclick = () => window.viewUserProfileImage(resolvedAvatar, msg.senderName);
             row.appendChild(img);
@@ -2065,7 +2224,7 @@
           
           if(!isSelf) {
             const nameSpan = document.createElement('span');
-            nameSpan.className = 'msg-name text-[11px] text-slate-400 font-medium mb-1 px-1';
+            nameSpan.className = 'msg-name text-[11px] text-slate-400 font-medium mb-1 px-1 select-none';
             nameSpan.innerText = msg.senderName;
             wrapper.appendChild(nameSpan);
           }
@@ -2075,12 +2234,12 @@
 
           if(msg.deleted) {
             bubble.innerText = 'ข้อความถูกลบเรียบร้อย';
-            bubble.className += ' msg-deleted text-slate-400 italic bg-white/20 border border-dashed text-xs';
+            bubble.className += ' msg-deleted text-slate-400 italic bg-white/20 border border-dashed text-xs select-none';
           } else {
             if(msg.type === 'image') {
               bubble.innerHTML = `
                 <img src="${msg.content}" class="max-w-[160px] sm:max-w-[200px] rounded-xl object-cover cursor-pointer border border-white/20 shadow-md transform hover:scale-[1.02] transition-all select-none" referrerpolicy="no-referrer" onerror="this.src='https://cdn-icons-png.flaticon.com/512/16/16410.png'; this.className='w-12 h-12 opacity-50';" onclick="window.openImageInZoomViewer('${msg.content}')">
-                <div class="flex items-center gap-1.5 mt-1 w-full justify-center">
+                <div class="flex items-center gap-1.5 mt-1 w-full justify-center select-none">
                   <a href="https://drive.google.com/file/d/${msg.fileId || ''}/view" target="_blank" class="px-2 py-1 bg-slate-800/80 hover:bg-slate-900 text-[10px] text-white rounded-md font-medium transition-colors flex items-center gap-1 shadow-sm"><i class="fa-regular fa-eye"></i> ดูไฟล์</a>
                   <button onclick="directDownloadFromDrive('${msg.fileId || ''}', '${msg.filename || 'image.jpg'}')" class="px-2 py-1 bg-green-600 hover:bg-green-700 text-[10px] text-white rounded-md font-medium transition-colors flex items-center gap-1 shadow-sm"><i class="fa-solid fa-download"></i> ดาวน์โหลด</button>
                 </div>
@@ -2090,7 +2249,7 @@
             } else if(msg.type === 'video') {
               const videoId = `video_el_${key}`;
               bubble.innerHTML = `
-                <div class="video-premium-container">
+                <div class="video-premium-container select-none">
                   <video id="${videoId}" preload="metadata" class="w-full max-h-[300px] object-cover" onclick="this.paused ? (this.play(), this.nextElementSibling.style.display='none') : (this.pause(), this.nextElementSibling.style.display='flex')"></video>
                   <div class="video-play-overlay" onclick="const v = this.previousElementSibling; v.play(); this.style.display='none'; v.controls=true;">
                     <div class="video-play-btn"><i class="fa-solid fa-play ml-0.5"></i></div>
@@ -2099,7 +2258,7 @@
                     <i class="fa-solid fa-circle-notch animate-spin text-emerald-400 text-base"></i> สตรีมข้อมูลจากคลาวด์...
                   </div>
                 </div>
-                <div class="flex items-center gap-1.5 mt-1 w-full justify-start">
+                <div class="flex items-center gap-1.5 mt-1 w-full justify-start select-none">
                   <button onclick="directDownloadFromDrive('${msg.fileId || ''}', '${msg.filename || 'video.mp4'}')" class="px-2 py-1 bg-green-600 hover:bg-green-700 text-[10px] text-white rounded-md font-medium transition-colors flex items-center gap-1 shadow-sm"><i class="fa-solid fa-download"></i> ดาวน์โหลดวีดิโอ</button>
                 </div>
               `;
@@ -2110,7 +2269,7 @@
               const audioId = `audio_el_${key}`;
               const durationId = `dur_${key}`;
               bubble.innerHTML = `
-                <div class="audio-player-container">
+                <div class="audio-player-container select-none">
                   <button onclick="this.nextElementSibling.paused ? this.nextElementSibling.play() : this.nextElementSibling.pause()" class="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-sm shrink-0"><i class="fa-solid fa-play text-xs"></i></button>
                   <audio id="${audioId}" preload="metadata" onplay="this.previousElementSibling.innerHTML='<i class=\"fa-solid fa-pause text-xs\"></i>'" onpause="this.previousElementSibling.innerHTML='<i class=\"fa-solid fa-play text-xs\"></i>'"></audio>
                   <div class="flex flex-col flex-1">
@@ -2118,7 +2277,7 @@
                     <span id="${durationId}" class="text-xs font-semibold text-slate-700"><i class="fa-solid fa-circle-notch animate-spin text-emerald-500 mr-1"></i>กำลังคำนวณ...</span>
                   </div>
                 </div>
-                <div class="flex items-center gap-1.5 mt-1 w-full justify-start">
+                <div class="flex items-center gap-1.5 mt-1 w-full justify-start select-none">
                   <button onclick="directDownloadFromDrive('${msg.fileId || ''}', '${msg.filename || 'audio.mp3'}')" class="px-2 py-0.5 bg-green-600/10 hover:bg-green-600/20 text-[10px] text-green-600 rounded-md font-semibold transition-colors flex items-center gap-1"><i class="fa-solid fa-download"></i> ดาวน์โหลดข้อความเสียง</button>
                 </div>
               `;
@@ -2126,15 +2285,16 @@
               bindMessageActionEvents(bubble, key, msg.fileId, null);
               mediaToLoad.push({ fileId: msg.fileId, elementId: audioId, type: 'audio', loadingId: null });
             } else if(msg.type === 'text') {
-              bubble.innerHTML = linkify(msg.content);
+              // กล่องข้อความทั่วไปเปิดให้ลาก Cursor เลือกแบบจำเพาะเจาะจงได้เสรี (ผ่านคลาส select-text อัตโนมัติจาก Tailwind)
+              bubble.innerHTML = highlightSearchKeyword(msg.content, currentSearchKeyword);
               bubble.className += isSelf ? ' bg-[#7CE68E] text-slate-900 rounded-tr-none' : ' bg-white text-slate-800 rounded-tl-none';
               bindMessageActionEvents(bubble, key, msg.fileId, msg.content); 
             } else if(msg.type === 'file') {
               bubble.innerHTML = `
                 <div class="flex items-center gap-2 font-semibold text-slate-700 text-xs sm:text-sm break-all">
-                  <i class="fa-solid fa-file-lines text-lg sm:text-xl text-emerald-500 shrink-0"></i> ${msg.filename || 'ไฟล์แนบ'}
+                  <i class="fa-solid fa-file-lines text-lg sm:text-xl text-emerald-500 shrink-0 select-none"></i> ${highlightSearchKeyword(msg.filename, currentSearchKeyword)}
                 </div>
-                <div class="flex items-center gap-2 mt-1 border-t border-slate-100 pt-1.5 justify-start">
+                <div class="flex items-center gap-2 mt-1 border-t border-slate-100 pt-1.5 justify-start select-none">
                   <a href="https://drive.google.com/file/d/${msg.fileId || ''}/view" target="_blank" class="px-1.5 py-0.5 sm:px-2 sm:py-1 bg-slate-100 hover:bg-slate-200 text-[10px] text-slate-600 rounded-md font-medium transition-colors flex items-center gap-1"><i class="fa-regular fa-eye"></i> ดูไฟล์</a>
                   <button onclick="directDownloadFromDrive('${msg.fileId || ''}', '${msg.filename || 'file'}')" class="px-1.5 py-0.5 sm:px-2 sm:py-1 bg-green-50 hover:bg-green-100 text-[10px] text-green-600 rounded-md font-medium transition-colors flex items-center gap-1"><i class="fa-solid fa-download"></i> ดาวน์โหลด</button>
                 </div>
@@ -2151,7 +2311,7 @@
           wrapper.appendChild(bubble);
           
           const metaContainer = document.createElement('div');
-          metaContainer.className = `flex flex-col text-[9px] text-slate-400 font-medium px-0.5 mb-1 shrink-0 ${isSelf ? 'items-end' : 'items-start'}`;
+          metaContainer.className = `flex flex-col text-[9px] text-slate-400 font-medium px-0.5 mb-1 shrink-0 select-none ${isSelf ? 'items-end' : 'items-start'}`;
 
           const totalReadsCount = msg.readBy ? Object.keys(msg.readBy).length : 0;
 
@@ -2193,7 +2353,7 @@
       const ep = document.getElementById('emoji-picker');
       emojis.forEach(emo => {
         let span = document.createElement('span'); 
-        span.className = 'hover:scale-130 transition-transform duration-100 flex items-center justify-center p-1'; 
+        span.className = 'hover:scale-130 transition-transform duration-100 flex items-center justify-center p-1 select-none'; 
         span.innerText = emo;
         span.onclick = (e) => { 
           e.stopPropagation();
@@ -2214,7 +2374,7 @@
       stickers.forEach(stk => {
         let img = document.createElement('img'); 
         img.src = stk; 
-        img.className = 'w-14 h-14 sm:w-16 sm:h-16 object-contain hover:scale-115 active:scale-95 transition-all duration-100 p-1 cursor-pointer';
+        img.className = 'w-14 h-14 sm:w-16 sm:h-16 object-contain hover:scale-115 active:scale-95 transition-all duration-100 p-1 cursor-pointer select-none';
         img.onclick = (e) => { 
           e.stopPropagation();
           sendSticker(stk); 
