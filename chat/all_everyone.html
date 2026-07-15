@@ -355,7 +355,7 @@
       </div>
       
       <div class="flex items-center gap-2 items-end">
-        <textarea id="msg-input" rows="1" placeholder="พิมพ์ข้อความของคุณที่นี่..." class="flex-1 p-2.5 sm:p-3.5 px-4 sm:px-5 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 font-medium text-slate-800 placeholder-slate-400 shadow-sm transition-all custom-scrollbar select-text"></textarea>
+        <textarea id="msg-input" rows="1" placeholder="พิมพ์ข้อความ หรือ วางรูปภาพ (Ctrl+V) เพื่อส่งแบบ LINE..." class="flex-1 p-2.5 sm:p-3.5 px-4 sm:px-5 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 font-medium text-slate-800 placeholder-slate-400 shadow-sm transition-all custom-scrollbar select-text"></textarea>
         <button id="btn-send" class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-green-500/20 transform active:scale-95 transition-all shrink-0 mb-0.5">
           <i class="fa-solid fa-paper-plane text-xs sm:text-sm"></i>
         </button>
@@ -434,6 +434,7 @@
       initDragAndDropEvents();
       initMultiSelectEvents();
       initSearchAndFilterEvents();
+      initPasteEvents(); // ลงทะเบียน Event ดักจับการกดวางภาพ
     });
 
     function unlockAudioContext() {
@@ -645,6 +646,54 @@
       });
     }
 
+    // ฟังก์ชันดักจับ Event การกดวาง (Paste) จากคลิปบอร์ด
+    function initPasteEvents() {
+      const msgInput = document.getElementById('msg-input');
+      
+      // ดักจับที่ช่องพิมพ์ข้อความ
+      msgInput.addEventListener('paste', (e) => {
+        handlePasteAction(e);
+      });
+
+      // ดักจับที่หน้าต่างแอปพลิเคชันรวมเพื่อความสะดวก
+      document.getElementById('chat-interface').addEventListener('paste', (e) => {
+        // หากผู้ใช้กำลังพิมพ์ช่องค้นหาหรือช่อง Input อื่นๆ ให้ข้ามไป ไม่ต้องดักจับ
+        if (document.activeElement && document.activeElement.id === 'chat-search-input') return;
+        handlePasteAction(e);
+      });
+    }
+
+    // ฟังก์ชันจัดการดึงรูปออกจากคลิปบอร์ด
+    async function handlePasteAction(e) {
+      const clipboardData = e.clipboardData || window.clipboardData;
+      if (!clipboardData) return;
+
+      const items = clipboardData.items;
+      let targetImageFiles = [];
+
+      for (let i = 0; i < items.length; i++) {
+        // ตรวจสอบว่ามีข้อมูลประเภทรูปภาพถูกคัดลอกมาหรือไม่
+        if (items[i].type.indexOf('image') !== -1) {
+          const file = items[i].getAsFile();
+          if (file) {
+            // ตั้งชื่อไฟล์จำลองอัตโนมัติหากรูปภาพนั้นไม่มีชื่อ (เช่น รูปจากการกด PrintScreen หรือ Copy ภาพดิบ)
+            let finalFile = file;
+            if (!file.name || file.name === "image.png") {
+              const extension = file.type.split('/')[1] || 'png';
+              finalFile = new File([file], `clipboard_${Date.now()}.${extension}`, { type: file.type });
+            }
+            targetImageFiles.push(finalFile);
+          }
+        }
+      }
+
+      // หากเจอป้อนข้อมูลรูปภาพในคลิปบอร์ด ให้ส่งเข้าสตรีมการตรวจสอบและแสดง Modal ยืนยันก่อนส่ง
+      if (targetImageFiles.length > 0) {
+        e.preventDefault(); // หยุดการเอา Base64 ดิบไปแปะลงเป็น Text ในช่อง Textarea
+        processRawFiles(targetImageFiles);
+      }
+    }
+
     window.handleFileSelection = function(e) {
       if(e.target.files && e.target.files.length > 0) {
         processRawFiles(e.target.files);
@@ -674,7 +723,6 @@
       });
     }
 
-    // ฟังก์ชันช่วยสกัดหาคลาสไอคอน FontAwesome ตามนามสกุลไฟล์
     function getFileIconClass(filename, mimeType) {
       const ext = filename.split('.').pop().toLowerCase();
       if (mimeType.startsWith('image/') || ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(ext)) {
@@ -704,7 +752,7 @@
       if (['txt', 'md', 'html', 'css', 'js', 'json', 'xml'].includes(ext)) {
         return { icon: 'fa-solid fa-file-code', color: 'text-slate-600' };
       }
-      return { icon: 'fa-solid fa-file-lines', color: 'text-green-500' }; // Default Icon for all other types
+      return { icon: 'fa-solid fa-file-lines', color: 'text-green-500' };
     }
 
     async function processRawFiles(files) {
@@ -730,7 +778,6 @@
           }
         }
 
-        // อนุญาตให้ส่งไฟล์ได้ทุกประเภทผ่าน Google Drive Backend API
         const MAX_FILE_SIZE = 25 * 1024 * 1024; 
         if (files[i].size > MAX_FILE_SIZE) {
            Swal.fire('ไฟล์ขนาดใหญ่เกินไป', `ไฟล์ ${files[i].name} มีขนาดใหญ่กว่า 25MB ระบบคลาวด์รับข้อมูลไม่ไหวครับ`, 'warning');
@@ -755,7 +802,6 @@
           const objectURL = URL.createObjectURL(file);
           previewHTML = `<img src="${objectURL}" class="w-11 h-11 rounded-lg object-cover border shadow-sm">`;
         } else {
-          // ดึงสไตล์ไอคอนที่แมตช์ตามประเภทของไฟล์
           const iconConfig = getFileIconClass(file.name, file.type);
           previewHTML = `<div class="w-11 h-11 bg-white rounded-lg flex items-center justify-center border shadow-sm"><i class="${iconConfig.icon} text-2xl ${iconConfig.color}"></i></div>`;
         }
@@ -763,7 +809,7 @@
         row.innerHTML = `
           ${previewHTML}
           <div class="flex-1 overflow-hidden">
-            <p class="text Red-xs font-bold text-slate-700 truncate">${file.name}</p>
+            <p class="text-xs font-bold text-slate-700 truncate">${file.name}</p>
             <p class="text-[10px] text-slate-400">${file.type.startsWith('image/') ? 'รูปภาพ (จะถูกบีบอัดอัตโนมัติ)' : file.type.startsWith('video/') ? 'วิดีโอ (จำกัดไม่เกิน 3 นาที)' : (file.size / 1024).toFixed(1) + ' KB'}</p>
           </div>
         `;
@@ -961,7 +1007,7 @@
         if(res.isConfirmed) {
           Swal.fire({
             title: 'กำลังทยอยลบข้อมูลคลาวด์...',
-            html: 'ระบบกำลังดืนการลบข้อความแชทและทำลายไฟล์มีเดียออกจากสารบบ Google Drive ทั้งหมดครับ...',
+            html: 'ระบบกำลังดำเนินการลบข้อความแชทและทำลายไฟล์มีเดียออกจากสารบบ Google Drive ทั้งหมดครับ...',
             allowOutsideClick: false,
             didOpen: () => { Swal.showLoading(); }
           });
@@ -1957,7 +2003,7 @@
 
         menuHTML += `
           <button id="cm-close" class="w-full text-center py-2 mt-1 bg-slate-100 text-slate-500 rounded-xl text-xs font-medium hover:bg-slate-200 transition-colors">
-            ปิดเมนู
+            定เมนู
           </button>
         `;
         
@@ -2295,7 +2341,6 @@
               bubble.className += isSelf ? ' bg-[#7CE68E] text-slate-900 rounded-tr-none' : ' bg-white text-slate-800 rounded-tl-none';
               bindMessageActionEvents(bubble, key, msg.fileId, msg.content); 
             } else if(msg.type === 'file') {
-              // ดึงการตั้งค่าไอคอนแบบ Dynamic ตามประเภทไฟล์เพื่อแสดงในห้องแชทรวม
               const iconConfig = getFileIconClass(msg.filename || 'file', '');
               bubble.innerHTML = `
                 <div class="flex items-center gap-2 font-semibold text-slate-700 text-xs sm:text-sm break-all select-text">
