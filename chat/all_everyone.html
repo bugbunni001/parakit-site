@@ -42,7 +42,6 @@
       transition: all 0.4s ease;
     }
     
-    /* เปิดให้มี Scrollbar แบบโมเดิร์น สวยงามไม่รกสายตา */
     .custom-scrollbar::-webkit-scrollbar {
       width: 6px;
       height: 6px;
@@ -81,7 +80,6 @@
     #viewer-hidden-container { display: none; }
     .viewer-title { display: none !important; }
     
-    /* Context Menu */
     .custom-cm {
       position: fixed;
       z-index: 1000;
@@ -117,7 +115,6 @@
     }
     #msg-input { resize: none; max-height: 120px; }
     
-    /* Drag & Drop Overlay Zone */
     #drop-zone-overlay {
       display: none;
       background: rgba(16, 185, 129, 0.15);
@@ -125,7 +122,6 @@
       border: 3px dashed #10b981;
     }
     
-    /* Checkbox สำหรับโหมดเลือกหลายรายการ */
     .msg-checkbox {
       display: none;
     }
@@ -133,7 +129,6 @@
       display: block;
     }
 
-    /* Modern Video Player Style Overlay */
     .video-premium-container {
       position: relative;
       max-width: 260px;
@@ -176,7 +171,6 @@
       border-color: #10b981;
     }
 
-    /* สไตล์ Grid กลุ่มรูปภาพแบบแอป LINE */
     .image-group-grid {
       display: grid;
       gap: 4px;
@@ -195,7 +189,6 @@
       transform: scale(1.02);
       filter: brightness(0.95);
     }
-    /* ปุ่มดาวน์โหลดแยกภาพเดี่ยวในกลุ่ม Grid */
     .single-img-dl-btn {
       opacity: 0;
       transition: opacity 0.2s ease, background-color 0.2s ease;
@@ -204,7 +197,6 @@
       opacity: 1;
     }
 
-    /* ไฮไลท์สำหรับคำที่ค้นหาเจอ */
     .search-highlight {
       background-color: #fde047;
       color: #0f172a;
@@ -324,7 +316,7 @@
         <button id="btn-delete-selected" class="px-2.5 py-1.5 bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold rounded-lg flex items-center gap-1 transition-colors">
           <i class="fa-solid fa-trash-can"></i> <span class="hidden sm:inline">ลบรายการที่เลือก</span><span class="sm:hidden">ลบ</span>
         </button>
-        <button id="btn-share-selected" class="px-2.5 py-1.5 bg-green-50 text-white text-xs font-bold rounded-lg flex items-center gap-1 hover:bg-green-600 transition-colors">
+        <button id="btn-share-selected" class="px-2.5 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded-lg flex items-center gap-1 transition-colors">
           <i class="fa-solid fa-share-nodes"></i> <span class="hidden sm:inline">แชร์ไปยังแอปอื่น</span><span class="sm:hidden">แชร์</span>
         </button>
         <button id="btn-cancel-selected" class="px-2.5 py-1.5 bg-slate-700 text-slate-300 text-xs font-bold rounded-lg hover:bg-slate-600 transition-colors">
@@ -434,31 +426,36 @@
       initDragAndDropEvents();
       initMultiSelectEvents();
       initSearchAndFilterEvents();
-      initPasteEvents(); // ลงทะเบียน Event ดักจับการกดวางภาพ
     });
 
     function unlockAudioContext() {
       const audio = document.getElementById('global-noti-sound');
-      audio.play().then(() => {
-        audio.pause();
-        audio.currentTime = 0;
-      }).catch(e => console.log("Audio unlock retry:", e));
+      if (audio) {
+        audio.play().then(() => {
+          audio.pause();
+          audio.currentTime = 0;
+        }).catch(e => console.log("Audio unlock retry:", e));
+      }
     }
 
     function initGlobalViewer() {
       const imgTarget = document.getElementById('viewer-target-image');
-      globalViewerInstance = new Viewer(imgTarget, {
-        inline: false, button: true, navbar: false, title: false,
-        toolbar: { zoomIn: 4, zoomOut: 4, oneToOne: 4, reset: 4, rotateLeft: 4, rotateRight: 4, flipHorizontal: 4, flipVertical: 4 },
-        tooltip: true, movable: true, zoomable: true, rotatable: true, scalable: true, transition: true, fullscreen: true, keyboard: true
-      });
+      if (imgTarget) {
+        globalViewerInstance = new Viewer(imgTarget, {
+          inline: false, button: true, navbar: false, title: false,
+          toolbar: { zoomIn: 4, zoomOut: 4, oneToOne: 4, reset: 4, rotateLeft: 4, rotateRight: 4, flipHorizontal: 4, flipVertical: 4 },
+          tooltip: true, movable: true, zoomable: true, rotatable: true, scalable: true, transition: true, fullscreen: true, keyboard: true
+        });
+      }
     }
 
     window.openImageInZoomViewer = function(url) {
       const imgTarget = document.getElementById('viewer-target-image');
-      imgTarget.src = url;
-      globalViewerInstance.update();
-      globalViewerInstance.show();
+      if (imgTarget && globalViewerInstance) {
+        imgTarget.src = url;
+        globalViewerInstance.update();
+        globalViewerInstance.show();
+      }
     };
 
     function initContextMenuDismissal() {
@@ -473,10 +470,11 @@
         let res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getAllAvatars' }) });
         let result = await res.json();
         if (result.status === 'success') {
-          globalAvatarMap = result.avatars;
+          globalAvatarMap = result.avatars || {};
           if (currentUser && globalAvatarMap[currentUser.displayName]) {
             currentUser.avatar = globalAvatarMap[currentUser.displayName];
-            document.getElementById('my-avatar-img').src = currentUser.avatar;
+            const myAvatar = document.getElementById('my-avatar-img');
+            if (myAvatar) myAvatar.src = currentUser.avatar;
             localStorage.setItem('parakit_chat_user', JSON.stringify(currentUser));
           }
         }
@@ -499,18 +497,23 @@
       const savedUser = localStorage.getItem('parakit_chat_user');
       if (savedUser) {
         currentUser = JSON.parse(savedUser);
-        document.getElementById('login-screen').style.display = 'none';
+        const loginScreen = document.getElementById('login-screen');
+        if (loginScreen) loginScreen.style.display = 'none';
         const chatUI = document.getElementById('chat-interface');
-        chatUI.style.display = 'flex';
+        if (chatUI) chatUI.style.display = 'flex';
         
-        document.getElementById('my-display-name').innerText = currentUser.displayName;
-        if(currentUser.avatar) document.getElementById('my-avatar-img').src = currentUser.avatar;
+        const myName = document.getElementById('my-display-name');
+        const myAvatar = document.getElementById('my-avatar-img');
+        if(myName) myName.innerText = currentUser.displayName;
+        if(myAvatar && currentUser.avatar) myAvatar.src = currentUser.avatar;
         
         const savedBg = currentUser.bgUrl || localStorage.getItem(`parakit_chat_bg_${currentUser.username}`);
         if (savedBg) {
           const chatBody = document.getElementById('chat-body');
-          chatBody.style.backgroundImage = `url('${savedBg}')`;
-          chatBody.style.backgroundSize = 'cover';
+          if (chatBody) {
+            chatBody.style.backgroundImage = `url('${savedBg}')`;
+            chatBody.style.backgroundSize = 'cover';
+          }
         }
         
         setupUserPresence();
@@ -646,54 +649,6 @@
       });
     }
 
-    // ฟังก์ชันดักจับ Event การกดวาง (Paste) จากคลิปบอร์ด
-    function initPasteEvents() {
-      const msgInput = document.getElementById('msg-input');
-      
-      // ดักจับที่ช่องพิมพ์ข้อความ
-      msgInput.addEventListener('paste', (e) => {
-        handlePasteAction(e);
-      });
-
-      // ดักจับที่หน้าต่างแอปพลิเคชันรวมเพื่อความสะดวก
-      document.getElementById('chat-interface').addEventListener('paste', (e) => {
-        // หากผู้ใช้กำลังพิมพ์ช่องค้นหาหรือช่อง Input อื่นๆ ให้ข้ามไป ไม่ต้องดักจับ
-        if (document.activeElement && document.activeElement.id === 'chat-search-input') return;
-        handlePasteAction(e);
-      });
-    }
-
-    // ฟังก์ชันจัดการดึงรูปออกจากคลิปบอร์ด
-    async function handlePasteAction(e) {
-      const clipboardData = e.clipboardData || window.clipboardData;
-      if (!clipboardData) return;
-
-      const items = clipboardData.items;
-      let targetImageFiles = [];
-
-      for (let i = 0; i < items.length; i++) {
-        // ตรวจสอบว่ามีข้อมูลประเภทรูปภาพถูกคัดลอกมาหรือไม่
-        if (items[i].type.indexOf('image') !== -1) {
-          const file = items[i].getAsFile();
-          if (file) {
-            // ตั้งชื่อไฟล์จำลองอัตโนมัติหากรูปภาพนั้นไม่มีชื่อ (เช่น รูปจากการกด PrintScreen หรือ Copy ภาพดิบ)
-            let finalFile = file;
-            if (!file.name || file.name === "image.png") {
-              const extension = file.type.split('/')[1] || 'png';
-              finalFile = new File([file], `clipboard_${Date.now()}.${extension}`, { type: file.type });
-            }
-            targetImageFiles.push(finalFile);
-          }
-        }
-      }
-
-      // หากเจอป้อนข้อมูลรูปภาพในคลิปบอร์ด ให้ส่งเข้าสตรีมการตรวจสอบและแสดง Modal ยืนยันก่อนส่ง
-      if (targetImageFiles.length > 0) {
-        e.preventDefault(); // หยุดการเอา Base64 ดิบไปแปะลงเป็น Text ในช่อง Textarea
-        processRawFiles(targetImageFiles);
-      }
-    }
-
     window.handleFileSelection = function(e) {
       if(e.target.files && e.target.files.length > 0) {
         processRawFiles(e.target.files);
@@ -725,13 +680,14 @@
 
     function getFileIconClass(filename, mimeType) {
       const ext = filename.split('.').pop().toLowerCase();
-      if (mimeType.startsWith('image/') || ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(ext)) {
+      const mime = mimeType || '';
+      if (mime.startsWith('image/') || ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(ext)) {
         return { icon: 'fa-solid fa-file-image', color: 'text-blue-500' };
       }
-      if (mimeType.startsWith('video/') || ['mp4', 'mov', 'avi', 'mkv', 'webm', '3gp'].includes(ext)) {
+      if (mime.startsWith('video/') || ['mp4', 'mov', 'avi', 'mkv', 'webm', '3gp'].includes(ext)) {
         return { icon: 'fa-solid fa-file-video', color: 'text-indigo-500' };
       }
-      if (mimeType.startsWith('audio/') || ['mp3', 'wav', 'ogg', 'm4a', 'aac', 'flac'].includes(ext)) {
+      if (mime.startsWith('audio/') || ['mp3', 'wav', 'ogg', 'm4a', 'aac', 'flac'].includes(ext)) {
         return { icon: 'fa-solid fa-file-audio', color: 'text-purple-500' };
       }
       if (ext === 'pdf') {
@@ -1007,7 +963,7 @@
         if(res.isConfirmed) {
           Swal.fire({
             title: 'กำลังทยอยลบข้อมูลคลาวด์...',
-            html: 'ระบบกำลังดำเนินการลบข้อความแชทและทำลายไฟล์มีเดียออกจากสารบบ Google Drive ทั้งหมดครับ...',
+            html: 'ระบบกำลังดืนการลบข้อความแชทและทำลายไฟล์มีเดียออกจากสารบบ Google Drive ทั้งหมดครับ...',
             allowOutsideClick: false,
             didOpen: () => { Swal.showLoading(); }
           });
@@ -1489,8 +1445,10 @@
           const savedBg = currentUser.bgUrl || localStorage.getItem(`parakit_chat_bg_${currentUser.username}`);
           if (savedBg) {
             const chatBody = document.getElementById('chat-body');
-            chatBody.style.backgroundImage = `url('${savedBg}')`;
-            chatBody.style.backgroundSize = 'cover';
+            if (chatBody) {
+              chatBody.style.backgroundImage = `url('${savedBg}')`;
+              chatBody.style.backgroundSize = 'cover';
+            }
           }
 
           setupUserPresence();
@@ -1553,7 +1511,7 @@
           preConfirm: () => { return { otp: document.getElementById('reset-otp').value.trim(), newPassword: document.getElementById('reset-newpass').value } }
         });
 
-        if(!resetData.otp || !resetData.newPassword) return;
+        if(!resetData || !resetData.otp || !resetData.newPassword) return;
         if(!validatePassword(resetData.newPassword)) {
           return Swal.fire({ title: 'ไม่สำเร็จ', text: 'รหัสใหม่ต้องมีความยาว 8 ตัวขึ้นไป โดยต้องผสมระหว่างตัวเลขและตัวอักษร', icon: 'error', confirmButtonColor: '#10b981' });
         }
@@ -1583,10 +1541,13 @@
         showCancelButton: true, cancelButtonText: 'ยกเลิก', cancelButtonColor: '#64748b',
         customClass: { title: 'swal-premium-title', htmlContainer: 'swal-premium-html' },
         didOpen: () => {
-          document.getElementById('admin-pass-input').focus();
-          document.getElementById('admin-pass-input').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') Swal.clickConfirm();
-          });
+          const apiInput = document.getElementById('admin-pass-input');
+          if (apiInput) {
+            apiInput.focus();
+            apiInput.addEventListener('keypress', (e) => {
+              if (e.key === 'Enter') Swal.clickConfirm();
+            });
+          }
           document.getElementById('btn-admin-forgot-link').addEventListener('click', (e) => {
             e.preventDefault(); Swal.close(); handleAdminForgotFlow();
           });
@@ -1706,8 +1667,10 @@
             let directBgUrl = result.viewUrl || result.url;
             
             const chatBody = document.getElementById('chat-body');
-            chatBody.style.backgroundImage = `url('${directBgUrl}')`;
-            chatBody.style.backgroundSize = 'cover';
+            if (chatBody) {
+              chatBody.style.backgroundImage = `url('${directBgUrl}')`;
+              chatBody.style.backgroundSize = 'cover';
+            }
             
             currentUser.bgUrl = directBgUrl;
             localStorage.setItem('parakit_chat_user', JSON.stringify(currentUser));
@@ -1780,11 +1743,14 @@
         let shouldScroll = false;
         if (initialLoadComplete && lastSnapshotData) {
           const sound = document.getElementById('global-noti-sound');
-          sound.play().catch(e => console.log("แจ้งเตือนเสียงถูกบล็อกชั่วคราวครับ: ", e));
+          if (sound) sound.play().catch(e => console.log("แจ้งเตือนเสียงถูกบล็อกชั่วคราวครับ: ", e));
           
-          const lastKey = Object.keys(lastSnapshotData).pop();
-          if(lastSnapshotData[lastKey] && lastSnapshotData[lastKey].senderName === currentUser.displayName) {
-            shouldScroll = true;
+          const messageKeys = Object.keys(lastSnapshotData);
+          if (messageKeys.length > 0) {
+            const lastKey = messageKeys[messageKeys.length - 1];
+            if(lastSnapshotData[lastKey] && lastSnapshotData[lastKey].senderName === currentUser.displayName) {
+              shouldScroll = true;
+            }
           }
         } else {
           shouldScroll = true;
@@ -1801,6 +1767,7 @@
       
       Object.keys(lastSnapshotData).forEach(key => {
         const msg = lastSnapshotData[key];
+        if (!msg) return;
         const isSelf = msg.senderName === currentUser.displayName;
         const hasRead = msg.readBy && msg.readBy[currentUser.username];
         
@@ -2003,7 +1970,7 @@
 
         menuHTML += `
           <button id="cm-close" class="w-full text-center py-2 mt-1 bg-slate-100 text-slate-500 rounded-xl text-xs font-medium hover:bg-slate-200 transition-colors">
-            定เมนู
+            ปิดเมนู
           </button>
         `;
         
@@ -2093,6 +2060,7 @@
 
     function renderAllMessagesWithTemps(forceScrollToBottomFlag = false) {
       const body = document.getElementById('chat-body');
+      if (!body) return;
       
       const previousScrollTop = body.scrollTop;
       const previousScrollHeight = body.scrollHeight;
@@ -2111,12 +2079,13 @@
         for (let idx = 0; idx < messageKeys.length; idx++) {
           const key = messageKeys[idx];
           const msg = lastSnapshotData[key];
+          if (!msg) continue;
           
           if (currentSearchKeyword) {
             let matched = false;
-            if (msg.type === 'text' && msg.content && msg.content.toLowerCase().includes(currentSearchKeyword.toLowerCase())) {
+            if (msg.type === 'text' && msg.content && String(msg.content).toLowerCase().includes(currentSearchKeyword.toLowerCase())) {
               matched = true;
-            } else if (msg.filename && msg.filename.toLowerCase().includes(currentSearchKeyword.toLowerCase())) {
+            } else if (msg.filename && String(msg.filename).toLowerCase().includes(currentSearchKeyword.toLowerCase())) {
               matched = true;
             }
             if (!matched) continue;
@@ -2387,7 +2356,7 @@
       
       Object.keys(activeTempUploads).forEach(id => {
         const tempMsg = activeTempUploads[id];
-        body.appendChild(createTempRow(tempMsg));
+        if (tempMsg) body.appendChild(createTempRow(tempMsg));
       });
       
       if (forceScrollToBottomFlag || isUserAtBottom) {
