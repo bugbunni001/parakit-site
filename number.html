@@ -17,6 +17,7 @@
             --text-main: #1c1c1e;
             --text-muted: #8e8e93;
             --gold-gradient: linear-gradient(135deg, #d4af37 0%, #f7ef8a 50%, #b58d40 100%);
+            --rahu-gradient: linear-gradient(135deg, #2c3e50 0%, #000000 100%);
             --transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
             --transition-swift: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             --transition-bounce: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -83,7 +84,7 @@
 
         /* ===== CATEGORY NAV ===== */
         .category-nav {
-            display: flex; justify-content: center; gap: 12px; margin-bottom: 40px;
+            display: flex; justify-content: center; gap: 12px; margin-bottom: 40px; flex-wrap: wrap;
         }
         .cat-btn {
             padding: 12px 25px; border-radius: 100px; border: 1px solid var(--glass-border);
@@ -95,6 +96,7 @@
         .cat-btn.active { color: #fff; border-color: transparent; }
         .cat-btn.regular.active { background: var(--ios-blue); box-shadow: 0 8px 20px rgba(0, 122, 255, 0.3); }
         .cat-btn.silver.active { background: var(--gold-gradient); box-shadow: 0 8px 20px rgba(181, 141, 64, 0.3); }
+        .cat-btn.rahu.active { background: var(--rahu-gradient); box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4); }
 
         /* ===== MAIN CONTENT ===== */
         .main-content { 
@@ -219,9 +221,11 @@
             <p>กรุณาเลือกเบอร์ที่เหมาะสมกับคุณ</p>
         </div>
 
+        <!-- 🏷️ เพิ่มปุ่มแท็บหมวดหมู่ Rahu Numbers เข้าไปในระบบ Nav -->
         <div class="category-nav">
             <button class="cat-btn regular active" onclick="filterCategory('Regular', this)">Regular Numbers</button>
             <button class="cat-btn silver" onclick="filterCategory('Silver', this)">Silver Numbers</button>
+            <button class="cat-btn rahu" onclick="filterCategory('Rahu', this)">Rahu Numbers</button>
         </div>
         
         <div id="loader" style="text-align: center; padding: 100px 0;">
@@ -271,7 +275,7 @@
 /* ==========================================
     ✅ DATA & CONFIG
    ========================================== */
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbylkr6WhEp7kpK8WkpZw6F7Rws0OglgqbWy3wQ-3IImG8Fwqaou9VmseZvuSdrxqg83WQ/exec";
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyI36yEf_a7punt0zx4Rjq1RCTDVPD_LpXW-C7LJxDyMLhrA0qywDKoi5WUst3dbNCFeg/exec";
 let allNumbers = [];
 let currentCategory = 'Regular';
 
@@ -307,12 +311,12 @@ function fetchData() {
 
 function filterCategory(cat, btn) {
     currentCategory = cat;
-    // UI Update for buttons
     document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     renderList();
 }
 
+/* 🔍 ปรับปรุงระบบกรองข้อมูลอัตโนมัติอิงจากคอลัมน์ B (Rahu / Regular / Silver) */
 function renderList() {
     document.getElementById("loader").style.display = "none";
     const list = document.getElementById("list");
@@ -320,7 +324,15 @@ function renderList() {
     
     const filtered = allNumbers.filter(item => {
         const detailText = (item.detail || "").toLowerCase();
-        return detailText.includes(currentCategory.toLowerCase());
+        
+        // ถ้าเลือกหมวดหมู่ Rahu ให้ค้นหาเบอร์ที่มีคำว่า 'rahu' ในคอลัมน์ B
+        if (currentCategory === 'Rahu') {
+            return detailText.includes('rahu');
+        } 
+        // ถ้าเป็นหมวดหมู่อื่น ๆ (Regular/Silver) ให้ดึงข้อมูลตามคำปกติ แต่ห้ามมีคำว่า rahu ติดมา
+        else {
+            return detailText.includes(currentCategory.toLowerCase()) && !detailText.includes('rahu');
+        }
     });
 
     if(filtered.length === 0) {
@@ -363,11 +375,10 @@ function use(r, phoneNum) {
         const btn = document.getElementById(`btn-${r}`);
         if(btn) { btn.innerText = "จองแล้ว"; btn.disabled = true; }
         
-        // Update local data state
         const idx = allNumbers.findIndex(n => n.row == r);
-        if(idx !== -1) allNumbers[idx].isUsed = true; // simulation
+        if(idx !== -1) allNumbers[idx].isUsed = true;
 
-        document.getElementById("successMessage").innerHTML = `เบอร์ <b>${phoneNum}</b> ถูกบันทึกข้อมูลการจองของท่านเรียบร้อยแล้วค่ะ`;
+        document.getElementById("successMessage").innerHTML = `เบอร์ <b>${phoneNum}</b> ถูกบันทึกข้อมูลการจองของท่านเรียบร้อยแล้วครับ`;
         document.getElementById("successOverlay").style.display = "flex";
     })
     .catch(err => {
