@@ -165,6 +165,7 @@
             display: flex;
             flex-direction: column;
             gap: 12px;
+            user-select: text; /* Allow text selection for copying */
         }
 
         .message-wrapper {
@@ -196,6 +197,12 @@
             font-size: 14.5px;
             line-height: 1.4;
             box-shadow: 0 1px 2px rgba(0,0,0,0.12);
+            user-select: text;
+        }
+
+        .message-text {
+            white-space: pre-wrap; /* Maintains spacing, tabs, and multiline pastes */
+            word-wrap: break-word;
         }
 
         .message-wrapper.sent .message-bubble {
@@ -225,6 +232,7 @@
             color: #555;
             margin-top: 4px;
             justify-content: flex-end;
+            user-select: none;
         }
 
         .message-wrapper.sent .message-info-meta { color: #335c00; }
@@ -299,6 +307,7 @@
             display: none;
             align-items: center;
             justify-content: center;
+            user-select: none;
         }
 
         .message-wrapper:hover .delete-btn { display: flex; }
@@ -308,13 +317,13 @@
             background: #ffffff;
             padding: 10px 12px;
             display: flex;
-            align-items: center;
+            align-items: flex-end;
             gap: 8px;
             flex-shrink: 0;
             border-top: 1px solid #e2e8f0;
         }
 
-        #chat-input-area input[type="text"] {
+        #message-input {
             flex: 1;
             padding: 10px 14px;
             border: 1px solid #cbd5e0;
@@ -322,9 +331,14 @@
             outline: none;
             font-size: 14px;
             background: #f7fafc;
+            resize: none;
+            max-height: 120px;
+            min-height: 40px;
+            line-height: 1.4;
+            white-space: pre-wrap;
         }
 
-        #chat-input-area input[type="text"]:focus { background: #fff; border-color: #06c755; }
+        #message-input:focus { background: #fff; border-color: #06c755; }
 
         .icon-btn {
             background: transparent;
@@ -336,6 +350,7 @@
             align-items: center;
             justify-content: center;
             padding: 4px;
+            margin-bottom: 4px;
             transition: color 0.2s;
         }
 
@@ -359,16 +374,18 @@
             justify-content: center;
             font-size: 16px;
             cursor: pointer;
+            margin-bottom: 2px;
+            flex-shrink: 0;
         }
 
         .send-btn:hover { background: #05b34c; }
 
-        /* Modals */
+        /* Modals & Zoom System */
         .modal, .profile-modal, .otp-modal {
             display: none;
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.6);
+            background: rgba(0,0,0,0.75);
             z-index: 10000;
             justify-content: center;
             align-items: center;
@@ -392,7 +409,88 @@
         .btn-green { background: #06c755; color: white; }
         .btn-red { background: #e53e3e; color: white; }
 
-        #image-preview-modal img { max-width: 95%; max-height: 85vh; border-radius: 8px; }
+        /* Zoomable Image Modal Elements */
+        #image-preview-modal {
+            flex-direction: column;
+            overflow: hidden;
+            position: fixed;
+        }
+
+        .zoom-viewport {
+            width: 100%;
+            height: 85vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+            cursor: grab;
+        }
+
+        .zoom-viewport:active { cursor: grabbing; }
+
+        #modal-image {
+            max-width: 90%;
+            max-height: 85vh;
+            border-radius: 8px;
+            transition: transform 0.1s ease-out;
+            transform-origin: center center;
+            user-select: none;
+        }
+
+        .zoom-controls {
+            position: absolute;
+            bottom: 20px;
+            display: flex;
+            gap: 12px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 8px 16px;
+            border-radius: 20px;
+            z-index: 10001;
+        }
+
+        .zoom-controls button {
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Context Menu for Copying */
+        #custom-context-menu {
+            display: none;
+            position: fixed;
+            z-index: 20000;
+            background: #ffffff;
+            border: 1px solid #cbd5e0;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding: 6px 0;
+            min-width: 140px;
+        }
+
+        #custom-context-menu button {
+            width: 100%;
+            text-align: left;
+            padding: 8px 16px;
+            background: transparent;
+            border: none;
+            font-size: 13.5px;
+            cursor: pointer;
+            color: #2d3748;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #custom-context-menu button:hover {
+            background: #edf2f7;
+            color: #06c755;
+        }
 
         /* Record Banner */
         #recording-banner {
@@ -466,7 +564,7 @@
             </div>
 
             <div id="chat-messages">
-                <div style="text-align:center;padding:20px;color:#fff;">Loading messages...</div>
+                <div class="loading" style="text-align:center;padding:20px;color:#fff;">Loading messages...</div>
             </div>
 
             <div id="recording-banner">
@@ -481,7 +579,7 @@
                 
                 <button class="icon-btn" id="record-btn" onclick="toggleRecording()" title="Record Voice"><i class="bi bi-mic"></i></button>
 
-                <input type="text" id="message-input" placeholder="Type a message..." onkeypress="handleKeyPress(event)">
+                <textarea id="message-input" placeholder="Type a message..." rows="1" onkeydown="handleKeyPress(event)" oninput="autoGrowTextarea(this)"></textarea>
                 <button class="send-btn" onclick="sendMessage()"><i class="bi bi-send-fill"></i></button>
             </div>
 
@@ -489,17 +587,33 @@
         </div>
     </div>
 
-    <!-- Image Modal -->
-    <div class="modal" id="image-preview-modal" onclick="closeModal()">
-        <img id="modal-image" src="" alt="Preview">
+    <!-- Image Modal with Zoom Capabilities -->
+    <div class="modal" id="image-preview-modal">
+        <div class="zoom-viewport" id="zoom-viewport">
+            <img id="modal-image" src="" alt="Preview">
+        </div>
+        <div class="zoom-controls">
+            <button onclick="adjustZoom(0.25)" title="Zoom In"><i class="bi bi-zoom-in"></i></button>
+            <button onclick="resetZoom()" title="Reset"><i class="bi bi-aspect-ratio"></i></button>
+            <button onclick="adjustZoom(-0.25)" title="Zoom Out"><i class="bi bi-zoom-out"></i></button>
+            <button onclick="closeModal()" title="Close"><i class="bi bi-x-lg"></i></button>
+        </div>
+    </div>
+
+    <!-- Context Menu for Copy -->
+    <div id="custom-context-menu">
+        <button id="ctx-copy-btn"><i class="bi bi-copy"></i> คัดลอกข้อความ</button>
     </div>
 
     <!-- Profile Modal -->
     <div class="profile-modal" id="profile-modal">
         <div class="modal-box">
             <h2>Edit Profile</h2>
-            <div style="text-align:center;margin-bottom:15px;">
-                <img id="profile-modal-pic" src="" alt="Profile" style="width:90px;height:90px;border-radius:50%;object-fit:cover;cursor:pointer;border:3px solid #06c755;" onclick="document.getElementById('profile-pic-input').click()">
+            <div style="text-align:center;margin-bottom:15px;position:relative;display:inline-block;width:100%;">
+                <div id="profile-modal-pic-container" style="width:90px;height:90px;border-radius:50%;margin:0 auto;overflow:hidden;border:3px solid #06c755;cursor:pointer;background:#34495e;display:flex;align-items:center;justify-content:center;color:white;font-size:40px;" onclick="document.getElementById('profile-pic-input').click()">
+                    <i class="bi bi-person-fill" id="profile-modal-fallback"></i>
+                    <img id="profile-modal-pic" src="" alt="Profile" style="width:100%;height:100%;object-fit:cover;display:none;">
+                </div>
             </div>
             <input type="file" id="profile-pic-input" accept="image/*" style="display:none" onchange="updateProfilePic(event)">
             <input type="text" id="profile-display-name" placeholder="Display Name">
@@ -533,7 +647,7 @@
     </div>
 
     <script>
-        const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxL6P8xS3qiN8StecKGg6YzjJCAiUGtVKSscwNrvRLqyhCzTncQk1QBr4IpzDP_rXE3/exec';
+        const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxI7-tVC6Tz9F5I0TuoLG1fGS5k5XPujXDT7-BHPLEttGo4yL0ONGvXzql6Y8VfE9F4/exec';
         
         let currentUser = null;
         let sessionId = null;
@@ -545,12 +659,18 @@
         let uploadedFiles = [];
         let isPolling = false;
         let otpUserId = null;
+        let selectedTextToCopy = '';
 
         // Audio Recording variables
         let mediaRecorder = null;
         let audioChunks = [];
         let recordTimerInterval = null;
         let recordSeconds = 0;
+
+        // Image Zoom Variables
+        let zoomScale = 1;
+        let isPanning = false;
+        let startX = 0, startY = 0, translateX = 0, translateY = 0;
 
         const authContainer = document.getElementById('auth-container');
         const chatContainer = document.getElementById('chat-container');
@@ -569,7 +689,9 @@
         const emojiPicker = document.getElementById('emoji-picker');
         const profileModal = document.getElementById('profile-modal');
         const profileModalPic = document.getElementById('profile-modal-pic');
+        const profileModalFallback = document.getElementById('profile-modal-fallback');
         const profileDisplayName = document.getElementById('profile-display-name');
+        const contextMenu = document.getElementById('custom-context-menu');
 
         async function postApi(action, data) {
             try {
@@ -608,6 +730,8 @@
                 }
             }
             initEmojiPicker();
+            initZoomAndPan();
+            initContextMenu();
         });
 
         async function verifySession() {
@@ -708,27 +832,65 @@
             }
         }
 
-        // ==================== MESSAGES & MEDIA RENDER ====================
+        function autoGrowTextarea(element) {
+            element.style.height = '40px';
+            element.style.height = Math.min(element.scrollHeight, 120) + 'px';
+        }
+
+        // ==================== MESSAGES & REALTIME RENDERING ====================
         async function sendMessage() {
             const text = messageInput.value.trim();
             if (!text && uploadedFiles.length === 0) return;
             if (!currentUser) return;
+
+            const tempId = 'temp_' + Date.now();
+            const nowIso = new Date().toISOString();
+            
+            // Local optimistic echo (render instantly)
+            const localMsg = {
+                id: tempId,
+                userId: currentUser.id,
+                displayName: currentUser.displayName,
+                photoURL: currentUser.photoURL,
+                text: text,
+                type: uploadedFiles.length > 0 ? getMessageType(uploadedFiles) : 'text',
+                files: [...uploadedFiles],
+                replyTo: '',
+                timestamp: nowIso,
+                readBy: [currentUser.id]
+            };
+
+            displayMessage(localMsg);
+            
+            // Clear input states
+            messageInput.value = '';
+            messageInput.style.height = '40px';
+            const pendingFiles = [...uploadedFiles];
+            uploadedFiles = [];
 
             try {
                 const messageData = {
                     userId: currentUser.id,
                     sessionId: sessionId,
                     text: text,
-                    type: uploadedFiles.length > 0 ? getMessageType(uploadedFiles) : 'text',
-                    files: uploadedFiles
+                    type: localMsg.type,
+                    files: pendingFiles
                 };
 
                 const data = await postApi('sendMessage', messageData);
-                if (data.success) {
-                    messageInput.value = ''; uploadedFiles = [];
-                    loadMessages();
-                } else { alert('ส่งข้อความล้มเหลว: ' + data.error); }
-            } catch (error) { alert('เกิดข้อผิดพลาด: ' + error.message); }
+                if (data.success && data.message) {
+                    const tempEl = messagesContainer.querySelector(`[data-message-id="${tempId}"]`);
+                    if (tempEl) {
+                        tempEl.dataset.messageId = data.message.id;
+                        updateReadCount(data.message);
+                    }
+                    lastMessageTimestamp = data.message.timestamp;
+                } else if (!data.success) {
+                    alert('ส่งข้อความล้มเหลว: ' + data.error);
+                }
+            } catch (error) { 
+                console.error('Send error:', error);
+            }
         }
 
         function getMessageType(files) {
@@ -739,7 +901,10 @@
         }
 
         function handleKeyPress(e) {
-            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+            if (e.key === 'Enter' && !e.shiftKey) { 
+                e.preventDefault(); 
+                sendMessage(); 
+            }
         }
 
         async function loadMessages() {
@@ -791,9 +956,10 @@
                 bubble.appendChild(name);
             }
 
-            // Render Message Content
+            // Render Message Content with Paragraph formatting preserved
             if (message.text) {
                 const text = document.createElement('div');
+                text.className = 'message-text';
                 text.textContent = message.text;
                 bubble.appendChild(text);
             }
@@ -893,8 +1059,94 @@
         }
 
         async function markAsRead(messageId) {
-            if (!currentUser) return;
+            if (!currentUser || messageId.startsWith('temp_')) return;
             try { await postApi('markAsRead', { userId: currentUser.id, sessionId, messageId }); } catch (e) {}
+        }
+
+        // ==================== CONTEXT MENU & COPY ====================
+        function initContextMenu() {
+            messagesContainer.addEventListener('contextmenu', (e) => {
+                const bubble = e.target.closest('.message-bubble');
+                if (bubble) {
+                    const textNode = bubble.querySelector('.message-text');
+                    if (textNode) {
+                        e.preventDefault();
+                        selectedTextToCopy = textNode.textContent;
+                        contextMenu.style.top = `${e.clientY}px`;
+                        contextMenu.style.left = `${Math.min(e.clientX, window.innerWidth - 150)}px`;
+                        contextMenu.style.display = 'block';
+                    }
+                }
+            });
+
+            document.addEventListener('click', () => {
+                contextMenu.style.display = 'none';
+            });
+
+            document.getElementById('ctx-copy-btn').addEventListener('click', () => {
+                if (selectedTextToCopy) {
+                    navigator.clipboard.writeText(selectedTextToCopy);
+                }
+            });
+        }
+
+        // ==================== IMAGE ZOOM & PAN SYSTEM ====================
+        function initZoomAndPan() {
+            const viewport = document.getElementById('zoom-viewport');
+            const img = document.getElementById('modal-image');
+
+            viewport.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const delta = e.deltaY < 0 ? 0.15 : -0.15;
+                adjustZoom(delta);
+            }, { passive: false });
+
+            viewport.addEventListener('mousedown', (e) => {
+                if (zoomScale > 1) {
+                    isPanning = true;
+                    startX = e.clientX - translateX;
+                    startY = e.clientY - translateY;
+                }
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                if (isPanning) {
+                    translateX = e.clientX - startX;
+                    translateY = e.clientY - startY;
+                    applyTransform();
+                }
+            });
+
+            window.addEventListener('mouseup', () => { isPanning = false; });
+        }
+
+        function adjustZoom(amount) {
+            zoomScale = Math.min(Math.max(1, zoomScale + amount), 4);
+            if (zoomScale === 1) { translateX = 0; translateY = 0; }
+            applyTransform();
+        }
+
+        function resetZoom() {
+            zoomScale = 1;
+            translateX = 0;
+            translateY = 0;
+            applyTransform();
+        }
+
+        function applyTransform() {
+            const img = document.getElementById('modal-image');
+            img.style.transform = `translate(${translateX}px, ${translateY}px) scale(${zoomScale})`;
+        }
+
+        function openImageModal(url) {
+            const img = document.getElementById('modal-image');
+            img.src = url;
+            resetZoom();
+            document.getElementById('image-preview-modal').classList.add('active');
+        }
+
+        function closeModal() { 
+            document.getElementById('image-preview-modal').classList.remove('active'); 
         }
 
         // ==================== COMPRESSION & FILE UPLOAD ====================
@@ -902,7 +1154,6 @@
             let files = Array.from(event.target.files);
             if (files.length === 0) return;
 
-            // Maximum 20 images check
             const imageFiles = files.filter(f => f.type.startsWith('image/'));
             if (imageFiles.length > 20) {
                 alert('ส่งรูปภาพได้สูงสุดทีละ 20 ไฟล์ครับ');
@@ -916,8 +1167,6 @@
                 const fileDataArr = [];
                 for (let i = 0; i < files.length; i++) {
                     let file = files[i];
-                    
-                    // Compress Image
                     if (file.type.startsWith('image/')) {
                         file = await compressImage(file);
                     }
@@ -951,7 +1200,6 @@
             }
         }
 
-        // Image Compression Utility
         function compressImage(file) {
             return new Promise((resolve) => {
                 const reader = new FileReader();
@@ -1112,7 +1360,10 @@
                 const { Picker } = window.EmojiMart;
                 emojiPickerInstance = new Picker({
                     onEmojiSelect: (emoji) => {
-                        messageInput.value += emoji.native; messageInput.focus(); toggleEmojiPicker();
+                        messageInput.value += emoji.native; 
+                        autoGrowTextarea(messageInput);
+                        messageInput.focus(); 
+                        toggleEmojiPicker();
                     },
                     theme: 'light', showPreview: false, showSearch: true
                 });
@@ -1124,24 +1375,34 @@
             emojiPicker.style.display = emojiPicker.style.display === 'block' ? 'none' : 'block';
         }
 
-        function openImageModal(url) {
-            document.getElementById('modal-image').src = url;
-            document.getElementById('image-preview-modal').classList.add('active');
-        }
-
-        function closeModal() { document.getElementById('image-preview-modal').classList.remove('active'); }
-
         async function updateProfilePic(event) {
             const file = event.target.files[0];
             if (!file || !currentUser) return;
             try {
+                showProgress(true);
                 const base64 = await readFileAsBase64(file);
                 const result = await postApi('updateProfilePic', { userId: currentUser.id, sessionId, imageData: base64 });
                 if (result.success) {
                     currentUserData.photoURL = result.photoURL;
-                    updateProfileUI(); closeProfileModal();
+                    currentUser.photoURL = result.photoURL;
+                    
+                    const savedSession = localStorage.getItem('chatSession');
+                    if (savedSession) {
+                        const sess = JSON.parse(savedSession);
+                        sess.user.photoURL = result.photoURL;
+                        localStorage.setItem('chatSession', JSON.stringify(sess));
+                    }
+                    
+                    updateProfileUI(); 
+                    closeProfileModal();
+                } else {
+                    alert(result.error);
                 }
-            } catch (e) { alert(e.message); }
+            } catch (e) { 
+                alert(e.message); 
+            } finally {
+                showProgress(false);
+            }
         }
 
         async function updateDisplayName() {
@@ -1151,7 +1412,17 @@
                 const data = await postApi('updateProfile', { userId: currentUser.id, sessionId, displayName: newName });
                 if (data.success) {
                     currentUserData.displayName = newName;
-                    updateProfileUI(); closeProfileModal();
+                    currentUser.displayName = newName;
+                    
+                    const savedSession = localStorage.getItem('chatSession');
+                    if (savedSession) {
+                        const sess = JSON.parse(savedSession);
+                        sess.user.displayName = newName;
+                        localStorage.setItem('chatSession', JSON.stringify(sess));
+                    }
+
+                    updateProfileUI(); 
+                    closeProfileModal();
                 }
             } catch (e) { alert(e.message); }
         }
@@ -1159,13 +1430,64 @@
         function openProfileModal() {
             if (!currentUserData) return;
             profileDisplayName.value = currentUserData.displayName || '';
-            profileModalPic.src = currentUserData.photoURL || '';
+            
+            if (currentUserData.photoURL) {
+                profileModalPic.src = currentUserData.photoURL;
+                profileModalPic.style.display = 'block';
+                profileModalFallback.style.display = 'none';
+            } else {
+                profileModalPic.style.display = 'none';
+                profileModalFallback.style.display = 'block';
+            }
             profileModal.classList.add('active');
         }
 
         function closeProfileModal() { profileModal.classList.remove('active'); }
         function openOTPModal() { document.getElementById('otp-modal').classList.add('active'); }
         function closeOTPModal() { document.getElementById('otp-modal').classList.remove('active'); }
+
+        async function sendOTP() {
+            const email = document.getElementById('otp-email').value.trim();
+            const status = document.getElementById('otp-status');
+            if (!email) { status.textContent = 'กรุณากรอกอีเมล'; return; }
+            status.textContent = 'กำลังส่ง OTP...';
+            try {
+                const res = await postApi('sendOTP', { email });
+                if (res.success) {
+                    otpUserId = res.userId;
+                    status.textContent = 'ส่ง OTP สำเร็จ กรุณาเช็คอีเมลของคุณ';
+                    document.getElementById('otp-section').style.display = 'block';
+                } else {
+                    status.textContent = res.error;
+                }
+            } catch (e) { status.textContent = e.message; }
+        }
+
+        async function verifyOTPAndChangePassword() {
+            const email = document.getElementById('otp-email').value.trim();
+            const otp = document.getElementById('otp-code').value.trim();
+            const newPassword = document.getElementById('otp-new-password').value;
+            const confirmPassword = document.getElementById('otp-confirm-password').value;
+            const status = document.getElementById('otp-status');
+
+            if (!otp || !newPassword || !confirmPassword) {
+                status.textContent = 'กรุณากรอกข้อมูลให้ครบถ้วน'; return;
+            }
+            if (newPassword !== confirmPassword) {
+                status.textContent = 'รหัสผ่านใหม่ไม่ตรงกัน'; return;
+            }
+
+            try {
+                const verifyRes = await postApi('verifyOTP', { email, otp });
+                if (verifyRes.success) {
+                    const changeRes = await postApi('changePassword', { userId: otpUserId, newPassword });
+                    if (changeRes.success) {
+                        alert('เปลี่ยนรหัสผ่านสำเร็จ กรุณาเข้าสู่ระบบอีกครั้ง');
+                        closeOTPModal();
+                    } else { status.textContent = changeRes.error; }
+                } else { status.textContent = verifyRes.error; }
+            } catch (e) { status.textContent = e.message; }
+        }
     </script>
 </body>
 </html>
