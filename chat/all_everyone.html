@@ -82,7 +82,7 @@
         #context-menu .menu-item.danger { color: #ff6b6b; }
         #context-menu .menu-item.danger:hover { background: #fff0f0; }
 
-        /* Initial Screen Guard (Prevent Flash) */
+        /* Initial Screen Guard */
         .auth-loading-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: #075e54; z-index: 10000; display: flex; justify-content: center; align-items: center; color: white; font-size: 24px; }
 
         /* Auth Container */
@@ -105,7 +105,7 @@
         .forgot-password { color: rgba(255,255,255,0.7); text-align: center; margin-top: 10px; cursor: pointer; font-size: 13px; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; }
         .forgot-password:hover { color: white; text-decoration: underline; }
 
-        /* Chat Container Layout Fixes */
+        /* Chat Container Layout */
         #chat-container { 
             display: none; 
             flex-direction: column; 
@@ -139,7 +139,7 @@
         #chat-header .header-actions button { background: transparent; border: none; color: white; font-size: 18px; cursor: pointer; padding: 6px; border-radius: 50%; transition: background 0.2s; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; }
         #chat-header .header-actions button:hover { background: rgba(255,255,255,0.15); }
 
-        /* Messages Area Fixes */
+        /* Messages Area */
         #chat-messages { 
             flex: 1 1 auto; 
             min-height: 0; 
@@ -203,7 +203,7 @@
         .message-bubble .video-container { position: relative; border-radius: 8px; overflow: hidden; margin: 4px 0; }
         .message-bubble .video-container video { width: 100%; max-height: 250px; border-radius: 8px; background: #000; }
 
-        /* Typing & Input Area Fixes */
+        /* Typing & Input Area */
         #typing-indicator { font-size: 12px; color: #66757f; padding: 4px 16px; display: none; font-style: italic; flex-shrink: 0; }
         #typing-indicator .dots { display: inline-block; animation: typingDots 1.4s infinite; }
         @keyframes typingDots { 0%, 60%, 100% { opacity: 0.3; } 30% { opacity: 1; } }
@@ -265,7 +265,7 @@
         .db-status.connected { background: #4CAF50; }
         .db-status.disconnected { background: #ff6b6b; }
 
-        /* Responsive Fix for Mobile Full Viewport */
+        /* Responsive Fix for Mobile */
         @media (max-width: 480px) { 
             #app { 
                 height: 100vh; 
@@ -430,7 +430,7 @@
     </div>
 
     <script>
-        const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwxgg7U49P5IvRrgmwRe6wiSydEAVCxDelffLtTjZtt5fDAKGRdmzlyFgpXGdeR-Z2X/exec';
+        const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyCxvCnaZNGkPck6-3r9qTfVPyRul4LhlxuBJc7AtrFrUF4qWFa6rQiiUizMiJFnlfD/exec';
 
         let currentUser = null, sessionId = null, currentUserData = null, isLogin = true;
         let lastMessageTimestamp = '', pollTimeout = null, emojiPickerInstance = null;
@@ -438,7 +438,6 @@
         let mediaRecorder = null, audioChunks = [], isRecording = false, recordingStartTime = null;
         let recordingTimer = null, currentRecordingData = null, isConnected = false;
         
-        // Context Menu & Long Press Variables
         let selectedMessageObj = null;
         let longPressTimer = null;
 
@@ -782,14 +781,12 @@
         // CONTEXT MENU & LONG PRESS ENGINE
         // ============================================================
         function attachContextMenuEvents(element, message) {
-            // Right Click (PC)
             element.addEventListener('contextmenu', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 showCustomContextMenu(e.clientX, e.clientY, message);
             });
 
-            // Long Press (Mobile)
             element.addEventListener('touchstart', (e) => {
                 longPressTimer = setTimeout(() => {
                     if (e.touches && e.touches[0]) {
@@ -808,21 +805,18 @@
             const deleteBtn = document.getElementById('menu-delete');
             const copyPartialBtn = document.getElementById('menu-copy-partial');
 
-            // แสดงเฉพาะปุ่มลบหากเป็นข้อความของผู้ใช้เอง
             if (message.userId === currentUser?.id && !message.id.startsWith('temp_')) {
                 deleteBtn.style.display = 'flex';
             } else {
                 deleteBtn.style.display = 'none';
             }
 
-            // แสดงตัวเลือกคัดลอกบางส่วนเฉพาะเมื่อมีข้อความตัวอักษร
             if (message.text) {
                 copyPartialBtn.style.display = 'flex';
             } else {
                 copyPartialBtn.style.display = 'none';
             }
 
-            // ปรับตำแหน่งไม่ให้หลุดหน้าจอ
             contextMenu.style.display = 'block';
             const menuWidth = contextMenu.offsetWidth;
             const menuHeight = contextMenu.offsetHeight;
@@ -908,7 +902,7 @@
                     if (tempEl) tempEl.remove();
                     Swal.fire({ icon: 'error', title: 'Send Failed', text: data.error });
                 } else {
-                    setTimeout(fetchLatestMessagesImmediately, 300);
+                    fetchLatestMessagesImmediately();
                 }
             } catch (error) { 
                 const tempEl = messagesContainer.querySelector(`[data-message-id="${tempId}"]`);
@@ -942,7 +936,8 @@
                 if (data.success) {
                     const msgElem = messagesContainer.querySelector(`[data-message-id="${messageId}"]`);
                     if (msgElem) msgElem.remove();
-                    Swal.fire({ icon: 'success', title: 'ลบสำเร็จ', toast: true, position: 'top', timer: 1500, showConfirmButton: false });
+                    Swal.fire({ icon: 'success', title: 'ลบสำเร็จ', toast: true, position: 'top', timer: 1200, showConfirmButton: false });
+                    fetchLatestMessagesImmediately();
                 } else {
                     Swal.fire({ icon: 'error', title: 'Error', text: data.error });
                 }
@@ -986,7 +981,7 @@
                 const data = await postApi('sendVoiceMessage', { userId: currentUser.id, sessionId, audioData: currentRecordingData, duration: Math.floor((Date.now() - recordingStartTime) / 1000) });
                 if (data.success) { 
                     currentRecordingData = null; audioChunks = []; 
-                    setTimeout(fetchLatestMessagesImmediately, 300); 
+                    fetchLatestMessagesImmediately(); 
                 } 
                 else Swal.fire({ icon: 'error', title: 'Failed', text: data.error });
             } catch (error) { Swal.fire({ icon: 'error', title: 'Error', text: error.message }); }
@@ -1061,28 +1056,39 @@
         function closeProfileModal() { document.getElementById('profile-modal').classList.remove('active'); }
 
         // ============================================================
-        // REAL-TIME ENGINE
+        // REAL-TIME ENGINE (SYNC DELETION & HIGH SPEED)
         // ============================================================
         async function fetchLatestMessagesImmediately() {
             await loadMessages();
         }
 
         async function loadMessages() {
-            if (isPolling) return;
-            isPolling = true;
             try {
                 const data = await getApi({ action: 'getMessages', lastTimestamp: lastMessageTimestamp, limit: 50 });
-                if (data.success && data.messages && data.messages.length > 0) {
-                    displayMessages(data.messages);
-                    const lastMsg = data.messages[data.messages.length - 1];
-                    if (lastMsg && lastMsg.timestamp) {
-                        lastMessageTimestamp = lastMsg.timestamp;
+                if (data.success) {
+                    // 1. ซิงค์การลบข้อความ: เช็คเทียบกับ ID ข้อความทั้งหมดที่ยังเหลือใน Server
+                    if (data.activeIds && Array.isArray(data.activeIds)) {
+                        const localMessageElements = messagesContainer.querySelectorAll('.message-wrapper');
+                        localMessageElements.forEach(el => {
+                            const msgId = el.dataset.messageId;
+                            // ข้ามการลบหากเป็น temp message ที่กำลังจะส่ง
+                            if (msgId && !msgId.startsWith('temp_') && !data.activeIds.includes(msgId)) {
+                                el.remove(); // ลบข้อความจาก DOM ฝั่ง Client ทันทีหากถูกลบออกจาก Server แล้ว
+                            }
+                        });
+                    }
+
+                    // 2. แสดงข้อความใหม่ที่เพิ่งส่งเข้ามา
+                    if (data.messages && data.messages.length > 0) {
+                        displayMessages(data.messages);
+                        const lastMsg = data.messages[data.messages.length - 1];
+                        if (lastMsg && lastMsg.timestamp) {
+                            lastMessageTimestamp = lastMsg.timestamp;
+                        }
                     }
                 }
             } catch (error) {
                 console.error("Error loading messages:", error);
-            } finally { 
-                isPolling = false; 
             }
         }
 
@@ -1176,7 +1182,6 @@
             timeDiv.innerHTML = `<span>${time24}</span><span class="read-count" id="read-${message.id}">${readCountHtml}</span>`;
             bubble.appendChild(timeDiv);
 
-            // Attach Custom Context Menu & Long Press Events
             attachContextMenuEvents(bubble, message);
 
             wrapper.appendChild(bubble); 
@@ -1199,7 +1204,8 @@
             if (!currentUser) return;
             await loadMessages();
             await loadUsers();
-            pollTimeout = setTimeout(scheduleNextPoll, 1500); 
+            // ปรับระยะเวลาวน Polling ให้เร็วที่สุดเป็น ~400ms
+            pollTimeout = setTimeout(scheduleNextPoll, 400); 
         }
 
         function startPolling() {
