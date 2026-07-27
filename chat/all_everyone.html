@@ -198,16 +198,130 @@
         .message-bubble .file-attachment .file-info .file-name { font-size: 12px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .message-bubble .file-attachment .file-info .file-size { font-size: 10px; color: #66757f; }
 
-        /* Voice & Video */
-        .message-bubble .voice-message { display: flex; align-items: center; gap: 8px; padding: 4px 0; min-width: 140px; }
-        .message-bubble .voice-message .play-btn { width: 34px; height: 34px; border-radius: 50%; border: none; background: #075e54; color: white; cursor: pointer; font-size: 15px; display: flex; align-items: center; justify-content: center; transition: background 0.2s; flex-shrink: 0; }
-        .message-bubble .voice-message .play-btn:hover { background: #128C7E; }
-        .message-bubble .voice-message .waveform { flex: 1; height: 26px; display: flex; align-items: center; gap: 2px; }
-        .message-bubble .voice-message .waveform .bar { flex: 1; background: #075e54; border-radius: 2px; height: 20%; transition: height 0.3s; }
-        .message-bubble .voice-message .waveform .bar.active { background: #25D366; }
-        .message-bubble .voice-message .duration { font-size: 11px; color: #66757f; min-width: 35px; text-align: center; }
-        .message-bubble .video-container { position: relative; border-radius: 8px; overflow: hidden; margin: 4px 0; }
-        .message-bubble .video-container video { width: 100%; max-height: 250px; border-radius: 8px; background: #000; }
+        /* Messenger Style Voice Player */
+        .messenger-audio-player {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 6px 10px;
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 20px;
+            min-width: 200px;
+            margin: 4px 0;
+        }
+        .message-wrapper.sent .messenger-audio-player { background: rgba(7, 94, 84, 0.08); }
+        .messenger-audio-player .play-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #0084ff;
+            color: white;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            cursor: pointer;
+            flex-shrink: 0;
+            box-shadow: 0 2px 6px rgba(0,132,255,0.3);
+            transition: transform 0.15s ease;
+        }
+        .messenger-audio-player .play-btn:active { transform: scale(0.92); }
+        .messenger-audio-player .audio-track-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 0;
+        }
+        .messenger-audio-player .audio-waveform-bars {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            height: 18px;
+        }
+        .messenger-audio-player .audio-waveform-bars .bar {
+            flex: 1;
+            background: #bcc0c4;
+            border-radius: 2px;
+            height: 20%;
+            transition: height 0.2s, background 0.2s;
+        }
+        .messenger-audio-player.playing .audio-waveform-bars .bar {
+            animation: messengerWave 1.2s infinite ease-in-out alternate;
+            background: #0084ff;
+        }
+        @keyframes messengerWave {
+            0% { height: 15%; }
+            100% { height: 100%; }
+        }
+        .messenger-audio-player .audio-slider {
+            width: 100%;
+            height: 4px;
+            border-radius: 2px;
+            accent-color: #0084ff;
+            cursor: pointer;
+        }
+        .messenger-audio-player .audio-timer {
+            font-size: 10px;
+            color: #65676b;
+            font-weight: 600;
+            align-self: flex-end;
+        }
+
+        /* Messenger Style Video Player */
+        .messenger-video-card {
+            position: relative;
+            max-width: 260px;
+            border-radius: 14px;
+            overflow: hidden;
+            background: #000;
+            margin: 4px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        .messenger-video-card video {
+            width: 100%;
+            max-height: 280px;
+            display: block;
+            object-fit: cover;
+        }
+        .messenger-video-card .video-overlay-play {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.55);
+            backdrop-filter: blur(4px);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            cursor: pointer;
+            pointer-events: none;
+            transition: transform 0.2s, background 0.2s;
+        }
+        .messenger-video-card.playing .video-overlay-play { opacity: 0; }
+        .messenger-video-card .expand-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(0,0,0,0.5);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 14px;
+            z-index: 2;
+        }
 
         /* Typing & Input Area */
         #typing-indicator { font-size: 12px; color: #66757f; padding: 4px 16px; display: none; font-style: italic; flex-shrink: 0; }
@@ -236,7 +350,7 @@
         #chat-input .input-actions .send-btn:hover { background: #128C7E; }
         #chat-input input[type="file"] { display: none; }
         
-        /* Emoji Picker Container ปรับปรุง CSS ให้สมบูรณ์ */
+        /* Emoji Picker Container */
         #emoji-picker-container { 
             position: absolute; 
             bottom: 60px; 
@@ -925,6 +1039,14 @@
             if (!text && uploadedFiles.length === 0) return;
             if (!currentUser) return;
 
+            let msgType = 'text';
+            if (uploadedFiles.length > 0) {
+                if (uploadedFiles.every(f => f.type && f.type.startsWith('image/'))) msgType = 'images';
+                else if (uploadedFiles.every(f => f.type && f.type.startsWith('video/'))) msgType = 'video';
+                else if (uploadedFiles.every(f => f.type && f.type.startsWith('audio/'))) msgType = 'voice';
+                else msgType = 'files';
+            }
+
             const tempId = 'temp_' + Date.now();
             const tempMessage = {
                 id: tempId,
@@ -932,7 +1054,7 @@
                 displayName: currentUser.displayName,
                 photoURL: currentUser.photoURL,
                 text: text,
-                type: uploadedFiles.length > 0 ? (uploadedFiles.every(f => f.type && f.type.startsWith('image/')) ? 'images' : 'files') : 'text',
+                type: msgType,
                 files: [...uploadedFiles],
                 timestamp: new Date().toISOString(),
                 readBy: [currentUser.id]
@@ -1218,9 +1340,11 @@
                 bubble.appendChild(sender);
             }
 
-            if (message.type === 'text') {
+            if (message.text) {
                 const text = document.createElement('div'); text.className = 'message-text'; text.textContent = message.text; bubble.appendChild(text);
-            } else if (message.type === 'images' && message.files) {
+            }
+
+            if (message.type === 'images' && message.files) {
                 const grid = document.createElement('div'); grid.className = 'image-grid';
                 message.files.forEach(file => {
                     const imgSrc = resolveImageUrl(file);
@@ -1242,19 +1366,18 @@
                     fileDiv.innerHTML = `<span class="file-icon">${getFileIcon(file.type)}</span><div class="file-info"><div class="file-name">${file.name || 'File'}</div><div class="file-size">${formatFileSize(file.size)}</div></div>`;
                     bubble.appendChild(fileDiv);
                 });
-            } else if (message.type === 'voice' && message.files) {
-                const voiceDiv = document.createElement('div'); voiceDiv.className = 'voice-message'; const file = message.files[0];
-                const playBtn = document.createElement('button'); playBtn.className = 'play-btn'; playBtn.innerHTML = '<i class="bi bi-play-fill"></i>'; playBtn.onclick = () => toggleVoicePlayback(playBtn, file.url);
-                const waveform = document.createElement('div'); waveform.className = 'waveform';
-                for (let i = 0; i < 20; i++) { const bar = document.createElement('div'); bar.className = 'bar'; bar.style.height = (10 + Math.random() * 40) + '%'; waveform.appendChild(bar); }
-                voiceDiv.innerHTML = playBtn.outerHTML + waveform.outerHTML + `<span class="duration">${file.duration ? formatDuration(file.duration) : '0:00'}</span>`;
-                voiceDiv.querySelector('.play-btn').onclick = function() { toggleVoicePlayback(this, file.url); };
-                bubble.appendChild(voiceDiv);
+            } else if ((message.type === 'voice' || message.type === 'audio') && message.files) {
+                // Messenger Style Voice Message Player
+                message.files.forEach(file => {
+                    const audioPlayer = createMessengerAudioPlayer(file);
+                    bubble.appendChild(audioPlayer);
+                });
             } else if (message.type === 'video' && message.files) {
-                const container = document.createElement('div'); container.className = 'video-container';
-                container.innerHTML = `<video src="${message.files[0].url}" controls preload="metadata"></video>`;
-                container.querySelector('video').onclick = () => openMediaModal(message.files[0].url, 'video');
-                bubble.appendChild(container);
+                // Messenger Style Video Player
+                message.files.forEach(file => {
+                    const videoCard = createMessengerVideoPlayer(file);
+                    bubble.appendChild(videoCard);
+                });
             }
 
             const time24 = msgDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
@@ -1274,6 +1397,129 @@
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
             if (message.userId !== currentUser?.id && !message.id.startsWith('temp_')) markAsRead(message.id);
+        }
+
+        // Messenger Audio Player Builder
+        function createMessengerAudioPlayer(file) {
+            const container = document.createElement('div');
+            container.className = 'messenger-audio-player';
+
+            const playBtn = document.createElement('button');
+            playBtn.className = 'play-btn';
+            playBtn.innerHTML = '<i class="bi bi-play-fill"></i>';
+
+            const info = document.createElement('div');
+            info.className = 'audio-track-info';
+
+            const waveform = document.createElement('div');
+            waveform.className = 'audio-waveform-bars';
+            for (let i = 0; i < 15; i++) {
+                const bar = document.createElement('div');
+                bar.className = 'bar';
+                bar.style.height = (20 + Math.random() * 80) + '%';
+                waveform.appendChild(bar);
+            }
+
+            const slider = document.createElement('input');
+            slider.type = 'range';
+            slider.className = 'audio-slider';
+            slider.value = 0;
+            slider.max = 100;
+
+            info.appendChild(waveform);
+            info.appendChild(slider);
+
+            const timer = document.createElement('span');
+            timer.className = 'audio-timer';
+            timer.textContent = file.duration ? formatDuration(file.duration) : '0:00';
+
+            container.appendChild(playBtn);
+            container.appendChild(info);
+            container.appendChild(timer);
+
+            const audio = new Audio(file.url);
+
+            playBtn.onclick = () => {
+                if (currentAudio && currentAudio !== audio) {
+                    currentAudio.pause();
+                }
+
+                if (audio.paused) {
+                    audio.play();
+                    currentAudio = audio;
+                    playBtn.innerHTML = '<i class="bi bi-pause-fill"></i>';
+                    container.classList.add('playing');
+                } else {
+                    audio.pause();
+                    playBtn.innerHTML = '<i class="bi bi-play-fill"></i>';
+                    container.classList.remove('playing');
+                }
+            };
+
+            audio.ontimeupdate = () => {
+                if (audio.duration) {
+                    slider.value = (audio.currentTime / audio.duration) * 100;
+                    timer.textContent = formatDuration(Math.floor(audio.currentTime));
+                }
+            };
+
+            audio.onended = () => {
+                playBtn.innerHTML = '<i class="bi bi-play-fill"></i>';
+                container.classList.remove('playing');
+                slider.value = 0;
+                timer.textContent = file.duration ? formatDuration(file.duration) : '0:00';
+            };
+
+            slider.oninput = () => {
+                if (audio.duration) {
+                    audio.currentTime = (slider.value / 100) * audio.duration;
+                }
+            };
+
+            return container;
+        }
+
+        // Messenger Video Player Builder
+        function createMessengerVideoPlayer(file) {
+            const container = document.createElement('div');
+            container.className = 'messenger-video-card';
+
+            const video = document.createElement('video');
+            video.src = file.url;
+            video.preload = 'metadata';
+            video.playsInline = true;
+
+            const playOverlay = document.createElement('div');
+            playOverlay.className = 'video-overlay-play';
+            playOverlay.innerHTML = '<i class="bi bi-play-fill"></i>';
+
+            const expandBtn = document.createElement('button');
+            expandBtn.className = 'expand-btn';
+            expandBtn.innerHTML = '<i class="bi bi-arrows-angle-expand"></i>';
+            expandBtn.onclick = (e) => {
+                e.stopPropagation();
+                openMediaModal(file.url, 'video');
+            };
+
+            container.appendChild(video);
+            container.appendChild(playOverlay);
+            container.appendChild(expandBtn);
+
+            container.onclick = () => {
+                if (video.paused) {
+                    video.play();
+                    container.classList.add('playing');
+                } else {
+                    video.pause();
+                    container.classList.remove('playing');
+                }
+            };
+
+            video.onended = () => {
+                container.classList.remove('playing');
+            };
+
+            return container;
         }
 
         function updateReadCount(message) {
@@ -1310,12 +1556,6 @@
         });
 
         let currentAudio = null;
-        function toggleVoicePlayback(btn, url) {
-            if (currentAudio && !currentAudio.paused) { currentAudio.pause(); currentAudio = null; btn.innerHTML = '<i class="bi bi-play-fill"></i>'; return; }
-            if (currentAudio) currentAudio = null;
-            const audio = new Audio(url); audio.onended = () => { btn.innerHTML = '<i class="bi bi-play-fill"></i>'; currentAudio = null; };
-            audio.play(); currentAudio = audio; btn.innerHTML = '<i class="bi bi-pause-fill"></i>';
-        }
 
         // ============================================================
         // PINCH TO ZOOM & PAN ENGINE FOR MODAL PREVIEW
@@ -1502,12 +1742,10 @@
             });
         }
 
-        // ============================================================
-        // EMOJI PICKER REFACTORED (WEB COMPONENT BASE)
-        // ============================================================
+        // EMOJI PICKER
         function initEmojiPicker() {
             const container = document.getElementById('emoji-picker-container');
-            container.innerHTML = ''; // เคลียร์ของเก่า
+            container.innerHTML = ''; 
 
             const picker = document.createElement('emoji-picker');
             container.appendChild(picker);
@@ -1527,7 +1765,7 @@
 
         function getFileIcon(type) { if (!type) return '📎'; if (type.startsWith('image/')) return '🖼️'; if (type.startsWith('video/')) return '🎬'; if (type.startsWith('audio/')) return '🎵'; if (type.includes('pdf')) return '📄'; if (type.includes('word') || type.includes('document')) return '📝'; if (type.includes('excel') || type.includes('sheet')) return '📊'; if (type.includes('powerpoint') || type.includes('presentation')) return '📑'; return '📎'; }
         function formatFileSize(bytes) { if (!bytes || bytes === 0) return '0 B'; const k = 1024; const sizes = ['B', 'KB', 'MB', 'GB']; const i = Math.floor(Math.log(bytes) / Math.log(k)); return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]; }
-        function formatDuration(seconds) { const mins = Math.floor(seconds / 60); const secs = seconds % 60; return `${mins}:${String(secs).padStart(2, '0')}`; }
+        function formatDuration(seconds) { const mins = Math.floor(seconds / 60); const secs = Math.floor(seconds % 60); return `${mins}:${String(secs).padStart(2, '0')}`; }
 
         document.addEventListener('click', (e) => { 
             if (!e.target.closest('#emoji-picker-container') && !e.target.closest('#emoji-btn')) {
