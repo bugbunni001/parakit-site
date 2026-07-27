@@ -35,6 +35,53 @@
             position: relative; 
         }
 
+        /* Drag Overlay */
+        #drag-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(7, 94, 84, 0.85);
+            z-index: 9998;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            gap: 12px;
+            pointer-events: none;
+        }
+        #drag-overlay.active { display: flex; }
+        #drag-overlay i { font-size: 48px; }
+
+        /* Custom Context Menu */
+        #context-menu {
+            display: none;
+            position: fixed;
+            z-index: 10000;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            padding: 6px 0;
+            min-width: 180px;
+            overflow: hidden;
+            animation: fadeIn 0.1s ease;
+        }
+        #context-menu .menu-item {
+            padding: 10px 16px;
+            font-size: 14px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: background 0.15s;
+            user-select: none;
+        }
+        #context-menu .menu-item:hover { background: #f0f0f0; }
+        #context-menu .menu-item.danger { color: #ff6b6b; }
+        #context-menu .menu-item.danger:hover { background: #fff0f0; }
+
         /* Initial Screen Guard (Prevent Flash) */
         .auth-loading-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: #075e54; z-index: 10000; display: flex; justify-content: center; align-items: center; color: white; font-size: 24px; }
 
@@ -113,7 +160,17 @@
         .message-wrapper.temp-message { opacity: 0.7; }
         .message-date { font-size: 11px; color: #66757f; text-align: center; padding: 8px 0 12px; width: 100%; font-weight: 500; letter-spacing: 0.3px; flex-shrink: 0; }
         .message-date span { background: rgba(0,0,0,0.05); padding: 3px 14px; border-radius: 20px; }
-        .message-bubble { max-width: 82%; padding: 7px 12px; border-radius: 12px; position: relative; word-wrap: break-word; word-break: break-word; box-shadow: 0 1px 2px rgba(0,0,0,0.08); }
+        .message-bubble { 
+            max-width: 82%; 
+            padding: 7px 12px; 
+            border-radius: 12px; 
+            position: relative; 
+            word-wrap: break-word; 
+            word-break: break-word; 
+            box-shadow: 0 1px 2px rgba(0,0,0,0.08); 
+            user-select: text; 
+            -webkit-user-select: text;
+        }
         .message-wrapper.sent .message-bubble { background: #dcf8c6; border-bottom-right-radius: 3px; }
         .message-wrapper.received .message-bubble { background: white; border-bottom-left-radius: 3px; }
         .message-bubble .sender-name { font-size: 11px; font-weight: 700; color: #075e54; margin-bottom: 2px; display: flex; align-items: center; gap: 6px; }
@@ -145,13 +202,6 @@
         .message-bubble .voice-message .duration { font-size: 11px; color: #66757f; min-width: 35px; text-align: center; }
         .message-bubble .video-container { position: relative; border-radius: 8px; overflow: hidden; margin: 4px 0; }
         .message-bubble .video-container video { width: 100%; max-height: 250px; border-radius: 8px; background: #000; }
-
-        /* Delete button */
-        .message-bubble .delete-btn { position: absolute; top: -6px; right: -6px; background: #ff6b6b; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 11px; cursor: pointer; display: none; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2); transition: transform 0.2s; }
-        .message-wrapper:hover .delete-btn { display: flex; }
-        .message-bubble .delete-btn:hover { transform: scale(1.1); }
-        .message-bubble .delete-btn-mobile { display: none; background: #ff6b6b; color: white; border: none; border-radius: 50%; width: 24px; height: 24px; font-size: 12px; cursor: pointer; align-items: center; justify-content: center; margin-top: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
-        @media (max-width: 768px) { .message-wrapper:hover .delete-btn { display: none; } .message-bubble .delete-btn-mobile { display: flex; } }
 
         /* Typing & Input Area Fixes */
         #typing-indicator { font-size: 12px; color: #66757f; padding: 4px 16px; display: none; font-style: italic; flex-shrink: 0; }
@@ -232,6 +282,12 @@
 </head>
 <body>
     <div id="app">
+        <!-- Drag & Drop Visual Overlay -->
+        <div id="drag-overlay">
+            <i class="bi bi-cloud-arrow-up-fill"></i>
+            <div>วางไฟล์ตรงนี้เพื่อส่ง</div>
+        </div>
+
         <!-- Initial Guard Overlay -->
         <div id="app-loading-guard" class="auth-loading-overlay">
             <i class="bi bi-chat-dots-fill animated pulse"></i>
@@ -312,6 +368,19 @@
         </div>
     </div>
 
+    <!-- Custom Context Menu UI -->
+    <div id="context-menu">
+        <div class="menu-item" id="menu-copy-all" onclick="executeContextAction('copy-all')">
+            <i class="bi bi-copy"></i> คัดลอกข้อความทั้งหมด
+        </div>
+        <div class="menu-item" id="menu-copy-partial" onclick="executeContextAction('copy-partial')">
+            <i class="bi bi-blockquote-left"></i> คัดลอกข้อความบางส่วน
+        </div>
+        <div class="menu-item danger" id="menu-delete" onclick="executeContextAction('delete')">
+            <i class="bi bi-trash"></i> ลบข้อความ
+        </div>
+    </div>
+
     <!-- Modals -->
     <div class="modal-overlay" id="media-modal" onclick="closeModal(event)">
         <span class="modal-close" onclick="closeModal(event)"><i class="bi bi-x-lg"></i></span>
@@ -368,6 +437,10 @@
         let uploadedFiles = [], isPolling = false, otpUserId = null;
         let mediaRecorder = null, audioChunks = [], isRecording = false, recordingStartTime = null;
         let recordingTimer = null, currentRecordingData = null, isConnected = false;
+        
+        // Context Menu & Long Press Variables
+        let selectedMessageObj = null;
+        let longPressTimer = null;
 
         const authContainer = document.getElementById('auth-container'), chatContainer = document.getElementById('chat-container');
         const authBtn = document.getElementById('auth-btn'), authToggle = document.getElementById('auth-toggle');
@@ -377,6 +450,8 @@
         const messageInput = document.getElementById('message-input'), messagesContainer = document.getElementById('chat-messages');
         const profilePic = document.getElementById('profile-pic'), memberCount = document.getElementById('member-count');
         const dbStatus = document.getElementById('db-status');
+        const contextMenu = document.getElementById('context-menu');
+        const dragOverlay = document.getElementById('drag-overlay');
 
         function resolveImageUrl(file) {
             if (!file) return '';
@@ -431,7 +506,6 @@
         document.addEventListener('DOMContentLoaded', async function() {
             checkDatabaseConnection();
             
-            // Enter Key Handlers for Auth Forms
             const handleAuthEnter = (e) => { if (e.key === 'Enter') { e.preventDefault(); authBtn.click(); } };
             emailInput.addEventListener('keypress', handleAuthEnter);
             passwordInput.addEventListener('keypress', handleAuthEnter);
@@ -458,6 +532,7 @@
             }
             document.getElementById('app-loading-guard').style.display = 'none';
             initEmojiPicker();
+            setupDragAndDrop();
         });
 
         async function checkDatabaseConnection() {
@@ -568,7 +643,7 @@
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonColor: '#ff6b6b',
-                cancelButtonColor: '#075e54',
+                confirmButtonColor: '#075e54',
                 confirmButtonText: 'Yes, Logout'
             });
 
@@ -663,6 +738,143 @@
         }
 
         // ============================================================
+        // DRAG AND DROP HANDLER
+        // ============================================================
+        function setupDragAndDrop() {
+            const app = document.getElementById('app');
+
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                app.addEventListener(eventName, preventDefaults, false);
+                document.body.addEventListener(eventName, preventDefaults, false);
+            });
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                app.addEventListener(eventName, () => {
+                    if (currentUser) dragOverlay.classList.add('active');
+                }, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                app.addEventListener(eventName, (e) => {
+                    if (e.type === 'drop' || (e.relatedTarget && !app.contains(e.relatedTarget))) {
+                        dragOverlay.classList.remove('active');
+                    }
+                }, false);
+            });
+
+            app.addEventListener('drop', (e) => {
+                dragOverlay.classList.remove('active');
+                if (!currentUser) return;
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                if (files && files.length > 0) {
+                    processFiles(Array.from(files));
+                }
+            }, false);
+        }
+
+        // ============================================================
+        // CONTEXT MENU & LONG PRESS ENGINE
+        // ============================================================
+        function attachContextMenuEvents(element, message) {
+            // Right Click (PC)
+            element.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                showCustomContextMenu(e.clientX, e.clientY, message);
+            });
+
+            // Long Press (Mobile)
+            element.addEventListener('touchstart', (e) => {
+                longPressTimer = setTimeout(() => {
+                    if (e.touches && e.touches[0]) {
+                        showCustomContextMenu(e.touches[0].clientX, e.touches[0].clientY, message);
+                    }
+                }, 500);
+            }, { passive: true });
+
+            element.addEventListener('touchend', () => clearTimeout(longPressTimer));
+            element.addEventListener('touchmove', () => clearTimeout(longPressTimer));
+        }
+
+        function showCustomContextMenu(x, y, message) {
+            selectedMessageObj = message;
+            
+            const deleteBtn = document.getElementById('menu-delete');
+            const copyPartialBtn = document.getElementById('menu-copy-partial');
+
+            // แสดงเฉพาะปุ่มลบหากเป็นข้อความของผู้ใช้เอง
+            if (message.userId === currentUser?.id && !message.id.startsWith('temp_')) {
+                deleteBtn.style.display = 'flex';
+            } else {
+                deleteBtn.style.display = 'none';
+            }
+
+            // แสดงตัวเลือกคัดลอกบางส่วนเฉพาะเมื่อมีข้อความตัวอักษร
+            if (message.text) {
+                copyPartialBtn.style.display = 'flex';
+            } else {
+                copyPartialBtn.style.display = 'none';
+            }
+
+            // ปรับตำแหน่งไม่ให้หลุดหน้าจอ
+            contextMenu.style.display = 'block';
+            const menuWidth = contextMenu.offsetWidth;
+            const menuHeight = contextMenu.offsetHeight;
+            const winWidth = window.innerWidth;
+            const winHeight = window.innerHeight;
+
+            let left = x;
+            let top = y;
+
+            if (x + menuWidth > winWidth) left = winWidth - menuWidth - 10;
+            if (y + menuHeight > winHeight) top = winHeight - menuHeight - 10;
+
+            contextMenu.style.left = `${left}px`;
+            contextMenu.style.top = `${top}px`;
+        }
+
+        function hideContextMenu() {
+            contextMenu.style.display = 'none';
+        }
+
+        async function executeContextAction(action) {
+            hideContextMenu();
+            if (!selectedMessageObj) return;
+
+            if (action === 'copy-all') {
+                let contentToCopy = selectedMessageObj.text || '';
+                if (selectedMessageObj.files && selectedMessageObj.files.length > 0) {
+                    const urls = selectedMessageObj.files.map(f => f.url || resolveImageUrl(f)).join('\n');
+                    contentToCopy = contentToCopy ? `${contentToCopy}\n${urls}` : urls;
+                }
+                if (contentToCopy) {
+                    navigator.clipboard.writeText(contentToCopy);
+                    Swal.fire({ icon: 'success', title: 'คัดลอกเรียบร้อย', toast: true, position: 'top', timer: 1500, showConfirmButton: false });
+                }
+            } else if (action === 'copy-partial') {
+                const msgElem = messagesContainer.querySelector(`[data-message-id="${selectedMessageObj.id}"] .message-text`);
+                if (msgElem) {
+                    const range = document.createRange();
+                    range.selectNodeContents(msgElem);
+                    const selection = window.getSelection();
+                    selection.removeAllRanges();
+                    selection.addRange(range);
+                    Swal.fire({ icon: 'info', title: 'คลุมข้อความแล้ว', text: 'คุณสามารถกดคัดลอกส่วนที่ต้องการได้เลย', toast: true, position: 'top', timer: 2000, showConfirmButton: false });
+                }
+            } else if (action === 'delete') {
+                deleteMessage(selectedMessageObj.id);
+            }
+        }
+
+        document.addEventListener('click', hideContextMenu);
+
+        // ============================================================
         // MESSAGE FUNCTIONS
         // ============================================================
         async function sendMessage() {
@@ -714,12 +926,13 @@
 
         async function deleteMessage(messageId) {
             const res = await Swal.fire({
-                title: 'Delete Message?',
-                text: 'This action cannot be undone.',
+                title: 'ลบข้อความนี้?',
+                text: 'รูปภาพหรือไฟล์แนบจะถูกลบออกจาก Google Drive ด้วย',
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#ff6b6b',
-                confirmButtonText: 'Yes, Delete'
+                confirmButtonText: 'ใช่, ลบเลย',
+                cancelButtonText: 'ยกเลิก'
             });
 
             if (!res.isConfirmed) return;
@@ -729,6 +942,7 @@
                 if (data.success) {
                     const msgElem = messagesContainer.querySelector(`[data-message-id="${messageId}"]`);
                     if (msgElem) msgElem.remove();
+                    Swal.fire({ icon: 'success', title: 'ลบสำเร็จ', toast: true, position: 'top', timer: 1500, showConfirmButton: false });
                 } else {
                     Swal.fire({ icon: 'error', title: 'Error', text: data.error });
                 }
@@ -736,6 +950,7 @@
                 Swal.fire({ icon: 'error', title: 'Error', text: error.message });
             }
         }
+
         async function markAsRead(messageId) { try { await postApi('markAsRead', { userId: currentUser.id, sessionId, messageId }); } catch (e) {} }
 
         async function toggleRecording() { if (isRecording) stopRecording(); else startRecording(); }
@@ -779,8 +994,13 @@
 
         async function handleFileUpload(event) {
             const files = Array.from(event.target.files);
+            await processFiles(files);
+            event.target.value = '';
+        }
+
+        async function processFiles(files) {
             if (files.length === 0) return;
-            if (files.length > 20) { Swal.fire({ icon: 'warning', title: 'Limit Exceeded', text: 'Maximum 20 files per upload' }); event.target.value = ''; return; }
+            if (files.length > 20) { Swal.fire({ icon: 'warning', title: 'Limit Exceeded', text: 'Maximum 20 files per upload' }); return; }
 
             const progressModal = document.getElementById('upload-progress'), progressFill = document.getElementById('progress-fill'), progressText = document.getElementById('progress-text');
             progressModal.classList.add('active');
@@ -798,7 +1018,7 @@
                 if (data.success) { uploadedFiles = data.files; await sendMessage(); } 
                 else Swal.fire({ icon: 'error', title: 'Upload Failed', text: data.error });
             } catch (error) { Swal.fire({ icon: 'error', title: 'Upload Error', text: error.message }); } 
-            finally { progressModal.classList.remove('active'); event.target.value = ''; }
+            finally { progressModal.classList.remove('active'); }
         }
 
         async function updateProfilePic(event) {
@@ -956,11 +1176,8 @@
             timeDiv.innerHTML = `<span>${time24}</span><span class="read-count" id="read-${message.id}">${readCountHtml}</span>`;
             bubble.appendChild(timeDiv);
 
-            if (message.userId === currentUser?.id && !message.id.startsWith('temp_')) {
-                const deleteBtn = document.createElement('button'); deleteBtn.className = 'delete-btn'; deleteBtn.innerHTML = '<i class="bi bi-x"></i>'; deleteBtn.onclick = (e) => { e.stopPropagation(); deleteMessage(message.id); }; bubble.appendChild(deleteBtn);
-                const deleteBtnMobile = document.createElement('button'); deleteBtnMobile.className = 'delete-btn-mobile'; deleteBtnMobile.innerHTML = '<i class="bi bi-trash"></i>'; deleteBtnMobile.onclick = (e) => { e.stopPropagation(); deleteMessage(message.id); }; bubble.appendChild(deleteBtnMobile);
-                bubble.addEventListener('contextmenu', (e) => { e.preventDefault(); deleteMessage(message.id); });
-            }
+            // Attach Custom Context Menu & Long Press Events
+            attachContextMenuEvents(bubble, message);
 
             wrapper.appendChild(bubble); 
             messagesContainer.appendChild(wrapper); 
@@ -1051,7 +1268,7 @@
         function formatDuration(seconds) { const mins = Math.floor(seconds / 60); const secs = seconds % 60; return `${mins}:${String(secs).padStart(2, '0')}`; }
 
         document.addEventListener('click', (e) => { if (!e.target.closest('#emoji-picker-container') && !e.target.closest('#emoji-btn')) document.getElementById('emoji-picker-container').classList.remove('active'); });
-        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeModal(e); closeProfileModal(); closeOTPModal(); document.getElementById('emoji-picker-container').classList.remove('active'); } });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeModal(e); closeProfileModal(); closeOTPModal(); hideContextMenu(); document.getElementById('emoji-picker-container').classList.remove('active'); } });
         window.addEventListener('beforeunload', async () => { if (currentUser) try { await postApi('logout', { userId: currentUser.id }); } catch (error) {} });
     </script>
 </body>
