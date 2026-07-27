@@ -284,27 +284,8 @@
             max-height: 280px;
             display: block;
             object-fit: cover;
+            border-radius: 14px;
         }
-        .messenger-video-card .video-overlay-play {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            background: rgba(0, 0, 0, 0.55);
-            backdrop-filter: blur(4px);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
-            cursor: pointer;
-            pointer-events: none;
-            transition: transform 0.2s, background 0.2s;
-        }
-        .messenger-video-card.playing .video-overlay-play { opacity: 0; }
         .messenger-video-card .expand-btn {
             position: absolute;
             top: 8px;
@@ -557,7 +538,7 @@
             <div class="zoom-wrapper" id="zoom-wrapper">
                 <img id="modal-image" src="" alt="Preview">
             </div>
-            <video id="modal-video" controls style="display:none; max-width:90%; max-height:85vh;"></video>
+            <video id="modal-video" controls playsinline style="display:none; max-width:90%; max-height:85vh;"></video>
         </div>
         <div class="modal-actions">
             <button onclick="downloadCurrentMedia()"><i class="bi bi-download"></i> Download</button>
@@ -632,6 +613,17 @@
             if (file.url && file.url.includes('id=')) {
                 const idMatch = file.url.match(/id=([a-zA-Z0-9_-]+)/);
                 if (idMatch && idMatch[1]) return 'https://lh3.googleusercontent.com/d/' + idMatch[1];
+            }
+            return file.url || '';
+        }
+
+        function resolveVideoUrl(file) {
+            if (!file) return '';
+            if (file.data && file.data.startsWith('data:video')) return file.data;
+            if (file.driveId) return 'https://drive.google.com/uc?export=download&id=' + file.driveId;
+            if (file.url && file.url.includes('id=')) {
+                const idMatch = file.url.match(/id=([a-zA-Z0-9_-]+)/);
+                if (idMatch && idMatch[1]) return 'https://drive.google.com/uc?export=download&id=' + idMatch[1];
             }
             return file.url || '';
         }
@@ -1120,42 +1112,111 @@
         async function markAsRead(messageId) { try { await postApi('markAsRead', { userId: currentUser.id, sessionId, messageId }); } catch (e) {} }
 
         async function toggleRecording() { if (isRecording) stopRecording(); else startRecording(); }
+        
         async function startRecording() {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                mediaRecorder = new MediaRecorder(stream); audioChunks = [];
-                mediaRecorder.ondataavailable = event => { audioChunks.push(event.data); };
+                mediaRecorder = new MediaRecorder(stream); 
+                audioChunks = [];
+                currentRecordingData = null;
+
+                mediaRecorder.ondataavailable = event => { 
+                    if (event.data.size > 0) audioChunks.push(event.data); 
+                };
+
                 mediaRecorder.onstop = () => {
                     const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                    const reader = new FileReader(); reader.onload = function() { currentRecordingData = reader.result; }; reader.readAsDataURL(audioBlob);
+                    const reader = new FileReader(); 
+                    reader.onloadend = function() { 
+                        currentRecordingData = reader.result; 
+                    }; 
+                    reader.readAsDataURL(audioBlob);
                     stream.getTracks().forEach(track => track.stop());
                 };
-                mediaRecorder.start(); isRecording = true; recordingStartTime = Date.now();
-                document.getElementById('voice-recording').classList.add('active'); document.getElementById('chat-input-default').style.display = 'none';
+
+                mediaRecorder.start(); 
+                isRecording = true; 
+                recordingStartTime = Date.now();
+                document.getElementById('voice-recording').classList.add('active'); 
+                document.getElementById('chat-input-default').style.display = 'none';
+                
                 recordingTimer = setInterval(() => {
                     const elapsed = Math.floor((Date.now() - recordingStartTime) / 1000);
                     document.getElementById('recording-timer').textContent = `${String(Math.floor(elapsed / 60)).padStart(2, '0')}:${String(elapsed % 60).padStart(2, '0')}`;
                 }, 1000);
             } catch (error) { Swal.fire({ icon: 'error', title: 'Microphone Error', text: error.message }); }
         }
+
         function stopRecording() {
-            if (mediaRecorder && isRecording) {
-                mediaRecorder.stop(); isRecording = false; clearInterval(recordingTimer);
-                document.getElementById('voice-recording').classList.remove('active'); document.getElementById('chat-input-default').style.display = 'flex';
-                document.getElementById('recording-timer').textContent = '00:00';
-            }
+            return new Promise((resolve) => {
+                if (mediaRecorder && isRecording) {
+                    mediaRecorder.onstop = () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        const reader = new FileReader(); 
+                        reader.onloadend = function() { 
+                            currentRecordingData = reader.result;
+                            resolve();
+                        }; 
+                        reader.readAsDataURL(audioBlob);
+                    };
+                    mediaRecorder.stop(); 
+                    isRecording = false; 
+                    clearInterval(recordingTimer);
+                    document.getElementById('voice-recording').classList.remove('active'); 
+                    document.getElementById('chat-input-default').style.display = 'flex';
+                    document.getElementById('recording-timer').textContent = '00:00';
+                } else {
+                    resolve();
+                }
+            });
         }
-        function cancelRecording() { stopRecording(); currentRecordingData = null; audioChunks = []; }
+
+        async function cancelRecording() { 
+            if (mediaRecorder && isRecording) {
+                mediaRecorder.stop();
+                isRecording = false;
+                clearInterval(recordingTimer);
+            }
+            currentRecordingData = null; 
+            audioChunks = []; 
+            document.getElementById('voice-recording').classList.remove('active'); 
+            document.getElementById('chat-input-default').style.display = 'flex';
+            document.getElementById('recording-timer').textContent = '00:00';
+        }
+
         async function sendRecording() {
+            if (isRecording) {
+                await stopRecording();
+            }
+
+            // รอการแปลง Base64 เล็กน้อยหากยังประมวลผลไม่เสร็จ
+            let checkCount = 0;
+            while (!currentRecordingData && checkCount < 10) {
+                await new Promise(r => setTimeout(r, 100));
+                checkCount++;
+            }
+
             if (!currentRecordingData) return Swal.fire({ icon: 'info', title: 'Notice', text: 'No recording to send' });
+
+            Swal.showLoading();
             try {
-                const data = await postApi('sendVoiceMessage', { userId: currentUser.id, sessionId, audioData: currentRecordingData, duration: Math.floor((Date.now() - recordingStartTime) / 1000) });
+                const data = await postApi('sendVoiceMessage', { 
+                    userId: currentUser.id, 
+                    sessionId, 
+                    audioData: currentRecordingData, 
+                    duration: Math.floor((Date.now() - recordingStartTime) / 1000) 
+                });
+                Swal.close();
                 if (data.success) { 
-                    currentRecordingData = null; audioChunks = []; 
+                    currentRecordingData = null; 
+                    audioChunks = []; 
                     fetchLatestMessagesImmediately(); 
                 } 
                 else Swal.fire({ icon: 'error', title: 'Failed', text: data.error });
-            } catch (error) { Swal.fire({ icon: 'error', title: 'Error', text: error.message }); }
+            } catch (error) { 
+                Swal.close();
+                Swal.fire({ icon: 'error', title: 'Error', text: error.message }); 
+            }
         }
 
         async function handleFileUpload(event) {
@@ -1367,13 +1428,11 @@
                     bubble.appendChild(fileDiv);
                 });
             } else if ((message.type === 'voice' || message.type === 'audio') && message.files) {
-                // Messenger Style Voice Message Player
                 message.files.forEach(file => {
                     const audioPlayer = createMessengerAudioPlayer(file);
                     bubble.appendChild(audioPlayer);
                 });
             } else if (message.type === 'video' && message.files) {
-                // Messenger Style Video Player
                 message.files.forEach(file => {
                     const videoCard = createMessengerVideoPlayer(file);
                     bubble.appendChild(videoCard);
@@ -1437,7 +1496,7 @@
             container.appendChild(info);
             container.appendChild(timer);
 
-            const audio = new Audio(file.url);
+            const audio = new Audio(file.url || resolveVideoUrl(file));
 
             playBtn.onclick = () => {
                 if (currentAudio && currentAudio !== audio) {
@@ -1485,39 +1544,21 @@
             container.className = 'messenger-video-card';
 
             const video = document.createElement('video');
-            video.src = file.url;
+            video.src = resolveVideoUrl(file);
+            video.controls = true;
             video.preload = 'metadata';
             video.playsInline = true;
-
-            const playOverlay = document.createElement('div');
-            playOverlay.className = 'video-overlay-play';
-            playOverlay.innerHTML = '<i class="bi bi-play-fill"></i>';
 
             const expandBtn = document.createElement('button');
             expandBtn.className = 'expand-btn';
             expandBtn.innerHTML = '<i class="bi bi-arrows-angle-expand"></i>';
             expandBtn.onclick = (e) => {
                 e.stopPropagation();
-                openMediaModal(file.url, 'video');
+                openMediaModal(resolveVideoUrl(file), 'video');
             };
 
             container.appendChild(video);
-            container.appendChild(playOverlay);
             container.appendChild(expandBtn);
-
-            container.onclick = () => {
-                if (video.paused) {
-                    video.play();
-                    container.classList.add('playing');
-                } else {
-                    video.pause();
-                    container.classList.remove('playing');
-                }
-            };
-
-            video.onended = () => {
-                container.classList.remove('playing');
-            };
 
             return container;
         }
