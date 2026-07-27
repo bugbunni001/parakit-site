@@ -1,554 +1,198 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LINE Style Chat Application</title>
+    <title>💬 Real-time Chat</title>
+    
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
     <!-- Emoji Mart -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/emoji-mart@5.5.2/css/emoji-mart.css">
-    <script src="https://cdn.jsdelivr.net/npm/emoji-mart@5.5.2/dist/browser.js"></script>
+    
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <style>
-        :root {
-            --line-header: #202b36;
-            --line-bg: #8cabd9;
-            --line-green: #06c755;
-            --line-green-hover: #05b34c;
-            --line-bubble-sent: #a0e75a;
-            --line-bubble-received: #ffffff;
-            --text-dark: #1e1e1e;
-        }
+        /* CSS Reset & Base */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif; }
+        body { background: #e5ddd5; height: 100vh; display: flex; justify-content: center; align-items: center; }
+        #app { width: 100%; max-width: 480px; height: 100vh; max-height: 800px; background: white; border-radius: 12px; box-shadow: 0 4px 30px rgba(0,0,0,0.2); display: flex; flex-direction: column; overflow: hidden; position: relative; }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-        }
+        /* Initial Screen Guard (Prevent Flash) */
+        .auth-loading-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: #075e54; z-index: 10000; display: flex; justify-content: center; align-items: center; color: white; font-size: 24px; }
 
-        body {
-            background: #dcdcdc;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
+        /* Auth Container */
+        #auth-container { padding: 30px 24px; display: flex; flex-direction: column; height: 100%; justify-content: center; background: linear-gradient(145deg, #075e54 0%, #128C7E 100%); overflow-y: auto; }
+        #auth-container .logo { text-align: center; font-size: 48px; margin-bottom: 4px; color: white; }
+        #auth-container .logo i { font-size: 64px; }
+        #auth-container h1 { color: white; text-align: center; margin-bottom: 32px; font-size: 26px; font-weight: 600; letter-spacing: -0.5px; }
+        #auth-container input { padding: 14px 18px; margin: 6px 0; border: none; border-radius: 30px; font-size: 15px; background: rgba(255,255,255,0.92); outline: none; width: 100%; transition: all 0.2s; }
+        #auth-container input:focus { background: white; box-shadow: 0 0 0 3px rgba(255,255,255,0.3); }
+        #auth-container .input-icon { position: relative; }
+        #auth-container .input-icon i { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #999; font-size: 18px; }
+        #auth-container .input-icon input { padding-left: 44px; }
+        #auth-container button { padding: 14px; margin: 10px 0 6px; border: none; border-radius: 30px; font-size: 16px; font-weight: 700; background: #25D366; color: white; cursor: pointer; transition: all 0.2s; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        #auth-container button:hover { background: #20b859; transform: scale(1.01); }
+        #auth-container button:disabled { opacity: 0.7; cursor: not-allowed; }
+        #auth-toggle { color: rgba(255,255,255,0.85); text-align: center; margin-top: 12px; cursor: pointer; font-size: 14px; transition: color 0.2s; }
+        #auth-toggle:hover { color: white; text-decoration: underline; }
+        #auth-container .error { color: #ff6b6b; text-align: center; margin: 6px 0; font-size: 13px; background: rgba(255,0,0,0.1); padding: 8px; border-radius: 8px; }
+        #auth-container .success { color: #69db7c; text-align: center; margin: 6px 0; font-size: 13px; background: rgba(0,255,0,0.1); padding: 8px; border-radius: 8px; }
+        .forgot-password { color: rgba(255,255,255,0.7); text-align: center; margin-top: 10px; cursor: pointer; font-size: 13px; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .forgot-password:hover { color: white; text-decoration: underline; }
 
-        #app {
-            width: 100%;
-            max-width: 480px;
-            height: 100vh;
-            max-height: 850px;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            position: relative;
-        }
-
-        /* Auth Screen */
-        #auth-container {
-            padding: 30px 24px;
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-            justify-content: center;
-            background: linear-gradient(180deg, #06c755 0%, #039740 100%);
-            overflow-y: auto;
-        }
-
-        #auth-container .logo {
-            text-align: center;
-            font-size: 70px;
-            color: white;
-            margin-bottom: 10px;
-        }
-
-        #auth-container h1 {
-            color: white;
-            text-align: center;
-            margin-bottom: 30px;
-            font-size: 26px;
-            font-weight: 700;
-        }
-
-        #auth-container input {
-            padding: 14px 18px;
-            margin: 8px 0;
-            border: none;
-            border-radius: 8px;
-            font-size: 15px;
-            background: rgba(255,255,255,0.95);
-            outline: none;
-            width: 100%;
-        }
-
-        #auth-container button {
-            padding: 14px;
-            margin: 15px 0 10px 0;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
-            background: #1e1e1e;
-            color: white;
-            cursor: pointer;
-            transition: all 0.2s;
-            width: 100%;
-        }
-
-        #auth-container button:hover { background: #333; }
-
-        #auth-toggle {
-            color: white;
-            text-align: center;
-            margin-top: 15px;
-            cursor: pointer;
-            font-size: 14px;
-            text-decoration: underline;
-        }
-
-        .error { color: #ffeb3b; text-align: center; margin: 10px 0; font-size: 14px; font-weight: 600; }
-        .success { color: #ffffff; text-align: center; margin: 10px 0; font-size: 14px; font-weight: 600; }
-        .forgot-password { color: white; text-align: center; margin-top: 10px; cursor: pointer; font-size: 13px; opacity: 0.9; }
-
-        /* Chat Layout */
-        #chat-container {
-            display: none;
-            flex: 1;
-            flex-direction: column;
-            height: 100%;
-            background: var(--line-bg);
-        }
-
-        #chat-header {
-            background: var(--line-header);
-            color: white;
-            padding: 12px 16px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex-shrink: 0;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-
-        #profile-pic {
-            width: 42px;
-            height: 42px;
-            border-radius: 40%;
-            background: #34495e;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            color: white;
-            cursor: pointer;
-            overflow: hidden;
-            flex-shrink: 0;
-        }
-
+        /* Chat Container */
+        #chat-container { display: none; flex: 1; flex-direction: column; height: 100%; background: #ece5dd; }
+        #chat-header { background: #075e54; color: white; padding: 12px 16px; display: flex; align-items: center; gap: 12px; flex-shrink: 0; box-shadow: 0 1px 4px rgba(0,0,0,0.15); }
+        #profile-pic { width: 40px; height: 40px; border-radius: 50%; background: #128C7E; display: flex; align-items: center; justify-content: center; font-size: 18px; color: white; cursor: pointer; overflow: hidden; flex-shrink: 0; border: 2px solid rgba(255,255,255,0.3); transition: border-color 0.2s; }
+        #profile-pic:hover { border-color: white; }
         #profile-pic img { width: 100%; height: 100%; object-fit: cover; }
+        #chat-header .info { flex: 1; min-width: 0; }
+        #chat-header .info h3 { font-size: 15px; font-weight: 600; margin-bottom: 1px; display: flex; align-items: center; gap: 6px; }
+        #chat-header .info small { font-size: 11px; opacity: 0.8; display: block; }
+        #chat-header .header-actions { display: flex; gap: 4px; }
+        #chat-header .header-actions button { background: transparent; border: none; color: white; font-size: 20px; cursor: pointer; padding: 6px 8px; border-radius: 50%; transition: background 0.2s; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; }
+        #chat-header .header-actions button:hover { background: rgba(255,255,255,0.15); }
 
-        #chat-header .info { flex: 1; }
-        #chat-header .info h3 { font-size: 16px; font-weight: 600; margin-bottom: 2px; }
-        #chat-header .info small { font-size: 12px; opacity: 0.7; }
-        #chat-header button { background: transparent; border: none; color: white; font-size: 20px; cursor: pointer; padding: 5px; }
+        /* Messages Area */
+        #chat-messages { flex: 1; overflow-y: auto; padding: 8px 12px; background: #ece5dd; position: relative; display: flex; flex-direction: column; }
+        #chat-messages::-webkit-scrollbar { width: 6px; }
+        #chat-messages::-webkit-scrollbar-track { background: transparent; }
+        #chat-messages::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); border-radius: 3px; }
+        .message-wrapper { margin-bottom: 6px; display: flex; flex-direction: column; animation: fadeIn 0.15s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+        .message-wrapper.sent { align-items: flex-end; }
+        .message-wrapper.received { align-items: flex-start; }
+        .message-wrapper.temp-message { opacity: 0.7; }
+        .message-date { font-size: 11px; color: #66757f; text-align: center; padding: 8px 0 12px; width: 100%; font-weight: 500; letter-spacing: 0.3px; }
+        .message-date span { background: rgba(0,0,0,0.05); padding: 3px 14px; border-radius: 20px; }
+        .message-bubble { max-width: 78%; padding: 7px 12px; border-radius: 12px; position: relative; word-wrap: break-word; box-shadow: 0 1px 2px rgba(0,0,0,0.08); }
+        .message-wrapper.sent .message-bubble { background: #dcf8c6; border-bottom-right-radius: 3px; }
+        .message-wrapper.received .message-bubble { background: white; border-bottom-left-radius: 3px; }
+        .message-bubble .sender-name { font-size: 11px; font-weight: 700; color: #075e54; margin-bottom: 2px; display: flex; align-items: center; gap: 6px; }
+        .message-bubble .sender-name img { width: 18px; height: 18px; border-radius: 50%; object-fit: cover; }
+        .message-bubble .message-text { font-size: 14px; line-height: 1.4; white-space: pre-wrap; }
+        .message-bubble .time { font-size: 10px; color: #66757f; margin-top: 4px; display: flex; align-items: center; gap: 6px; justify-content: flex-end; }
+        .message-bubble .read-count { font-size: 10px; color: #4CAF50; font-weight: 500; }
 
-        #chat-messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 15px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            user-select: text; /* Allow text selection for copying */
-        }
+        /* Images & Files */
+        .message-bubble .image-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 4px; margin: 4px 0; }
+        .message-bubble .image-grid img { width: 100%; height: 100px; object-fit: cover; border-radius: 6px; cursor: pointer; transition: transform 0.2s; background: #f0f0f0; }
+        .message-bubble .image-grid img:hover { transform: scale(1.02); }
+        .message-bubble .download-all-btn { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; background: #075e54; color: white; border: none; border-radius: 16px; cursor: pointer; font-size: 11px; margin-top: 4px; transition: background 0.2s; }
+        .message-bubble .download-all-btn:hover { background: #128C7E; }
+        .message-bubble .file-attachment { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: rgba(0,0,0,0.04); border-radius: 8px; margin: 4px 0; cursor: pointer; transition: background 0.2s; }
+        .message-bubble .file-attachment:hover { background: rgba(0,0,0,0.08); }
+        .message-bubble .file-attachment .file-icon { font-size: 28px; flex-shrink: 0; }
+        .message-bubble .file-attachment .file-info { flex: 1; min-width: 0; }
+        .message-bubble .file-attachment .file-info .file-name { font-size: 12px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .message-bubble .file-attachment .file-info .file-size { font-size: 10px; color: #66757f; }
 
-        .message-wrapper {
-            display: flex;
-            flex-direction: column;
-            max-width: 82%;
-        }
+        /* Voice & Video */
+        .message-bubble .voice-message { display: flex; align-items: center; gap: 10px; padding: 4px 0; min-width: 160px; }
+        .message-bubble .voice-message .play-btn { width: 36px; height: 36px; border-radius: 50%; border: none; background: #075e54; color: white; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; transition: background 0.2s; flex-shrink: 0; }
+        .message-bubble .voice-message .play-btn:hover { background: #128C7E; }
+        .message-bubble .voice-message .waveform { flex: 1; height: 30px; display: flex; align-items: center; gap: 2px; }
+        .message-bubble .voice-message .waveform .bar { flex: 1; background: #075e54; border-radius: 2px; height: 20%; transition: height 0.3s; }
+        .message-bubble .voice-message .waveform .bar.active { background: #25D366; }
+        .message-bubble .voice-message .duration { font-size: 11px; color: #66757f; min-width: 40px; text-align: center; }
+        .message-bubble .video-container { position: relative; border-radius: 8px; overflow: hidden; margin: 4px 0; }
+        .message-bubble .video-container video { width: 100%; max-height: 300px; border-radius: 8px; background: #000; }
 
-        .message-wrapper.sent { align-self: flex-end; align-items: flex-end; }
-        .message-wrapper.received { align-self: flex-start; align-items: flex-start; }
-
-        .message-date {
-            font-size: 11px;
-            color: #4a5568;
-            background: rgba(255, 255, 255, 0.4);
-            padding: 3px 10px;
-            border-radius: 12px;
-            text-align: center;
-            align-self: center;
-            margin: 8px 0;
-            font-weight: 600;
-        }
-
-        .message-bubble {
-            padding: 10px 14px;
-            border-radius: 16px;
-            position: relative;
-            word-break: break-word;
-            font-size: 14.5px;
-            line-height: 1.4;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.12);
-            user-select: text;
-        }
-
-        .message-text {
-            white-space: pre-wrap; /* Maintains spacing, tabs, and multiline pastes */
-            word-wrap: break-word;
-        }
-
-        .message-wrapper.sent .message-bubble {
-            background: var(--line-bubble-sent);
-            color: #000;
-            border-top-right-radius: 2px;
-        }
-
-        .message-wrapper.received .message-bubble {
-            background: var(--line-bubble-received);
-            color: #000;
-            border-top-left-radius: 2px;
-        }
-
-        .message-bubble .sender-name {
-            font-size: 11px;
-            font-weight: 700;
-            color: #2b6cb0;
-            margin-bottom: 4px;
-        }
-
-        .message-info-meta {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            font-size: 10px;
-            color: #555;
-            margin-top: 4px;
-            justify-content: flex-end;
-            user-select: none;
-        }
-
-        .message-wrapper.sent .message-info-meta { color: #335c00; }
-
-        /* Media Displays */
-        .media-container { margin: 4px 0; border-radius: 10px; overflow: hidden; }
-        .media-container img { max-width: 100%; max-height: 250px; border-radius: 8px; cursor: pointer; display: block; }
-        .media-container video { max-width: 100%; max-height: 260px; border-radius: 8px; outline: none; background: #000; }
-        .media-container audio { width: 100%; min-width: 210px; height: 38px; outline: none; }
-
-        .image-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
-            gap: 4px;
-            margin: 4px 0;
-        }
-
-        .image-grid img { width: 100%; height: 90px; object-fit: cover; border-radius: 6px; cursor: pointer; }
-
-        /* File Download Bubble */
-        .file-attachment-card {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 10px;
-            background: rgba(0, 0, 0, 0.04);
-            border: 1px solid rgba(0, 0, 0, 0.08);
-            border-radius: 8px;
-            margin: 4px 0;
-            min-width: 200px;
-        }
-
-        .file-attachment-card .file-icon-box {
-            font-size: 26px;
-            color: #06c755;
-            display: flex;
-            align-items: center;
-        }
-
-        .file-attachment-card .file-details { flex: 1; overflow: hidden; }
-        .file-attachment-card .file-title { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .file-attachment-card .file-size-text { font-size: 10px; color: #666; }
-
-        .file-download-btn {
-            background: #06c755;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 32px;
-            height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            text-decoration: none;
-            transition: background 0.2s;
-        }
-
-        .file-download-btn:hover { background: #05b34c; }
-
-        /* Delete Button */
-        .message-bubble .delete-btn {
-            position: absolute;
-            top: -6px; right: -6px;
-            background: #e53e3e;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 18px; height: 18px;
-            font-size: 10px;
-            cursor: pointer;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            user-select: none;
-        }
-
+        /* Delete button */
+        .message-bubble .delete-btn { position: absolute; top: -6px; right: -6px; background: #ff6b6b; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 11px; cursor: pointer; display: none; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2); transition: transform 0.2s; }
         .message-wrapper:hover .delete-btn { display: flex; }
+        .message-bubble .delete-btn:hover { transform: scale(1.1); }
+        .message-bubble .delete-btn-mobile { display: none; background: #ff6b6b; color: white; border: none; border-radius: 50%; width: 28px; height: 28px; font-size: 14px; cursor: pointer; align-items: center; justify-content: center; margin-top: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        @media (max-width: 768px) { .message-wrapper:hover .delete-btn { display: none; } .message-bubble .delete-btn-mobile { display: flex; } }
 
-        /* Chat Input Bar */
-        #chat-input-area {
-            background: #ffffff;
-            padding: 10px 12px;
-            display: flex;
-            align-items: flex-end;
-            gap: 8px;
-            flex-shrink: 0;
-            border-top: 1px solid #e2e8f0;
-        }
+        /* Typing & Input Area */
+        #typing-indicator { font-size: 12px; color: #66757f; padding: 4px 16px; display: none; font-style: italic; }
+        #typing-indicator .dots { display: inline-block; animation: typingDots 1.4s infinite; }
+        @keyframes typingDots { 0%, 60%, 100% { opacity: 0.3; } 30% { opacity: 1; } }
+        #chat-input { padding: 8px 12px; background: #f0f0f0; display: flex; align-items: center; gap: 8px; flex-shrink: 0; border-top: 1px solid #e0e0e0; }
+        #chat-input input[type="text"] { flex: 1; padding: 10px 16px; border: none; border-radius: 24px; outline: none; font-size: 14px; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        #chat-input input[type="text"]:focus { box-shadow: 0 1px 6px rgba(0,0,0,0.1); }
+        #chat-input .input-actions { display: flex; gap: 4px; align-items: center; }
+        #chat-input .input-actions button, #chat-input .input-actions label { padding: 8px; border: none; border-radius: 50%; width: 38px; height: 38px; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; background: transparent; color: #075e54; }
+        #chat-input .input-actions button:hover, #chat-input .input-actions label:hover { background: rgba(7,94,84,0.1); transform: scale(1.05); }
+        #chat-input .input-actions .send-btn { background: #075e54; color: white; border-radius: 50%; }
+        #chat-input .input-actions .send-btn:hover { background: #128C7E; }
+        #chat-input input[type="file"] { display: none; }
+        #emoji-picker-container { position: absolute; bottom: 70px; right: 12px; display: none; z-index: 1000; max-height: 380px; overflow-y: auto; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+        #emoji-picker-container.active { display: block; }
+        .emoji-mart { border-radius: 12px !important; }
 
-        #message-input {
-            flex: 1;
-            padding: 10px 14px;
-            border: 1px solid #cbd5e0;
-            border-radius: 20px;
-            outline: none;
-            font-size: 14px;
-            background: #f7fafc;
-            resize: none;
-            max-height: 120px;
-            min-height: 40px;
-            line-height: 1.4;
-            white-space: pre-wrap;
-        }
-
-        #message-input:focus { background: #fff; border-color: #06c755; }
-
-        .icon-btn {
-            background: transparent;
-            border: none;
-            color: #4a5568;
-            font-size: 22px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 4px;
-            margin-bottom: 4px;
-            transition: color 0.2s;
-        }
-
-        .icon-btn:hover { color: #06c755; }
-        .icon-btn.recording { color: #e53e3e; animation: pulse 1s infinite; }
-
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.15); }
-            100% { transform: scale(1); }
-        }
-
-        .send-btn {
-            background: #06c755;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 36px; height: 36px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-            cursor: pointer;
-            margin-bottom: 2px;
-            flex-shrink: 0;
-        }
-
-        .send-btn:hover { background: #05b34c; }
-
-        /* Modals & Zoom System */
-        .modal, .profile-modal, .otp-modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.75);
-            z-index: 10000;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .modal.active, .profile-modal.active, .otp-modal.active { display: flex; }
-
-        .modal-box {
-            background: white;
-            padding: 24px;
-            border-radius: 12px;
-            max-width: 400px;
-            width: 90%;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-        }
-
-        .modal-box h2 { text-align: center; margin-bottom: 16px; font-size: 20px; color: #2d3748; }
-        .modal-box input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 14px; }
-        .modal-box button { width: 100%; padding: 12px; margin: 6px 0; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
-
-        .btn-green { background: #06c755; color: white; }
-        .btn-red { background: #e53e3e; color: white; }
-
-        /* Zoomable Image Modal Elements */
-        #image-preview-modal {
-            flex-direction: column;
-            overflow: hidden;
-            position: fixed;
-        }
-
-        .zoom-viewport {
-            width: 100%;
-            height: 85vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-            position: relative;
-            cursor: grab;
-        }
-
-        .zoom-viewport:active { cursor: grabbing; }
-
-        #modal-image {
-            max-width: 90%;
-            max-height: 85vh;
-            border-radius: 8px;
-            transition: transform 0.1s ease-out;
-            transform-origin: center center;
-            user-select: none;
-        }
-
-        .zoom-controls {
-            position: absolute;
-            bottom: 20px;
-            display: flex;
-            gap: 12px;
-            background: rgba(0, 0, 0, 0.6);
-            padding: 8px 16px;
-            border-radius: 20px;
-            z-index: 10001;
-        }
-
-        .zoom-controls button {
-            background: transparent;
-            border: none;
-            color: white;
-            font-size: 20px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* Context Menu for Copying */
-        #custom-context-menu {
-            display: none;
-            position: fixed;
-            z-index: 20000;
-            background: #ffffff;
-            border: 1px solid #cbd5e0;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            padding: 6px 0;
-            min-width: 140px;
-        }
-
-        #custom-context-menu button {
-            width: 100%;
-            text-align: left;
-            padding: 8px 16px;
-            background: transparent;
-            border: none;
-            font-size: 13.5px;
-            cursor: pointer;
-            color: #2d3748;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        #custom-context-menu button:hover {
-            background: #edf2f7;
-            color: #06c755;
-        }
-
-        /* Record Banner */
-        #recording-banner {
-            display: none;
-            background: #fff5f5;
-            color: #c53030;
-            padding: 8px 14px;
-            font-size: 13px;
-            font-weight: 600;
-            align-items: center;
-            justify-content: space-between;
-            border-top: 1px solid #feb2b2;
-        }
-
-        /* Progress Modal */
-        #upload-progress {
-            position: fixed;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-            z-index: 10001;
-            display: none;
-            min-width: 220px;
-            text-align: center;
-        }
-
-        #upload-progress.active { display: block; }
-
-        .progress-bar {
-            width: 100%; height: 8px;
-            background: #edf2f7;
-            border-radius: 4px;
-            overflow: hidden;
-            margin: 10px 0;
-        }
-
-        .progress-bar .fill { height: 100%; background: #06c755; width: 0%; transition: width 0.2s; }
+        /* Modals & Uploading UI */
+        .voice-recording { display: none; align-items: center; gap: 12px; flex: 1; padding: 0 8px; }
+        .voice-recording.active { display: flex; }
+        .voice-recording .recording-indicator { display: flex; align-items: center; gap: 8px; color: #ff6b6b; font-size: 13px; font-weight: 500; }
+        .voice-recording .recording-indicator .pulse { width: 10px; height: 10px; border-radius: 50%; background: #ff6b6b; animation: pulse 1s infinite; }
+        @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.5); opacity: 0.5; } }
+        .modal-overlay, .profile-modal, .otp-modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); z-index: 9999; justify-content: center; align-items: center; padding: 20px; }
+        .modal-overlay.active, .profile-modal.active, .otp-modal.active { display: flex; }
+        .profile-modal, .otp-modal { background: rgba(0,0,0,0.6); }
+        .modal-overlay .modal-close { position: absolute; top: 20px; right: 30px; color: white; font-size: 36px; cursor: pointer; transition: transform 0.2s; }
+        .modal-overlay .modal-content { max-width: 90%; max-height: 90vh; position: relative; }
+        .modal-overlay .modal-content img, .modal-overlay .modal-content video { max-width: 100%; max-height: 85vh; object-fit: contain; border-radius: 8px; }
+        .modal-overlay .modal-actions { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 12px; }
+        .modal-overlay .modal-actions button { padding: 10px 24px; background: #075e54; color: white; border: none; border-radius: 30px; cursor: pointer; font-size: 14px; font-weight: 600; }
+        .profile-modal .content, .otp-modal .content { background: white; padding: 32px; border-radius: 20px; max-width: 400px; width: 92%; box-shadow: 0 10px 40px rgba(0,0,0,0.3); }
+        .profile-modal .content h2, .otp-modal .content h2 { margin-bottom: 20px; text-align: center; color: #075e54; font-size: 22px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .profile-modal .content .profile-pic-large { width: 120px; height: 120px; border-radius: 50%; margin: 0 auto 20px; display: block; object-fit: cover; cursor: pointer; border: 4px solid #075e54; }
+        .profile-modal .content input, .otp-modal .content input { width: 100%; padding: 10px 14px; margin: 4px 0 8px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 14px; outline: none; }
+        .profile-modal .content button, .otp-modal .content button { width: 100%; padding: 12px; margin: 8px 0; border: none; border-radius: 12px; cursor: pointer; font-size: 15px; font-weight: 600; }
+        .upload-progress { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 24px 32px; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); z-index: 9997; min-width: 240px; text-align: center; }
+        .upload-progress.active { display: block; }
+        .upload-progress .progress-bar { width: 100%; height: 8px; background: #f0f0f0; border-radius: 4px; overflow: hidden; margin: 8px 0; }
+        .upload-progress .progress-bar .fill { height: 100%; background: linear-gradient(90deg, #075e54, #25D366); width: 0%; transition: width 0.3s; }
+        .online-status { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+        .online-status.online { background: #4CAF50; }
+        .online-status.offline { background: #9e9e9e; }
+        .loading { text-align: center; padding: 30px; color: #66757f; font-size: 14px; }
+        .db-status { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-left: 4px; }
+        .db-status.connected { background: #4CAF50; }
+        .db-status.disconnected { background: #ff6b6b; }
+        @media (max-width: 480px) { #app { max-height: 100vh; border-radius: 0; max-width: 100%; } }
     </style>
 </head>
 <body>
     <div id="app">
+        <!-- Initial Guard Overlay -->
+        <div id="app-loading-guard" class="auth-loading-overlay">
+            <i class="bi bi-chat-dots-fill animated pulse"></i>
+        </div>
+
         <!-- Auth Container -->
         <div id="auth-container">
-            <div class="logo"><i class="bi bi-chat-fill"></i></div>
-            <h1>LINE Chat App</h1>
+            <div class="logo"><i class="bi bi-chat-dots-fill"></i></div>
+            <h1>Real-time Chat</h1>
             <div id="auth-form">
-                <input type="text" id="display-name" placeholder="Display Name" style="display:none;">
-                <input type="email" id="email" placeholder="Email">
-                <input type="password" id="password" placeholder="Password">
-                <input type="password" id="confirm-password" placeholder="Confirm Password" style="display:none;">
+                <div class="input-icon">
+                    <i class="bi bi-person"></i>
+                    <input type="text" id="display-name" placeholder="Display Name" style="display:none;">
+                </div>
+                <div class="input-icon">
+                    <i class="bi bi-envelope"></i>
+                    <input type="email" id="email" placeholder="Email" autocomplete="email">
+                </div>
+                <div class="input-icon">
+                    <i class="bi bi-lock"></i>
+                    <input type="password" id="password" placeholder="Password" autocomplete="current-password">
+                </div>
+                <div class="input-icon">
+                    <i class="bi bi-shield-lock"></i>
+                    <input type="password" id="confirm-password" placeholder="Confirm Password" style="display:none;" autocomplete="new-password">
+                </div>
                 <div id="auth-error" class="error"></div>
                 <div id="auth-success" class="success"></div>
-                <button id="auth-btn">Login</button>
+                <button id="auth-btn"><i class="bi bi-box-arrow-in-right"></i> Login</button>
                 <div id="auth-toggle">Don't have an account? Register</div>
-                <div class="forgot-password" onclick="openOTPModal()">Forgot Password?</div>
+                <div class="forgot-password" onclick="openOTPModal()">
+                    <i class="bi bi-key"></i> Forgot Password?
+                </div>
             </div>
         </div>
 
@@ -557,197 +201,207 @@
             <div id="chat-header">
                 <div id="profile-pic" onclick="openProfileModal()"><i class="bi bi-person-fill"></i></div>
                 <div class="info">
-                    <h3>Group Chat</h3>
-                    <small id="member-count">Loading members...</small>
+                    <h3>
+                        <i class="bi bi-people-fill"></i> Group Chat
+                        <span id="online-count" class="online-status offline"></span>
+                        <span class="db-status connected" id="db-status" title="Database Connected"></span>
+                    </h3>
+                    <small id="member-count"><i class="bi bi-person"></i> Loading members...</small>
                 </div>
-                <button onclick="logoutUser()" title="Logout"><i class="bi bi-box-arrow-right"></i></button>
+                <div class="header-actions">
+                    <button onclick="logoutUser()" title="Logout"><i class="bi bi-box-arrow-right"></i></button>
+                </div>
             </div>
 
             <div id="chat-messages">
-                <div class="loading" style="text-align:center;padding:20px;color:#fff;">Loading messages...</div>
+                <div class="loading"><span class="spinner"></span> Loading messages...</div>
             </div>
+            <div id="typing-indicator"><i class="bi bi-pencil"></i> Someone is typing<span class="dots">...</span></div>
 
-            <div id="recording-banner">
-                <span><i class="bi bi-record-circle-fill"></i> Recording... <span id="record-timer">00:00</span></span>
-                <button class="icon-btn" onclick="stopRecording(false)" style="color:#e53e3e;"><i class="bi bi-x-circle-fill"></i></button>
-            </div>
-
-            <div id="chat-input-area">
-                <button class="icon-btn" id="emoji-btn" onclick="toggleEmojiPicker()"><i class="bi bi-emoji-smile"></i></button>
-                <button class="icon-btn" onclick="document.getElementById('file-input').click()" title="Attach Files (Max 20 Images)"><i class="bi bi-paperclip"></i></button>
-                <input type="file" id="file-input" multiple accept="*/*" style="display:none" onchange="handleFileUpload(event)">
-                
-                <button class="icon-btn" id="record-btn" onclick="toggleRecording()" title="Record Voice"><i class="bi bi-mic"></i></button>
-
-                <textarea id="message-input" placeholder="Type a message..." rows="1" onkeydown="handleKeyPress(event)" oninput="autoGrowTextarea(this)"></textarea>
-                <button class="send-btn" onclick="sendMessage()"><i class="bi bi-send-fill"></i></button>
-            </div>
-
-            <div id="emoji-picker" style="position:absolute;bottom:70px;right:10px;display:none;z-index:1000;"></div>
-        </div>
-    </div>
-
-    <!-- Image Modal with Zoom Capabilities -->
-    <div class="modal" id="image-preview-modal">
-        <div class="zoom-viewport" id="zoom-viewport">
-            <img id="modal-image" src="" alt="Preview">
-        </div>
-        <div class="zoom-controls">
-            <button onclick="adjustZoom(0.25)" title="Zoom In"><i class="bi bi-zoom-in"></i></button>
-            <button onclick="resetZoom()" title="Reset"><i class="bi bi-aspect-ratio"></i></button>
-            <button onclick="adjustZoom(-0.25)" title="Zoom Out"><i class="bi bi-zoom-out"></i></button>
-            <button onclick="closeModal()" title="Close"><i class="bi bi-x-lg"></i></button>
-        </div>
-    </div>
-
-    <!-- Context Menu for Copy -->
-    <div id="custom-context-menu">
-        <button id="ctx-copy-btn"><i class="bi bi-copy"></i> คัดลอกข้อความ</button>
-    </div>
-
-    <!-- Profile Modal -->
-    <div class="profile-modal" id="profile-modal">
-        <div class="modal-box">
-            <h2>Edit Profile</h2>
-            <div style="text-align:center;margin-bottom:15px;position:relative;display:inline-block;width:100%;">
-                <div id="profile-modal-pic-container" style="width:90px;height:90px;border-radius:50%;margin:0 auto;overflow:hidden;border:3px solid #06c755;cursor:pointer;background:#34495e;display:flex;align-items:center;justify-content:center;color:white;font-size:40px;" onclick="document.getElementById('profile-pic-input').click()">
-                    <i class="bi bi-person-fill" id="profile-modal-fallback"></i>
-                    <img id="profile-modal-pic" src="" alt="Profile" style="width:100%;height:100%;object-fit:cover;display:none;">
+            <div id="chat-input">
+                <div class="voice-recording" id="voice-recording">
+                    <div class="recording-indicator"><span class="pulse"></span> Recording</div>
+                    <span class="timer" id="recording-timer">00:00</span>
+                    <button class="cancel-recording" onclick="cancelRecording()"><i class="bi bi-x-lg"></i></button>
+                    <button class="send-recording" onclick="sendRecording()"><i class="bi bi-check-lg"></i></button>
+                </div>
+                <div id="chat-input-default" style="display:flex;flex:1;gap:8px;align-items:center;">
+                    <input type="text" id="message-input" placeholder="Type a message..." onkeypress="handleKeyPress(event)">
+                    <div class="input-actions">
+                        <button id="emoji-btn" onclick="toggleEmojiPicker()" title="Emoji"><i class="bi bi-emoji-smile"></i></button>
+                        <label onclick="document.getElementById('file-input').click()" title="Attach files"><i class="bi bi-paperclip"></i></label>
+                        <input type="file" id="file-input" multiple accept="*/*" onchange="handleFileUpload(event)">
+                        <button id="voice-btn" onclick="toggleRecording()" title="Voice message"><i class="bi bi-mic"></i></button>
+                        <button class="send-btn" onclick="sendMessage()" title="Send"><i class="bi bi-send-fill"></i></button>
+                    </div>
                 </div>
             </div>
+            <div id="emoji-picker-container"></div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div class="modal-overlay" id="media-modal" onclick="closeModal(event)">
+        <span class="modal-close" onclick="closeModal(event)"><i class="bi bi-x-lg"></i></span>
+        <div class="modal-content" id="modal-content">
+            <img id="modal-image" src="" alt="Preview">
+            <video id="modal-video" controls style="display:none;"></video>
+        </div>
+        <div class="modal-actions">
+            <button onclick="downloadCurrentMedia()"><i class="bi bi-download"></i> Download</button>
+        </div>
+    </div>
+
+    <div class="profile-modal" id="profile-modal">
+        <div class="content">
+            <h2><i class="bi bi-person-circle"></i> Edit Profile</h2>
+            <img class="profile-pic-large" id="profile-modal-pic" src="" alt="Profile" onclick="document.getElementById('profile-pic-input').click()">
+            <div class="pic-hint"><i class="bi bi-camera"></i> Tap to change profile picture</div>
             <input type="file" id="profile-pic-input" accept="image/*" style="display:none" onchange="updateProfilePic(event)">
-            <input type="text" id="profile-display-name" placeholder="Display Name">
-            <button class="btn-green" onclick="updateDisplayName()">Update Name</button>
-            <button class="btn-red" onclick="closeProfileModal()">Close</button>
+            <label><i class="bi bi-tag"></i> Display Name</label>
+            <input type="text" id="profile-display-name" placeholder="Enter display name">
+            <button style="background:#075e54;color:white;" id="btn-update-name" onclick="updateDisplayName()"><i class="bi bi-save"></i> Update Name</button>
+            <button style="background:#ff6b6b;color:white;" onclick="closeProfileModal()"><i class="bi bi-x-circle"></i> Close</button>
         </div>
     </div>
 
-    <!-- OTP Modal -->
     <div class="otp-modal" id="otp-modal">
-        <div class="modal-box">
-            <h2><i class="bi bi-shield-lock-fill"></i> Reset Password</h2>
+        <div class="content">
+            <h2><i class="bi bi-key-fill"></i> Reset Password</h2>
+            <p style="text-align:center;color:#66757f;margin-bottom:20px;font-size:14px;">Enter your email to receive OTP code</p>
             <input type="email" id="otp-email" placeholder="Your Email">
-            <button class="btn-green" onclick="sendOTP()">Send OTP</button>
-            <div id="otp-status" style="text-align:center;margin:8px 0;font-size:13px;"></div>
+            <button style="background:#667eea;color:white;" id="btn-send-otp" onclick="sendOTP()"><i class="bi bi-envelope-paper"></i> Send OTP</button>
+            <div id="otp-status" style="text-align:center;margin:8px 0;font-size:14px;"></div>
             <div id="otp-section" style="display:none;">
-                <input type="text" id="otp-code" placeholder="Enter OTP" maxlength="6" style="text-align:center;letter-spacing:3px;">
-                <input type="password" id="otp-new-password" placeholder="New Password">
-                <input type="password" id="otp-confirm-password" placeholder="Confirm Password">
-                <button class="btn-green" onclick="verifyOTPAndChangePassword()">Change Password</button>
+                <input type="text" id="otp-code" placeholder="000000" maxlength="6" inputmode="numeric" style="font-size:24px;letter-spacing:8px;font-weight:600;text-align:center;">
+                <input type="password" id="otp-new-password" placeholder="New Password (min 6 chars)">
+                <input type="password" id="otp-confirm-password" placeholder="Confirm New Password">
+                <button style="background:#4CAF50;color:white;" id="btn-verify-otp" onclick="verifyOTPAndChangePassword()"><i class="bi bi-check-circle"></i> Change Password</button>
             </div>
-            <button class="btn-red" onclick="closeOTPModal()">Close</button>
+            <button style="background:#ff6b6b;color:white;" onclick="closeOTPModal()"><i class="bi bi-x-circle"></i> Close</button>
         </div>
     </div>
 
-    <!-- Upload Progress -->
-    <div id="upload-progress">
-        <div style="margin-bottom:8px;font-weight:600;font-size:14px;">Uploading & Processing...</div>
+    <div class="upload-progress" id="upload-progress">
+        <div style="font-weight:600;margin-bottom:12px;color:#333;"><i class="bi bi-cloud-upload"></i> Uploading files...</div>
         <div class="progress-bar"><div class="fill" id="progress-fill"></div></div>
-        <div style="font-size:12px;color:#666;" id="progress-text">0%</div>
+        <div id="progress-text" style="font-size:13px;color:#66757f;">0%</div>
     </div>
 
     <script>
-        const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxI7-tVC6Tz9F5I0TuoLG1fGS5k5XPujXDT7-BHPLEttGo4yL0ONGvXzql6Y8VfE9F4/exec';
-        
-        let currentUser = null;
-        let sessionId = null;
-        let currentUserData = null;
-        let isLogin = true;
-        let lastMessageTimestamp = '';
-        let pollInterval = null;
-        let emojiPickerInstance = null;
-        let uploadedFiles = [];
-        let isPolling = false;
-        let otpUserId = null;
-        let selectedTextToCopy = '';
+        const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwxgg7U49P5IvRrgmwRe6wiSydEAVCxDelffLtTjZtt5fDAKGRdmzlyFgpXGdeR-Z2X/exec';
 
-        // Audio Recording variables
-        let mediaRecorder = null;
-        let audioChunks = [];
-        let recordTimerInterval = null;
-        let recordSeconds = 0;
+        let currentUser = null, sessionId = null, currentUserData = null, isLogin = true;
+        let lastMessageTimestamp = '', pollTimeout = null, emojiPickerInstance = null;
+        let uploadedFiles = [], isPolling = false, otpUserId = null;
+        let mediaRecorder = null, audioChunks = [], isRecording = false, recordingStartTime = null;
+        let recordingTimer = null, currentRecordingData = null, isConnected = false;
 
-        // Image Zoom Variables
-        let zoomScale = 1;
-        let isPanning = false;
-        let startX = 0, startY = 0, translateX = 0, translateY = 0;
+        const authContainer = document.getElementById('auth-container'), chatContainer = document.getElementById('chat-container');
+        const authBtn = document.getElementById('auth-btn'), authToggle = document.getElementById('auth-toggle');
+        const emailInput = document.getElementById('email'), passwordInput = document.getElementById('password');
+        const confirmPasswordInput = document.getElementById('confirm-password'), displayNameInput = document.getElementById('display-name');
+        const authError = document.getElementById('auth-error'), authSuccess = document.getElementById('auth-success');
+        const messageInput = document.getElementById('message-input'), messagesContainer = document.getElementById('chat-messages');
+        const profilePic = document.getElementById('profile-pic'), memberCount = document.getElementById('member-count');
+        const dbStatus = document.getElementById('db-status');
 
-        const authContainer = document.getElementById('auth-container');
-        const chatContainer = document.getElementById('chat-container');
-        const authBtn = document.getElementById('auth-btn');
-        const authToggle = document.getElementById('auth-toggle');
-        const emailInput = document.getElementById('email');
-        const passwordInput = document.getElementById('password');
-        const confirmPasswordInput = document.getElementById('confirm-password');
-        const displayNameInput = document.getElementById('display-name');
-        const authError = document.getElementById('auth-error');
-        const authSuccess = document.getElementById('auth-success');
-        const messageInput = document.getElementById('message-input');
-        const messagesContainer = document.getElementById('chat-messages');
-        const profilePic = document.getElementById('profile-pic');
-        const memberCount = document.getElementById('member-count');
-        const emojiPicker = document.getElementById('emoji-picker');
-        const profileModal = document.getElementById('profile-modal');
-        const profileModalPic = document.getElementById('profile-modal-pic');
-        const profileModalFallback = document.getElementById('profile-modal-fallback');
-        const profileDisplayName = document.getElementById('profile-display-name');
-        const contextMenu = document.getElementById('custom-context-menu');
+        function resolveImageUrl(file) {
+            if (!file) return '';
+            if (file.data && file.data.startsWith('data:image')) return file.data;
+            if (file.url && file.url.startsWith('https://lh3.googleusercontent.com')) return file.url;
+            if (file.driveId) return 'https://lh3.googleusercontent.com/d/' + file.driveId;
+            if (file.url && file.url.includes('id=')) {
+                const idMatch = file.url.match(/id=([a-zA-Z0-9_-]+)/);
+                if (idMatch && idMatch[1]) return 'https://lh3.googleusercontent.com/d/' + idMatch[1];
+            }
+            return file.url || '';
+        }
 
         async function postApi(action, data) {
             try {
                 const response = await fetch(APP_SCRIPT_URL, {
                     method: 'POST',
+                    mode: 'cors',
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({ action: action, ...data })
+                    body: JSON.stringify({ action, ...data })
                 });
-                return await response.json();
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const result = await response.json();
+                if (result.success) { isConnected = true; dbStatus.className = 'db-status connected'; }
+                return result;
             } catch (error) {
-                throw new Error('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้: ' + error.message);
+                console.error('Post API error:', error);
+                isConnected = false; dbStatus.className = 'db-status disconnected';
+                throw new Error('Cannot connect to server: ' + error.message);
             }
         }
 
         async function getApi(params = {}) {
             try {
                 const queryString = new URLSearchParams(params).toString();
-                const response = await fetch(`${APP_SCRIPT_URL}?${queryString}`);
-                return await response.json();
+                const url = `${APP_SCRIPT_URL}?${queryString}`;
+                const response = await fetch(url, {
+                    method: 'GET',
+                    mode: 'cors'
+                });
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const result = await response.json();
+                if (result.success) { isConnected = true; dbStatus.className = 'db-status connected'; }
+                return result;
             } catch (error) {
-                throw new Error('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้: ' + error.message);
+                console.error('Get API error:', error);
+                isConnected = false; dbStatus.className = 'db-status disconnected';
+                throw new Error('Cannot connect to server: ' + error.message);
             }
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async function() {
+            checkDatabaseConnection();
             const savedSession = localStorage.getItem('chatSession');
             if (savedSession) {
                 try {
                     const session = JSON.parse(savedSession);
-                    sessionId = session.sessionId;
-                    currentUser = session.user;
+                    sessionId = session.sessionId; 
+                    currentUser = session.user; 
                     currentUserData = session.user;
-                    verifySession();
-                } catch (e) {
-                    localStorage.removeItem('chatSession');
+                    await verifySession();
+                } catch (e) { 
+                    localStorage.removeItem('chatSession'); 
+                    showAuth();
                 }
+            } else {
+                showAuth();
             }
+            document.getElementById('app-loading-guard').style.display = 'none';
             initEmojiPicker();
-            initZoomAndPan();
-            initContextMenu();
         });
+
+        async function checkDatabaseConnection() {
+            try {
+                const data = await getApi({ action: 'getUsers' });
+                if (data.success) {
+                    isConnected = true; dbStatus.className = 'db-status connected';
+                } else {
+                    isConnected = false; dbStatus.className = 'db-status disconnected';
+                }
+            } catch (error) { isConnected = false; dbStatus.className = 'db-status disconnected'; }
+        }
 
         async function verifySession() {
             try {
-                const data = await getApi({ action: 'checkAuth', sessionId: sessionId });
-                if (data.success) {
-                    currentUser = data.user;
-                    currentUserData = data.user;
-                    showChat();
-                } else {
-                    localStorage.removeItem('chatSession');
-                    showAuth();
+                const data = await getApi({ action: 'checkAuth', sessionId });
+                if (data.success && data.user) { 
+                    currentUser = data.user; 
+                    currentUserData = data.user; 
+                    showChat(); 
+                } else { 
+                    localStorage.removeItem('chatSession'); 
+                    showAuth(); 
                 }
-            } catch (e) {
-                localStorage.removeItem('chatSession');
-                showAuth();
+            } catch (error) { 
+                localStorage.removeItem('chatSession'); 
+                showAuth(); 
             }
         }
 
@@ -758,736 +412,544 @@
 
         authToggle.addEventListener('click', () => {
             isLogin = !isLogin;
-            authBtn.textContent = isLogin ? 'Login' : 'Register';
-            authToggle.textContent = isLogin ? "Don't have an account? Register" : 'Already have an account? Login';
-            displayNameInput.style.display = isLogin ? 'none' : 'block';
-            confirmPasswordInput.style.display = isLogin ? 'none' : 'block';
+            if (isLogin) {
+                authBtn.innerHTML = '<i class="bi bi-box-arrow-in-right"></i> Login';
+                authToggle.textContent = "Don't have an account? Register";
+                displayNameInput.style.display = 'none'; confirmPasswordInput.style.display = 'none';
+            } else {
+                authBtn.innerHTML = '<i class="bi bi-person-plus"></i> Register';
+                authToggle.textContent = 'Already have an account? Login';
+                displayNameInput.style.display = 'block'; confirmPasswordInput.style.display = 'block';
+            }
             authError.textContent = ''; authSuccess.textContent = '';
         });
 
         async function registerUser() {
-            const email = emailInput.value.trim().toLowerCase();
-            const password = passwordInput.value;
-            const confirmPassword = confirmPasswordInput.value;
-            const displayName = displayNameInput.value.trim();
+            const email = emailInput.value.trim(), password = passwordInput.value, confirm = confirmPasswordInput.value, name = displayNameInput.value.trim();
+            if (!email || !password || !confirm || !name) return authError.textContent = 'All fields are required';
+            if (password !== confirm) return authError.textContent = 'Passwords do not match';
+            if (password.length < 6) return authError.textContent = 'Password must be at least 6 characters';
+            if (!email.includes('@')) return authError.textContent = 'Invalid email format';
 
-            if (!email || !password || !confirmPassword || !displayName) {
-                authError.textContent = 'กรุณากรอกข้อมูลให้ครบทุกช่อง'; return;
-            }
-            if (password !== confirmPassword) {
-                authError.textContent = 'รหัสผ่านไม่ตรงกัน'; return;
-            }
+            const originalBtnHtml = authBtn.innerHTML;
+            authBtn.disabled = true;
+            authBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Registering...';
 
             try {
-                const data = await postApi('register', { email, password, displayName });
+                const data = await postApi('register', { email, password, displayName: name });
                 if (data.success) {
-                    authSuccess.textContent = 'สมัครสมาชิกสำเร็จ! กรุณาเข้าสู่ระบบ';
-                    isLogin = true; authBtn.textContent = 'Login';
-                    displayNameInput.style.display = 'none'; confirmPasswordInput.style.display = 'none';
-                } else { authError.textContent = data.error; }
-            } catch (error) { authError.textContent = error.message; }
+                    Swal.fire({ icon: 'success', title: 'Register Success', text: 'Account created! Logging you in...', timer: 1500, showConfirmButton: false });
+                    currentUser = data.user; currentUserData = data.user; sessionId = data.sessionId;
+                    localStorage.setItem('chatSession', JSON.stringify({ sessionId, user: currentUser }));
+                    showChat();
+                } else {
+                    authError.textContent = data.error || 'Registration failed';
+                }
+            } catch (error) { 
+                authError.textContent = error.message; 
+            } finally {
+                authBtn.disabled = false;
+                authBtn.innerHTML = originalBtnHtml;
+            }
         }
 
         async function loginUser() {
-            const email = emailInput.value.trim().toLowerCase();
-            const password = passwordInput.value;
-            if (!email || !password) { authError.textContent = 'กรุณากรอกอีเมลและรหัสผ่าน'; return; }
+            const email = emailInput.value.trim(), password = passwordInput.value;
+            if (!email || !password) return authError.textContent = 'Email and password are required';
+            
+            const originalBtnHtml = authBtn.innerHTML;
+            authBtn.disabled = true;
+            authBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Logging in...';
 
             try {
                 const data = await postApi('login', { email, password });
                 if (data.success) {
                     currentUser = data.user; currentUserData = data.user; sessionId = data.sessionId;
                     localStorage.setItem('chatSession', JSON.stringify({ sessionId, user: currentUser }));
-                    showChat();
+                    showChat(); authError.textContent = ''; authSuccess.textContent = '';
                 } else {
-                    authError.textContent = data.error === 'Email not found' ? 'ไม่พบอีเมลในระบบ กรุณาสมัครสมาชิกก่อน' : data.error;
+                    authError.textContent = data.error || 'Login failed';
                 }
-            } catch (error) { authError.textContent = error.message; }
-        }
-
-        function showChat() {
-            authContainer.style.display = 'none';
-            chatContainer.style.display = 'flex';
-            updateProfileUI(); loadMessages(); loadUsers(); startPolling();
-        }
-
-        function showAuth() {
-            authContainer.style.display = 'flex'; chatContainer.style.display = 'none'; stopPolling();
-        }
-
-        async function logoutUser() {
-            if (!confirm('ต้องการออกจากระบบใช่หรือไม่?')) return;
-            if (currentUser) await postApi('logout', { userId: currentUser.id });
-            localStorage.removeItem('chatSession');
-            currentUser = null; currentUserData = null; sessionId = null;
-            showAuth();
-        }
-
-        function updateProfileUI() {
-            if (!currentUserData) return;
-            if (currentUserData.photoURL) {
-                profilePic.innerHTML = `<img src="${currentUserData.photoURL}" alt="Profile">`;
-            } else {
-                profilePic.innerHTML = `<i class="bi bi-person-fill"></i>`;
+            } catch (error) { 
+                authError.textContent = error.message; 
+            } finally {
+                authBtn.disabled = false;
+                authBtn.innerHTML = originalBtnHtml;
             }
         }
 
-        function autoGrowTextarea(element) {
-            element.style.height = '40px';
-            element.style.height = Math.min(element.scrollHeight, 120) + 'px';
+        async function logoutUser() {
+            const res = await Swal.fire({
+                title: 'Logout',
+                text: 'Are you sure you want to logout?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#ff6b6b',
+                cancelButtonColor: '#075e54',
+                confirmButtonText: 'Yes, Logout'
+            });
+
+            if (!res.isConfirmed) return;
+
+            try { if (currentUser) await postApi('logout', { userId: currentUser.id }); } catch (e) {}
+            localStorage.removeItem('chatSession'); 
+            currentUser = null; currentUserData = null; sessionId = null;
+            showAuth(); 
+            stopPolling();
         }
 
-        // ==================== MESSAGES & REALTIME RENDERING ====================
+        function showChat() { 
+            authContainer.style.display = 'none'; 
+            chatContainer.style.display = 'flex'; 
+            updateProfileUI(); 
+            loadMessages(); 
+            loadUsers(); 
+            startPolling(); 
+        }
+        function showAuth() { 
+            authContainer.style.display = 'flex'; 
+            chatContainer.style.display = 'none'; 
+            stopPolling(); 
+        }
+        function updateProfileUI() {
+            if (!currentUserData) return;
+            profilePic.innerHTML = currentUserData.photoURL ? `<img src="${currentUserData.photoURL}" alt="Profile">` : `<i class="bi bi-person-fill"></i>`;
+        }
+
+        function openOTPModal() { document.getElementById('otp-modal').classList.add('active'); document.getElementById('otp-section').style.display = 'none'; document.getElementById('otp-status').textContent = ''; document.getElementById('otp-email').value = ''; otpUserId = null; }
+        function closeOTPModal() { document.getElementById('otp-modal').classList.remove('active'); }
+
+        async function sendOTP() {
+            const email = document.getElementById('otp-email').value.trim(), status = document.getElementById('otp-status');
+            const btn = document.getElementById('btn-send-otp');
+            if (!email) return status.textContent = 'Please enter your email', status.style.color = '#ff6b6b';
+            
+            btn.disabled = true;
+            btn.innerHTML = 'Sending OTP...';
+            status.textContent = 'Sending OTP...'; status.style.color = '#333';
+            try {
+                const data = await postApi('sendOTP', { email });
+                if (data.success) {
+                    status.textContent = '✅ OTP sent to your email.'; status.style.color = '#4CAF50';
+                    document.getElementById('otp-section').style.display = 'block'; otpUserId = data.userId;
+                    Swal.fire({ icon: 'success', title: 'OTP Sent', text: 'Please check your email inbox.' });
+                } else { 
+                    status.textContent = '❌ ' + (data.error || 'Failed to send OTP'); status.style.color = '#ff6b6b'; 
+                    Swal.fire({ icon: 'error', title: 'Failed', text: data.error || 'Failed to send OTP' });
+                }
+            } catch (error) { 
+                status.textContent = '❌ ' + error.message; status.style.color = '#ff6b6b'; 
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-envelope-paper"></i> Send OTP';
+            }
+        }
+
+        async function verifyOTPAndChangePassword() {
+            const email = document.getElementById('otp-email').value.trim(), otp = document.getElementById('otp-code').value.trim(), newPass = document.getElementById('otp-new-password').value, confPass = document.getElementById('otp-confirm-password').value, status = document.getElementById('otp-status');
+            const btn = document.getElementById('btn-verify-otp');
+            if (!otp || otp.length < 6) return status.textContent = 'Please enter 6-digit OTP', status.style.color = '#ff6b6b';
+            if (newPass.length < 6) return status.textContent = 'Password min 6 characters', status.style.color = '#ff6b6b';
+            if (newPass !== confPass) return status.textContent = 'Passwords do not match', status.style.color = '#ff6b6b';
+            
+            btn.disabled = true;
+            btn.innerHTML = 'Verifying...';
+            status.textContent = 'Verifying OTP...'; status.style.color = '#333';
+            try {
+                const verifyData = await postApi('verifyOTP', { email, otp });
+                if (!verifyData.success) {
+                    btn.disabled = false; btn.innerHTML = '<i class="bi bi-check-circle"></i> Change Password';
+                    return status.textContent = '❌ ' + (verifyData.error || 'Invalid OTP'), status.style.color = '#ff6b6b';
+                }
+                const changeData = await postApi('changePassword', { userId: otpUserId, newPassword: newPass, sessionId });
+                if (changeData.success) {
+                    Swal.fire({ icon: 'success', title: 'Success', text: 'Password changed successfully!' });
+                    closeOTPModal();
+                    if (currentUser) logoutUser();
+                } else { 
+                    Swal.fire({ icon: 'error', title: 'Error', text: changeData.error || 'Failed to change password' });
+                }
+            } catch (error) { 
+                status.textContent = '❌ ' + error.message; status.style.color = '#ff6b6b'; 
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-check-circle"></i> Change Password';
+            }
+        }
+
+        // ============================================================
+        // MESSAGE FUNCTIONS (FIXED DUP IMAGE & SCROLL POSITION)
+        // ============================================================
         async function sendMessage() {
             const text = messageInput.value.trim();
             if (!text && uploadedFiles.length === 0) return;
             if (!currentUser) return;
 
             const tempId = 'temp_' + Date.now();
-            const nowIso = new Date().toISOString();
-            
-            // Local optimistic echo (render instantly)
-            const localMsg = {
+            const tempMessage = {
                 id: tempId,
                 userId: currentUser.id,
                 displayName: currentUser.displayName,
                 photoURL: currentUser.photoURL,
                 text: text,
-                type: uploadedFiles.length > 0 ? getMessageType(uploadedFiles) : 'text',
+                type: uploadedFiles.length > 0 ? (uploadedFiles.every(f => f.type && f.type.startsWith('image/')) ? 'images' : 'files') : 'text',
                 files: [...uploadedFiles],
-                replyTo: '',
-                timestamp: nowIso,
+                timestamp: new Date().toISOString(),
                 readBy: [currentUser.id]
             };
 
-            displayMessage(localMsg);
-            
-            // Clear input states
-            messageInput.value = '';
-            messageInput.style.height = '40px';
-            const pendingFiles = [...uploadedFiles];
+            // Optimistic Display
+            displayMessage(tempMessage);
+            const currentFiles = [...uploadedFiles];
+            messageInput.value = ''; 
             uploadedFiles = [];
 
             try {
-                const messageData = {
-                    userId: currentUser.id,
-                    sessionId: sessionId,
-                    text: text,
-                    type: localMsg.type,
-                    files: pendingFiles
-                };
-
+                const messageData = { userId: currentUser.id, sessionId, text, type: tempMessage.type, files: currentFiles };
                 const data = await postApi('sendMessage', messageData);
-                if (data.success && data.message) {
+                if (!data.success) {
+                    // หากส่งไม่สำเร็จ ลบตัวชั่วคราวออก
                     const tempEl = messagesContainer.querySelector(`[data-message-id="${tempId}"]`);
-                    if (tempEl) {
-                        tempEl.dataset.messageId = data.message.id;
-                        updateReadCount(data.message);
-                    }
-                    lastMessageTimestamp = data.message.timestamp;
-                } else if (!data.success) {
-                    alert('ส่งข้อความล้มเหลว: ' + data.error);
+                    if (tempEl) tempEl.remove();
+                    Swal.fire({ icon: 'error', title: 'Send Failed', text: data.error });
+                } else {
+                    fetchLatestMessagesImmediately();
                 }
             } catch (error) { 
-                console.error('Send error:', error);
+                const tempEl = messagesContainer.querySelector(`[data-message-id="${tempId}"]`);
+                if (tempEl) tempEl.remove();
+                Swal.fire({ icon: 'error', title: 'Error', text: error.message });
             }
         }
 
-        function getMessageType(files) {
-            if (files.every(f => f.type && f.type.startsWith('image/'))) return 'images';
-            if (files.every(f => f.type && f.type.startsWith('video/'))) return 'videos';
-            if (files.every(f => f.type && f.type.startsWith('audio/'))) return 'audios';
-            return 'files';
-        }
-
-        function handleKeyPress(e) {
-            if (e.key === 'Enter' && !e.shiftKey) { 
-                e.preventDefault(); 
-                sendMessage(); 
-            }
-        }
-
-        async function loadMessages() {
-            if (isPolling) return;
-            isPolling = true;
-
-            try {
-                const data = await getApi({ action: 'getMessages', lastTimestamp: lastMessageTimestamp });
-                if (data.success && data.messages && data.messages.length > 0) {
-                    displayMessages(data.messages);
-                    lastMessageTimestamp = data.messages[data.messages.length - 1].timestamp || '';
-                }
-            } catch (e) { console.error('Load messages error:', e); } 
-            finally { isPolling = false; }
-        }
-
-        function displayMessages(messages) {
-            const loading = messagesContainer.querySelector('.loading');
-            if (loading) loading.remove();
-            for (const message of messages) { displayMessage(message); }
-        }
-
-        function displayMessage(message) {
-            const existing = messagesContainer.querySelector(`[data-message-id="${message.id}"]`);
-            if (existing) { updateReadCount(message); return; }
-
-            const wrapper = document.createElement('div');
-            wrapper.className = `message-wrapper ${message.userId === currentUser?.id ? 'sent' : 'received'}`;
-            wrapper.dataset.messageId = message.id;
-
-            const msgDate = new Date(message.timestamp);
-            const dateStr = msgDate.toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
-
-            const lastDate = messagesContainer.querySelector('.message-date:last-child');
-            if (!lastDate || lastDate.textContent !== dateStr) {
-                const dateHeader = document.createElement('div');
-                dateHeader.className = 'message-date';
-                dateHeader.textContent = dateStr;
-                messagesContainer.appendChild(dateHeader);
-            }
-
-            const bubble = document.createElement('div');
-            bubble.className = 'message-bubble';
-
-            if (message.userId !== currentUser?.id) {
-                const name = document.createElement('div');
-                name.className = 'sender-name';
-                name.textContent = message.displayName || 'Unknown';
-                bubble.appendChild(name);
-            }
-
-            // Render Message Content with Paragraph formatting preserved
-            if (message.text) {
-                const text = document.createElement('div');
-                text.className = 'message-text';
-                text.textContent = message.text;
-                bubble.appendChild(text);
-            }
-
-            if (message.files && message.files.length > 0) {
-                if (message.type === 'images') {
-                    if (message.files.length === 1) {
-                        const mediaDiv = document.createElement('div');
-                        mediaDiv.className = 'media-container';
-                        mediaDiv.innerHTML = `<img src="${message.files[0].url}" alt="image" onclick="openImageModal('${message.files[0].url}')">`;
-                        bubble.appendChild(mediaDiv);
-                    } else {
-                        const grid = document.createElement('div');
-                        grid.className = 'image-grid';
-                        message.files.forEach(f => {
-                            grid.innerHTML += `<img src="${f.url}" alt="img" onclick="openImageModal('${f.url}')">`;
-                        });
-                        bubble.appendChild(grid);
-                    }
-                } else if (message.type === 'videos') {
-                    message.files.forEach(f => {
-                        const mediaDiv = document.createElement('div');
-                        mediaDiv.className = 'media-container';
-                        mediaDiv.innerHTML = `<video src="${f.url}" controls preload="metadata"></video>`;
-                        bubble.appendChild(mediaDiv);
-                    });
-                } else if (message.type === 'audios') {
-                    message.files.forEach(f => {
-                        const mediaDiv = document.createElement('div');
-                        mediaDiv.className = 'media-container';
-                        mediaDiv.innerHTML = `<audio src="${f.url}" controls></audio>`;
-                        bubble.appendChild(mediaDiv);
-                    });
-                } else {
-                    // Documents and File Downloads
-                    message.files.forEach(f => {
-                        const downloadUrl = f.downloadUrl || f.url;
-                        const card = document.createElement('div');
-                        card.className = 'file-attachment-card';
-                        card.innerHTML = `
-                            <div class="file-icon-box"><i class="${getFileIconClass(f.type)}"></i></div>
-                            <div class="file-details">
-                                <div class="file-title">${f.name}</div>
-                                <div class="file-size-text">${formatBytes(f.size)}</div>
-                            </div>
-                            <a href="${downloadUrl}" class="file-download-btn" target="_blank" title="Download File" download>
-                                <i class="bi bi-download"></i>
-                            </a>
-                        `;
-                        bubble.appendChild(card);
-                    });
-                }
-            }
-
-            // Metadata Time and Read
-            const metaDiv = document.createElement('div');
-            metaDiv.className = 'message-info-meta';
-            const msgTime = new Date(message.timestamp).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
-            
-            const readCount = (message.readBy || []).length;
-            metaDiv.innerHTML = `<span>${msgTime}</span> ${readCount > 0 ? `<span>• Read ${readCount}</span>` : ''}`;
-            bubble.appendChild(metaDiv);
-
-            if (message.userId === currentUser?.id) {
-                const deleteBtn = document.createElement('button');
-                deleteBtn.className = 'delete-btn';
-                deleteBtn.innerHTML = '<i class="bi bi-x"></i>';
-                deleteBtn.onclick = (e) => { e.stopPropagation(); deleteMessage(message.id); };
-                bubble.appendChild(deleteBtn);
-            }
-
-            wrapper.appendChild(bubble);
-            messagesContainer.appendChild(wrapper);
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-
-            if (message.userId !== currentUser?.id) markAsRead(message.id);
-        }
-
-        function updateReadCount(message) {
-            const el = messagesContainer.querySelector(`[data-message-id="${message.id}"] .message-info-meta`);
-            if (el) {
-                const count = (message.readBy || []).length;
-                const msgTime = new Date(message.timestamp).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
-                el.innerHTML = `<span>${msgTime}</span> ${count > 0 ? `<span>• Read ${count}</span>` : ''}`;
-            }
-        }
+        function handleKeyPress(event) { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); sendMessage(); } }
 
         async function deleteMessage(messageId) {
-            if (!confirm('ลบข้อความนี้ใช่หรือไม่?')) return;
-            try {
-                const data = await postApi('deleteMessage', { userId: currentUser.id, sessionId, messageId });
+            const res = await Swal.fire({
+                title: 'Delete Message?',
+                text: 'This action cannot be undone.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ff6b6b',
+                confirmButtonText: 'Yes, Delete'
+            });
+
+            if (!res.isConfirmed) return;
+
+            try { 
+                const data = await postApi('deleteMessage', { userId: currentUser.id, sessionId, messageId }); 
                 if (data.success) {
-                    const el = messagesContainer.querySelector(`[data-message-id="${messageId}"]`);
-                    if (el) el.remove();
+                    const msgElem = messagesContainer.querySelector(`[data-message-id="${messageId}"]`);
+                    if (msgElem) msgElem.remove();
+                } else {
+                    Swal.fire({ icon: 'error', title: 'Error', text: data.error });
                 }
-            } catch (e) { alert(e.message); }
-        }
-
-        async function markAsRead(messageId) {
-            if (!currentUser || messageId.startsWith('temp_')) return;
-            try { await postApi('markAsRead', { userId: currentUser.id, sessionId, messageId }); } catch (e) {}
-        }
-
-        // ==================== CONTEXT MENU & COPY ====================
-        function initContextMenu() {
-            messagesContainer.addEventListener('contextmenu', (e) => {
-                const bubble = e.target.closest('.message-bubble');
-                if (bubble) {
-                    const textNode = bubble.querySelector('.message-text');
-                    if (textNode) {
-                        e.preventDefault();
-                        selectedTextToCopy = textNode.textContent;
-                        contextMenu.style.top = `${e.clientY}px`;
-                        contextMenu.style.left = `${Math.min(e.clientX, window.innerWidth - 150)}px`;
-                        contextMenu.style.display = 'block';
-                    }
-                }
-            });
-
-            document.addEventListener('click', () => {
-                contextMenu.style.display = 'none';
-            });
-
-            document.getElementById('ctx-copy-btn').addEventListener('click', () => {
-                if (selectedTextToCopy) {
-                    navigator.clipboard.writeText(selectedTextToCopy);
-                }
-            });
-        }
-
-        // ==================== IMAGE ZOOM & PAN SYSTEM ====================
-        function initZoomAndPan() {
-            const viewport = document.getElementById('zoom-viewport');
-            const img = document.getElementById('modal-image');
-
-            viewport.addEventListener('wheel', (e) => {
-                e.preventDefault();
-                const delta = e.deltaY < 0 ? 0.15 : -0.15;
-                adjustZoom(delta);
-            }, { passive: false });
-
-            viewport.addEventListener('mousedown', (e) => {
-                if (zoomScale > 1) {
-                    isPanning = true;
-                    startX = e.clientX - translateX;
-                    startY = e.clientY - translateY;
-                }
-            });
-
-            window.addEventListener('mousemove', (e) => {
-                if (isPanning) {
-                    translateX = e.clientX - startX;
-                    translateY = e.clientY - startY;
-                    applyTransform();
-                }
-            });
-
-            window.addEventListener('mouseup', () => { isPanning = false; });
-        }
-
-        function adjustZoom(amount) {
-            zoomScale = Math.min(Math.max(1, zoomScale + amount), 4);
-            if (zoomScale === 1) { translateX = 0; translateY = 0; }
-            applyTransform();
-        }
-
-        function resetZoom() {
-            zoomScale = 1;
-            translateX = 0;
-            translateY = 0;
-            applyTransform();
-        }
-
-        function applyTransform() {
-            const img = document.getElementById('modal-image');
-            img.style.transform = `translate(${translateX}px, ${translateY}px) scale(${zoomScale})`;
-        }
-
-        function openImageModal(url) {
-            const img = document.getElementById('modal-image');
-            img.src = url;
-            resetZoom();
-            document.getElementById('image-preview-modal').classList.add('active');
-        }
-
-        function closeModal() { 
-            document.getElementById('image-preview-modal').classList.remove('active'); 
-        }
-
-        // ==================== COMPRESSION & FILE UPLOAD ====================
-        async function handleFileUpload(event) {
-            let files = Array.from(event.target.files);
-            if (files.length === 0) return;
-
-            const imageFiles = files.filter(f => f.type.startsWith('image/'));
-            if (imageFiles.length > 20) {
-                alert('ส่งรูปภาพได้สูงสุดทีละ 20 ไฟล์ครับ');
-                event.target.value = '';
-                return;
-            }
-
-            showProgress(true);
-
-            try {
-                const fileDataArr = [];
-                for (let i = 0; i < files.length; i++) {
-                    let file = files[i];
-                    if (file.type.startsWith('image/')) {
-                        file = await compressImage(file);
-                    }
-                    
-                    const base64 = await readFileAsBase64(file);
-                    fileDataArr.push({
-                        name: file.name,
-                        type: file.type,
-                        size: file.size,
-                        data: base64
-                    });
-
-                    updateProgress(((i + 1) / files.length) * 100);
-                }
-
-                const data = await postApi('uploadFiles', {
-                    userId: currentUser.id,
-                    sessionId: sessionId,
-                    files: fileDataArr,
-                    messageId: 'msg_' + Date.now()
-                });
-
-                if (data.success) {
-                    uploadedFiles = data.files;
-                    await sendMessage();
-                } else { alert('อัปโหลดไฟล์ล้มเหลว: ' + data.error); }
-            } catch (error) { alert('เกิดข้อผิดพลาดในการประมวลผลไฟล์: ' + error.message); } 
-            finally {
-                showProgress(false);
-                event.target.value = '';
+            } catch (error) { 
+                Swal.fire({ icon: 'error', title: 'Error', text: error.message });
             }
         }
+        async function markAsRead(messageId) { try { await postApi('markAsRead', { userId: currentUser.id, sessionId, messageId }); } catch (e) {} }
 
-        function compressImage(file) {
-            return new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const img = new Image();
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        let width = img.width;
-                        let height = img.height;
-                        const maxDim = 1280;
-
-                        if (width > maxDim || height > maxDim) {
-                            if (width > height) { height = Math.round((height * maxDim) / width); width = maxDim; }
-                            else { width = Math.round((width * maxDim) / height); height = maxDim; }
-                        }
-
-                        canvas.width = width; canvas.height = height;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, width, height);
-                        canvas.toBlob((blob) => {
-                            resolve(new File([blob], file.name, { type: 'image/jpeg' }));
-                        }, 'image/jpeg', 0.7);
-                    };
-                    img.src = e.target.result;
-                };
-                reader.readAsDataURL(file);
-            });
-        }
-
-        function readFileAsBase64(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = (e) => resolve(e.target.result);
-                reader.onerror = reject;
-                reader.readAsDataURL(file);
-            });
-        }
-
-        // ==================== VOICE RECORDING ====================
-        async function toggleRecording() {
-            if (mediaRecorder && mediaRecorder.state === 'recording') {
-                stopRecording(true);
-            } else {
-                startRecording();
-            }
-        }
-
+        async function toggleRecording() { if (isRecording) stopRecording(); else startRecording(); }
         async function startRecording() {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                mediaRecorder = new MediaRecorder(stream);
-                audioChunks = [];
-
-                mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) audioChunks.push(e.data); };
-                mediaRecorder.onstop = async () => {
+                mediaRecorder = new MediaRecorder(stream); audioChunks = [];
+                mediaRecorder.ondataavailable = event => { audioChunks.push(event.data); };
+                mediaRecorder.onstop = () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    const reader = new FileReader(); reader.onload = function() { currentRecordingData = reader.result; }; reader.readAsDataURL(audioBlob);
                     stream.getTracks().forEach(track => track.stop());
                 };
-
-                mediaRecorder.start();
-                document.getElementById('record-btn').classList.add('recording');
-                document.getElementById('recording-banner').style.display = 'flex';
-                
-                recordSeconds = 0;
-                recordTimerInterval = setInterval(() => {
-                    recordSeconds++;
-                    const mins = String(Math.floor(recordSeconds / 60)).padStart(2, '0');
-                    const secs = String(recordSeconds % 60).padStart(2, '0');
-                    document.getElementById('record-timer').textContent = `${mins}:${secs}`;
+                mediaRecorder.start(); isRecording = true; recordingStartTime = Date.now();
+                document.getElementById('voice-recording').classList.add('active'); document.getElementById('chat-input-default').style.display = 'none';
+                recordingTimer = setInterval(() => {
+                    const elapsed = Math.floor((Date.now() - recordingStartTime) / 1000);
+                    document.getElementById('recording-timer').textContent = `${String(Math.floor(elapsed / 60)).padStart(2, '0')}:${String(elapsed % 60).padStart(2, '0')}`;
                 }, 1000);
-
-            } catch (err) { alert('ไม่สามารถเข้าถึงไมโครโฟนได้: ' + err.message); }
+            } catch (error) { Swal.fire({ icon: 'error', title: 'Microphone Error', text: error.message }); }
         }
-
-        async function stopRecording(send = true) {
-            if (!mediaRecorder) return;
-            
-            clearInterval(recordTimerInterval);
-            document.getElementById('record-btn').classList.remove('recording');
-            document.getElementById('recording-banner').style.display = 'none';
-
-            mediaRecorder.onstop = async () => {
-                if (send && audioChunks.length > 0) {
-                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                    const voiceFile = new File([audioBlob], `Voice_${Date.now()}.webm`, { type: 'audio/webm' });
-                    
-                    showProgress(true);
-                    const base64 = await readFileAsBase64(voiceFile);
-                    const data = await postApi('uploadFiles', {
-                        userId: currentUser.id,
-                        sessionId: sessionId,
-                        files: [{ name: voiceFile.name, type: voiceFile.type, size: voiceFile.size, data: base64 }],
-                        messageId: 'voice_' + Date.now()
-                    });
-
-                    showProgress(false);
-                    if (data.success) {
-                        uploadedFiles = data.files;
-                        await sendMessage();
-                    }
-                }
-            };
-
-            mediaRecorder.stop();
+        function stopRecording() {
+            if (mediaRecorder && isRecording) {
+                mediaRecorder.stop(); isRecording = false; clearInterval(recordingTimer);
+                document.getElementById('voice-recording').classList.remove('active'); document.getElementById('chat-input-default').style.display = 'flex';
+                document.getElementById('recording-timer').textContent = '00:00';
+            }
         }
-
-        // ==================== USER MANAGEMENT & HELPERS ====================
-        async function loadUsers() {
+        function cancelRecording() { stopRecording(); currentRecordingData = null; audioChunks = []; }
+        async function sendRecording() {
+            if (!currentRecordingData) return Swal.fire({ icon: 'info', title: 'Notice', text: 'No recording to send' });
             try {
-                const data = await getApi({ action: 'getUsers' });
-                if (data.success && data.users) {
-                    const onlineCount = data.users.filter(u => u.status === 'online').length;
-                    memberCount.textContent = `${data.users.length} members (${onlineCount} online)`;
-                }
-            } catch (e) {}
+                const data = await postApi('sendVoiceMessage', { userId: currentUser.id, sessionId, audioData: currentRecordingData, duration: Math.floor((Date.now() - recordingStartTime) / 1000) });
+                if (data.success) { currentRecordingData = null; audioChunks = []; fetchLatestMessagesImmediately(); } 
+                else Swal.fire({ icon: 'error', title: 'Failed', text: data.error });
+            } catch (error) { Swal.fire({ icon: 'error', title: 'Error', text: error.message }); }
         }
 
-        function startPolling() {
-            if (pollInterval) return;
-            loadMessages(); loadUsers();
-            pollInterval = setInterval(() => { loadMessages(); loadUsers(); }, 3000);
-        }
+        async function handleFileUpload(event) {
+            const files = Array.from(event.target.files);
+            if (files.length === 0) return;
+            if (files.length > 20) { Swal.fire({ icon: 'warning', title: 'Limit Exceeded', text: 'Maximum 20 files per upload' }); event.target.value = ''; return; }
 
-        function stopPolling() {
-            if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
-            isPolling = false;
-        }
+            const progressModal = document.getElementById('upload-progress'), progressFill = document.getElementById('progress-fill'), progressText = document.getElementById('progress-text');
+            progressModal.classList.add('active');
 
-        function getFileIconClass(mimeType) {
-            if (!mimeType) return 'bi-file-earmark';
-            if (mimeType.includes('pdf')) return 'bi-file-earmark-pdf-fill';
-            if (mimeType.includes('word') || mimeType.includes('document')) return 'bi-file-earmark-word-fill';
-            if (mimeType.includes('excel') || mimeType.includes('sheet')) return 'bi-file-earmark-excel-fill';
-            if (mimeType.includes('zip') || mimeType.includes('rar')) return 'bi-file-earmark-zip-fill';
-            return 'bi-file-earmark-arrow-down-fill';
-        }
-
-        function formatBytes(bytes) {
-            if (!bytes || bytes === 0) return '0 Bytes';
-            const k = 1024;
-            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-        }
-
-        function showProgress(show) {
-            const el = document.getElementById('upload-progress');
-            if (show) el.classList.add('active'); else el.classList.remove('active');
-        }
-
-        function updateProgress(percent) {
-            document.getElementById('progress-fill').style.width = percent + '%';
-            document.getElementById('progress-text').textContent = Math.round(percent) + '%';
-        }
-
-        function initEmojiPicker() {
             try {
-                if (typeof window.EmojiMart === 'undefined') return;
-                const { Picker } = window.EmojiMart;
-                emojiPickerInstance = new Picker({
-                    onEmojiSelect: (emoji) => {
-                        messageInput.value += emoji.native; 
-                        autoGrowTextarea(messageInput);
-                        messageInput.focus(); 
-                        toggleEmojiPicker();
-                    },
-                    theme: 'light', showPreview: false, showSearch: true
-                });
-                emojiPicker.appendChild(emojiPickerInstance);
-            } catch (e) {}
-        }
-
-        function toggleEmojiPicker() {
-            emojiPicker.style.display = emojiPicker.style.display === 'block' ? 'none' : 'block';
+                const fileData = [];
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    const data = await new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = e => resolve(e.target.result); reader.onerror = reject; reader.readAsDataURL(file); });
+                    fileData.push({ name: file.name, type: file.type, size: file.size, data: data });
+                    const progress = ((i + 1) / files.length) * 100;
+                    progressFill.style.width = progress + '%'; progressText.textContent = Math.round(progress) + '%';
+                }
+                const data = await postApi('uploadFiles', { userId: currentUser.id, sessionId, files: fileData, messageId: 'temp_' + Date.now() });
+                if (data.success) { uploadedFiles = data.files; await sendMessage(); } 
+                else Swal.fire({ icon: 'error', title: 'Upload Failed', text: data.error });
+            } catch (error) { Swal.fire({ icon: 'error', title: 'Upload Error', text: error.message }); } 
+            finally { progressModal.classList.remove('active'); event.target.value = ''; }
         }
 
         async function updateProfilePic(event) {
             const file = event.target.files[0];
             if (!file || !currentUser) return;
             try {
-                showProgress(true);
-                const base64 = await readFileAsBase64(file);
-                const result = await postApi('updateProfilePic', { userId: currentUser.id, sessionId, imageData: base64 });
+                const data = await new Promise((resolve) => { const reader = new FileReader(); reader.onload = e => resolve(e.target.result); reader.readAsDataURL(file); });
+                const result = await postApi('updateProfilePic', { userId: currentUser.id, sessionId, imageData: data });
                 if (result.success) {
-                    currentUserData.photoURL = result.photoURL;
-                    currentUser.photoURL = result.photoURL;
-                    
-                    const savedSession = localStorage.getItem('chatSession');
-                    if (savedSession) {
-                        const sess = JSON.parse(savedSession);
-                        sess.user.photoURL = result.photoURL;
-                        localStorage.setItem('chatSession', JSON.stringify(sess));
-                    }
-                    
-                    updateProfileUI(); 
-                    closeProfileModal();
-                } else {
-                    alert(result.error);
-                }
-            } catch (e) { 
-                alert(e.message); 
-            } finally {
-                showProgress(false);
-            }
+                    currentUserData.photoURL = result.photoURL; updateProfileUI(); closeProfileModal();
+                    const savedSession = JSON.parse(localStorage.getItem('chatSession') || '{}');
+                    savedSession.user = currentUserData; localStorage.setItem('chatSession', JSON.stringify(savedSession));
+                    Swal.fire({ icon: 'success', title: 'Updated', text: 'Profile picture updated successfully!' });
+                } else Swal.fire({ icon: 'error', title: 'Error', text: result.error });
+            } catch (error) { Swal.fire({ icon: 'error', title: 'Error', text: error.message }); }
         }
 
         async function updateDisplayName() {
-            const newName = profileDisplayName.value.trim();
+            const newName = document.getElementById('profile-display-name').value.trim();
+            const btn = document.getElementById('btn-update-name');
             if (!newName || !currentUser) return;
+
+            btn.disabled = true;
+            btn.innerHTML = 'Updating...';
             try {
                 const data = await postApi('updateProfile', { userId: currentUser.id, sessionId, displayName: newName });
                 if (data.success) {
-                    currentUserData.displayName = newName;
-                    currentUser.displayName = newName;
-                    
-                    const savedSession = localStorage.getItem('chatSession');
-                    if (savedSession) {
-                        const sess = JSON.parse(savedSession);
-                        sess.user.displayName = newName;
-                        localStorage.setItem('chatSession', JSON.stringify(sess));
+                    currentUserData.displayName = newName; updateProfileUI(); closeProfileModal();
+                    const savedSession = JSON.parse(localStorage.getItem('chatSession') || '{}');
+                    savedSession.user = currentUserData; localStorage.setItem('chatSession', JSON.stringify(savedSession));
+                    Swal.fire({ icon: 'success', title: 'Updated', text: 'Display name updated!' });
+                } else Swal.fire({ icon: 'error', title: 'Error', text: data.error });
+            } catch (error) { Swal.fire({ icon: 'error', title: 'Error', text: error.message }); }
+            finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-save"></i> Update Name';
+            }
+        }
+        function openProfileModal() { if (!currentUserData) return; document.getElementById('profile-display-name').value = currentUserData.displayName || ''; document.getElementById('profile-modal-pic').src = currentUserData.photoURL || ''; document.getElementById('profile-modal').classList.add('active'); }
+        function closeProfileModal() { document.getElementById('profile-modal').classList.remove('active'); }
+
+        // ============================================================
+        // REAL-TIME MESSAGING ENGINE
+        // ============================================================
+        async function fetchLatestMessagesImmediately() {
+            if (isPolling) return;
+            await loadMessages();
+        }
+
+        async function loadMessages() {
+            if (isPolling) return;
+            isPolling = true;
+            try {
+                const data = await getApi({ action: 'getMessages', lastTimestamp: lastMessageTimestamp, limit: 50 });
+                if (data.success && data.messages && data.messages.length > 0) {
+                    displayMessages(data.messages);
+                    lastMessageTimestamp = data.messages[data.messages.length - 1].timestamp || '';
+                }
+            } catch (error) {} 
+            finally { 
+                isPolling = false; 
+            }
+        }
+
+        function displayMessages(messages) {
+            const loading = messagesContainer.querySelector('.loading'); if (loading) loading.remove();
+            for (const message of messages) displayMessage(message);
+        }
+
+        function displayMessage(message) {
+            // Check if exact ID already rendered
+            const existing = messagesContainer.querySelector(`[data-message-id="${message.id}"]`);
+            if (existing) { updateReadCount(message); return; }
+
+            // Deduplication Check for Temp Messages (Avoid duplicate images/text)
+            if (!message.id.startsWith('temp_')) {
+                const tempMatches = messagesContainer.querySelectorAll('.temp-message');
+                tempMatches.forEach(el => {
+                    if (el.dataset.userId === message.userId) {
+                        el.remove(); // ลบตัวชั่วคราวออกเมื่อข้อมูลจริงมาถึง
                     }
+                });
+            }
 
-                    updateProfileUI(); 
-                    closeProfileModal();
+            const wrapper = document.createElement('div');
+            wrapper.className = `message-wrapper ${message.userId === currentUser?.id ? 'sent' : 'received'} ${message.id.startsWith('temp_') ? 'temp-message' : ''}`;
+            wrapper.dataset.messageId = message.id;
+            wrapper.dataset.userId = message.userId;
+
+            const msgDate = new Date(message.timestamp);
+            const dateStr = msgDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            const lastDate = messagesContainer.querySelector('.message-date:last-child');
+            if (!lastDate || lastDate.textContent !== dateStr) {
+                const dateHeader = document.createElement('div'); dateHeader.className = 'message-date'; dateHeader.innerHTML = `<span>${dateStr}</span>`; messagesContainer.appendChild(dateHeader);
+            }
+
+            const bubble = document.createElement('div'); bubble.className = 'message-bubble';
+
+            if (message.userId !== currentUser?.id) {
+                const sender = document.createElement('div'); sender.className = 'sender-name';
+                sender.innerHTML = message.photoURL ? `<img src="${message.photoURL}" alt=""> ${message.displayName || 'Unknown'}` : `<i class="bi bi-person-circle"></i> ${message.displayName || 'Unknown'}`;
+                bubble.appendChild(sender);
+            }
+
+            if (message.type === 'text') {
+                const text = document.createElement('div'); text.className = 'message-text'; text.textContent = message.text; bubble.appendChild(text);
+            } else if (message.type === 'images' && message.files) {
+                const grid = document.createElement('div'); grid.className = 'image-grid';
+                message.files.forEach(file => {
+                    const imgSrc = resolveImageUrl(file);
+                    if (imgSrc) {
+                        const img = document.createElement('img');
+                        img.src = imgSrc;
+                        img.alt = file.name || 'Image';
+                        img.onclick = () => openMediaModal(imgSrc, 'image');
+                        grid.appendChild(img);
+                    }
+                });
+                bubble.appendChild(grid);
+                if (message.files.length > 1) {
+                    const downloadBtn = document.createElement('button'); downloadBtn.className = 'download-all-btn'; downloadBtn.innerHTML = `<i class="bi bi-download"></i> Download All (${message.files.length} images)`; downloadBtn.onclick = () => downloadAllImages(message.files); bubble.appendChild(downloadBtn);
                 }
-            } catch (e) { alert(e.message); }
-        }
+            } else if (message.type === 'files' && message.files) {
+                message.files.forEach(file => {
+                    const fileDiv = document.createElement('div'); fileDiv.className = 'file-attachment'; fileDiv.onclick = () => window.open(file.url, '_blank');
+                    fileDiv.innerHTML = `<span class="file-icon">${getFileIcon(file.type)}</span><div class="file-info"><div class="file-name">${file.name || 'File'}</div><div class="file-size">${formatFileSize(file.size)}</div></div>`;
+                    bubble.appendChild(fileDiv);
+                });
+            } else if (message.type === 'voice' && message.files) {
+                const voiceDiv = document.createElement('div'); voiceDiv.className = 'voice-message'; const file = message.files[0];
+                const playBtn = document.createElement('button'); playBtn.className = 'play-btn'; playBtn.innerHTML = '<i class="bi bi-play-fill"></i>'; playBtn.onclick = () => toggleVoicePlayback(playBtn, file.url);
+                const waveform = document.createElement('div'); waveform.className = 'waveform';
+                for (let i = 0; i < 20; i++) { const bar = document.createElement('div'); bar.className = 'bar'; bar.style.height = (10 + Math.random() * 40) + '%'; waveform.appendChild(bar); }
+                voiceDiv.innerHTML = playBtn.outerHTML + waveform.outerHTML + `<span class="duration">${file.duration ? formatDuration(file.duration) : '0:00'}</span>`;
+                voiceDiv.querySelector('.play-btn').onclick = function() { toggleVoicePlayback(this, file.url); };
+                bubble.appendChild(voiceDiv);
+            } else if (message.type === 'video' && message.files) {
+                const container = document.createElement('div'); container.className = 'video-container';
+                container.innerHTML = `<video src="${message.files[0].url}" controls preload="metadata"></video>`;
+                container.querySelector('video').onclick = () => openMediaModal(message.files[0].url, 'video');
+                bubble.appendChild(container);
+            }
 
-        function openProfileModal() {
-            if (!currentUserData) return;
-            profileDisplayName.value = currentUserData.displayName || '';
+            const timeDiv = document.createElement('div'); timeDiv.className = 'time';
+            timeDiv.innerHTML = `<span>${new Date(message.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span><span class="read-count" id="read-${message.id}">${(message.readBy || []).length > 0 ? '👁️ ' + message.readBy.length : ''}</span>`;
+            bubble.appendChild(timeDiv);
+
+            if (message.userId === currentUser?.id && !message.id.startsWith('temp_')) {
+                const deleteBtn = document.createElement('button'); deleteBtn.className = 'delete-btn'; deleteBtn.innerHTML = '<i class="bi bi-x"></i>'; deleteBtn.onclick = (e) => { e.stopPropagation(); deleteMessage(message.id); }; bubble.appendChild(deleteBtn);
+                const deleteBtnMobile = document.createElement('button'); deleteBtnMobile.className = 'delete-btn-mobile'; deleteBtnMobile.innerHTML = '<i class="bi bi-trash"></i>'; deleteBtnMobile.onclick = (e) => { e.stopPropagation(); deleteMessage(message.id); }; bubble.appendChild(deleteBtnMobile);
+                bubble.addEventListener('contextmenu', (e) => { e.preventDefault(); deleteMessage(message.id); });
+            }
+
+            wrapper.appendChild(bubble); 
+            messagesContainer.appendChild(wrapper); 
             
-            if (currentUserData.photoURL) {
-                profileModalPic.src = currentUserData.photoURL;
-                profileModalPic.style.display = 'block';
-                profileModalFallback.style.display = 'none';
-            } else {
-                profileModalPic.style.display = 'none';
-                profileModalFallback.style.display = 'block';
-            }
-            profileModal.classList.add('active');
+            // Auto-scroll ล่าสุดลงข้างล่างเสมอ
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+            if (message.userId !== currentUser?.id && !message.id.startsWith('temp_')) markAsRead(message.id);
         }
 
-        function closeProfileModal() { profileModal.classList.remove('active'); }
-        function openOTPModal() { document.getElementById('otp-modal').classList.add('active'); }
-        function closeOTPModal() { document.getElementById('otp-modal').classList.remove('active'); }
+        function updateReadCount(message) {
+            const readElement = document.getElementById(`read-${message.id}`);
+            if (readElement) readElement.textContent = (message.readBy || []).length > 0 ? `👁️ ${(message.readBy).length}` : '';
+        }
 
-        async function sendOTP() {
-            const email = document.getElementById('otp-email').value.trim();
-            const status = document.getElementById('otp-status');
-            if (!email) { status.textContent = 'กรุณากรอกอีเมล'; return; }
-            status.textContent = 'กำลังส่ง OTP...';
+        async function scheduleNextPoll() {
+            if (!currentUser) return;
+            await loadMessages();
+            await loadUsers();
+            pollTimeout = setTimeout(scheduleNextPoll, 1200); 
+        }
+
+        function startPolling() {
+            if (pollTimeout) clearTimeout(pollTimeout);
+            scheduleNextPoll();
+        }
+
+        function stopPolling() {
+            if (pollTimeout) { clearTimeout(pollTimeout); pollTimeout = null; }
+            isPolling = false;
+        }
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                stopPolling();
+            } else if (currentUser) {
+                startPolling();
+            }
+        });
+
+        let currentAudio = null;
+        function toggleVoicePlayback(btn, url) {
+            if (currentAudio && !currentAudio.paused) { currentAudio.pause(); currentAudio = null; btn.innerHTML = '<i class="bi bi-play-fill"></i>'; return; }
+            if (currentAudio) currentAudio = null;
+            const audio = new Audio(url); audio.onended = () => { btn.innerHTML = '<i class="bi bi-play-fill"></i>'; currentAudio = null; };
+            audio.play(); currentAudio = audio; btn.innerHTML = '<i class="bi bi-pause-fill"></i>';
+        }
+
+        let currentMediaUrl = '', currentMediaType = '';
+        function openMediaModal(url, type) {
+            currentMediaUrl = url; currentMediaType = type; document.getElementById('modal-image').style.display = 'none'; document.getElementById('modal-video').style.display = 'none';
+            if (type === 'image') { document.getElementById('modal-image').src = url; document.getElementById('modal-image').style.display = 'block'; }
+            else if (type === 'video') { document.getElementById('modal-video').src = url; document.getElementById('modal-video').style.display = 'block'; document.getElementById('modal-video').load(); }
+            document.getElementById('media-modal').classList.add('active');
+        }
+        function closeModal(event) {
+            if (event && event.target !== event.currentTarget) return;
+            document.getElementById('media-modal').classList.remove('active'); if (document.getElementById('modal-video')) { document.getElementById('modal-video').pause(); document.getElementById('modal-video').src = ''; }
+        }
+        function downloadCurrentMedia() { const link = document.createElement('a'); link.href = currentMediaUrl; link.download = currentMediaType === 'image' ? 'image.jpg' : 'video.mp4'; document.body.appendChild(link); link.click(); document.body.removeChild(link); }
+        function downloadAllImages(files) { const imageFiles = files.filter(f => f.type && f.type.startsWith('image/')); if (imageFiles.length === 0) return; imageFiles.forEach((file, index) => { setTimeout(() => { const link = document.createElement('a'); link.href = resolveImageUrl(file); link.download = file.name || `image_${index + 1}.jpg`; document.body.appendChild(link); link.click(); document.body.removeChild(link); }, index * 500); }); }
+
+        async function loadUsers() {
             try {
-                const res = await postApi('sendOTP', { email });
-                if (res.success) {
-                    otpUserId = res.userId;
-                    status.textContent = 'ส่ง OTP สำเร็จ กรุณาเช็คอีเมลของคุณ';
-                    document.getElementById('otp-section').style.display = 'block';
-                } else {
-                    status.textContent = res.error;
+                const data = await getApi({ action: 'getUsers' });
+                if (data.success && data.users) {
+                    const onlineUsers = data.users.filter(u => u.status === 'online');
+                    document.getElementById('member-count').innerHTML = `<i class="bi bi-person"></i> ${data.users.length} members (<i class="bi bi-circle-fill" style="color:#4CAF50;font-size:8px;"></i> ${onlineUsers.length} online)`;
+                    document.getElementById('online-count').className = `online-status ${onlineUsers.length > 0 ? 'online' : 'offline'}`;
                 }
-            } catch (e) { status.textContent = e.message; }
+            } catch (error) {}
         }
 
-        async function verifyOTPAndChangePassword() {
-            const email = document.getElementById('otp-email').value.trim();
-            const otp = document.getElementById('otp-code').value.trim();
-            const newPassword = document.getElementById('otp-new-password').value;
-            const confirmPassword = document.getElementById('otp-confirm-password').value;
-            const status = document.getElementById('otp-status');
-
-            if (!otp || !newPassword || !confirmPassword) {
-                status.textContent = 'กรุณากรอกข้อมูลให้ครบถ้วน'; return;
-            }
-            if (newPassword !== confirmPassword) {
-                status.textContent = 'รหัสผ่านใหม่ไม่ตรงกัน'; return;
-            }
-
+        async function initEmojiPicker() {
             try {
-                const verifyRes = await postApi('verifyOTP', { email, otp });
-                if (verifyRes.success) {
-                    const changeRes = await postApi('changePassword', { userId: otpUserId, newPassword });
-                    if (changeRes.success) {
-                        alert('เปลี่ยนรหัสผ่านสำเร็จ กรุณาเข้าสู่ระบบอีกครั้ง');
-                        closeOTPModal();
-                    } else { status.textContent = changeRes.error; }
-                } else { status.textContent = verifyRes.error; }
-            } catch (e) { status.textContent = e.message; }
+                if (typeof window['emoji-mart'] === 'undefined') return;
+                const { Picker } = window['emoji-mart'];
+                emojiPickerInstance = new Picker({ onEmojiSelect: (emoji) => { messageInput.value += emoji.native; messageInput.focus(); toggleEmojiPicker(); }, theme: 'light', showPreview: false, showSearch: true, searchPosition: 'sticky', skinTonePosition: 'none', maxFrequentRows: 1, perLine: 8 });
+                document.getElementById('emoji-picker-container').appendChild(emojiPickerInstance);
+            } catch (error) {}
         }
+        function toggleEmojiPicker() { document.getElementById('emoji-picker-container').classList.toggle('active'); }
+
+        function getFileIcon(type) { if (!type) return '📎'; if (type.startsWith('image/')) return '🖼️'; if (type.startsWith('video/')) return '🎬'; if (type.startsWith('audio/')) return '🎵'; if (type.includes('pdf')) return '📄'; if (type.includes('word') || type.includes('document')) return '📝'; if (type.includes('excel') || type.includes('sheet')) return '📊'; if (type.includes('powerpoint') || type.includes('presentation')) return '📑'; return '📎'; }
+        function formatFileSize(bytes) { if (!bytes || bytes === 0) return '0 B'; const k = 1024; const sizes = ['B', 'KB', 'MB', 'GB']; const i = Math.floor(Math.log(bytes) / Math.log(k)); return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]; }
+        function formatDuration(seconds) { const mins = Math.floor(seconds / 60); const secs = seconds % 60; return `${mins}:${String(secs).padStart(2, '0')}`; }
+
+        document.addEventListener('click', (e) => { if (!e.target.closest('#emoji-picker-container') && !e.target.closest('#emoji-btn')) document.getElementById('emoji-picker-container').classList.remove('active'); });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeModal(e); closeProfileModal(); closeOTPModal(); document.getElementById('emoji-picker-container').classList.remove('active'); } });
+        window.addEventListener('beforeunload', async () => { if (currentUser) try { await postApi('logout', { userId: currentUser.id }); } catch (error) {} });
     </script>
 </body>
 </html>
