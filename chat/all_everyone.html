@@ -584,7 +584,7 @@
     </div>
 
     <script>
-        const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby9oin6Fltb-tPTAwLXZcMePMV7Y2UMYJij1oFmeKxon5fB-iJgtQerwiier1KZds23/exec';
+        const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwumBFdns4F6MfV9OeKsFYMJqgx9zQel5RKEKVdCTFUptXYs1PxDDfrgz1hwTd5eDTs/exec';
 
         let currentUser = null, sessionId = null, currentUserData = null, isLogin = true;
         let lastMessageTimestamp = '', pollTimeout = null;
@@ -608,7 +608,6 @@
         const contextMenu = document.getElementById('context-menu');
         const dragOverlay = document.getElementById('drag-overlay');
 
-        // ฟังก์ชันแปลง URL เพื่อแก้ปัญหาแสดงผลมีเดียแบบ Real-time และแก้ปัญหาแสดงวิดีโอ/เสียงไม่ได้
         function resolveImageUrl(file) {
             if (!file) return '';
             if (file.data && file.data.startsWith('data:image')) return file.data;
@@ -687,6 +686,7 @@
             document.getElementById('otp-email').addEventListener('keypress', (e) => { if (e.key === 'Enter') sendOTP(); });
             document.getElementById('otp-confirm-password').addEventListener('keypress', (e) => { if (e.key === 'Enter') verifyOTPAndChangePassword(); });
 
+            // ตรวจสอบเซสชันถาวร
             const savedSession = localStorage.getItem('chatSession');
             if (savedSession) {
                 try {
@@ -694,7 +694,10 @@
                     sessionId = session.sessionId; 
                     currentUser = session.user; 
                     currentUserData = session.user;
-                    await verifySession();
+                    
+                    // สลับเข้าหน้าแชททันที แล้วตรวจสอบความถูกต้องในฉากหลัง
+                    showChat();
+                    verifySession();
                 } catch (e) { 
                     localStorage.removeItem('chatSession'); 
                     showAuth();
@@ -702,6 +705,7 @@
             } else {
                 showAuth();
             }
+            
             document.getElementById('app-loading-guard').style.display = 'none';
             initEmojiPicker();
             setupDragAndDrop();
@@ -725,14 +729,21 @@
                 if (data.success && data.user) { 
                     currentUser = data.user; 
                     currentUserData = data.user; 
-                    showChat(); 
+                    // อัปเดตข้อมูลผู้ใช้ล่าสุดเข้า localStorage
+                    localStorage.setItem('chatSession', JSON.stringify({ sessionId, user: currentUser }));
+                    updateProfileUI();
                 } else { 
                     localStorage.removeItem('chatSession'); 
                     showAuth(); 
                 }
             } catch (error) { 
-                localStorage.removeItem('chatSession'); 
-                showAuth(); 
+                // หากเชื่อมต่อเน็ตไม่ได้ ให้ใช้ข้อมูลในเครื่องไปก่อน
+                if (!navigator.onLine && currentUser) {
+                    showChat();
+                } else {
+                    localStorage.removeItem('chatSession'); 
+                    showAuth(); 
+                }
             }
         }
 
@@ -1064,7 +1075,6 @@
                 readBy: [currentUser.id]
             };
 
-            // แสดงแชทจางๆ ในหน้าจอตัวเองทันที
             displayMessage(tempMessage);
             const currentFiles = [...filesToSend];
             messageInput.value = ''; 
@@ -1220,7 +1230,6 @@
                 duration: Math.floor((Date.now() - recordingStartTime) / 1000)
             }];
 
-            // ส่งเป็น Optimistic Message แสดงในจอทันทีแบบ LINE
             const tempId = 'temp_' + Date.now();
             displayMessage({
                 id: tempId,
@@ -1264,13 +1273,11 @@
             event.target.value = '';
         }
 
-        // ประมวลผลไฟล์และส่งแชทแบบจางทันที ไม่ขัดจังหวะด้วย Pop-up โหลด
         async function processFiles(files) {
             if (files.length === 0) return;
             if (files.length > 20) { Swal.fire({ icon: 'warning', title: 'Limit Exceeded', text: 'Maximum 20 files per upload' }); return; }
 
             try {
-                // อ่านไฟล์พร้อมกันแบบ Parallel อ่านเร็วขึ้น 3 เท่า
                 const filePromises = files.map(file => {
                     return new Promise((resolve, reject) => {
                         const reader = new FileReader();
@@ -1288,7 +1295,6 @@
 
                 const loadedFiles = await Promise.all(filePromises);
 
-                // ส่งเข้าแชทฝั่งตัวเองจางๆ ทันที
                 const tempId = 'temp_' + Date.now();
                 let msgType = 'files';
                 if (loadedFiles.every(f => f.type && f.type.startsWith('image/'))) msgType = 'images';
@@ -1307,7 +1313,6 @@
                     readBy: [currentUser.id]
                 });
 
-                // อัปโหลดไปยังคลาวด์ใน background
                 const data = await postApi('uploadFiles', { userId: currentUser.id, sessionId, files: loadedFiles, messageId: tempId });
                 if (data.success) { 
                     await sendMessage(data.files); 
@@ -1362,7 +1367,6 @@
         function openProfileModal() { if (!currentUserData) return; document.getElementById('profile-display-name').value = currentUserData.displayName || ''; document.getElementById('profile-modal-pic').src = currentUserData.photoURL || ''; document.getElementById('profile-modal').classList.add('active'); }
         function closeProfileModal() { document.getElementById('profile-modal').classList.remove('active'); }
 
-        // REAL-TIME ENGINE
         async function fetchLatestMessagesImmediately() {
             await loadMessages();
         }
@@ -1535,7 +1539,6 @@
             if (message.userId !== currentUser?.id && !message.id.startsWith('temp_')) markAsRead(message.id);
         }
 
-        // Messenger Audio Player Builder
         function createMessengerAudioPlayer(file) {
             const container = document.createElement('div');
             container.className = 'messenger-audio-player';
@@ -1615,7 +1618,6 @@
             return container;
         }
 
-        // Messenger Video Player Builder
         function createMessengerVideoPlayer(file) {
             const container = document.createElement('div');
             container.className = 'messenger-video-card';
@@ -1681,7 +1683,6 @@
 
         let currentAudio = null;
 
-        // PINCH TO ZOOM & PAN ENGINE FOR MODAL PREVIEW
         let currentMediaUrl = '', currentMediaType = '';
         let zoomScale = 1, currentX = 0, currentY = 0;
         let isDragging = false, startX = 0, startY = 0;
@@ -1864,7 +1865,6 @@
             });
         }
 
-        // EMOJI PICKER FIX
         function initEmojiPicker() {
             const container = document.getElementById('emoji-picker-container');
             container.innerHTML = ''; 
