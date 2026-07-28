@@ -158,7 +158,7 @@
         .message-wrapper.sent { align-items: flex-end; }
         .message-wrapper.received { align-items: flex-start; }
         
-        /* Optimistic / Temp Message (ข้อความส่งจางๆ แบบ LINE) */
+        /* Optimistic / Temp Message */
         .message-wrapper.temp-message { opacity: 0.6; filter: grayscale(10%); transition: opacity 0.3s ease; }
         .message-wrapper.temp-message .message-bubble::after {
             content: "\F282";
@@ -584,7 +584,7 @@
     </div>
 
     <script>
-        const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzfBiGiDPzeccipiXTe0dk8g4LQUHXO6dKvhsL3vAsGXsRE6d68zbmAlkVlH9IJQFB4/exec';
+        const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwyN4T0WRoYxCE5irBKQEbH-sVuB4IPoIs2V51zpC2dxYfr0ndkkdL50X-zqJTAe-Iu/exec';
 
         let currentUser = null, sessionId = null, currentUserData = null, isLogin = true;
         let lastMessageTimestamp = '', pollTimeout = null;
@@ -607,6 +607,7 @@
         const contextMenu = document.getElementById('context-menu');
         const dragOverlay = document.getElementById('drag-overlay');
 
+        // ฟังก์ชันแปลง URL เพื่อแก้ปัญหาแสดงผลมีเดียแบบ Real-time และแก้ปัญหาแสดงวิดีโอ/เสียงไม่ได้
         function resolveImageUrl(file) {
             if (!file) return '';
             if (file.data && file.data.startsWith('data:image')) return file.data;
@@ -622,22 +623,16 @@
         function resolveAudioUrl(file) {
             if (!file) return '';
             if (file.data && file.data.startsWith('data:audio')) return file.data;
-            if (file.driveId) return 'https://drive.google.com/uc?export=download&id=' + file.driveId;
-            if (file.url && file.url.includes('id=')) {
-                const idMatch = file.url.match(/id=([a-zA-Z0-9_-]+)/);
-                if (idMatch && idMatch[1]) return 'https://drive.google.com/uc?export=download&id=' + idMatch[1];
-            }
+            const driveId = file.driveId || (file.url && file.url.includes('id=') ? file.url.match(/id=([a-zA-Z0-9_-]+)/)?.[1] : null);
+            if (driveId) return 'https://drive.google.com/thumbnail?sz=w1000&id=' + driveId;
             return file.url || '';
         }
 
         function resolveVideoUrl(file) {
             if (!file) return '';
             if (file.data && file.data.startsWith('data:video')) return file.data;
-            if (file.driveId) return 'https://drive.google.com/uc?export=download&id=' + file.driveId;
-            if (file.url && file.url.includes('id=')) {
-                const idMatch = file.url.match(/id=([a-zA-Z0-9_-]+)/);
-                if (idMatch && idMatch[1]) return 'https://drive.google.com/uc?export=download&id=' + idMatch[1];
-            }
+            const driveId = file.driveId || (file.url && file.url.includes('id=') ? file.url.match(/id=([a-zA-Z0-9_-]+)/)?.[1] : null);
+            if (driveId) return 'https://drive.google.com/thumbnail?sz=w1000&id=' + driveId;
             return file.url || '';
         }
 
@@ -1855,7 +1850,7 @@
             });
         }
 
-        // EMOJI PICKER FIX (สร้างอิลิเมนต์ <emoji-picker> สมบูรณ์)
+        // EMOJI PICKER FIX
         function initEmojiPicker() {
             const container = document.getElementById('emoji-picker-container');
             container.innerHTML = ''; 
