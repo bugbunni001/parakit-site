@@ -584,7 +584,7 @@
     </div>
 
     <script>
-        const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzfBiGiDPzeccipiXTe0dk8g4LQUHXO6dKvhsL3vAsGXsRE6d68zbmAlkVlH9IJQFB4/exec';
+        const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzen1GEYq8BKvHnZ10VnpoNEl_OHBU1CpJDx5dN1Igs4mCvgx4b39P_VvMHcKzD0umA/exec';
 
         let currentUser = null, sessionId = null, currentUserData = null, isLogin = true;
         let lastMessageTimestamp = '', pollTimeout = null;
@@ -620,26 +620,28 @@
         }
 
         function resolveAudioUrl(file) {
-            if (!file) return '';
-            if (file.data && file.data.startsWith('data:audio')) return file.data;
-            if (file.driveId) return 'https://drive.google.com/uc?export=download&id=' + file.driveId;
-            if (file.url && file.url.includes('id=')) {
-                const idMatch = file.url.match(/id=([a-zA-Z0-9_-]+)/);
-                if (idMatch && idMatch[1]) return 'https://drive.google.com/uc?export=download&id=' + idMatch[1];
-            }
-            return file.url || '';
-        }
+    if (!file) return '';
+    if (file.data && file.data.startsWith('data:audio')) return file.data;
+    // เปลี่ยนมาใช้ lh3.googleusercontent.com เพื่อแก้ปัญหา CORS
+    if (file.driveId) return 'https://lh3.googleusercontent.com/d/' + file.driveId;
+    if (file.url && file.url.includes('id=')) {
+        const idMatch = file.url.match(/id=([a-zA-Z0-9_-]+)/);
+        if (idMatch && idMatch[1]) return 'https://lh3.googleusercontent.com/d/' + idMatch[1];
+    }
+    return file.url || '';
+}
 
-        function resolveVideoUrl(file) {
-            if (!file) return '';
-            if (file.data && file.data.startsWith('data:video')) return file.data;
-            if (file.driveId) return 'https://drive.google.com/uc?export=download&id=' + file.driveId;
-            if (file.url && file.url.includes('id=')) {
-                const idMatch = file.url.match(/id=([a-zA-Z0-9_-]+)/);
-                if (idMatch && idMatch[1]) return 'https://drive.google.com/uc?export=download&id=' + idMatch[1];
-            }
-            return file.url || '';
-        }
+function resolveVideoUrl(file) {
+    if (!file) return '';
+    if (file.data && file.data.startsWith('data:video')) return file.data;
+    // เปลี่ยนมาใช้ lh3.googleusercontent.com เพื่อแก้ปัญหา CORS
+    if (file.driveId) return 'https://lh3.googleusercontent.com/d/' + file.driveId;
+    if (file.url && file.url.includes('id=')) {
+        const idMatch = file.url.match(/id=([a-zA-Z0-9_-]+)/);
+        if (idMatch && idMatch[1]) return 'https://lh3.googleusercontent.com/d/' + idMatch[1];
+    }
+    return file.url || '';
+}
 
         async function postApi(action, data) {
             try {
