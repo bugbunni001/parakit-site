@@ -584,13 +584,14 @@
     </div>
 
     <script>
-        const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwyN4T0WRoYxCE5irBKQEbH-sVuB4IPoIs2V51zpC2dxYfr0ndkkdL50X-zqJTAe-Iu/exec';
+        const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby9oin6Fltb-tPTAwLXZcMePMV7Y2UMYJij1oFmeKxon5fB-iJgtQerwiier1KZds23/exec';
 
         let currentUser = null, sessionId = null, currentUserData = null, isLogin = true;
         let lastMessageTimestamp = '', pollTimeout = null;
         let uploadedFiles = [], isPolling = false, otpUserId = null;
         let mediaRecorder = null, audioChunks = [], isRecording = false, recordingStartTime = null;
         let recordingTimer = null, currentRecordingData = null, isConnected = false;
+        let isFirstLoad = true;
         
         let usersMap = {}; 
         let selectedMessageObj = null;
@@ -832,16 +833,17 @@
             chatContainer.style.display = 'flex'; 
             updateProfileUI(); 
             lastMessageTimestamp = ''; 
+            isFirstLoad = true;
             messagesContainer.innerHTML = '<div class="loading"><span class="spinner"></span> Loading messages...</div>';
-            loadUsers();
-            loadMessages(); 
             startPolling(); 
         }
+
         function showAuth() { 
             authContainer.style.display = 'flex'; 
             chatContainer.style.display = 'none'; 
             stopPolling(); 
         }
+
         function updateProfileUI() {
             if (!currentUserData) return;
             profilePic.innerHTML = currentUserData.photoURL ? `<img src="${currentUserData.photoURL}" alt="Profile">` : `<i class="bi bi-person-fill"></i>`;
@@ -1367,7 +1369,11 @@
 
         async function loadMessages() {
             try {
-                const data = await getApi({ action: 'getMessages', lastTimestamp: lastMessageTimestamp, limit: 50 });
+                const data = await getApi({ action: 'getMessages', lastTimestamp: lastMessageTimestamp, limit: 30 });
+                
+                const loading = messagesContainer.querySelector('.loading');
+                if (loading) loading.remove();
+
                 if (data.success) {
                     if (data.activeIds && Array.isArray(data.activeIds)) {
                         const localMessageElements = messagesContainer.querySelectorAll('.message-wrapper');
@@ -1400,6 +1406,8 @@
                 }
             } catch (error) {
                 console.error("Error loading messages:", error);
+                const loading = messagesContainer.querySelector('.loading');
+                if (loading) loading.innerHTML = '<div style="color:#ff6b6b;text-align:center;">โหลดข้อความไม่สำเร็จ กำลังลองใหม่...</div>';
             }
         }
 
@@ -1642,9 +1650,15 @@
 
         async function scheduleNextPoll() {
             if (!currentUser) return;
-            await loadUsers();
-            await loadMessages();
-            pollTimeout = setTimeout(scheduleNextPoll, 400); 
+            
+            if (isFirstLoad) {
+                await Promise.all([loadUsers(), loadMessages()]);
+                isFirstLoad = false;
+            } else {
+                await loadMessages();
+            }
+            
+            pollTimeout = setTimeout(scheduleNextPoll, 1500); 
         }
 
         function startPolling() {
