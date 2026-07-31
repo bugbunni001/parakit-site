@@ -1145,8 +1145,8 @@
 
         document.addEventListener('click', hideContextMenu);
 
-        async function sendMessage(pendingFiles = [], pendingText = null) {
-            const text = pendingText !== null ? pendingText : messageInput.value.trim();
+        async function sendMessage(pendingFiles = []) {
+            const text = messageInput.value.trim();
             const filesToSend = pendingFiles.length > 0 ? pendingFiles : uploadedFiles;
             
             if (!text && filesToSend.length === 0) return;
@@ -1173,7 +1173,12 @@
                 readBy: [currentUser.id]
             };
 
-            displayMessage(tempMessage);
+            // หากไม่มีการส่งไฟล์แนบมา (เป็นข้อความอย่างเดียว) ให้แสดงข้อความชั่วคราวบนหน้าจอ
+            // แต่หากเป็นไฟล์แนบ processFiles() จะแสดงผลชั่วคราวล่วงหน้าไปแล้ว เพื่อป้องกันภาพซ้อนกัน 2 รูป
+            if (pendingFiles.length === 0) {
+                displayMessage(tempMessage);
+            }
+
             const currentFiles = [...filesToSend];
             messageInput.value = ''; 
             messageInput.style.height = '40px';
@@ -1385,57 +1390,32 @@
                 const loadedFiles = await Promise.all(files.map(file => compressImage(file)));
                 Swal.close();
 
-                const isAllImages = loadedFiles.every(f => f.type && f.type.startsWith('image/'));
+                const tempId = 'temp_' + Date.now();
+                let msgType = 'files';
+                if (loadedFiles.every(f => f.type && f.type.startsWith('image/'))) msgType = 'images';
+                else if (loadedFiles.every(f => f.type && f.type.startsWith('video/'))) msgType = 'video';
+                else if (loadedFiles.every(f => f.type && f.type.startsWith('audio/'))) msgType = 'voice';
 
-                // ถ้าเป็นรูปภาพ -> แสดง SweetAlert2 Preview ก่อนส่ง
-                if (isAllImages) {
-                    let previewGridHtml = '<div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 6px; max-height: 200px; overflow-y: auto; margin-bottom: 12px;">';
-                    loadedFiles.forEach(f => {
-                        previewGridHtml += `<img src="${f.data}" style="width:100%; height:80px; object-fit:cover; border-radius:8px;" />`;
-                    });
-                    previewGridHtml += '</div>';
+                displayMessage({
+                    id: tempId,
+                    userId: currentUser.id,
+                    displayName: currentUser.displayName,
+                    photoURL: currentUser.photoURL,
+                    text: messageInput.value.trim(),
+                    type: msgType,
+                    files: loadedFiles,
+                    timestamp: new Date().toISOString(),
+                    readBy: [currentUser.id]
+                });
 
-                    const initialCaption = messageInput.value.trim();
-
-                    const { isConfirmed, value: captionText } = await Swal.fire({
-                        title: `ส่ง ${loadedFiles.length} รูปภาพ`,
-                        html: previewGridHtml + `<textarea id="swal-caption" class="swal2-textarea" placeholder="พิมพ์ข้อความแนบรูปภาพ..." style="margin:0; width:100%; box-sizing:border-box; font-size:14px;">${initialCaption}</textarea>`,
-                        showCancelButton: true,
-                        confirmButtonText: 'ส่งข้อความ',
-                        cancelButtonText: 'ยกเลิก',
-                        confirmButtonColor: '#075e54',
-                        focusConfirm: false,
-                        preConfirm: () => {
-                            return document.getElementById('swal-caption').value.trim();
-                        }
-                    });
-
-                    if (!isConfirmed) return;
-
-                    // อัปโหลดและส่งรูปเพียงครั้งเดียว
-                    Swal.fire({ title: 'กำลังอัปโหลด...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-                    const uploadRes = await postApi('uploadFiles', { userId: currentUser.id, sessionId, files: loadedFiles });
-                    Swal.close();
-
-                    if (uploadRes.success) {
-                        await sendMessage(uploadRes.files, captionText);
-                    } else {
-                        Swal.fire({ icon: 'error', title: 'Upload Failed', text: uploadRes.error });
-                    }
-
+                const data = await postApi('uploadFiles', { userId: currentUser.id, sessionId, files: loadedFiles, messageId: tempId });
+                if (data.success) { 
+                    await sendMessage(data.files); 
                 } else {
-                    // หากเป็นไฟล์ประเภทอื่น อัปโหลดแล้วส่ง
-                    Swal.fire({ title: 'กำลังอัปโหลด...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-                    const uploadRes = await postApi('uploadFiles', { userId: currentUser.id, sessionId, files: loadedFiles });
-                    Swal.close();
-
-                    if (uploadRes.success) {
-                        await sendMessage(uploadRes.files);
-                    } else {
-                        Swal.fire({ icon: 'error', title: 'Upload Failed', text: uploadRes.error });
-                    }
+                    const tempEl = messagesContainer.querySelector(`[data-message-id="${tempId}"]`);
+                    if (tempEl) tempEl.remove();
+                    Swal.fire({ icon: 'error', title: 'Upload Failed', text: data.error });
                 }
-
             } catch (error) { 
                 Swal.close();
                 Swal.fire({ icon: 'error', title: 'Upload Error', text: error.message }); 
