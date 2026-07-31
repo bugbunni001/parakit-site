@@ -342,7 +342,7 @@
         }
         #chat-input-default { display: flex; flex: 1; gap: 6px; align-items: center; min-width: 0; }
         
-        /* ปรับปรุง Input รองรับหลายบรรทัดอย่างเป็นธรรมชาติ */
+        /* Input รองรับการพิมพ์และวางรูปภาพ */
         #message-input { 
             flex: 1; 
             min-width: 0; 
@@ -657,7 +657,7 @@
             return file.url || '';
         }
 
-        // ปรับปรุงระบบบีบอัดภาพ: เพิ่มความละเอียดเป็น 2048px และ คุณภาพเป็น 0.92 ช่วยให้ภาพชัดเจนไม่แตกมัว
+        // Fast Client-side Image Resizing Engine
         function compressImage(file, maxWidth = 2048, maxHeight = 2048, quality = 0.92) {
             return new Promise((resolve, reject) => {
                 if (!file.type.startsWith('image/')) {
@@ -690,7 +690,7 @@
                         ctx.drawImage(img, 0, 0, width, height);
                         const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
                         resolve({
-                            name: file.name.replace(/\.[^/.]+$/, "") + ".jpg",
+                            name: (file.name || "pasted_image").replace(/\.[^/.]+$/, "") + ".jpg",
                             type: 'image/jpeg',
                             size: Math.round((compressedDataUrl.length * 3) / 4),
                             data: compressedDataUrl,
@@ -774,6 +774,7 @@
             document.getElementById('app-loading-guard').style.display = 'none';
             initEmojiPicker();
             setupDragAndDrop();
+            setupPasteImageHandler();
             initPinchZoomEngine();
         });
 
@@ -1022,6 +1023,40 @@
             }, false);
         }
 
+        /* ฟังก์ชันรองรับการก๊อปปี้รูปจากที่ไหนก็ได้มาวาง (Ctrl+V / Cmd+V) แบบ LINE */
+        function setupPasteImageHandler() {
+            const handlePaste = (e) => {
+                if (!currentUser || chatContainer.style.display === 'none') return;
+
+                const clipboardData = e.clipboardData || window.clipboardData;
+                if (!clipboardData || !clipboardData.items) return;
+
+                const items = Array.from(clipboardData.items);
+                const imageFiles = [];
+
+                items.forEach(item => {
+                    if (item.type.indexOf('image') !== -1) {
+                        const file = item.getAsFile();
+                        if (file) {
+                            imageFiles.push(file);
+                        }
+                    }
+                });
+
+                if (imageFiles.length > 0) {
+                    e.preventDefault();
+                    processFiles(imageFiles);
+                }
+            };
+
+            messageInput.addEventListener('paste', handlePaste);
+            document.addEventListener('paste', (e) => {
+                if (document.activeElement !== messageInput) {
+                    handlePaste(e);
+                }
+            });
+        }
+
         function attachContextMenuEvents(element, message) {
             element.addEventListener('contextmenu', (e) => {
                 e.preventDefault();
@@ -1161,7 +1196,6 @@
             }
         }
 
-        // รองรับการเว้นบรรทัดเมื่อกด Shift + Enter หรือพิมพ์ข้อความยาวๆ
         function handleKeyPress(event) { 
             if (event.key === 'Enter' && !event.shiftKey) { 
                 event.preventDefault(); 
@@ -1362,7 +1396,7 @@
                     userId: currentUser.id,
                     displayName: currentUser.displayName,
                     photoURL: currentUser.photoURL,
-                    text: '',
+                    text: messageInput.value.trim(),
                     type: msgType,
                     files: loadedFiles,
                     timestamp: new Date().toISOString(),
@@ -1858,7 +1892,6 @@
             resetZoom();
         }
 
-        // ดาวน์โหลดไฟล์และรูปภาพโดยตรงลงเครื่องโดยไม่เด้งเปิดหน้าต่างใหม่
         async function directFileDownload(url, filename) {
             try {
                 if (url.startsWith('data:')) {
