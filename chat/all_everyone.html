@@ -200,6 +200,17 @@
             white-space: pre-wrap; 
             word-break: break-word;
         }
+        .message-bubble .message-text a {
+            color: #0274be;
+            text-decoration: underline;
+            word-break: break-all;
+        }
+        .message-wrapper.sent .message-bubble .message-text a {
+            color: #035286;
+        }
+        .message-bubble .message-text a:hover {
+            text-decoration: none;
+        }
         
         .message-bubble .time { font-size: 10px; color: #66757f; margin-top: 4px; display: flex; align-items: center; gap: 4px; justify-content: flex-end; }
         .message-bubble .read-count { font-size: 10px; color: #075e54; font-weight: 600; display: inline-flex; align-items: center; gap: 3px; }
@@ -628,6 +639,22 @@
         const dbStatus = document.getElementById('db-status');
         const contextMenu = document.getElementById('context-menu');
         const dragOverlay = document.getElementById('drag-overlay');
+
+        /* Helper ฟังก์ชันแปลง URL ในข้อความให้เป็นแท็ก <a> ที่คลิกเปิดเว็บได้ทันที */
+        function formatMessageTextWithLinks(inputText) {
+            if (!inputText) return '';
+            const urlRegex = /(https?:\/\/[^\s]+)/g;
+            const escapeHtml = (str) => str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+            
+            const parts = inputText.split(urlRegex);
+            return parts.map(part => {
+                if (part.match(urlRegex)) {
+                    const safeUrl = escapeHtml(part);
+                    return `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer">${safeUrl}</a>`;
+                }
+                return escapeHtml(part);
+            }).join('');
+        }
 
         function resolveImageUrl(file) {
             if (!file) return '';
@@ -1577,7 +1604,10 @@
             }
 
             if (message.text) {
-                const text = document.createElement('div'); text.className = 'message-text'; text.textContent = message.text; bubble.appendChild(text);
+                const text = document.createElement('div'); 
+                text.className = 'message-text'; 
+                text.innerHTML = formatMessageTextWithLinks(message.text); 
+                bubble.appendChild(text);
             }
 
             if (message.type === 'images' && message.files) {
