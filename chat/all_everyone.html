@@ -200,6 +200,14 @@
             white-space: pre-wrap; 
             word-break: break-word;
         }
+        .message-bubble .message-text a {
+            color: #0274be;
+            text-decoration: underline;
+            word-break: break-all;
+        }
+        .message-wrapper.sent .message-bubble .message-text a {
+            color: #075e54;
+        }
         
         .message-bubble .time { font-size: 10px; color: #66757f; margin-top: 4px; display: flex; align-items: center; gap: 4px; justify-content: flex-end; }
         .message-bubble .read-count { font-size: 10px; color: #075e54; font-weight: 600; display: inline-flex; align-items: center; gap: 3px; }
@@ -628,6 +636,19 @@
         const dbStatus = document.getElementById('db-status');
         const contextMenu = document.getElementById('context-menu');
         const dragOverlay = document.getElementById('drag-overlay');
+
+        /* ฟังก์ชันสำหรับแปลง URL ในข้อความให้เป็นคลิกลิงก์ */
+        function formatMessageText(text) {
+            if (!text) return '';
+            const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+)/g;
+            return text.replace(urlRegex, function(url) {
+                let href = url;
+                if (!href.match(/^https?:\/\//i)) {
+                    href = 'http://' + href;
+                }
+                return `<a href="${href}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();">${url}</a>`;
+            });
+        }
 
         function resolveImageUrl(file) {
             if (!file) return '';
@@ -1577,7 +1598,10 @@
             }
 
             if (message.text) {
-                const text = document.createElement('div'); text.className = 'message-text'; text.textContent = message.text; bubble.appendChild(text);
+                const text = document.createElement('div'); 
+                text.className = 'message-text'; 
+                text.innerHTML = formatMessageText(message.text); 
+                bubble.appendChild(text);
             }
 
             if (message.type === 'images' && message.files) {
