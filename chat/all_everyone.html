@@ -1496,12 +1496,25 @@
 
         async function loadMessages() {
             try {
-                const data = await getApi({ action: 'getMessages', lastTimestamp: lastMessageTimestamp, limit: 50 });
+                // ปรับปรุงการส่งพารามิเตอร์: หากโหลดครั้งแรก ให้ส่ง limit 100 และไม่กรอง lastTimestamp
+                const requestParams = { action: 'getMessages' };
+                if (isFirstLoad) {
+                    requestParams.limit = 100;
+                } else if (lastMessageTimestamp) {
+                    requestParams.lastTimestamp = lastMessageTimestamp;
+                    requestParams.limit = 50;
+                } else {
+                    requestParams.limit = 50;
+                }
+
+                const data = await getApi(requestParams);
                 
                 const loading = messagesContainer.querySelector('.loading');
-                if (loading) loading.remove();
 
-                if (data.success) {
+                if (data && data.success) {
+                    if (loading) loading.remove();
+
+                    // ตรวจสอบข้อความที่ถูกลบออกไปจากระบบ
                     if (data.activeIds && Array.isArray(data.activeIds)) {
                         const localMessageElements = messagesContainer.querySelectorAll('.message-wrapper');
                         localMessageElements.forEach(el => {
@@ -1512,6 +1525,7 @@
                         });
                     }
 
+                    // อัปเดตจำนวนผู้ที่อ่านข้อความ
                     if (data.readMap) {
                         for (const msgId in data.readMap) {
                             const readByList = data.readMap[msgId];
@@ -1523,16 +1537,25 @@
                         }
                     }
 
-                    if (data.messages && data.messages.length > 0) {
+                    // วาดข้อความลงบนแชท
+                    if (data.messages && Array.isArray(data.messages) && data.messages.length > 0) {
                         displayMessages(data.messages);
                         const lastMsg = data.messages[data.messages.length - 1];
                         if (lastMsg && lastMsg.timestamp) {
                             lastMessageTimestamp = lastMsg.timestamp;
                         }
+                    } else if (isFirstLoad && (!data.messages || data.messages.length === 0)) {
+                        messagesContainer.innerHTML = '<div class="loading" style="padding:20px;color:#888;">ยังไม่มีข้อความในห้องแชทนี้</div>';
                     }
+                } else {
+                    if (loading) loading.innerHTML = '<span style="color:#ff6b6b;">ไม่สามารถโหลดข้อความได้</span>';
                 }
             } catch (error) {
                 console.error("Error loading messages:", error);
+                const loading = messagesContainer.querySelector('.loading');
+                if (loading && isFirstLoad) {
+                    loading.innerHTML = '<span style="color:#ff6b6b;"><i class="bi bi-exclamation-triangle"></i> เกิดข้อผิดพลาดในการเชื่อมต่อ</span>';
+                }
             }
         }
 
@@ -1542,6 +1565,8 @@
         }
 
         function displayMessage(message) {
+            if (!message || !message.id) return;
+            
             const existing = messagesContainer.querySelector(`[data-message-id="${message.id}"]`);
             if (existing) { updateReadCount(message); return; }
 
@@ -1561,7 +1586,12 @@
             wrapper.dataset.messageId = message.id;
             wrapper.dataset.userId = message.userId;
 
-            const msgDate = new Date(message.timestamp);
+            // Safe Date Parsing Engine
+            let msgDate = new Date(message.timestamp);
+            if (isNaN(msgDate.getTime())) {
+                msgDate = new Date(); // Fallback เป็นเวลาปัจจุบัน หากรูปแบบวันที่ส่งมาจาก Sheet ผิดพลาด
+            }
+
             const dateStr = msgDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
             const dateHeaders = messagesContainer.querySelectorAll('.message-date');
             const lastDateHeader = dateHeaders.length > 0 ? dateHeaders[dateHeaders.length - 1] : null;
