@@ -200,15 +200,17 @@
             white-space: pre-wrap; 
             word-break: break-word;
         }
+        
+        /* ตกแต่งลิงก์ที่ถูกคลิกได้ */
         .message-bubble .message-text a {
             color: #0274be;
             text-decoration: underline;
             word-break: break-all;
         }
-        .message-wrapper.sent .message-bubble .message-text a {
-            color: #075e54;
+        .message-bubble .message-text a:hover {
+            color: #014b7c;
         }
-        
+
         .message-bubble .time { font-size: 10px; color: #66757f; margin-top: 4px; display: flex; align-items: center; gap: 4px; justify-content: flex-end; }
         .message-bubble .read-count { font-size: 10px; color: #075e54; font-weight: 600; display: inline-flex; align-items: center; gap: 3px; }
 
@@ -637,11 +639,16 @@
         const contextMenu = document.getElementById('context-menu');
         const dragOverlay = document.getElementById('drag-overlay');
 
-        /* ฟังก์ชันสำหรับแปลง URL ในข้อความให้เป็นคลิกลิงก์ */
-        function formatMessageText(text) {
+        /* ฟังก์ชันแปลงลิงก์ URL ในข้อความให้กดได้ */
+        function parseMessageTextWithLinks(text) {
             if (!text) return '';
             const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+)/g;
-            return text.replace(urlRegex, function(url) {
+            const escapedText = text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;");
+
+            return escapedText.replace(urlRegex, function(url) {
                 let href = url;
                 if (!href.match(/^https?:\/\//i)) {
                     href = 'http://' + href;
@@ -1194,8 +1201,6 @@
                 readBy: [currentUser.id]
             };
 
-            // หากไม่มีการส่งไฟล์แนบมา (เป็นข้อความอย่างเดียว) ให้แสดงข้อความชั่วคราวบนหน้าจอ
-            // แต่หากเป็นไฟล์แนบ processFiles() จะแสดงผลชั่วคราวล่วงหน้าไปแล้ว เพื่อป้องกันภาพซ้อนกัน 2 รูป
             if (pendingFiles.length === 0) {
                 displayMessage(tempMessage);
             }
@@ -1488,9 +1493,15 @@
             await loadMessages();
         }
 
+        /* ปรับปรุงระบบโหลดแชท แก้ไขบั๊กแชทโหลดไม่ขึ้น */
         async function loadMessages() {
             try {
-                const data = await getApi({ action: 'getMessages', lastTimestamp: lastMessageTimestamp, limit: 50 });
+                const params = { action: 'getMessages', limit: 50 };
+                if (lastMessageTimestamp) {
+                    params.lastTimestamp = lastMessageTimestamp;
+                }
+
+                const data = await getApi(params);
                 
                 const loading = messagesContainer.querySelector('.loading');
                 if (loading) loading.remove();
@@ -1527,6 +1538,10 @@
                 }
             } catch (error) {
                 console.error("Error loading messages:", error);
+                const loading = messagesContainer.querySelector('.loading');
+                if (loading) {
+                    loading.innerHTML = '<div style="color:#ff6b6b;text-align:center;">ไม่สามารถโหลดข้อความได้ กำลังลองใหม่...</div>';
+                }
             }
         }
 
@@ -1536,6 +1551,7 @@
         }
 
         function displayMessage(message) {
+            if (!message || !message.id) return;
             const existing = messagesContainer.querySelector(`[data-message-id="${message.id}"]`);
             if (existing) { updateReadCount(message); return; }
 
@@ -1555,7 +1571,7 @@
             wrapper.dataset.messageId = message.id;
             wrapper.dataset.userId = message.userId;
 
-            const msgDate = new Date(message.timestamp);
+            const msgDate = message.timestamp ? new Date(message.timestamp) : new Date();
             const dateStr = msgDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
             const dateHeaders = messagesContainer.querySelectorAll('.message-date');
             const lastDateHeader = dateHeaders.length > 0 ? dateHeaders[dateHeaders.length - 1] : null;
@@ -1597,10 +1613,11 @@
                 bubble.appendChild(sender);
             }
 
+            /* แปลงข้อความให้อ่านลิงก์และคลิกเปิดได้ทันที */
             if (message.text) {
                 const text = document.createElement('div'); 
                 text.className = 'message-text'; 
-                text.innerHTML = formatMessageText(message.text); 
+                text.innerHTML = parseMessageTextWithLinks(message.text); 
                 bubble.appendChild(text);
             }
 
@@ -1771,14 +1788,14 @@
         async function scheduleNextPoll() {
             if (!currentUser) return;
             
-            if (isFirstLoad) {
+            try {
                 await Promise.all([loadUsers(), loadMessages()]);
+            } catch (e) {
+                console.error("Polling error:", e);
+            } finally {
                 isFirstLoad = false;
-            } else {
-                await Promise.all([loadUsers(), loadMessages()]);
+                pollTimeout = setTimeout(scheduleNextPoll, 2000); 
             }
-            
-            pollTimeout = setTimeout(scheduleNextPoll, 2000); 
         }
 
         function startPolling() {
