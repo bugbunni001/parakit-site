@@ -614,14 +614,14 @@
     </div>
 
     <script>
-        const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxmgMjeE3QBrxQKmKqDIS510Rd7nAUf2jGT0JHxp6LXXs2cYM_xIDvEq3DaNutNirVz/exec';
+        const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzBgaFeVaj556GexFuL9CApVSg5eQ3TWLZqVxy080rkIEtYYGOacM8dzIPgN_E98qwE/exec';
 
         let currentUser = null, sessionId = null, currentUserData = null, isLogin = true;
         let lastMessageTimestamp = '', pollTimeout = null;
         let uploadedFiles = [], otpUserId = null;
         let mediaRecorder = null, audioChunks = [], isRecording = false, recordingStartTime = null;
         let recordingTimer = null, currentRecordingData = null, isConnected = false;
-        let isFirstLoad = true;
+        let isFirstLoad = true, isFetchingMessages = false;
         
         let usersMap = {}; 
         let selectedMessageObj = null;
@@ -681,7 +681,7 @@
             return file.url || '';
         }
 
-        function compressImage(file, maxWidth = 2048, maxHeight = 2048, quality = 0.92) {
+        function compressImage(file, maxWidth = 1600, maxHeight = 1600, quality = 0.85) {
             return new Promise((resolve, reject) => {
                 if (!file.type || !file.type.startsWith('image/')) {
                     const reader = new FileReader();
@@ -1161,7 +1161,7 @@
 
         document.addEventListener('click', hideContextMenu);
 
-        // ⚡ OPTIMISTIC UI SENDING (Instant Message Load)
+        // ⚡ REALTIME OPTIMISTIC SENDER ( Instant UI Update )
         async function sendMessage(pendingFiles = []) {
             const text = messageInput.value.trim();
             const filesToSend = pendingFiles.length > 0 ? pendingFiles : uploadedFiles;
@@ -1190,7 +1190,7 @@
                 readBy: [currentUser.id]
             };
 
-            // แสดงผลบนแชททันที 0 วินาที
+            // แสดงผลบนหน้าจอทันที 0s
             displayMessage(tempMessage);
 
             const currentFiles = [...filesToSend];
@@ -1206,6 +1206,7 @@
                     if (tempEl) tempEl.remove();
                     Swal.fire({ icon: 'error', title: 'Send Failed', text: data.error });
                 } else {
+                    // Sync ทันทีหลังจากส่งเสร็จ
                     fetchLatestMessagesImmediately();
                 }
             } catch (error) { 
@@ -1456,16 +1457,19 @@
             await loadMessages();
         }
 
+        // ⚡ OPTIMIZED FAST MESSAGE LOADER
         async function loadMessages() {
+            if (isFetchingMessages) return;
+            isFetchingMessages = true;
             try {
                 const requestParams = { action: 'getMessages' };
                 if (isFirstLoad) {
-                    requestParams.limit = 100;
+                    requestParams.limit = 150; // โหลดข้อความย้อนหลังเพิ่มขึ้น ป้องกันข้อมูลขาดหาย
                 } else if (lastMessageTimestamp) {
                     requestParams.lastTimestamp = lastMessageTimestamp;
-                    requestParams.limit = 50;
+                    requestParams.limit = 100;
                 } else {
-                    requestParams.limit = 50;
+                    requestParams.limit = 100;
                 }
 
                 const data = await getApi(requestParams);
@@ -1513,6 +1517,8 @@
                 if (loading && isFirstLoad) {
                     loading.innerHTML = '<span style="color:#ff6b6b;"><i class="bi bi-exclamation-triangle"></i> เกิดข้อผิดพลาดในการเชื่อมต่อ</span>';
                 }
+            } finally {
+                isFetchingMessages = false;
             }
         }
 
@@ -1530,7 +1536,6 @@
                 return; 
             }
 
-            // ถ้าเป็นข้อความจริงที่โหลดมาจาก Apps Script ให้เคลียร์กล่องข้อความชั่วคราว (temp) ของผู้ใช้นั้นๆ ออก
             if (!message.id.startsWith('temp_')) {
                 const tempMatches = messagesContainer.querySelectorAll('.temp-message');
                 tempMatches.forEach(el => {
@@ -1764,11 +1769,11 @@
             }
         }
 
-        // ⚡ Non-blocking fast polling loop
+        // ⚡ FAST REALTIME POLLING LOOP (1.2 Seconds Interval)
         function scheduleNextPoll() {
             if (!currentUser) return;
             
-            pollTimeout = setTimeout(scheduleNextPoll, 2500); 
+            pollTimeout = setTimeout(scheduleNextPoll, 1200); 
 
             if (isFirstLoad) {
                 Promise.all([loadUsers(), loadMessages()]).then(() => {
