@@ -159,14 +159,13 @@
         .message-wrapper.received { align-items: flex-start; }
         
         /* Optimistic / Temp Message */
-        .message-wrapper.temp-message { opacity: 0.7; filter: grayscale(10%); transition: opacity 0.3s ease; }
-        .message-wrapper.temp-message .time::after {
+        .message-wrapper.temp-message { opacity: 0.6; filter: grayscale(10%); transition: opacity 0.3s ease; }
+        .message-wrapper.temp-message .message-bubble::after {
             content: "\F282";
             font-family: "bootstrap-icons";
             font-size: 10px;
             margin-left: 4px;
             color: #666;
-            display: inline-block;
             animation: spin 1s infinite linear;
         }
         @keyframes spin { 100% { transform: rotate(360deg); } }
@@ -194,22 +193,12 @@
         .message-wrapper.received .message-bubble { background: white; border-bottom-left-radius: 3px; }
         .message-bubble .sender-name { font-size: 11px; font-weight: 700; color: #075e54; margin-bottom: 2px; display: flex; align-items: center; gap: 6px; }
         
+        /* ปรับรักษาการเว้นวรรคและเว้นบรรทัดให้ตรงตามต้นฉบับที่ก็อปมา */
         .message-bubble .message-text { 
             font-size: 14px; 
             line-height: 1.4; 
             white-space: pre-wrap; 
             word-break: break-word;
-        }
-        .message-bubble .message-text a {
-            color: #0274be;
-            text-decoration: underline;
-            word-break: break-all;
-        }
-        .message-wrapper.sent .message-bubble .message-text a {
-            color: #035286;
-        }
-        .message-bubble .message-text a:hover {
-            text-decoration: none;
         }
         
         .message-bubble .time { font-size: 10px; color: #66757f; margin-top: 4px; display: flex; align-items: center; gap: 4px; justify-content: flex-end; }
@@ -353,6 +342,7 @@
         }
         #chat-input-default { display: flex; flex: 1; gap: 6px; align-items: center; min-width: 0; }
         
+        /* Input รองรับการพิมพ์และวางรูปภาพ */
         #message-input { 
             flex: 1; 
             min-width: 0; 
@@ -434,6 +424,7 @@
         .modal-overlay .modal-content { max-width: 100%; max-height: 100%; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; pointer-events: none; }
         .modal-overlay .modal-content * { pointer-events: auto; }
         
+        /* Zoomable Image CSS */
         .zoom-wrapper { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; touch-action: none; position: relative; cursor: grab; pointer-events: none; }
         .zoom-wrapper:active { cursor: grabbing; }
         .zoom-wrapper img { max-width: 90%; max-height: 85vh; object-fit: contain; transition: transform 0.05s linear; transform-origin: center center; pointer-events: auto; }
@@ -614,14 +605,14 @@
     </div>
 
     <script>
-        const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzBgaFeVaj556GexFuL9CApVSg5eQ3TWLZqVxy080rkIEtYYGOacM8dzIPgN_E98qwE/exec';
+        const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxmgMjeE3QBrxQKmKqDIS510Rd7nAUf2jGT0JHxp6LXXs2cYM_xIDvEq3DaNutNirVz/exec';
 
         let currentUser = null, sessionId = null, currentUserData = null, isLogin = true;
         let lastMessageTimestamp = '', pollTimeout = null;
         let uploadedFiles = [], otpUserId = null;
         let mediaRecorder = null, audioChunks = [], isRecording = false, recordingStartTime = null;
         let recordingTimer = null, currentRecordingData = null, isConnected = false;
-        let isFirstLoad = true, isFetchingMessages = false;
+        let isFirstLoad = true;
         
         let usersMap = {}; 
         let selectedMessageObj = null;
@@ -637,21 +628,6 @@
         const dbStatus = document.getElementById('db-status');
         const contextMenu = document.getElementById('context-menu');
         const dragOverlay = document.getElementById('drag-overlay');
-
-        function formatMessageTextWithLinks(inputText) {
-            if (!inputText) return '';
-            const urlRegex = /(https?:\/\/[^\s]+)/g;
-            const escapeHtml = (str) => str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
-            
-            const parts = inputText.split(urlRegex);
-            return parts.map(part => {
-                if (part.match(urlRegex)) {
-                    const safeUrl = escapeHtml(part);
-                    return `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer">${safeUrl}</a>`;
-                }
-                return escapeHtml(part);
-            }).join('');
-        }
 
         function resolveImageUrl(file) {
             if (!file) return '';
@@ -681,11 +657,12 @@
             return file.url || '';
         }
 
-        function compressImage(file, maxWidth = 1600, maxHeight = 1600, quality = 0.85) {
+        // Fast Client-side Image Resizing Engine
+        function compressImage(file, maxWidth = 2048, maxHeight = 2048, quality = 0.92) {
             return new Promise((resolve, reject) => {
-                if (!file.type || !file.type.startsWith('image/')) {
+                if (!file.type.startsWith('image/')) {
                     const reader = new FileReader();
-                    reader.onload = e => resolve({ name: file.name, type: file.type || 'application/octet-stream', size: file.size, data: e.target.result, url: e.target.result });
+                    reader.onload = e => resolve({ name: file.name, type: file.type, size: file.size, data: e.target.result, url: e.target.result });
                     reader.onerror = reject;
                     reader.readAsDataURL(file);
                     return;
@@ -749,7 +726,10 @@
             try {
                 const queryString = new URLSearchParams(params).toString();
                 const url = `${APP_SCRIPT_URL}?${queryString}`;
-                const response = await fetch(url, { method: 'GET', mode: 'cors' });
+                const response = await fetch(url, {
+                    method: 'GET',
+                    mode: 'cors'
+                });
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 const result = await response.json();
                 if (result.success) { isConnected = true; dbStatus.className = 'db-status connected'; }
@@ -801,8 +781,11 @@
         async function checkDatabaseConnection() {
             try {
                 const data = await getApi({ action: 'getUsers' });
-                if (data.success) { isConnected = true; dbStatus.className = 'db-status connected'; }
-                else { isConnected = false; dbStatus.className = 'db-status disconnected'; }
+                if (data.success) {
+                    isConnected = true; dbStatus.className = 'db-status connected';
+                } else {
+                    isConnected = false; dbStatus.className = 'db-status disconnected';
+                }
             } catch (error) { isConnected = false; dbStatus.className = 'db-status disconnected'; }
         }
 
@@ -1040,6 +1023,7 @@
             }, false);
         }
 
+        /* ฟังก์ชันรองรับการก๊อปปี้รูปจากที่ไหนก็ได้มาวาง (Ctrl+V / Cmd+V) แบบ LINE */
         function setupPasteImageHandler() {
             const handlePaste = (e) => {
                 if (!currentUser || chatContainer.style.display === 'none') return;
@@ -1161,7 +1145,6 @@
 
         document.addEventListener('click', hideContextMenu);
 
-        // ⚡ REALTIME OPTIMISTIC SENDER ( Instant UI Update )
         async function sendMessage(pendingFiles = []) {
             const text = messageInput.value.trim();
             const filesToSend = pendingFiles.length > 0 ? pendingFiles : uploadedFiles;
@@ -1190,8 +1173,11 @@
                 readBy: [currentUser.id]
             };
 
-            // แสดงผลบนหน้าจอทันที 0s
-            displayMessage(tempMessage);
+            // หากไม่มีการส่งไฟล์แนบมา (เป็นข้อความอย่างเดียว) ให้แสดงข้อความชั่วคราวบนหน้าจอ
+            // แต่หากเป็นไฟล์แนบ processFiles() จะแสดงผลชั่วคราวล่วงหน้าไปแล้ว เพื่อป้องกันภาพซ้อนกัน 2 รูป
+            if (pendingFiles.length === 0) {
+                displayMessage(tempMessage);
+            }
 
             const currentFiles = [...filesToSend];
             messageInput.value = ''; 
@@ -1206,7 +1192,6 @@
                     if (tempEl) tempEl.remove();
                     Swal.fire({ icon: 'error', title: 'Send Failed', text: data.error });
                 } else {
-                    // Sync ทันทีหลังจากส่งเสร็จ
                     fetchLatestMessagesImmediately();
                 }
             } catch (error) { 
@@ -1405,7 +1390,32 @@
                 const loadedFiles = await Promise.all(files.map(file => compressImage(file)));
                 Swal.close();
 
-                await sendMessage(loadedFiles);
+                const tempId = 'temp_' + Date.now();
+                let msgType = 'files';
+                if (loadedFiles.every(f => f.type && f.type.startsWith('image/'))) msgType = 'images';
+                else if (loadedFiles.every(f => f.type && f.type.startsWith('video/'))) msgType = 'video';
+                else if (loadedFiles.every(f => f.type && f.type.startsWith('audio/'))) msgType = 'voice';
+
+                displayMessage({
+                    id: tempId,
+                    userId: currentUser.id,
+                    displayName: currentUser.displayName,
+                    photoURL: currentUser.photoURL,
+                    text: messageInput.value.trim(),
+                    type: msgType,
+                    files: loadedFiles,
+                    timestamp: new Date().toISOString(),
+                    readBy: [currentUser.id]
+                });
+
+                const data = await postApi('uploadFiles', { userId: currentUser.id, sessionId, files: loadedFiles, messageId: tempId });
+                if (data.success) { 
+                    await sendMessage(data.files); 
+                } else {
+                    const tempEl = messagesContainer.querySelector(`[data-message-id="${tempId}"]`);
+                    if (tempEl) tempEl.remove();
+                    Swal.fire({ icon: 'error', title: 'Upload Failed', text: data.error });
+                }
             } catch (error) { 
                 Swal.close();
                 Swal.fire({ icon: 'error', title: 'Upload Error', text: error.message }); 
@@ -1457,27 +1467,14 @@
             await loadMessages();
         }
 
-        // ⚡ OPTIMIZED FAST MESSAGE LOADER
         async function loadMessages() {
-            if (isFetchingMessages) return;
-            isFetchingMessages = true;
             try {
-                const requestParams = { action: 'getMessages' };
-                if (isFirstLoad) {
-                    requestParams.limit = 150; // โหลดข้อความย้อนหลังเพิ่มขึ้น ป้องกันข้อมูลขาดหาย
-                } else if (lastMessageTimestamp) {
-                    requestParams.lastTimestamp = lastMessageTimestamp;
-                    requestParams.limit = 100;
-                } else {
-                    requestParams.limit = 100;
-                }
-
-                const data = await getApi(requestParams);
+                const data = await getApi({ action: 'getMessages', lastTimestamp: lastMessageTimestamp, limit: 50 });
+                
                 const loading = messagesContainer.querySelector('.loading');
+                if (loading) loading.remove();
 
-                if (data && data.success) {
-                    if (loading) loading.remove();
-
+                if (data.success) {
                     if (data.activeIds && Array.isArray(data.activeIds)) {
                         const localMessageElements = messagesContainer.querySelectorAll('.message-wrapper');
                         localMessageElements.forEach(el => {
@@ -1499,26 +1496,16 @@
                         }
                     }
 
-                    if (data.messages && Array.isArray(data.messages) && data.messages.length > 0) {
+                    if (data.messages && data.messages.length > 0) {
                         displayMessages(data.messages);
                         const lastMsg = data.messages[data.messages.length - 1];
                         if (lastMsg && lastMsg.timestamp) {
                             lastMessageTimestamp = lastMsg.timestamp;
                         }
-                    } else if (isFirstLoad && (!data.messages || data.messages.length === 0)) {
-                        messagesContainer.innerHTML = '<div class="loading" style="padding:20px;color:#888;">ยังไม่มีข้อความในห้องแชทนี้</div>';
                     }
-                } else {
-                    if (loading) loading.innerHTML = '<span style="color:#ff6b6b;">ไม่สามารถโหลดข้อความได้</span>';
                 }
             } catch (error) {
                 console.error("Error loading messages:", error);
-                const loading = messagesContainer.querySelector('.loading');
-                if (loading && isFirstLoad) {
-                    loading.innerHTML = '<span style="color:#ff6b6b;"><i class="bi bi-exclamation-triangle"></i> เกิดข้อผิดพลาดในการเชื่อมต่อ</span>';
-                }
-            } finally {
-                isFetchingMessages = false;
             }
         }
 
@@ -1528,13 +1515,8 @@
         }
 
         function displayMessage(message) {
-            if (!message || !message.id) return;
-            
             const existing = messagesContainer.querySelector(`[data-message-id="${message.id}"]`);
-            if (existing) { 
-                updateReadCount(message); 
-                return; 
-            }
+            if (existing) { updateReadCount(message); return; }
 
             if (!message.id.startsWith('temp_')) {
                 const tempMatches = messagesContainer.querySelectorAll('.temp-message');
@@ -1552,11 +1534,7 @@
             wrapper.dataset.messageId = message.id;
             wrapper.dataset.userId = message.userId;
 
-            let msgDate = new Date(message.timestamp);
-            if (isNaN(msgDate.getTime())) {
-                msgDate = new Date();
-            }
-
+            const msgDate = new Date(message.timestamp);
             const dateStr = msgDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
             const dateHeaders = messagesContainer.querySelectorAll('.message-date');
             const lastDateHeader = dateHeaders.length > 0 ? dateHeaders[dateHeaders.length - 1] : null;
@@ -1599,10 +1577,7 @@
             }
 
             if (message.text) {
-                const text = document.createElement('div'); 
-                text.className = 'message-text'; 
-                text.innerHTML = formatMessageTextWithLinks(message.text); 
-                bubble.appendChild(text);
+                const text = document.createElement('div'); text.className = 'message-text'; text.textContent = message.text; bubble.appendChild(text);
             }
 
             if (message.type === 'images' && message.files) {
@@ -1769,20 +1744,17 @@
             }
         }
 
-        // ⚡ FAST REALTIME POLLING LOOP (1.2 Seconds Interval)
-        function scheduleNextPoll() {
+        async function scheduleNextPoll() {
             if (!currentUser) return;
             
-            pollTimeout = setTimeout(scheduleNextPoll, 1200); 
-
             if (isFirstLoad) {
-                Promise.all([loadUsers(), loadMessages()]).then(() => {
-                    isFirstLoad = false;
-                }).catch(() => {});
+                await Promise.all([loadUsers(), loadMessages()]);
+                isFirstLoad = false;
             } else {
-                loadUsers().catch(() => {});
-                loadMessages().catch(() => {});
+                await Promise.all([loadUsers(), loadMessages()]);
             }
+            
+            pollTimeout = setTimeout(scheduleNextPoll, 2000); 
         }
 
         function startPolling() {
