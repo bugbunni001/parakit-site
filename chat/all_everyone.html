@@ -193,7 +193,7 @@
         .message-wrapper.received .message-bubble { background: white; border-bottom-left-radius: 3px; }
         .message-bubble .sender-name { font-size: 11px; font-weight: 700; color: #075e54; margin-bottom: 2px; display: flex; align-items: center; gap: 6px; }
         
-        /* ปรับรักษาการเว้นวรรคและเว้นบรรทัดให้ตรงตามต้นฉบับ */
+        /* ปรับรักษาการเว้นวรรคและเว้นบรรทัด พร้อมรองรับ clickable links */
         .message-bubble .message-text { 
             font-size: 14px; 
             line-height: 1.4; 
@@ -201,12 +201,15 @@
             word-break: break-word;
         }
         .message-bubble .message-text a {
-            color: #0645ad;
+            color: #0288d1;
             text-decoration: underline;
             word-break: break-all;
         }
         .message-wrapper.sent .message-bubble .message-text a {
-            color: #03527e;
+            color: #0066cc;
+        }
+        .message-bubble .message-text a:hover {
+            text-decoration: none;
         }
         
         .message-bubble .time { font-size: 10px; color: #66757f; margin-top: 4px; display: flex; align-items: center; gap: 4px; justify-content: flex-end; }
@@ -665,25 +668,22 @@
             return file.url || '';
         }
 
-        // ตัวแปลง URL ในข้อความให้กลายเป็นลิงก์กดได้ (Linkify Engine)
-        function linkify(text) {
+        // ฟังก์ชันช่วยแปลงข้อความ URL เป็นแท็ก <a> ที่คลิกเปิดได้
+        function renderMessageTextWithLinks(text) {
             if (!text) return '';
-            const escapedText = text
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
+            const escapeHtml = (str) => str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+            
+            // Regex สำหรับตรวจจับ http, https หรือ www.
+            const urlPattern = /(https?:\/\/[^\s]+|www\.[^\s]+)/g;
+            const parts = text.split(urlPattern);
 
-            const urlRegex = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|]|(www\.[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|]))/ig;
-
-            return escapedText.replace(urlRegex, function(url) {
-                let href = url;
-                if (!href.match('^https?:\/\/')) {
-                    href = 'http://' + href;
+            return parts.map(part => {
+                if (part.match(urlPattern)) {
+                    const href = part.startsWith('www.') ? 'http://' + part : part;
+                    return `<a href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();">${escapeHtml(part)}</a>`;
                 }
-                return `<a href="${href}" target="_blank" rel="noopener noreferrer">${url}</a>`;
-            });
+                return escapeHtml(part);
+            }).join('');
         }
 
         // Fast Client-side Image Resizing Engine
@@ -1052,9 +1052,9 @@
             }, false);
         }
 
-        /* ฟังก์ชันรองรับการก๊อปปี้รูปจากที่ไหนก็ได้มาวาง (Ctrl+V / Cmd+V) แบบ LINE */
+        /* ฟังก์ชันรองรับการก๊อปปี้รูปมาวาง (Paste - Ctrl+V / Cmd+V) แบบรัดกุม ป้องกันส่งรูปซ้ำ 2 รูป */
         function setupPasteImageHandler() {
-            const handlePaste = (e) => {
+            messageInput.addEventListener('paste', function(e) {
                 if (!currentUser || chatContainer.style.display === 'none') return;
 
                 const clipboardData = e.clipboardData || window.clipboardData;
@@ -1066,22 +1066,14 @@
                 items.forEach(item => {
                     if (item.type.indexOf('image') !== -1) {
                         const file = item.getAsFile();
-                        if (file) {
-                            imageFiles.push(file);
-                        }
+                        if (file) imageFiles.push(file);
                     }
                 });
 
                 if (imageFiles.length > 0) {
                     e.preventDefault();
+                    e.stopPropagation();
                     processFiles(imageFiles);
-                }
-            };
-
-            messageInput.addEventListener('paste', handlePaste);
-            document.addEventListener('paste', (e) => {
-                if (document.activeElement !== messageInput) {
-                    handlePaste(e);
                 }
             });
         }
@@ -1174,7 +1166,6 @@
 
         document.addEventListener('click', hideContextMenu);
 
-        // ปรับปรุงการส่งข้อความ/รูป เพื่อไม่ให้เกิดภาพซ้อน 2 รูป
         async function sendMessage(pendingFiles = []) {
             const text = messageInput.value.trim();
             const filesToSend = pendingFiles.length > 0 ? pendingFiles : uploadedFiles;
@@ -1203,7 +1194,7 @@
                 readBy: [currentUser.id]
             };
 
-            // แสดงข้อความชั่วคราวบนหน้าจอ (เฉพาะเมื่อไม่ได้ส่งจาก processFiles ที่แสดงอยู่แล้ว)
+            // แสดงข้อความชั่วคราวบนหน้าจอถ้าไม่มีการส่งไฟล์ซ้ำซ้อน
             if (pendingFiles.length === 0) {
                 displayMessage(tempMessage);
             }
@@ -1211,7 +1202,7 @@
             const currentFiles = [...filesToSend];
             messageInput.value = ''; 
             messageInput.style.height = '40px';
-            uploadedFiles = []; // ล้างไฟล์ที่ค้างอยู่ป้องกันการส่งซ้ำ
+            uploadedFiles = [];
 
             try {
                 const messageData = { userId: currentUser.id, sessionId, text, type: tempMessage.type, files: currentFiles };
@@ -1425,7 +1416,6 @@
                 else if (loadedFiles.every(f => f.type && f.type.startsWith('video/'))) msgType = 'video';
                 else if (loadedFiles.every(f => f.type && f.type.startsWith('audio/'))) msgType = 'voice';
 
-                // แสดงข้อความชั่วคราวก่อนเริ่มอัปโหลด
                 displayMessage({
                     id: tempId,
                     userId: currentUser.id,
@@ -1606,11 +1596,10 @@
                 bubble.appendChild(sender);
             }
 
-            // ใช้ linkify() เพื่อแปลงลิงก์ให้กดได้ทันทีโดยไม่เสียการเว้นบรรทัด
             if (message.text) {
                 const text = document.createElement('div'); 
                 text.className = 'message-text'; 
-                text.innerHTML = linkify(message.text);
+                text.innerHTML = renderMessageTextWithLinks(message.text); 
                 bubble.appendChild(text);
             }
 
