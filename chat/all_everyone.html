@@ -193,23 +193,12 @@
         .message-wrapper.received .message-bubble { background: white; border-bottom-left-radius: 3px; }
         .message-bubble .sender-name { font-size: 11px; font-weight: 700; color: #075e54; margin-bottom: 2px; display: flex; align-items: center; gap: 6px; }
         
-        /* ปรับรักษาการเว้นวรรคและเว้นบรรทัด พร้อมรองรับ clickable links */
+        /* ปรับรักษาการเว้นวรรคและเว้นบรรทัดให้ตรงตามต้นฉบับที่ก็อปมา */
         .message-bubble .message-text { 
             font-size: 14px; 
             line-height: 1.4; 
             white-space: pre-wrap; 
             word-break: break-word;
-        }
-        .message-bubble .message-text a {
-            color: #0288d1;
-            text-decoration: underline;
-            word-break: break-all;
-        }
-        .message-wrapper.sent .message-bubble .message-text a {
-            color: #0066cc;
-        }
-        .message-bubble .message-text a:hover {
-            text-decoration: none;
         }
         
         .message-bubble .time { font-size: 10px; color: #66757f; margin-top: 4px; display: flex; align-items: center; gap: 4px; justify-content: flex-end; }
@@ -668,24 +657,6 @@
             return file.url || '';
         }
 
-        // ฟังก์ชันช่วยแปลงข้อความ URL เป็นแท็ก <a> ที่คลิกเปิดได้
-        function renderMessageTextWithLinks(text) {
-            if (!text) return '';
-            const escapeHtml = (str) => str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-            
-            // Regex สำหรับตรวจจับ http, https หรือ www.
-            const urlPattern = /(https?:\/\/[^\s]+|www\.[^\s]+)/g;
-            const parts = text.split(urlPattern);
-
-            return parts.map(part => {
-                if (part.match(urlPattern)) {
-                    const href = part.startsWith('www.') ? 'http://' + part : part;
-                    return `<a href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();">${escapeHtml(part)}</a>`;
-                }
-                return escapeHtml(part);
-            }).join('');
-        }
-
         // Fast Client-side Image Resizing Engine
         function compressImage(file, maxWidth = 2048, maxHeight = 2048, quality = 0.92) {
             return new Promise((resolve, reject) => {
@@ -1052,9 +1023,9 @@
             }, false);
         }
 
-        /* ฟังก์ชันรองรับการก๊อปปี้รูปมาวาง (Paste - Ctrl+V / Cmd+V) แบบรัดกุม ป้องกันส่งรูปซ้ำ 2 รูป */
+        /* ฟังก์ชันรองรับการก๊อปปี้รูปจากที่ไหนก็ได้มาวาง (Ctrl+V / Cmd+V) แบบ LINE */
         function setupPasteImageHandler() {
-            messageInput.addEventListener('paste', function(e) {
+            const handlePaste = (e) => {
                 if (!currentUser || chatContainer.style.display === 'none') return;
 
                 const clipboardData = e.clipboardData || window.clipboardData;
@@ -1066,14 +1037,22 @@
                 items.forEach(item => {
                     if (item.type.indexOf('image') !== -1) {
                         const file = item.getAsFile();
-                        if (file) imageFiles.push(file);
+                        if (file) {
+                            imageFiles.push(file);
+                        }
                     }
                 });
 
                 if (imageFiles.length > 0) {
                     e.preventDefault();
-                    e.stopPropagation();
                     processFiles(imageFiles);
+                }
+            };
+
+            messageInput.addEventListener('paste', handlePaste);
+            document.addEventListener('paste', (e) => {
+                if (document.activeElement !== messageInput) {
+                    handlePaste(e);
                 }
             });
         }
@@ -1194,7 +1173,8 @@
                 readBy: [currentUser.id]
             };
 
-            // แสดงข้อความชั่วคราวบนหน้าจอถ้าไม่มีการส่งไฟล์ซ้ำซ้อน
+            // หากไม่มีการส่งไฟล์แนบมา (เป็นข้อความอย่างเดียว) ให้แสดงข้อความชั่วคราวบนหน้าจอ
+            // แต่หากเป็นไฟล์แนบ processFiles() จะแสดงผลชั่วคราวล่วงหน้าไปแล้ว เพื่อป้องกันภาพซ้อนกัน 2 รูป
             if (pendingFiles.length === 0) {
                 displayMessage(tempMessage);
             }
@@ -1597,10 +1577,7 @@
             }
 
             if (message.text) {
-                const text = document.createElement('div'); 
-                text.className = 'message-text'; 
-                text.innerHTML = renderMessageTextWithLinks(message.text); 
-                bubble.appendChild(text);
+                const text = document.createElement('div'); text.className = 'message-text'; text.textContent = message.text; bubble.appendChild(text);
             }
 
             if (message.type === 'images' && message.files) {
