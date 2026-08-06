@@ -193,7 +193,6 @@
         .message-wrapper.received .message-bubble { background: white; border-bottom-left-radius: 3px; }
         .message-bubble .sender-name { font-size: 11px; font-weight: 700; color: #075e54; margin-bottom: 2px; display: flex; align-items: center; gap: 6px; }
         
-        /* ปรับรักษาการเว้นวรรคและเว้นบรรทัดให้ตรงตามต้นฉบับที่ก็อปมา */
         .message-bubble .message-text { 
             font-size: 14px; 
             line-height: 1.4; 
@@ -350,7 +349,6 @@
         }
         #chat-input-default { display: flex; flex: 1; gap: 6px; align-items: center; min-width: 0; }
         
-        /* Input รองรับการพิมพ์และวางรูปภาพ */
         #message-input { 
             flex: 1; 
             min-width: 0; 
@@ -622,6 +620,10 @@
         let recordingTimer = null, currentRecordingData = null, isConnected = false;
         let isFirstLoad = true;
         
+        let isFetchingMessages = false;
+        let isFetchingUsers = false;
+        let userPollCounter = 0;
+
         let usersMap = {}; 
         let selectedMessageObj = null;
         let longPressTimer = null;
@@ -688,7 +690,7 @@
             if (!file) return '';
             if (file.data && file.data.startsWith('data:audio')) return file.data;
             const driveId = file.driveId || (file.url && file.url.includes('id=') ? file.url.match(/id=([a-zA-Z0-9_-]+)/)?.[1] : null);
-            if (driveId) return 'https://drive.google.com/thumbnail?sz=w1000&id=' + driveId;
+            if (driveId) return 'https://drive.google.com/uc?export=download&id=' + driveId;
             return file.url || '';
         }
 
@@ -696,16 +698,16 @@
             if (!file) return '';
             if (file.data && file.data.startsWith('data:video')) return file.data;
             const driveId = file.driveId || (file.url && file.url.includes('id=') ? file.url.match(/id=([a-zA-Z0-9_-]+)/)?.[1] : null);
-            if (driveId) return 'https://drive.google.com/thumbnail?sz=w1000&id=' + driveId;
+            if (driveId) return 'https://drive.google.com/uc?export=download&id=' + driveId;
             return file.url || '';
         }
 
-        // Fast Client-side Image Resizing Engine
-        function compressImage(file, maxWidth = 2048, maxHeight = 2048, quality = 0.92) {
+        // Optimized Fast Client-side Image Resizing Engine (Max 1280px @ 0.75 quality for speed)
+        function compressImage(file, maxWidth = 1280, maxHeight = 1280, quality = 0.75) {
             return new Promise((resolve, reject) => {
-                if (!file.type.startsWith('image/')) {
+                if (!file.type || !file.type.startsWith('image/')) {
                     const reader = new FileReader();
-                    reader.onload = e => resolve({ name: file.name, type: file.type, size: file.size, data: e.target.result, url: e.target.result });
+                    reader.onload = e => resolve({ name: file.name, type: file.type || 'application/octet-stream', size: file.size, data: e.target.result, url: e.target.result });
                     reader.onerror = reject;
                     reader.readAsDataURL(file);
                     return;
@@ -1066,7 +1068,6 @@
             }, false);
         }
 
-        /* ฟังก์ชันรองรับการก๊อปปี้รูปจากที่ไหนก็ได้มาวาง (Ctrl+V / Cmd+V) แบบ LINE */
         function setupPasteImageHandler() {
             const handlePaste = (e) => {
                 if (!currentUser || chatContainer.style.display === 'none') return;
@@ -1216,8 +1217,6 @@
                 readBy: [currentUser.id]
             };
 
-            // หากไม่มีการส่งไฟล์แนบมา (เป็นข้อความอย่างเดียว) ให้แสดงข้อความชั่วคราวบนหน้าจอ
-            // แต่หากเป็นไฟล์แนบ processFiles() จะแสดงผลชั่วคราวล่วงหน้าไปแล้ว เพื่อป้องกันภาพซ้อนกัน 2 รูป
             if (pendingFiles.length === 0) {
                 displayMessage(tempMessage);
             }
@@ -1428,40 +1427,62 @@
             if (files.length === 0) return;
             if (files.length > 20) { Swal.fire({ icon: 'warning', title: 'Limit Exceeded', text: 'Maximum 20 files per upload' }); return; }
 
+            const tempId = 'temp_' + Date.now();
             try {
-                Swal.fire({ title: 'Processing Files...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-                const loadedFiles = await Promise.all(files.map(file => compressImage(file)));
+                Swal.fire({ title: 'กำลังประมวลผลไฟล์...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                const loadedFiles = await Promise.all(files.map(file => compressImage(file, 1280, 1280, 0.75)));
                 Swal.close();
 
-                const tempId = 'temp_' + Date.now();
                 let msgType = 'files';
                 if (loadedFiles.every(f => f.type && f.type.startsWith('image/'))) msgType = 'images';
                 else if (loadedFiles.every(f => f.type && f.type.startsWith('video/'))) msgType = 'video';
                 else if (loadedFiles.every(f => f.type && f.type.startsWith('audio/'))) msgType = 'voice';
+
+                const captionText = messageInput.value.trim();
 
                 displayMessage({
                     id: tempId,
                     userId: currentUser.id,
                     displayName: currentUser.displayName,
                     photoURL: currentUser.photoURL,
-                    text: messageInput.value.trim(),
+                    text: captionText,
                     type: msgType,
                     files: loadedFiles,
                     timestamp: new Date().toISOString(),
                     readBy: [currentUser.id]
                 });
 
-                const data = await postApi('uploadFiles', { userId: currentUser.id, sessionId, files: loadedFiles, messageId: tempId });
-                if (data.success) { 
-                    await sendMessage(data.files); 
+                messageInput.value = '';
+                messageInput.style.height = '40px';
+
+                const uploadRes = await postApi('uploadFiles', { userId: currentUser.id, sessionId, files: loadedFiles, messageId: tempId });
+                
+                if (uploadRes.success) { 
+                    const messageData = { 
+                        userId: currentUser.id, 
+                        sessionId, 
+                        text: captionText, 
+                        type: msgType, 
+                        files: uploadRes.files || loadedFiles 
+                    };
+                    const sendRes = await postApi('sendMessage', messageData);
+                    if (!sendRes.success) {
+                        const tempEl = messagesContainer.querySelector(`[data-message-id="${tempId}"]`);
+                        if (tempEl) tempEl.remove();
+                        Swal.fire({ icon: 'error', title: 'ส่งข้อความไม่สำเร็จ', text: sendRes.error });
+                    } else {
+                        fetchLatestMessagesImmediately();
+                    }
                 } else {
                     const tempEl = messagesContainer.querySelector(`[data-message-id="${tempId}"]`);
                     if (tempEl) tempEl.remove();
-                    Swal.fire({ icon: 'error', title: 'Upload Failed', text: data.error });
+                    Swal.fire({ icon: 'error', title: 'อัปโหลดไฟล์ไม่สำเร็จ', text: uploadRes.error });
                 }
             } catch (error) { 
                 Swal.close();
-                Swal.fire({ icon: 'error', title: 'Upload Error', text: error.message }); 
+                const tempEl = messagesContainer.querySelector(`[data-message-id="${tempId}"]`);
+                if (tempEl) tempEl.remove();
+                Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: error.message }); 
             }
         }
 
@@ -1469,7 +1490,7 @@
             const file = event.target.files[0];
             if (!file || !currentUser) return;
             try {
-                const compressed = await compressImage(file, 512, 512, 0.9);
+                const compressed = await compressImage(file, 512, 512, 0.8);
                 const result = await postApi('updateProfilePic', { userId: currentUser.id, sessionId, imageData: compressed.data });
                 if (result.success) {
                     currentUserData.photoURL = result.photoURL; updateProfileUI(); closeProfileModal();
@@ -1507,7 +1528,14 @@
         function closeProfileModal() { document.getElementById('profile-modal').classList.remove('active'); }
 
         async function fetchLatestMessagesImmediately() {
-            await loadMessages();
+            if (!isFetchingMessages) {
+                isFetchingMessages = true;
+                try {
+                    await loadMessages();
+                } finally {
+                    isFetchingMessages = false;
+                }
+            }
         }
 
         async function loadMessages() {
@@ -1787,6 +1815,7 @@
             }
         }
 
+        // Optimized Polling Cycle (Avoid Request Stacking & Throttling)
         async function scheduleNextPoll() {
             if (!currentUser) return;
             
@@ -1794,10 +1823,32 @@
                 await Promise.all([loadUsers(), loadMessages()]);
                 isFirstLoad = false;
             } else {
-                await Promise.all([loadUsers(), loadMessages()]);
+                if (!isFetchingMessages) {
+                    isFetchingMessages = true;
+                    try {
+                        await loadMessages();
+                    } finally {
+                        isFetchingMessages = false;
+                    }
+                }
+
+                userPollCounter++;
+                if (userPollCounter >= 5) {
+                    userPollCounter = 0;
+                    if (!isFetchingUsers) {
+                        isFetchingUsers = true;
+                        try {
+                            await loadUsers();
+                        } finally {
+                            isFetchingUsers = false;
+                        }
+                    }
+                }
             }
             
-            pollTimeout = setTimeout(scheduleNextPoll, 2000); 
+            if (currentUser) {
+                pollTimeout = setTimeout(scheduleNextPoll, 3000); 
+            }
         }
 
         function startPolling() {
