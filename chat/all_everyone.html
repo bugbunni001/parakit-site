@@ -200,6 +200,14 @@
             white-space: pre-wrap; 
             word-break: break-word;
         }
+        .message-bubble .message-text a {
+            color: #027eb5;
+            text-decoration: underline;
+            word-break: break-all;
+        }
+        .message-wrapper.sent .message-bubble .message-text a {
+            color: #0056b3;
+        }
         
         .message-bubble .time { font-size: 10px; color: #66757f; margin-top: 4px; display: flex; align-items: center; gap: 4px; justify-content: flex-end; }
         .message-bubble .read-count { font-size: 10px; color: #075e54; font-weight: 600; display: inline-flex; align-items: center; gap: 3px; }
@@ -628,6 +636,41 @@
         const dbStatus = document.getElementById('db-status');
         const contextMenu = document.getElementById('context-menu');
         const dragOverlay = document.getElementById('drag-overlay');
+
+        function renderMessageTextElement(textContainer, rawText) {
+            textContainer.innerHTML = '';
+            if (!rawText) return;
+
+            const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+)/g;
+            let lastIndex = 0;
+            let match;
+
+            while ((match = urlRegex.exec(rawText)) !== null) {
+                if (match.index > lastIndex) {
+                    textContainer.appendChild(document.createTextNode(rawText.substring(lastIndex, match.index)));
+                }
+
+                const urlText = match[0];
+                let href = urlText;
+                if (urlText.toLowerCase().startsWith('www.')) {
+                    href = 'https://' + urlText;
+                }
+
+                const a = document.createElement('a');
+                a.href = href;
+                a.textContent = urlText;
+                a.target = '_blank';
+                a.rel = 'noopener noreferrer';
+                a.onclick = (e) => e.stopPropagation();
+
+                textContainer.appendChild(a);
+                lastIndex = urlRegex.lastIndex;
+            }
+
+            if (lastIndex < rawText.length) {
+                textContainer.appendChild(document.createTextNode(rawText.substring(lastIndex)));
+            }
+        }
 
         function resolveImageUrl(file) {
             if (!file) return '';
@@ -1577,7 +1620,7 @@
             }
 
             if (message.text) {
-                const text = document.createElement('div'); text.className = 'message-text'; text.textContent = message.text; bubble.appendChild(text);
+                const text = document.createElement('div'); text.className = 'message-text'; renderMessageTextElement(text, message.text); bubble.appendChild(text);
             }
 
             if (message.type === 'images' && message.files) {
