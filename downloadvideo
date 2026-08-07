@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Universal Video Downloader</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Kanit', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #311042 100%);
+            min-height: 100vh;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.07);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.125);
+        }
+        .glow-effect {
+            box-shadow: 0 0 25px rgba(99, 102, 241, 0.35);
+        }
+    </style>
+</head>
+<body class="text-slate-100 flex flex-col justify-between min-h-screen">
+
+    <!-- Navbar -->
+    <header class="w-full py-6 px-4 border-b border-slate-800/80 glass-card sticky top-0 z-50">
+        <div class="max-w-5xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-500/50">
+                    <i class="fa-solid font-bold fa-download text-xl text-white"></i>
+                </div>
+                <span class="text-xl font-semibold tracking-wide bg-gradient-to-r from-indigo-400 to-pink-400 bg-clip-text text-transparent">
+                    Video Downloader
+                </span>
+            </div>
+            <span class="text-xs bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-3 py-1 rounded-full">
+                v1.0 Ready
+            </span>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-4xl w-full mx-auto px-4 py-12 flex-grow flex flex-col justify-center">
+        
+        <!-- Header Section -->
+        <div class="text-center mb-10">
+            <h1 class="text-3xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
+                ดาวน์โหลดวิดีโอจากทุกเว็บไซต์
+            </h1>
+            <p class="text-slate-400 text-sm md:text-base max-w-xl mx-auto">
+                วางลิงก์วิดีโอจากเว็บที่คุณต้องการ แล้วกดค้นหาเพื่อพรีวิวและดาวน์โหลดลงเครื่องทันที
+            </p>
+        </div>
+
+        <!-- Search Input Box -->
+        <div class="glass-card rounded-2xl p-3 md:p-4 mb-8 glow-effect">
+            <form id="searchForm" onsubmit="handleSearch(event)" class="flex flex-col md:flex-row gap-3">
+                <div class="relative flex-grow">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
+                        <i class="fa-solid fa-link"></i>
+                    </div>
+                    <input 
+                        type="url" 
+                        id="videoUrl" 
+                        required 
+                        placeholder="วางลิงก์วิดีโอที่นี่ (เช่น https://example.com/video.mp4)..." 
+                        class="w-full pl-11 pr-12 py-3.5 bg-slate-900/60 border border-slate-700/60 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 transition-all text-sm md:text-base"
+                    >
+                    <button 
+                        type="button" 
+                        onclick="pasteClipboard()" 
+                        title="วางจากคลิปบอร์ด"
+                        class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-indigo-400 transition"
+                    >
+                        <i class="fa-regular fa-paste"></i>
+                    </button>
+                </div>
+                <button 
+                    type="submit" 
+                    id="searchBtn"
+                    class="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 active:scale-95 text-white font-medium px-8 py-3.5 rounded-xl flex items-center justify-center space-x-2 transition-all shadow-lg shadow-indigo-600/30 min-w-[140px]"
+                >
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <span>ค้นหา</span>
+                </button>
+            </form>
+        </div>
+
+        <!-- Loading Spinner -->
+        <div id="loadingState" class="hidden text-center py-12">
+            <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-indigo-500 border-t-transparent mb-4"></div>
+            <p class="text-slate-300 font-medium">กำลังค้นหาและประมวลผลวิดีโอ...</p>
+        </div>
+
+        <!-- Error Alert -->
+        <div id="errorAlert" class="hidden glass-card border-red-500/50 bg-red-500/10 text-red-200 p-4 rounded-xl mb-6 text-center text-sm">
+            <i class="fa-solid fa-triangle-exclamation mr-2"></i> <span id="errorMessage">เกิดข้อผิดพลาดในการโหลดวิดีโอ</span>
+        </div>
+
+        <!-- Result Card -->
+        <div id="resultCard" class="hidden glass-card rounded-2xl p-5 md:p-6 transition-all duration-300">
+            <h2 class="text-lg font-semibold mb-4 text-slate-200 flex items-center">
+                <i class="fa-solid fa-circle-play text-indigo-400 mr-2"></i> ตัวอย่างวิดีโอ
+            </h2>
+            
+            <!-- Video Preview Player -->
+            <div class="relative w-full rounded-xl overflow-hidden bg-black/80 mb-6 aspect-video flex items-center justify-center">
+                <video id="videoPreview" controls class="w-full h-full object-contain">
+                    เบราว์เซอร์ของคุณไม่รองรับการเล่นวิดีโอ
+                </video>
+            </div>
+
+            <!-- Video Info & Download Controls -->
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2 border-t border-slate-700/50">
+                <div class="w-full sm:w-auto text-center sm:text-left">
+                    <p id="videoTitle" class="text-sm font-medium text-slate-200 truncate max-w-md">Video_Source.mp4</p>
+                    <p id="videoStatus" class="text-xs text-emerald-400 mt-1"><i class="fa-solid fa-check-circle mr-1"></i>พร้อมดาวน์โหลด</p>
+                </div>
+                
+                <button 
+                    id="downloadBtn" 
+                    onclick="triggerDownload()" 
+                    class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-medium px-6 py-3 rounded-xl flex items-center justify-center space-x-2 shadow-lg shadow-emerald-600/30 transition-all"
+                >
+                    <i class="fa-solid fa-file-arrow-down"></i>
+                    <span>ดาวน์โหลดลงเครื่อง</span>
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="text-center py-6 text-slate-500 text-xs border-t border-slate-800/60">
+        <p>© 2026 Web Video Downloader • Powered by Google Apps Script & GitHub Pages</p>
+    </footer>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // *** ใส่ URL ของ Google Apps Script Web App ที่ Deploy แล้วที่นี่ ***
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzW7Fc7y8cS9bwJU5FhcEepeGHtaUWRWboubBX7rpW0qB0c2nYDdNQYIdr7ElWvOzUz/exec";
+
+        let currentMediaUrl = "";
+
+        // วางลิงก์จาก Clipboard
+        async function pasteClipboard() {
+            try {
+                const text = await navigator.clipboard.readText();
+                if (text) {
+                    document.getElementById('videoUrl').value = text;
+                }
+            } catch (err) {
+                alert("ไม่สามารถอ่านข้อมูลจาก Clipboard ได้ โปรดกด Ctrl+V เพื่อวางลิงก์");
+            }
+        }
+
+        // ค้นหาและดึงวิดีโอ
+        async function handleSearch(event) {
+            event.preventDefault();
+            const urlInput = document.getElementById('videoUrl').value.trim();
+            if (!urlInput) return;
+
+            // UI States
+            document.getElementById('loadingState').classList.remove('hidden');
+            document.getElementById('resultCard').classList.add('hidden');
+            document.getElementById('errorAlert').classList.add('hidden');
+
+            try {
+                // เรียกไปยัง Google Apps Script Backend
+                const response = await fetch(`${APPS_SCRIPT_URL}?url=${encodeURIComponent(urlInput)}`);
+                const data = await response.json();
+
+                if (data.status === "success" && data.videoUrl) {
+                    currentMediaUrl = data.videoUrl;
+                    
+                    const player = document.getElementById('videoPreview');
+                    player.src = data.videoUrl;
+                    player.load();
+
+                    document.getElementById('videoTitle').innerText = data.title || "Video_Download.mp4";
+                    document.getElementById('resultCard').classList.remove('hidden');
+                } else {
+                    showError(data.message || "ไม่สามารถดึงข้อมูลวิดีโอจากลิงก์นี้ได้");
+                }
+            } catch (err) {
+                // หากยังไม่ได้ตั้งค่า APPS_SCRIPT_URL หรือดึงโดยตรง
+                if (APPS_SCRIPT_URL === "YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL") {
+                    // Fallback Direct Play (ใช้สำหรับกรณีวิดีโอที่เป็น direct .mp4)
+                    currentMediaUrl = urlInput;
+                    const player = document.getElementById('videoPreview');
+                    player.src = urlInput;
+                    player.load();
+                    document.getElementById('videoTitle').innerText = "Direct_Media_Source.mp4";
+                    document.getElementById('resultCard').classList.remove('hidden');
+                } else {
+                    showError("เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์");
+                }
+            } finally {
+                document.getElementById('loadingState').classList.add('hidden');
+            }
+        }
+
+        // ดาวน์โหลดไฟล์วิดีโอนี้ลงเครื่องทันที
+        async function triggerDownload() {
+            if (!currentMediaUrl) return;
+
+            const btn = document.getElementById('downloadBtn');
+            const originalContent = btn.innerHTML;
+            btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> <span>กำลังดาวน์โหลด...</span>`;
+            btn.disabled = true;
+
+            try {
+                // ดึงไฟล์เป็น Blob เพื่อสั่งดาวน์โหลดทันทีโดยไม่เด้งเปิดแท็บใหม่
+                const res = await fetch(currentMediaUrl);
+                const blob = await res.blob();
+                const blobUrl = URL.createObjectURL(blob);
+
+                const a = document.createElement('a');
+                a.href = blobUrl;
+                a.download = `video_${Date.now()}.mp4`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(blobUrl);
+            } catch (e) {
+                // กรณีติด CORS ให้เปิดลิงก์ดาวน์โหลดโดยตรง
+                window.open(currentMediaUrl, '_blank');
+            } finally {
+                btn.innerHTML = originalContent;
+                btn.disabled = false;
+            }
+        }
+
+        function showError(msg) {
+            document.getElementById('errorMessage').innerText = msg;
+            document.getElementById('errorAlert').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
