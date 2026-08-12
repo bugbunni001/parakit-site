@@ -608,7 +608,7 @@
 </div>
 
 <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxSCITQHfJiAx3M_TscD8Pey4k83brUHHT0-2XTvy8_ZWdbqBENOhwoc59syHk42MhY/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwstNwOuBsPMgDjj3zyVHkeR-w7gAKlgORabdMQN89ymkCfK5Fh3iNb3HIP4qzHUxFR/exec';
 
     const jobTypes = [
         "Complaint", "MGM ปรับลด", "ยกเลิกบริการ (ปกติ)", "ยกเลิกบริการ (5P)", "MNP",
@@ -632,28 +632,17 @@
     let isDragging = false;
     let startX, startY, shiftX, shiftY;
 
-    // --- ฟังก์ชันหลักในการเรียก API ฝั่งหลังบ้าน ป้องกันสายหลุด/CORS บล็อก 100% ---
-    async function apiCall(payload, retries = 1, timeoutMs = 20000) {
-        for (let attempt = 0; attempt <= retries; attempt++) {
-            const controller = new AbortController();
-            const timer = setTimeout(() => controller.abort(), timeoutMs);
-            try {
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // ป้องกัน CORS Preflight Block
-                    body: JSON.stringify(payload),
-                    redirect: 'follow',
-                    signal: controller.signal
-                });
-                clearTimeout(timer);
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                const data = await response.json();
-                return data;
-            } catch (err) {
-                clearTimeout(timer);
-                if (attempt === retries) throw err;
-                await new Promise(r => setTimeout(r, 1000));
-            }
+    // Helper Function สำหรับดึงข้อมูลผ่าน Fetch ป้องกัน Timeout สายหลุด
+    async function fetchWithTimeout(url, options = {}, timeout = 10000) {
+        const controller = new AbortController();
+        const id = setTimeout(() => controller.abort(), timeout);
+        try {
+            const response = await fetch(url, { ...options, signal: controller.signal });
+            clearTimeout(id);
+            return response;
+        } catch (error) {
+            clearTimeout(id);
+            throw error;
         }
     }
 
@@ -927,13 +916,22 @@
         currentPage = 1; renderTable();
     }
 
-    async function loadData(manual = false) {
+    // ปรับแก้ระบบดึงข้อมูลให้เร็วขึ้นและลดอาการล้มเหลวด้วย Retry & Timeout Handling
+    async function loadData(manual = false, retries = 1) {
         const tableBody = document.getElementById('dataTable');
         const refreshBtn = document.querySelector('.bi-arrow-clockwise');
         if(refreshBtn) refreshBtn.classList.add('bi-spin');
         
         try {
-            const data = await apiCall({action: "read"});
+            const res = await fetchWithTimeout(SCRIPT_URL, { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({action: "read"}) 
+            }, 8000); // ตั้ง Timeout ที่ 8 วินาที
+
+            if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+            
+            const data = await res.json();
             
             const today = new Date();
             today.setHours(0, 0, 0, 0);
@@ -968,7 +966,12 @@
             updateStats(fullData);
         } catch (e) { 
             console.error("Load attempt failed:", e);
-            tableBody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:30px; color:var(--ios-red);">ดึงข้อมูลไม่สำเร็จ กรุณากดปุ่มรีเฟรชอีกครั้งครับ</td></tr>'; 
+            if (retries > 0) {
+                // พยายามดึงใหม่อีก 1 ครั้งอัตโนมัติ
+                setTimeout(() => loadData(manual, retries - 1), 1000);
+            } else {
+                tableBody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:30px; color:var(--ios-red);">ดึงข้อมูลไม่สำเร็จ กรุณากดปุ่มรีเฟรชอีกครั้ง</td></tr>'; 
+            }
         } finally { 
             if(refreshBtn) refreshBtn.classList.remove('bi-spin'); 
         }
@@ -1005,7 +1008,7 @@
             if (hasPassword && row[5]) {
                 filesHtml = '<span style="color:var(--ios-red); font-size:12px; font-weight:600;"><i class="bi bi-lock-fill"></i> ล็อคไฟล์</span>';
             } else if (row[5] && row[5] !== "-" && row[5] !== "") {
-                const urls = String(row[5]).split(", ");
+                const urls = row[5].split(", ");
                 filesHtml = urls.map((u, i) => `<a href="${u}" target="_blank" style="color:var(--ios-blue); text-decoration:none; margin-right:5px;"><i class="bi bi-file-earmark-text"></i> ${i+1}</a>`).join('');
             }
             
@@ -1071,19 +1074,19 @@
     }
 
     async function toggleProcessing(reportId) {
-        const idx = fullData.findIndex(r => String(r[11]).trim() === String(reportId).trim());
+        const idx = fullData.findIndex(r => r[11] == reportId);
         if(idx !== -1) {
             fullData[idx]._isProcessing = !fullData[idx]._isProcessing;
             fullData[idx][9] = String(fullData[idx]._isProcessing);
             filterData(); updateStats(fullData); 
         }
         try { 
-            await apiCall({ action: "toggleProcessing", reportId: reportId }); 
+            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "toggleProcessing", reportId: reportId }) }); 
         } catch (e) { loadData(); }
     }
 
     async function togglePin(reportId) {
-        const idx = fullData.findIndex(r => String(r[11]).trim() === String(reportId).trim());
+        const idx = fullData.findIndex(r => r[11] == reportId);
         if(idx !== -1) {
             fullData[idx]._isPinned = !fullData[idx]._isPinned;
             fullData[idx][7] = String(fullData[idx]._isPinned);
@@ -1096,12 +1099,12 @@
             filterData(); updateStats(fullData);
         }
         try { 
-            await apiCall({ action: "togglePin", reportId: reportId }); 
+            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "togglePin", reportId: reportId }) }); 
         } catch (e) { loadData(); }
     }
 
     async function toggleDaily(reportId) {
-        const idx = fullData.findIndex(r => String(r[11]).trim() === String(reportId).trim());
+        const idx = fullData.findIndex(r => r[11] == reportId);
         if(idx !== -1) {
             fullData[idx]._isDaily = !fullData[idx]._isDaily;
             fullData[idx][12] = String(fullData[idx]._isDaily);
@@ -1117,26 +1120,27 @@
             filterData(); updateStats(fullData);
         }
         try { 
-            await apiCall({ action: "toggleDaily", reportId: reportId }); 
+            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "toggleDaily", reportId: reportId }) }); 
         } catch (e) { loadData(); }
     }
 
     async function deleteData(reportId) {
         const confirm = await Swal.fire({ 
             title: 'ย้ายลงถังขยะ?', text: "ใบงาน ID: " + reportId + " จะถูกเก็บไว้ในถังขยะเป็นเวลา 30 วัน", icon: 'warning', 
-            showCancelButton: true, confirmButtonColor: '#FF3B30', confirmButtonText: 'ย้ายลงถังขยะ', cancelButtonText: 'ยกเลิก',
+            showCancelButton: true, confirmButtonColor: '#FF3B30', confirmButtonText: 'ย้ายลงถังขยะ',
             allowOutsideClick: false
         });
         if (confirm.isConfirmed) {
             Swal.fire({ title: 'กำลังประมวลผล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
             try {
-                const serverResponse = await apiCall({action: "delete", reportId: String(reportId).trim()});
+                const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: "delete", reportId: reportId}) });
+                const serverResponse = await res.json();
                 if(serverResponse.status === "success") {
-                    Swal.fire({title: 'ย้ายใบงานลงถังขยะเรียบร้อยแล้วครับ', icon: 'success', timer: 1000, showConfirmButton: false});
+                    Swal.fire({title: 'ย้ายใบงานลงถังขยะเรียบร้อยแล้ว', icon: 'success', timer: 1000, showConfirmButton: false});
                     loadData(true);
-                } else { throw new Error(serverResponse.message || 'Server error'); }
+                } else { throw new Error(); }
             } catch (e) {
-                Swal.fire('ผิดพลาด', 'ไม่สามารถย้ายใบงานลงถังขยะได้ครับ', 'error');
+                Swal.fire('ผิดพลาด', 'ไม่สามารถย้ายใบงานลงถังขยะได้', 'error');
             }
         }
     }
@@ -1144,10 +1148,11 @@
     async function openTrashModal() {
         Swal.fire({ title: 'กำลังโหลดข้อมูลในถังขยะ...', didOpen: () => Swal.showLoading() });
         try {
-            const trashData = await apiCall({action: "readTrash"});
+            const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: "readTrash"}) });
+            const trashData = await res.json();
             
             let tableRowsHtml = '';
-            if (!Array.isArray(trashData) || trashData.length === 0) {
+            if (trashData.length === 0) {
                 tableRowsHtml = `<tr><td colspan="5" style="text-align:center; color:#888; padding: 25px 0;">ไม่มีใบงานค้างในถังขยะครับ</td></tr>`;
             } else {
                 trashData.forEach(row => {
@@ -1211,12 +1216,13 @@
     async function restoreTrashItem(reportId) {
         Swal.fire({ title: 'กำลังกู้คืนข้อมูล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
         try {
-            const serverResponse = await apiCall({action: "restore", reportId: String(reportId).trim()});
+            const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: "restore", reportId: reportId}) });
+            const serverResponse = await res.json();
             if(serverResponse.status === "success") {
                 Swal.fire({title: 'กู้คืนงานสำเร็จครับ', icon: 'success', timer: 1000, showConfirmButton: false}).then(() => {
                     loadData(true);
                 });
-            } else { throw new Error(serverResponse.message || 'Error'); }
+            }
         } catch (e) { Swal.fire('ผิดพลาด', 'ไม่สามารถกู้คืนงานได้ครับ', 'error'); }
     }
 
@@ -1234,13 +1240,14 @@
         if (confirm.isConfirmed) {
             Swal.fire({ title: 'กำลังลบข้อมูล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
             try {
-                const serverResponse = await apiCall({action: "deletePermanently", reportId: String(reportId).trim()});
+                const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: "deletePermanently", reportId: reportId}) });
+                const serverResponse = await res.json();
                 if(serverResponse.status === "success") {
                     Swal.fire({title: 'ลบใบงานถาวรเรียบร้อยแล้วครับ', icon: 'success', timer: 1000, showConfirmButton: false}).then(() => {
                         openTrashModal();
                         loadData(true);
                     });
-                } else { throw new Error(serverResponse.message || 'Error'); }
+                } else { throw new Error(); }
             } catch (e) {
                 Swal.fire('ผิดพลาด', 'ไม่สามารถลบข้อมูลถาวรได้ครับ', 'error');
             }
@@ -1250,10 +1257,11 @@
     async function openLogsModal() {
         Swal.fire({ title: 'กำลังโหลด Log การทำรายการ...', didOpen: () => Swal.showLoading() });
         try {
-            const logsData = await apiCall({action: "readLogs"});
+            const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: "readLogs"}) });
+            const logsData = await res.json();
             
             let tableRowsHtml = '';
-            if (!Array.isArray(logsData) || logsData.length === 0) {
+            if (logsData.length === 0) {
                 tableRowsHtml = `<tr><td colspan="4" style="text-align:center; color:#888; padding: 25px 0;">ไม่มี Log การทำรายการบันทึกไว้</td></tr>`;
             } else {
                 logsData.forEach(row => {
@@ -1324,7 +1332,7 @@
         const item = JSON.parse(decodeURIComponent(rowJson));
         let filesDetail = '-';
         if (item[5] && item[5] !== "-" && item[5] !== "") {
-            const urls = String(item[5]).split(", ");
+            const urls = item[5].split(", ");
             filesDetail = urls.map((u, i) => `<a href="${u}" target="_blank" style="color:var(--ios-blue); text-decoration:none; font-weight:600; margin-right:15px;"><i class="bi bi-file-earmark-text"></i> ไฟล์ที่ ${i+1}</a>`).join('');
         }
         Swal.fire({
@@ -1422,8 +1430,7 @@
                     </div>
                 </div>
             `,
-            showCancelButton: true, confirmButtonText: 'บันทึกข้อมูล', cancelButtonText: 'ยกเลิก',
-            preConfirm: async () => {
+            showCancelButton: true, confirmButtonText: 'บันทึกข้อมูล', preConfirm: async () => {
                 const memberIdVal = document.getElementById('memberId').value.trim();
                 const phoneVal = document.getElementById('phone').value.trim();
                 const staffVal = document.getElementById('staff').value;
@@ -1442,16 +1449,17 @@
             if (result.isConfirmed) {
                 Swal.fire({title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
                 try {
-                    const serverResponse = await apiCall(result.value);
+                    const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(result.value) });
+                    const serverResponse = await res.json();
                     if(serverResponse.status === "success") {
                         Swal.fire({title: 'สำเร็จ', icon: 'success', timer: 1000, showConfirmButton: false}).then(() => {
                             currentPage = 1;
                             loadData(true);
                         });
-                    } else { throw new Error(serverResponse.message || 'Server Error'); }
+                    } else { throw new Error('Server Error'); }
                 } catch (e) {
                     console.error("Save error:", e);
-                    Swal.fire('ผิดพลาด', 'ไม่สามารถบันทึกได้ครับ (' + (e.message || '') + ')', 'error');
+                    Swal.fire('ผิดพลาด', 'ไม่สามารถบันทึกได้', 'error');
                 }
             }
         });
@@ -1487,7 +1495,7 @@
         const item = JSON.parse(decodeURIComponent(rowJson));
         
         selectedFiles = []; 
-        existingFiles = (item[5] && item[5] !== "-" && item[5] !== "") ? String(item[5]).split(", ") : []; 
+        existingFiles = (item[5] && item[5] !== "-" && item[5] !== "") ? item[5].split(", ") : []; 
         
         let typeOptions = `<option value="">-- เลือกประเภทงาน --</option>`;
         jobTypes.forEach(t => { typeOptions += `<option value="${t}" ${item[8] === t ? 'selected' : ''}>${t}</option>`; });
@@ -1530,14 +1538,14 @@
                 </div>
             `,
             didOpen: () => renderSelectedFiles(),
-            showCancelButton: true, confirmButtonText: 'บันทึกการแก้ไข', cancelButtonText: 'ยกเลิก',
+            showCancelButton: true, confirmButtonText: 'บันทึกการแก้ไข',
             preConfirm: () => {
                 const memberIdVal = document.getElementById('swal-memberId').value.trim();
                 const phoneVal = document.getElementById('swal-phone').value.trim();
                 const staffVal = document.getElementById('swal-staff').value;
                 if (!memberIdVal || !phoneVal || !staffVal) { Swal.showValidationMessage('กรุณากรอกข้อมูลและเลือกชื่อพนักงานให้ครบถ้วน'); return false; }
                 return { 
-                    action: "update", reportId: String(item[11]).trim(), date: document.getElementById('swal-date').value, 
+                    action: "update", reportId: item[11], date: document.getElementById('swal-date').value, 
                     memberId: "'" + memberIdVal, 
                     name: document.getElementById('swal-name').value, phone: "'" + phoneVal, 
                     staff: staffVal, jobDetail: "'" + document.getElementById('swal-jobDetail').value, 
@@ -1551,7 +1559,8 @@
             if (result.isConfirmed) {
                 Swal.fire({title: 'กำลังอัพเดท...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
                 try {
-                    const serverResponse = await apiCall(result.value);
+                    const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(result.value) });
+                    const serverResponse = await res.json();
                     if(serverResponse.status === "success") {
                         Swal.fire({title: 'สำเร็จ', icon: 'success', timer: 1000, showConfirmButton: false}).then(() => {
                             const newType = result.value.jobType;
@@ -1559,10 +1568,10 @@
                             currentPage = 1;
                             loadData(true);
                         });
-                    } else { throw new Error(serverResponse.message || 'Server Error'); }
+                    } else { throw new Error('Server Error'); }
                 } catch (e) {
                     console.error("Update error:", e);
-                    Swal.fire('ผิดพลาด', 'ไม่สามารถอัพเดทได้ครับ (' + (e.message || '') + ')', 'error');
+                    Swal.fire('ผิดพลาด', 'ไม่สามารถอัพเดทได้', 'error');
                 }
             }
         });
