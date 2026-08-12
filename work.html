@@ -632,20 +632,6 @@
     let isDragging = false;
     let startX, startY, shiftX, shiftY;
 
-    // Helper Function สำหรับดึงข้อมูลผ่าน Fetch ป้องกัน Timeout สายหลุด
-    async function fetchWithTimeout(url, options = {}, timeout = 10000) {
-        const controller = new AbortController();
-        const id = setTimeout(() => controller.abort(), timeout);
-        try {
-            const response = await fetch(url, { ...options, signal: controller.signal });
-            clearTimeout(id);
-            return response;
-        } catch (error) {
-            clearTimeout(id);
-            throw error;
-        }
-    }
-
     function parseCustomDate(dateVal) {
         if (!dateVal || dateVal === "-" || dateVal === "") return null;
         if (dateVal instanceof Date) return isNaN(dateVal) ? null : dateVal;
@@ -916,62 +902,47 @@
         currentPage = 1; renderTable();
     }
 
-    // ปรับแก้ระบบดึงข้อมูลให้เร็วขึ้นและลดอาการล้มเหลวด้วย Retry & Timeout Handling
-    async function loadData(manual = false, retries = 1) {
+    async function loadData(manual = false) {
         const tableBody = document.getElementById('dataTable');
         const refreshBtn = document.querySelector('.bi-arrow-clockwise');
         if(refreshBtn) refreshBtn.classList.add('bi-spin');
-        
         try {
-            const res = await fetchWithTimeout(SCRIPT_URL, { 
-                method: 'POST', 
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({action: "read"}) 
-            }, 8000); // ตั้ง Timeout ที่ 8 วินาที
-
-            if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
-            
+            const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: "read"}) });
             const data = await res.json();
             
             const today = new Date();
             today.setHours(0, 0, 0, 0);
 
-            fullData = data.map(row => {
-                const deadlineStr = formatForInputDate(row[10]);
-                const isDaily = (row[12] === "true" || row[12] === true);
-                const isPinned = (row[7] === "true" || row[7] === true);
-                const isProcessing = (row[9] === "true" || row[9] === true);
-                
-                let isOverdue = false;
-                if (!isDaily && row[10] && row[10] !== "-" && row[10] !== "") {
-                    const dDate = parseCustomDate(row[10]);
-                    isOverdue = dDate && dDate < today;
-                }
-
+            data.forEach(row => {
                 row._searchStr = row.join(' ').toLowerCase();
-                row._deadlineStr = deadlineStr;
-                row._isDaily = isDaily;
-                row._isPinned = isPinned;
-                row._isProcessing = isProcessing;
-                row._isOverdue = isOverdue;
-                return row;
-            }).sort((a, b) => {
-                if (a._isPinned !== b._isPinned) return a._isPinned ? -1 : 1;
-                const dateA = parseCustomDate(a[0]) || 0;
-                const dateB = parseCustomDate(b[0]) || 0;
+                row._deadlineStr = formatForInputDate(row[10]);
+                row._isDaily = (row[12] === "true" || row[12] === true);
+                row._isPinned = (row[7] === "true" || row[7] === true);
+                row._isProcessing = (row[9] === "true" || row[9] === true);
+                
+                if (row._isDaily) {
+                    row._isOverdue = false;
+                } else if (row[10] && row[10] !== "-" && row[10] !== "") {
+                    const dDate = parseCustomDate(row[10]);
+                    row._isOverdue = dDate && dDate < today;
+                } else {
+                    row._isOverdue = false;
+                }
+            });
+
+            fullData = data.sort((a, b) => {
+                if (a._isPinned && !b._isPinned) return -1;
+                if (!a._isPinned && b._isPinned) return 1;
+                const dateA = parseCustomDate(a[0]) || new Date(0);
+                const dateB = parseCustomDate(b[0]) || new Date(0);
                 return dateB - dateA;
             });
 
             filterData();
             updateStats(fullData);
         } catch (e) { 
-            console.error("Load attempt failed:", e);
-            if (retries > 0) {
-                // พยายามดึงใหม่อีก 1 ครั้งอัตโนมัติ
-                setTimeout(() => loadData(manual, retries - 1), 1000);
-            } else {
-                tableBody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:30px; color:var(--ios-red);">ดึงข้อมูลไม่สำเร็จ กรุณากดปุ่มรีเฟรชอีกครั้ง</td></tr>'; 
-            }
+            console.error("Load failed:", e);
+            tableBody.innerHTML = '<tr><td colspan="8" style="text-align:center;">โหลดข้อมูลไม่สำเร็จ กรุณารีเฟรชหน้าจอ</td></tr>'; 
         } finally { 
             if(refreshBtn) refreshBtn.classList.remove('bi-spin'); 
         }
@@ -1091,9 +1062,10 @@
             fullData[idx]._isPinned = !fullData[idx]._isPinned;
             fullData[idx][7] = String(fullData[idx]._isPinned);
             fullData.sort((a, b) => {
-                if (a._isPinned !== b._isPinned) return a._isPinned ? -1 : 1;
-                const dateA = parseCustomDate(a[0]) || 0;
-                const dateB = parseCustomDate(b[0]) || 0;
+                if (a._isPinned && !b._isPinned) return -1;
+                if (!a._isPinned && b._isPinned) return 1;
+                const dateA = parseCustomDate(a[0]) || new Date(0);
+                const dateB = parseCustomDate(b[0]) || new Date(0);
                 return dateB - dateA;
             });
             filterData(); updateStats(fullData);
