@@ -608,7 +608,7 @@
 </div>
 
 <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzVzA1XfFKvBlhNANrnb_mmJo9n7gY7sfXC7oypaMP1Ww91kc_fSnUnRmrJMiqmUO0m/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwstNwOuBsPMgDjj3zyVHkeR-w7gAKlgORabdMQN89ymkCfK5Fh3iNb3HIP4qzHUxFR/exec';
 
     const jobTypes = [
         "Complaint", "MGM ปรับลด", "ยกเลิกบริการ (ปกติ)", "ยกเลิกบริการ (5P)", "MNP",
@@ -631,30 +631,6 @@
     const sideOverlay = document.getElementById('sidebarOverlay');
     let isDragging = false;
     let startX, startY, shiftX, shiftY;
-
-    // ระบบ API Central Helper พร้อม Auto-Retry & Timeout Handling ป้องกันปัญหาสายหลุด
-    async function apiCall(payload, retries = 2, timeoutMs = 25000) {
-        for (let attempt = 0; attempt <= retries; attempt++) {
-            const controller = new AbortController();
-            const timer = setTimeout(() => controller.abort(), timeoutMs);
-            try {
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify(payload),
-                    signal: controller.signal
-                });
-                clearTimeout(timer);
-                if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
-                const data = await response.json();
-                return data;
-            } catch (err) {
-                clearTimeout(timer);
-                if (attempt === retries) throw err;
-                await new Promise(r => setTimeout(r, 1000 * (attempt + 1))); // รอแป๊บแล้วส่งซ้ำ
-            }
-        }
-    }
 
     function parseCustomDate(dateVal) {
         if (!dateVal || dateVal === "-" || dateVal === "") return null;
@@ -930,36 +906,35 @@
         const tableBody = document.getElementById('dataTable');
         const refreshBtn = document.querySelector('.bi-arrow-clockwise');
         if(refreshBtn) refreshBtn.classList.add('bi-spin');
-        
         try {
-            const data = await apiCall({action: "read"});
+            const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: "read"}) });
+            const data = await res.json();
             
             const today = new Date();
             today.setHours(0, 0, 0, 0);
 
-            fullData = data.map(row => {
-                const deadlineStr = formatForInputDate(row[10]);
-                const isDaily = (row[12] === "true" || row[12] === true);
-                const isPinned = (row[7] === "true" || row[7] === true);
-                const isProcessing = (row[9] === "true" || row[9] === true);
-                
-                let isOverdue = false;
-                if (!isDaily && row[10] && row[10] !== "-" && row[10] !== "") {
-                    const dDate = parseCustomDate(row[10]);
-                    isOverdue = dDate && dDate < today;
-                }
-
+            data.forEach(row => {
                 row._searchStr = row.join(' ').toLowerCase();
-                row._deadlineStr = deadlineStr;
-                row._isDaily = isDaily;
-                row._isPinned = isPinned;
-                row._isProcessing = isProcessing;
-                row._isOverdue = isOverdue;
-                return row;
-            }).sort((a, b) => {
-                if (a._isPinned !== b._isPinned) return a._isPinned ? -1 : 1;
-                const dateA = parseCustomDate(a[0]) || 0;
-                const dateB = parseCustomDate(b[0]) || 0;
+                row._deadlineStr = formatForInputDate(row[10]);
+                row._isDaily = (row[12] === "true" || row[12] === true);
+                row._isPinned = (row[7] === "true" || row[7] === true);
+                row._isProcessing = (row[9] === "true" || row[9] === true);
+                
+                if (row._isDaily) {
+                    row._isOverdue = false;
+                } else if (row[10] && row[10] !== "-" && row[10] !== "") {
+                    const dDate = parseCustomDate(row[10]);
+                    row._isOverdue = dDate && dDate < today;
+                } else {
+                    row._isOverdue = false;
+                }
+            });
+
+            fullData = data.sort((a, b) => {
+                if (a._isPinned && !b._isPinned) return -1;
+                if (!a._isPinned && b._isPinned) return 1;
+                const dateA = parseCustomDate(a[0]) || new Date(0);
+                const dateB = parseCustomDate(b[0]) || new Date(0);
                 return dateB - dateA;
             });
 
@@ -967,7 +942,7 @@
             updateStats(fullData);
         } catch (e) { 
             console.error("Load failed:", e);
-            tableBody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:30px; color:var(--ios-red);">เชื่อมต่อระบบหลังบ้านไม่สำเร็จ กรุณากดปุ่มรีเฟรชอีกครั้ง</td></tr>'; 
+            tableBody.innerHTML = '<tr><td colspan="8" style="text-align:center;">โหลดข้อมูลไม่สำเร็จ กรุณารีเฟรชหน้าจอ</td></tr>'; 
         } finally { 
             if(refreshBtn) refreshBtn.classList.remove('bi-spin'); 
         }
@@ -1077,7 +1052,7 @@
             filterData(); updateStats(fullData); 
         }
         try { 
-            await apiCall({ action: "toggleProcessing", reportId: reportId }); 
+            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "toggleProcessing", reportId: reportId }) }); 
         } catch (e) { loadData(); }
     }
 
@@ -1087,15 +1062,16 @@
             fullData[idx]._isPinned = !fullData[idx]._isPinned;
             fullData[idx][7] = String(fullData[idx]._isPinned);
             fullData.sort((a, b) => {
-                if (a._isPinned !== b._isPinned) return a._isPinned ? -1 : 1;
-                const dateA = parseCustomDate(a[0]) || 0;
-                const dateB = parseCustomDate(b[0]) || 0;
+                if (a._isPinned && !b._isPinned) return -1;
+                if (!a._isPinned && b._isPinned) return 1;
+                const dateA = parseCustomDate(a[0]) || new Date(0);
+                const dateB = parseCustomDate(b[0]) || new Date(0);
                 return dateB - dateA;
             });
             filterData(); updateStats(fullData);
         }
         try { 
-            await apiCall({ action: "togglePin", reportId: reportId }); 
+            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "togglePin", reportId: reportId }) }); 
         } catch (e) { loadData(); }
     }
 
@@ -1116,7 +1092,7 @@
             filterData(); updateStats(fullData);
         }
         try { 
-            await apiCall({ action: "toggleDaily", reportId: reportId }); 
+            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "toggleDaily", reportId: reportId }) }); 
         } catch (e) { loadData(); }
     }
 
@@ -1129,11 +1105,12 @@
         if (confirm.isConfirmed) {
             Swal.fire({ title: 'กำลังประมวลผล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
             try {
-                const serverResponse = await apiCall({action: "delete", reportId: reportId});
+                const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: "delete", reportId: reportId}) });
+                const serverResponse = await res.json();
                 if(serverResponse.status === "success") {
                     Swal.fire({title: 'ย้ายใบงานลงถังขยะเรียบร้อยแล้ว', icon: 'success', timer: 1000, showConfirmButton: false});
                     loadData(true);
-                } else { throw new Error(serverResponse.message || 'Error'); }
+                } else { throw new Error(); }
             } catch (e) {
                 Swal.fire('ผิดพลาด', 'ไม่สามารถย้ายใบงานลงถังขยะได้', 'error');
             }
@@ -1143,10 +1120,11 @@
     async function openTrashModal() {
         Swal.fire({ title: 'กำลังโหลดข้อมูลในถังขยะ...', didOpen: () => Swal.showLoading() });
         try {
-            const trashData = await apiCall({action: "readTrash"});
+            const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: "readTrash"}) });
+            const trashData = await res.json();
             
             let tableRowsHtml = '';
-            if (!Array.isArray(trashData) || trashData.length === 0) {
+            if (trashData.length === 0) {
                 tableRowsHtml = `<tr><td colspan="5" style="text-align:center; color:#888; padding: 25px 0;">ไม่มีใบงานค้างในถังขยะครับ</td></tr>`;
             } else {
                 trashData.forEach(row => {
@@ -1210,7 +1188,8 @@
     async function restoreTrashItem(reportId) {
         Swal.fire({ title: 'กำลังกู้คืนข้อมูล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
         try {
-            const serverResponse = await apiCall({action: "restore", reportId: reportId});
+            const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: "restore", reportId: reportId}) });
+            const serverResponse = await res.json();
             if(serverResponse.status === "success") {
                 Swal.fire({title: 'กู้คืนงานสำเร็จครับ', icon: 'success', timer: 1000, showConfirmButton: false}).then(() => {
                     loadData(true);
@@ -1233,7 +1212,8 @@
         if (confirm.isConfirmed) {
             Swal.fire({ title: 'กำลังลบข้อมูล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
             try {
-                const serverResponse = await apiCall({action: "deletePermanently", reportId: reportId});
+                const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: "deletePermanently", reportId: reportId}) });
+                const serverResponse = await res.json();
                 if(serverResponse.status === "success") {
                     Swal.fire({title: 'ลบใบงานถาวรเรียบร้อยแล้วครับ', icon: 'success', timer: 1000, showConfirmButton: false}).then(() => {
                         openTrashModal();
@@ -1249,10 +1229,11 @@
     async function openLogsModal() {
         Swal.fire({ title: 'กำลังโหลด Log การทำรายการ...', didOpen: () => Swal.showLoading() });
         try {
-            const logsData = await apiCall({action: "readLogs"});
+            const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: "readLogs"}) });
+            const logsData = await res.json();
             
             let tableRowsHtml = '';
-            if (!Array.isArray(logsData) || logsData.length === 0) {
+            if (logsData.length === 0) {
                 tableRowsHtml = `<tr><td colspan="4" style="text-align:center; color:#888; padding: 25px 0;">ไม่มี Log การทำรายการบันทึกไว้</td></tr>`;
             } else {
                 logsData.forEach(row => {
@@ -1440,13 +1421,14 @@
             if (result.isConfirmed) {
                 Swal.fire({title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
                 try {
-                    const serverResponse = await apiCall(result.value);
+                    const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(result.value) });
+                    const serverResponse = await res.json();
                     if(serverResponse.status === "success") {
                         Swal.fire({title: 'สำเร็จ', icon: 'success', timer: 1000, showConfirmButton: false}).then(() => {
                             currentPage = 1;
                             loadData(true);
                         });
-                    } else { throw new Error(serverResponse.message || 'Server Error'); }
+                    } else { throw new Error('Server Error'); }
                 } catch (e) {
                     console.error("Save error:", e);
                     Swal.fire('ผิดพลาด', 'ไม่สามารถบันทึกได้', 'error');
@@ -1549,7 +1531,8 @@
             if (result.isConfirmed) {
                 Swal.fire({title: 'กำลังอัพเดท...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
                 try {
-                    const serverResponse = await apiCall(result.value);
+                    const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(result.value) });
+                    const serverResponse = await res.json();
                     if(serverResponse.status === "success") {
                         Swal.fire({title: 'สำเร็จ', icon: 'success', timer: 1000, showConfirmButton: false}).then(() => {
                             const newType = result.value.jobType;
@@ -1557,7 +1540,7 @@
                             currentPage = 1;
                             loadData(true);
                         });
-                    } else { throw new Error(serverResponse.message || 'Server Error'); }
+                    } else { throw new Error('Server Error'); }
                 } catch (e) {
                     console.error("Update error:", e);
                     Swal.fire('ผิดพลาด', 'ไม่สามารถอัพเดทได้', 'error');
