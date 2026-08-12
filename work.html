@@ -608,7 +608,7 @@
 </div>
 
 <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwstNwOuBsPMgDjj3zyVHkeR-w7gAKlgORabdMQN89ymkCfK5Fh3iNb3HIP4qzHUxFR/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw-S-1aJIpirALURUNjaXHldEB7ocdeQqcsdSzt-tyNqFW6Rcd6w0eTQOBfntYJnCu_/exec';
 
     const jobTypes = [
         "Complaint", "MGM ปรับลด", "ยกเลิกบริการ (ปกติ)", "ยกเลิกบริการ (5P)", "MNP",
@@ -635,7 +635,6 @@
     function parseCustomDate(dateVal) {
         if (!dateVal || dateVal === "-" || dateVal === "") return null;
         if (dateVal instanceof Date) return isNaN(dateVal) ? null : dateVal;
-        
         if (typeof dateVal === 'string') {
             const parts = dateVal.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
             if (parts) {
@@ -770,9 +769,7 @@
             if(counts[type] !== undefined) counts[type]++;
             if(row._isPinned) pinnedCount++;
             if(row._isProcessing) processingCount++;
-            
             if(type === "Complaint") complaintCount++;
-            
             if(row._isDaily) {
                 dailyCount++;
             } else {
@@ -907,32 +904,37 @@
         const refreshBtn = document.querySelector('.bi-arrow-clockwise');
         if(refreshBtn) refreshBtn.classList.add('bi-spin');
         try {
-            const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: "read"}) });
+            const res = await fetch(SCRIPT_URL, { 
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({action: "read"}) 
+            });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const data = await res.json();
+            if (!Array.isArray(data)) throw new Error("Invalid data format");
             
             const today = new Date();
             today.setHours(0, 0, 0, 0);
 
-            data.forEach(row => {
-                row._searchStr = row.join(' ').toLowerCase();
-                row._deadlineStr = formatForInputDate(row[10]);
-                row._isDaily = (row[12] === "true" || row[12] === true);
-                row._isPinned = (row[7] === "true" || row[7] === true);
-                row._isProcessing = (row[9] === "true" || row[9] === true);
-                
-                if (row._isDaily) {
-                    row._isOverdue = false;
-                } else if (row[10] && row[10] !== "-" && row[10] !== "") {
+            fullData = data.map(row => {
+                const deadlineStr = formatForInputDate(row[10]);
+                const isDaily = (row[12] === "true" || row[12] === true);
+                const isPinned = (row[7] === "true" || row[7] === true);
+                const isProcessing = (row[9] === "true" || row[9] === true);
+                let isOverdue = false;
+                if (!isDaily && row[10] && row[10] !== "-" && row[10] !== "") {
                     const dDate = parseCustomDate(row[10]);
-                    row._isOverdue = dDate && dDate < today;
-                } else {
-                    row._isOverdue = false;
+                    isOverdue = dDate && dDate < today;
                 }
-            });
-
-            fullData = data.sort((a, b) => {
-                if (a._isPinned && !b._isPinned) return -1;
-                if (!a._isPinned && b._isPinned) return 1;
+                row._searchStr = row.join(' ').toLowerCase();
+                row._deadlineStr = deadlineStr;
+                row._isDaily = isDaily;
+                row._isPinned = isPinned;
+                row._isProcessing = isProcessing;
+                row._isOverdue = isOverdue;
+                return row;
+            }).sort((a, b) => {
+                if (a._isPinned !== b._isPinned) return a._isPinned ? -1 : 1;
                 const dateA = parseCustomDate(a[0]) || new Date(0);
                 const dateB = parseCustomDate(b[0]) || new Date(0);
                 return dateB - dateA;
@@ -942,7 +944,7 @@
             updateStats(fullData);
         } catch (e) { 
             console.error("Load failed:", e);
-            tableBody.innerHTML = '<tr><td colspan="8" style="text-align:center;">โหลดข้อมูลไม่สำเร็จ กรุณารีเฟรชหน้าจอ</td></tr>'; 
+            tableBody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:30px; color:var(--ios-red);">โหลดไม่สำเร็จ: ' + e.message + '<br><small>กรุณารีเฟรชหน้าเว็บหรือตรวจสอบการเชื่อมต่อ</small></td></tr>'; 
         } finally { 
             if(refreshBtn) refreshBtn.classList.remove('bi-spin'); 
         }
@@ -966,7 +968,6 @@
             const isDaily = row._isDaily;
             const rawPass = row[13] ? String(row[13]).replace(/^'/, '') : "";
             const hasPassword = rawPass.trim() !== ""; 
-            
             const reportId = row[11] || "-";
             const rowJson = encodeURIComponent(JSON.stringify(row));
             const deadlineDate = fixDate(row[10]);
@@ -1052,8 +1053,12 @@
             filterData(); updateStats(fullData); 
         }
         try { 
-            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "toggleProcessing", reportId: reportId }) }); 
-        } catch (e) { loadData(); }
+            await fetch(SCRIPT_URL, { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ action: "toggleProcessing", reportId: reportId }) 
+            }); 
+        } catch (e) { console.log("Toggle processing sync failed"); }
     }
 
     async function togglePin(reportId) {
@@ -1062,8 +1067,7 @@
             fullData[idx]._isPinned = !fullData[idx]._isPinned;
             fullData[idx][7] = String(fullData[idx]._isPinned);
             fullData.sort((a, b) => {
-                if (a._isPinned && !b._isPinned) return -1;
-                if (!a._isPinned && b._isPinned) return 1;
+                if (a._isPinned !== b._isPinned) return a._isPinned ? -1 : 1;
                 const dateA = parseCustomDate(a[0]) || new Date(0);
                 const dateB = parseCustomDate(b[0]) || new Date(0);
                 return dateB - dateA;
@@ -1071,8 +1075,12 @@
             filterData(); updateStats(fullData);
         }
         try { 
-            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "togglePin", reportId: reportId }) }); 
-        } catch (e) { loadData(); }
+            await fetch(SCRIPT_URL, { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ action: "togglePin", reportId: reportId }) 
+            }); 
+        } catch (e) { console.log("Toggle pin sync failed"); }
     }
 
     async function toggleDaily(reportId) {
@@ -1080,7 +1088,6 @@
         if(idx !== -1) {
             fullData[idx]._isDaily = !fullData[idx]._isDaily;
             fullData[idx][12] = String(fullData[idx]._isDaily);
-            
             if (fullData[idx]._isDaily) {
                 fullData[idx]._isOverdue = false;
             } else if (fullData[idx][10] && fullData[idx][10] !== "-" && fullData[idx][10] !== "") {
@@ -1088,12 +1095,15 @@
                 const dDate = parseCustomDate(fullData[idx][10]);
                 fullData[idx]._isOverdue = dDate && dDate < today;
             }
-            
             filterData(); updateStats(fullData);
         }
         try { 
-            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "toggleDaily", reportId: reportId }) }); 
-        } catch (e) { loadData(); }
+            await fetch(SCRIPT_URL, { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ action: "toggleDaily", reportId: reportId }) 
+            }); 
+        } catch (e) { console.log("Toggle daily sync failed"); }
     }
 
     async function deleteData(reportId) {
@@ -1105,14 +1115,18 @@
         if (confirm.isConfirmed) {
             Swal.fire({ title: 'กำลังประมวลผล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
             try {
-                const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: "delete", reportId: reportId}) });
+                const res = await fetch(SCRIPT_URL, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({action: "delete", reportId: reportId}) 
+                });
                 const serverResponse = await res.json();
                 if(serverResponse.status === "success") {
                     Swal.fire({title: 'ย้ายใบงานลงถังขยะเรียบร้อยแล้ว', icon: 'success', timer: 1000, showConfirmButton: false});
                     loadData(true);
-                } else { throw new Error(); }
+                } else { throw new Error(serverResponse.message || 'Server Error'); }
             } catch (e) {
-                Swal.fire('ผิดพลาด', 'ไม่สามารถย้ายใบงานลงถังขยะได้', 'error');
+                Swal.fire('ผิดพลาด', 'ไม่สามารถย้ายใบงานลงถังขยะได้: ' + e.message, 'error');
             }
         }
     }
@@ -1120,7 +1134,11 @@
     async function openTrashModal() {
         Swal.fire({ title: 'กำลังโหลดข้อมูลในถังขยะ...', didOpen: () => Swal.showLoading() });
         try {
-            const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: "readTrash"}) });
+            const res = await fetch(SCRIPT_URL, { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({action: "readTrash"}) 
+            });
             const trashData = await res.json();
             
             let tableRowsHtml = '';
@@ -1136,7 +1154,6 @@
                         const d2 = new Date(today.getFullYear(), today.getMonth(), today.getDate());
                         const diffDays = Math.floor((d2 - d1) / (1000 * 60 * 60 * 24));
                         const remainingDays = 30 - diffDays;
-
                         if (remainingDays > 0) {
                             countdownHtml = `<br><small style="color:var(--ios-orange); font-weight:600;"><i class="bi bi-hourglass-split"></i> เหลือ ${remainingDays} วัน</small>`;
                         } else {
@@ -1188,13 +1205,17 @@
     async function restoreTrashItem(reportId) {
         Swal.fire({ title: 'กำลังกู้คืนข้อมูล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
         try {
-            const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: "restore", reportId: reportId}) });
+            const res = await fetch(SCRIPT_URL, { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({action: "restore", reportId: reportId}) 
+            });
             const serverResponse = await res.json();
             if(serverResponse.status === "success") {
                 Swal.fire({title: 'กู้คืนงานสำเร็จครับ', icon: 'success', timer: 1000, showConfirmButton: false}).then(() => {
                     loadData(true);
                 });
-            }
+            } else { throw new Error(serverResponse.message || 'Server Error'); }
         } catch (e) { Swal.fire('ผิดพลาด', 'ไม่สามารถกู้คืนงานได้ครับ', 'error'); }
     }
 
@@ -1212,14 +1233,18 @@
         if (confirm.isConfirmed) {
             Swal.fire({ title: 'กำลังลบข้อมูล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
             try {
-                const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: "deletePermanently", reportId: reportId}) });
+                const res = await fetch(SCRIPT_URL, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({action: "deletePermanently", reportId: reportId}) 
+                });
                 const serverResponse = await res.json();
                 if(serverResponse.status === "success") {
                     Swal.fire({title: 'ลบใบงานถาวรเรียบร้อยแล้วครับ', icon: 'success', timer: 1000, showConfirmButton: false}).then(() => {
                         openTrashModal();
                         loadData(true);
                     });
-                } else { throw new Error(); }
+                } else { throw new Error(serverResponse.message || 'Server Error'); }
             } catch (e) {
                 Swal.fire('ผิดพลาด', 'ไม่สามารถลบข้อมูลถาวรได้ครับ', 'error');
             }
@@ -1229,7 +1254,11 @@
     async function openLogsModal() {
         Swal.fire({ title: 'กำลังโหลด Log การทำรายการ...', didOpen: () => Swal.showLoading() });
         try {
-            const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({action: "readLogs"}) });
+            const res = await fetch(SCRIPT_URL, { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({action: "readLogs"}) 
+            });
             const logsData = await res.json();
             
             let tableRowsHtml = '';
@@ -1278,7 +1307,6 @@
     window.checkPasswordAndShow = function(rowJson) {
         const item = JSON.parse(decodeURIComponent(rowJson));
         const pass = item[13] ? String(item[13]).replace(/^'/, '').trim() : "";
-        
         if (pass) {
             Swal.fire({
                 title: '<i class="bi bi-lock-fill" style="color:var(--ios-red);"></i> ติดรหัสผ่าน',
@@ -1289,7 +1317,7 @@
                 showCancelButton: true,
                 confirmButtonText: 'ยืนยัน',
                 cancelButtonText: 'ยกเลิก',
-                inputAttributes: { autocapitalize: 'off', autorrect: 'off' },
+                inputAttributes: { autocapitalize: 'off', autocorrect: 'off' },
                 inputValidator: (value) => {
                     if (!value) return 'กรุณากรอกรหัสผ่าน!';
                     if (value !== pass) return 'รหัสผ่านไม่ถูกต้อง!';
@@ -1331,7 +1359,7 @@
     window.handleFileSelect = async function(event) {
         const files = event.target.files;
         for (let i = 0; i < files.length; i++) {
-            if (selectedFiles.length + existingFiles.length >= 5) { break; }
+            if (selectedFiles.length + existingFiles.length >= 5) break;
             const file = files[i];
             const reader = new FileReader();
             const filePromise = new Promise(resolve => {
@@ -1344,13 +1372,8 @@
         event.target.value = ""; renderSelectedFiles();
     };
 
-    window.removeFile = function(id) {
-        selectedFiles = selectedFiles.filter(f => f.id !== id); renderSelectedFiles();
-    };
-    
-    window.removeExistingFile = function(url) {
-        existingFiles = existingFiles.filter(u => u !== url); renderSelectedFiles();
-    };
+    window.removeFile = function(id) { selectedFiles = selectedFiles.filter(f => f.id !== id); renderSelectedFiles(); };
+    window.removeExistingFile = function(url) { existingFiles = existingFiles.filter(u => u !== url); renderSelectedFiles(); };
 
     function renderSelectedFiles() {
         const fileListDiv = document.getElementById('selectedFileList');
@@ -1382,18 +1405,15 @@
                     <div class="swal-field-full"><label class="swal-label">ชื่อลูกค้า</label><input type="text" id="name" class="swal-input-styled"></div>
                     <div><label class="swal-label">เบอร์ติดต่อ</label><input type="text" id="phone" class="swal-input-styled" placeholder="0XXXXXXXXX" maxlength="10"></div>
                     <div><label class="swal-label">พนักงาน</label><select id="staff" class="swal-input-styled"><option value="">-- เลือกพนักงาน --</option><option value="ศุภกฤต">ศุภกฤต</option><option value="นวพล">นวพล</option><option value="ปิยะพร">ปิยะพร</option><option value="กรทักษ์">กรทักษ์</option><option value="พจมาลย์">พจมาลย์</option></select></div>
-                    
                     <div><label class="swal-label">วันครบกำหนดงาน</label><input type="date" id="deadline" class="swal-input-styled"></div>
                     <div>
                         <label class="swal-label" style="color:var(--ios-red);"><i class="bi bi-lock-fill"></i> รหัสผ่านล็อคงาน</label>
                         <input type="text" id="jobPassword" class="swal-input-styled" placeholder="กำหนดรหัสผ่าน">
                     </div>
-
                     <div class="swal-field-full" style="display:flex; align-items:center; gap:10px; background:#f5eeff; padding:10px; border-radius:14px; border:1px dashed var(--ios-purple);">
                         <input type="checkbox" id="isDaily" style="width:20px; height:20px; cursor:pointer;">
                         <label for="isDaily" style="font-size:14px; font-weight:600; color:var(--ios-purple); cursor:pointer;">แสดงงานนี้ทุกวัน (Infinity Mode)</label>
                     </div>
-
                     <div class="swal-field-full"><label class="swal-label">รายละเอียด</label><textarea id="jobDetail" class="swal-input-styled" style="height:160px;"></textarea></div>
                     <div class="swal-field-full">
                         <label class="swal-label">แนบไฟล์</label>
@@ -1421,17 +1441,21 @@
             if (result.isConfirmed) {
                 Swal.fire({title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
                 try {
-                    const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(result.value) });
+                    const res = await fetch(SCRIPT_URL, { 
+                        method: 'POST', 
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: JSON.stringify(result.value) 
+                    });
                     const serverResponse = await res.json();
                     if(serverResponse.status === "success") {
                         Swal.fire({title: 'สำเร็จ', icon: 'success', timer: 1000, showConfirmButton: false}).then(() => {
                             currentPage = 1;
                             loadData(true);
                         });
-                    } else { throw new Error('Server Error'); }
+                    } else { throw new Error(serverResponse.message || 'Server Error'); }
                 } catch (e) {
                     console.error("Save error:", e);
-                    Swal.fire('ผิดพลาด', 'ไม่สามารถบันทึกได้', 'error');
+                    Swal.fire('ผิดพลาด', 'ไม่สามารถบันทึกได้: ' + e.message, 'error');
                 }
             }
         });
@@ -1441,7 +1465,6 @@
         const item = JSON.parse(decodeURIComponent(rowJson));
         const rawPass = item[13] ? String(item[13]).replace(/^'/, '') : "";
         const pass = rawPass.trim();
-
         if (pass) {
             Swal.fire({
                 title: '<i class="bi bi-lock-fill" style="color:var(--ios-red);"></i> ติดรหัสผ่าน',
@@ -1452,7 +1475,7 @@
                 showCancelButton: true,
                 confirmButtonText: 'ยืนยัน',
                 cancelButtonText: 'ยกเลิก',
-                inputAttributes: { autocapitalize: 'off', autorrect: 'off' },
+                inputAttributes: { autocapitalize: 'off', autocorrect: 'off' },
                 inputValidator: (value) => {
                     if (!value) return 'กรุณากรอกรหัสผ่าน!';
                     if (value !== pass) return 'รหัสผ่านไม่ถูกต้อง!';
@@ -1465,13 +1488,11 @@
 
     function proceedToEdit(rowJson) {
         const item = JSON.parse(decodeURIComponent(rowJson));
-        
         selectedFiles = []; 
         existingFiles = (item[5] && item[5] !== "-" && item[5] !== "") ? item[5].split(", ") : []; 
         
         let typeOptions = `<option value="">-- เลือกประเภทงาน --</option>`;
         jobTypes.forEach(t => { typeOptions += `<option value="${t}" ${item[8] === t ? 'selected' : ''}>${t}</option>`; });
-        
         let staffOptions = `<option value="">-- เลือกพนักงาน --</option>`;
         ['ศุภกฤต', 'นวพล', 'ปิยะพร', 'กรทักษ์', 'พจมาลย์'].forEach(s => {
             staffOptions += `<option value="${s}" ${item[4] === s ? 'selected' : ''}>${s}</option>`;
@@ -1489,18 +1510,15 @@
                     <div class="swal-field-full"><label class="swal-label">ชื่อลูกค้า</label><input type="text" id="swal-name" class="swal-input-styled" value="${item[2]||''}"></div>
                     <div><label class="swal-label">เบอร์ติดต่อ</label><input type="text" id="swal-phone" class="swal-input-styled" value="${String(item[3]||'').replace(/^'/, '')}" maxlength="10"></div>
                     <div><label class="swal-label">พนักงาน</label><select id="swal-staff" class="swal-input-styled">${staffOptions}</select></div>
-                    
                     <div><label class="swal-label">วันครบกำหนดงาน</label><input type="date" id="swal-deadline" class="swal-input-styled" value="${formatForInputDate(item[10])}"></div>
                     <div>
                         <label class="swal-label" style="color:var(--ios-red);"><i class="bi bi-lock-fill"></i> รหัสผ่านล็อคงาน</label>
                         <input type="text" id="swal-jobPassword" class="swal-input-styled" value="${String(item[13]||'').replace(/^'/, '')}" placeholder="กำหนดรหัสผ่าน">
                     </div>
-
                     <div class="swal-field-full" style="display:flex; align-items:center; gap:10px; background:#f5eeff; padding:10px; border-radius:14px; border:1px dashed var(--ios-purple);">
                         <input type="checkbox" id="swal-isDaily" style="width:20px; height:20px; cursor:pointer;" ${item[12] === 'true' ? 'checked' : ''}>
                         <label for="swal-isDaily" style="font-size:14px; font-weight:600; color:var(--ios-purple); cursor:pointer;">แสดงงานนี้ทุกวัน (Infinity Mode)</label>
                     </div>
-
                     <div class="swal-field-full"><label class="swal-label">รายละเอียด</label><textarea id="swal-jobDetail" class="swal-input-styled" style="height:160px; resize:none;">${String(item[6] || '').replace(/^'/, '')}</textarea></div>
                     <div class="swal-field-full">
                         <label class="swal-label">จัดการไฟล์แนบ</label>
@@ -1531,7 +1549,11 @@
             if (result.isConfirmed) {
                 Swal.fire({title: 'กำลังอัพเดท...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
                 try {
-                    const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(result.value) });
+                    const res = await fetch(SCRIPT_URL, { 
+                        method: 'POST', 
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: JSON.stringify(result.value) 
+                    });
                     const serverResponse = await res.json();
                     if(serverResponse.status === "success") {
                         Swal.fire({title: 'สำเร็จ', icon: 'success', timer: 1000, showConfirmButton: false}).then(() => {
@@ -1540,10 +1562,10 @@
                             currentPage = 1;
                             loadData(true);
                         });
-                    } else { throw new Error('Server Error'); }
+                    } else { throw new Error(serverResponse.message || 'Server Error'); }
                 } catch (e) {
                     console.error("Update error:", e);
-                    Swal.fire('ผิดพลาด', 'ไม่สามารถอัพเดทได้', 'error');
+                    Swal.fire('ผิดพลาด', 'ไม่สามารถอัพเดทได้: ' + e.message, 'error');
                 }
             }
         });
