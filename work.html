@@ -608,7 +608,7 @@
 </div>
 
 <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwxkPFGUlK193qgrFy9Tp1CK0KSbIC1vfUeIIW946NXGesHZLzvF2rBnLp2zF4YfvKg/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwstNwOuBsPMgDjj3zyVHkeR-w7gAKlgORabdMQN89ymkCfK5Fh3iNb3HIP4qzHUxFR/exec';
 
     const jobTypes = [
         "Complaint", "MGM ปรับลด", "ยกเลิกบริการ (ปกติ)", "ยกเลิกบริการ (5P)", "MNP",
@@ -632,16 +632,12 @@
     let isDragging = false;
     let startX, startY, shiftX, shiftY;
 
-    // Helper Function ปรับเพิ่ม Timeout เป็น 25 วินาที รองรับ Cold Start ของ Google Apps Script
-    async function fetchWithTimeout(url, options = {}, timeout = 25000) {
+    // Helper Function สำหรับดึงข้อมูลผ่าน Fetch ป้องกัน Timeout สายหลุด
+    async function fetchWithTimeout(url, options = {}, timeout = 10000) {
         const controller = new AbortController();
         const id = setTimeout(() => controller.abort(), timeout);
         try {
-            const response = await fetch(url, { 
-                ...options, 
-                redirect: 'follow',
-                signal: controller.signal 
-            });
+            const response = await fetch(url, { ...options, signal: controller.signal });
             clearTimeout(id);
             return response;
         } catch (error) {
@@ -920,8 +916,8 @@
         currentPage = 1; renderTable();
     }
 
-    // ปรับปรุงระบบโหลดข้อมูล: เพิ่ม Retry เป็น 3 ครั้ง แบบขยับเวลาถอยหลัง (Exponential Backoff)
-    async function loadData(manual = false, retries = 3) {
+    // ปรับแก้ระบบดึงข้อมูลให้เร็วขึ้นและลดอาการล้มเหลวด้วย Retry & Timeout Handling
+    async function loadData(manual = false, retries = 1) {
         const tableBody = document.getElementById('dataTable');
         const refreshBtn = document.querySelector('.bi-arrow-clockwise');
         if(refreshBtn) refreshBtn.classList.add('bi-spin');
@@ -931,7 +927,7 @@
                 method: 'POST', 
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                 body: JSON.stringify({action: "read"}) 
-            }, 25000); // รองรับเวลาประมวลผลสูงถึง 25 วินาที
+            }, 8000); // ตั้ง Timeout ที่ 8 วินาที
 
             if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
             
@@ -971,9 +967,8 @@
         } catch (e) { 
             console.error("Load attempt failed:", e);
             if (retries > 0) {
-                // พยายามดึงใหม่อัตโนมัติสูงสุด 3 ครั้ง เพิ่มระยะเวลาห่างในแต่ละรอบ
-                const delay = (4 - retries) * 1500;
-                setTimeout(() => loadData(manual, retries - 1), delay);
+                // พยายามดึงใหม่อีก 1 ครั้งอัตโนมัติ
+                setTimeout(() => loadData(manual, retries - 1), 1000);
             } else {
                 tableBody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:30px; color:var(--ios-red);">ดึงข้อมูลไม่สำเร็จ กรุณากดปุ่มรีเฟรชอีกครั้ง</td></tr>'; 
             }
