@@ -608,7 +608,7 @@
 </div>
 
 <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwstNwOuBsPMgDjj3zyVHkeR-w7gAKlgORabdMQN89ymkCfK5Fh3iNb3HIP4qzHUxFR/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyve9yTM_Cv9AmP-EocQ7ywBLZoHcesY5EKtlUH9rYrAPuEtt-5T6O-sP4Lh4MgfXDU/exec';
 
     const jobTypes = [
         "Complaint", "MGM ปรับลด", "ยกเลิกบริการ (ปกติ)", "ยกเลิกบริการ (5P)", "MNP",
@@ -917,7 +917,7 @@
     }
 
     // ปรับแก้ระบบดึงข้อมูลให้เร็วขึ้นและลดอาการล้มเหลวด้วย Retry & Timeout Handling
-    async function loadData(manual = false, retries = 1) {
+    async function loadData(manual = false, retries = 2) {
         const tableBody = document.getElementById('dataTable');
         const refreshBtn = document.querySelector('.bi-arrow-clockwise');
         if(refreshBtn) refreshBtn.classList.add('bi-spin');
@@ -927,7 +927,7 @@
                 method: 'POST', 
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                 body: JSON.stringify({action: "read"}) 
-            }, 8000); // ตั้ง Timeout ที่ 8 วินาที
+            }, 12000); // เพิ่ม Timeout เป็น 12 วินาที
 
             if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
             
@@ -967,8 +967,8 @@
         } catch (e) { 
             console.error("Load attempt failed:", e);
             if (retries > 0) {
-                // พยายามดึงใหม่อีก 1 ครั้งอัตโนมัติ
-                setTimeout(() => loadData(manual, retries - 1), 1000);
+                // พยายามดึงใหม่อีกครั้งอัตโนมัติ (retries ครั้ง)
+                setTimeout(() => loadData(manual, retries - 1), 1500);
             } else {
                 tableBody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:30px; color:var(--ios-red);">ดึงข้อมูลไม่สำเร็จ กรุณากดปุ่มรีเฟรชอีกครั้ง</td></tr>'; 
             }
