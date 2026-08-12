@@ -608,7 +608,7 @@
 </div>
 
 <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwTZgku8J7RY9Hm-rQrRNJ3Ti4ljsYQlGfqGY8UwAi7KYH_pzm--KDdXrZ1srd2RfeU/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxbe6nWnhGcpobLY0gTlrqCfjwnXnDZm0DK2PpRAI2sG0zBNHlY6m2bBjJPMm6R1vCJ/exec';
 
     const jobTypes = [
         "Complaint", "MGM ปรับลด", "ยกเลิกบริการ (ปกติ)", "ยกเลิกบริการ (5P)", "MNP",
@@ -632,13 +632,26 @@
     let isDragging = false;
     let startX, startY, shiftX, shiftY;
 
-    async function fetchWithTimeout(url, options = {}, timeout = 12000) {
+    // --- ฟังก์ชันหลักที่ป้องกันปัญหาจากระบบ Network องค์กรบล็อก ---
+    async function apiCall(payload, timeout = 30000) {
         const controller = new AbortController();
         const id = setTimeout(() => controller.abort(), timeout);
+        
         try {
-            const response = await fetch(url, { ...options, signal: controller.signal });
+            const response = await fetch(SCRIPT_URL, {
+                method: 'POST',
+                mode: 'cors',        // อนุญาตให้ทำ Cross-Origin (ทะลุ Firewall บางตัว)
+                redirect: 'follow',  // สำคัญมากสำหรับ Google Apps Script เพื่อตาม Redirect URL
+                cache: 'no-store',   // บังคับไม่ให้ Proxy องค์กรเอา Cache เก่ามาตอบแทน
+                headers: { 
+                    'Content-Type': 'text/plain;charset=utf-8' // ป้องกัน CORS Preflight Block
+                },
+                body: JSON.stringify(payload),
+                signal: controller.signal
+            });
             clearTimeout(id);
-            return response;
+            if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+            return await response.json();
         } catch (error) {
             clearTimeout(id);
             throw error;
@@ -921,15 +934,7 @@
         if(refreshBtn) refreshBtn.classList.add('bi-spin');
         
         try {
-            const res = await fetchWithTimeout(SCRIPT_URL, { 
-                method: 'POST', 
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({action: "read"}) 
-            }, 10000);
-
-            if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
-            
-            const data = await res.json();
+            const data = await apiCall({action: "read"});
             
             const today = new Date();
             today.setHours(0, 0, 0, 0);
@@ -967,7 +972,7 @@
             if (retries > 0) {
                 setTimeout(() => loadData(manual, retries - 1), 1000);
             } else {
-                tableBody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:30px; color:var(--ios-red);">ดึงข้อมูลไม่สำเร็จ กรุณากดปุ่มรีเฟรชอีกครั้ง</td></tr>'; 
+                tableBody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:30px; color:var(--ios-red);">ดึงข้อมูลไม่สำเร็จ กรุณากดปุ่มรีเฟรชอีกครั้ง หรือตรวจสอบอินเทอร์เน็ต</td></tr>'; 
             }
         } finally { 
             if(refreshBtn) refreshBtn.classList.remove('bi-spin'); 
@@ -1077,9 +1082,7 @@
             fullData[idx][9] = String(fullData[idx]._isProcessing);
             filterData(); updateStats(fullData); 
         }
-        try { 
-            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "toggleProcessing", reportId: reportId }) }); 
-        } catch (e) { loadData(); }
+        try { await apiCall({ action: "toggleProcessing", reportId: reportId }); } catch (e) { loadData(); }
     }
 
     async function togglePin(reportId) {
@@ -1095,9 +1098,7 @@
             });
             filterData(); updateStats(fullData);
         }
-        try { 
-            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "togglePin", reportId: reportId }) }); 
-        } catch (e) { loadData(); }
+        try { await apiCall({ action: "togglePin", reportId: reportId }); } catch (e) { loadData(); }
     }
 
     async function toggleDaily(reportId) {
@@ -1113,12 +1114,9 @@
                 const dDate = parseCustomDate(fullData[idx][10]);
                 fullData[idx]._isOverdue = dDate && dDate < today;
             }
-            
             filterData(); updateStats(fullData);
         }
-        try { 
-            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "toggleDaily", reportId: reportId }) }); 
-        } catch (e) { loadData(); }
+        try { await apiCall({ action: "toggleDaily", reportId: reportId }); } catch (e) { loadData(); }
     }
 
     async function deleteData(reportId) {
@@ -1130,12 +1128,7 @@
         if (confirm.isConfirmed) {
             Swal.fire({ title: 'กำลังประมวลผล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
             try {
-                const res = await fetch(SCRIPT_URL, { 
-                    method: 'POST', 
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({action: "delete", reportId: String(reportId).trim()}) 
-                });
-                const serverResponse = await res.json();
+                const serverResponse = await apiCall({action: "delete", reportId: String(reportId).trim()});
                 if(serverResponse.status === "success") {
                     Swal.fire({title: 'ย้ายใบงานลงถังขยะเรียบร้อยแล้วครับ', icon: 'success', timer: 1000, showConfirmButton: false});
                     loadData(true);
@@ -1152,12 +1145,7 @@
     async function openTrashModal() {
         Swal.fire({ title: 'กำลังโหลดข้อมูลในถังขยะ...', didOpen: () => Swal.showLoading() });
         try {
-            const res = await fetch(SCRIPT_URL, { 
-                method: 'POST', 
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({action: "readTrash"}) 
-            });
-            const trashData = await res.json();
+            const trashData = await apiCall({action: "readTrash"});
             
             let tableRowsHtml = '';
             if (!Array.isArray(trashData) || trashData.length === 0) {
@@ -1224,12 +1212,7 @@
     async function restoreTrashItem(reportId) {
         Swal.fire({ title: 'กำลังกู้คืนข้อมูล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
         try {
-            const res = await fetch(SCRIPT_URL, { 
-                method: 'POST', 
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({action: "restore", reportId: String(reportId).trim()}) 
-            });
-            const serverResponse = await res.json();
+            const serverResponse = await apiCall({action: "restore", reportId: String(reportId).trim()});
             if(serverResponse.status === "success") {
                 Swal.fire({title: 'กู้คืนงานสำเร็จครับ', icon: 'success', timer: 1000, showConfirmButton: false}).then(() => {
                     loadData(true);
@@ -1254,12 +1237,7 @@
         if (confirm.isConfirmed) {
             Swal.fire({ title: 'กำลังลบข้อมูล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
             try {
-                const res = await fetch(SCRIPT_URL, { 
-                    method: 'POST', 
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({action: "deletePermanently", reportId: String(reportId).trim()}) 
-                });
-                const serverResponse = await res.json();
+                const serverResponse = await apiCall({action: "deletePermanently", reportId: String(reportId).trim()});
                 if(serverResponse.status === "success") {
                     Swal.fire({title: 'ลบใบงานถาวรเรียบร้อยแล้วครับ', icon: 'success', timer: 1000, showConfirmButton: false}).then(() => {
                         openTrashModal();
@@ -1275,12 +1253,7 @@
     async function openLogsModal() {
         Swal.fire({ title: 'กำลังโหลด Log การทำรายการ...', didOpen: () => Swal.showLoading() });
         try {
-            const res = await fetch(SCRIPT_URL, { 
-                method: 'POST', 
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({action: "readLogs"}) 
-            });
-            const logsData = await res.json();
+            const logsData = await apiCall({action: "readLogs"});
             
             let tableRowsHtml = '';
             if (!Array.isArray(logsData) || logsData.length === 0) {
@@ -1472,12 +1445,7 @@
             if (result.isConfirmed) {
                 Swal.fire({title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
                 try {
-                    const res = await fetch(SCRIPT_URL, { 
-                        method: 'POST', 
-                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                        body: JSON.stringify(result.value) 
-                    });
-                    const serverResponse = await res.json();
+                    const serverResponse = await apiCall(result.value);
                     if(serverResponse.status === "success") {
                         Swal.fire({title: 'สำเร็จ', icon: 'success', timer: 1000, showConfirmButton: false}).then(() => {
                             currentPage = 1;
@@ -1586,12 +1554,7 @@
             if (result.isConfirmed) {
                 Swal.fire({title: 'กำลังอัพเดท...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
                 try {
-                    const res = await fetch(SCRIPT_URL, { 
-                        method: 'POST', 
-                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                        body: JSON.stringify(result.value) 
-                    });
-                    const serverResponse = await res.json();
+                    const serverResponse = await apiCall(result.value);
                     if(serverResponse.status === "success") {
                         Swal.fire({title: 'สำเร็จ', icon: 'success', timer: 1000, showConfirmButton: false}).then(() => {
                             const newType = result.value.jobType;
