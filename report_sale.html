@@ -2,308 +2,348 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <title>รายงานยอดขายรายบุคคล - Parakit-site</title>
     <link rel="icon" type="image/png" href="favicon.png">
-    <!-- โหลดชุดฟอนต์พรีเมียม Prompt และ Bootstrap Icons -->
-    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     
     <style>
-        * { box-sizing: border-box; font-family: 'Prompt', sans-serif !important; margin: 0; padding: 0; }
-        
-        body { 
-            background: radial-gradient(circle at 50% 0%, #f8fafc 0%, #e2e8f0 100%);
+        :root {
+            --blue: #007aff;
+            --blue2: #0056d6;
+            --green: #22c55e;
+            --red: #ef4444;
+            --orange: #ff9500;
+            --purple: #8b5cf6;
+            --pink: #ec4899;
+            --bg: #eef3f9;
+            --text: #17181c;
+            --muted: #6b7280;
+            --glass: rgba(255, 255, 255, 0.68);
+            --glassStrong: rgba(255, 255, 255, 0.85);
+            --border: rgba(255, 255, 255, 0.82);
+            --shadow: 0 18px 50px rgba(15, 23, 42, 0.08);
+            --shadowSmall: 0 8px 24px rgba(15, 23, 42, 0.06);
+            --radius: 24px;
+            --sidebar-dark: rgba(28, 28, 30, 0.96);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Kanit', sans-serif !important;
+        }
+
+        body {
+            min-height: 100vh;
+            color: var(--text);
+            background: radial-gradient(circle at 15% 5%, rgba(0,122,255,.12), transparent 32%),
+                        radial-gradient(circle at 90% 10%, rgba(139,92,246,.10), transparent 30%),
+                        linear-gradient(180deg, #f8fbff 0%, #eef3f9 100%);
             background-attachment: fixed;
-            color: #1c1c1e; 
-            padding-bottom: 80px; 
-            -webkit-font-smoothing: antialiased;
+            padding-bottom: 70px;
         }
-        
-        /* Premium Ultra-Thin iOS Native Glass Header Bar */
-        header { 
-            background: rgba(255, 255, 255, 0.4); 
-            backdrop-filter: blur(40px);
-            -webkit-backdrop-filter: blur(40px);
-            color: #007aff; 
-            padding: 26px; 
-            text-align: center; 
-            font-size: 26px; 
-            font-weight: 700; 
-            box-shadow: inset 0 -1px 0px rgba(255, 255, 255, 0.4), 0 4px 30px rgba(0, 0, 0, 0.02);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-            letter-spacing: -0.7px;
-        }
-        
-        .container { max-width: 1440px; margin: 40px auto; padding: 0 32px; }
-        
-        /* Integrated Controls Tray - รูปแบบ Soft UI Pill แบบใหม่ */
-        .controls-row { 
-            display: flex; 
-            flex-wrap: wrap; 
-            gap: 20px; 
-            align-items: center; 
-            justify-content: flex-end; 
-            background: rgba(255, 255, 255, 0.45); 
-            backdrop-filter: blur(30px);
-            -webkit-backdrop-filter: blur(30px);
-            padding: 16px 28px; 
-            border-radius: 24px; 
-            box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.6), 0 8px 32px rgba(31, 41, 55, 0.03); 
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            margin-bottom: 35px; 
-        }
-        .control-group { display: flex; align-items: center; gap: 12px; }
-        label { font-weight: 500; color: #48484a; font-size: 14px; }
-        
-        /* iOS Smooth Minimalist Fields */
-        input[type="date"], select { 
-            padding: 10px 16px; 
-            border: 1px solid rgba(0, 0, 0, 0.06); 
-            border-radius: 14px; 
-            font-size: 14px; 
-            outline: none; 
-            background: rgba(255, 255, 255, 0.75); 
-            color: #1c1c1e;
-            font-weight: 500;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.01);
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        input[type="date"]:focus, select:focus { 
-            border-color: #007aff; 
-            background: #ffffff;
-            box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.12), 0 4px 12px rgba(0, 0, 0, 0.02);
-        }
-        
-        /* Premium iOS Solid Rounded Button */
-        .btn-fetch { 
-            background: #007aff; 
-            color: white; 
-            border: none; 
-            padding: 11px 36px; 
-            border-radius: 14px; 
-            font-size: 14px; 
-            font-weight: 600; 
-            cursor: pointer; 
-            box-shadow: 0 4px 14px rgba(0, 122, 255, 0.25);
-            transition: all 0.2s ease; 
-        }
-        .btn-fetch:hover { 
-            background: #0066d6;
-            transform: translateY(-0.5px);
-            box-shadow: 0 6px 20px rgba(0, 122, 255, 0.35);
-        }
-        
-        /* --- iOS Micro-Glassmorphic Structure --- */
-        .card { 
-            backdrop-filter: blur(30px);
-            -webkit-backdrop-filter: blur(30px);
-            border-radius: 28px; 
-            padding: 28px; 
-            margin-bottom: 30px; 
-            border: 1px solid rgba(255, 255, 255, 0.6);
-            box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.7), 0 12px 40px rgba(0, 0, 0, 0.02);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        
-        .card-daily { background: rgba(242, 248, 255, 0.65); }
-        .card-details { background: rgba(255, 255, 255, 0.55); }
-        .card-postpay { background: rgba(246, 245, 255, 0.65); }
-        .card-cumulative { background: rgba(242, 254, 246, 0.68); }
-        .card-brand { background: rgba(254, 245, 255, 0.65); }
-        .card-focus { background: rgba(255, 244, 246, 0.65); }
-        .card-target { background: rgba(255, 249, 241, 0.65); }
 
-        .card-title { 
-            font-size: 18px; 
-            font-weight: 600; 
-            margin-bottom: 22px; 
-            padding-bottom: 12px; 
-            border-bottom: 1px solid rgba(0, 0, 0, 0.05); 
+        /* Header */
+        .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            padding: 16px max(18px, calc((100vw - 1500px) / 2));
+        }
+        .topbar-inner {
             display: flex;
             align-items: center;
-            gap: 12px;
-            letter-spacing: -0.3px;
+            justify-content: space-between;
+            gap: 18px;
+            padding: 15px 18px;
+            border: 1px solid rgba(255, 255, 255, 0.82);
+            border-radius: 22px;
+            background: rgba(255, 255, 255, 0.68);
+            backdrop-filter: blur(28px);
+            -webkit-backdrop-filter: blur(28px);
+            box-shadow: 0 10px 35px rgba(15, 23, 42, 0.06);
         }
-        .card-daily .card-title { color: #0056b3; }
-        .card-details .card-title { color: #1c1c1e; }
-        .card-postpay .card-title { color: #3b3a78; }
-        .card-focus .card-title { color: #a31432; }
-        .card-cumulative .card-title { color: #146c2e; }
-        .card-target .card-title { color: #b55a00; }
-        .card-brand .card-title { color: #6a1b8a; }
-        
-        /* Layout Structure Flexible Grids */
-        .row-flex { display: flex; gap: 30px; flex-wrap: wrap; }
-        .flex-left-main { flex: 2; min-width: 600px; display: flex; flex-direction: column; gap: 0px; }
-        .flex-right-side { flex: 1; min-width: 340px; display: flex; flex-direction: column; gap: 0px; }
-        
-        /* Modern Floating Row Tables */
-        table { width: 100%; border-collapse: separate; border-spacing: 0 4px; font-size: 14px; }
-        th, td { text-align: left; padding: 14px 16px; }
-        th { background-color: rgba(0, 0, 0, 0.04); color: #555559; font-weight: 600; border-radius: 10px; padding: 10px 16px; }
-        td { color: #2c2c2e; background: rgba(255, 255, 255, 0.25); }
-        tr td:first-child { border-top-left-radius: 12px; border-bottom-left-radius: 12px; }
-        tr td:last-child { border-top-right-radius: 12px; border-bottom-right-radius: 12px; }
-        tr:hover td { background: rgba(255, 255, 255, 0.6); }
-        
-        /* Metrics Blocks Layout */
-        .daily-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; }
-        .daily-box { 
-            background: rgba(255, 255, 255, 0.45); 
-            padding: 18px 22px; 
-            border-radius: 20px; 
-            border: 1px solid rgba(255, 255, 255, 0.6); 
-            display: flex; 
-            flex-direction: column; 
-            justify-content: center;
-            box-shadow: inset 0 1px 1px rgba(255,255,255,0.8), 0 2px 6px rgba(0,0,0,0.01);
+        .brand { display: flex; align-items: center; gap: 13px; }
+        .brand-icon {
+            width: 46px; height: 46px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 15px; color: white; font-size: 21px;
+            background: linear-gradient(135deg, #007aff, #5b8cff);
+            box-shadow: 0 10px 25px rgba(0, 122, 255, 0.25);
         }
-        .daily-box-label { font-size: 12px; font-weight: 600; color: #8e8e93; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .daily-box-value { font-size: 19px; font-weight: 700; color: #1c1c1e; }
-        .badge-date { background: #007aff; color: white; padding: 3px 12px; border-radius: 10px; font-size: 13px; font-weight: 600; box-shadow: 0 2px 8px rgba(0,122,255,0.2); }
-        
-        /* Color Flag Conditions */
-        .text-red { color: #ff3b30 !important; font-weight: 600; }
-        .text-green { color: #34c759 !important; font-weight: 600; }
-        
-        /* Pagination Controls */
-        .pagination { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 26px; }
-        .page-btn { padding: 8px 18px; border: 1px solid rgba(0, 0, 0, 0.04); background: rgba(255, 255, 255, 0.7); border-radius: 12px; cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.2s; box-shadow: 0 2px 6px rgba(0,0,0,0.01); }
-        .page-btn.active { background-color: #007aff; color: white; border-color: #007aff; box-shadow: 0 4px 12px rgba(0, 122, 255, 0.2); }
-        .page-btn:disabled { background-color: rgba(0, 0, 0, 0.03); color: #aeaeae; cursor: not-allowed; box-shadow: none; }
-        
-        /* Cumulative Grid Module */
-        .sub-cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 18px; }
-        .sub-card { 
-            background: rgba(255, 255, 255, 0.4); 
-            padding: 18px; 
-            border-radius: 20px; 
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            box-shadow: inset 0 1px 1px rgba(255,255,255,0.8), 0 4px 12px rgba(0, 0, 0, 0.01);
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        .brand-text { display: flex; flex-direction: column; line-height: 1.15; }
+        .brand-title { font-size: 18px; font-weight: 700; }
+        .brand-subtitle { font-size: 11px; color: var(--muted); margin-top: 3px; }
+        .status {
+            display: flex; align-items: center; gap: 7px;
+            padding: 7px 12px; border-radius: 99px;
+            background: rgba(34, 197, 94, 0.10); color: #15803d;
+            font-size: 12px; font-weight: 600;
         }
-        .sub-card:hover { transform: translateY(-2px); background: rgba(255, 255, 255, 0.75); box-shadow: inset 0 1px 1px rgba(255,255,255,0.9), 0 8px 24px rgba(0, 0, 0, 0.03); }
-        .sub-card-title { font-weight: 600; color: #1c1c1e; margin-bottom: 12px; font-size: 14px; display: flex; align-items: center; gap: 8px; }
-        .sub-card-data { font-size: 13px; display: flex; flex-direction: column; gap: 6px; color: #48484a; }
-        .sub-card-data div { display: flex; justify-content: space-between; border-bottom: 1px dashed rgba(0,0,0,0.04); padding-bottom: 3px; }
-        
-        /* Modern Ultra blur Loading Screen */
-        #loading { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.45); backdrop-filter: blur(35px); -webkit-backdrop-filter: blur(35px); justify-content: center; align-items: center; font-size: 16px; font-weight: 500; color: #007aff; z-index: 1000; gap: 12px; }
-        .spinner { animation: rot 0.8s linear infinite; font-size: 22px; }
-        @keyframes rot { 100% { transform: rotate(360deg); } }
+        .status-dot {
+            width: 7px; height: 7px; border-radius: 50%;
+            background: #22c55e; box-shadow: 0 0 0 5px rgba(34, 197, 94, 0.10);
+        }
 
-        /* Floating Menu & Sidebar Module Style */
+        /* Container */
+        .container { width: min(1500px, calc(100% - 36px)); margin: 20px auto 0; }
+
+        /* Control Panel */
+        .control-panel {
+            display: grid;
+            grid-template-columns: minmax(210px, 1fr) minmax(240px, 1fr) auto;
+            gap: 14px; margin-bottom: 22px;
+        }
+        .control {
+            min-height: 80px; padding: 16px 18px;
+            border-radius: 20px; background: rgba(255, 255, 255, 0.70);
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(20px); box-shadow: var(--shadowSmall);
+        }
+        .control-label { display: block; margin-bottom: 6px; font-size: 13px; font-weight: 600; color: #7b8493; }
+        .control-field {
+            width: 100%; height: 42px; border: none; outline: none;
+            border-radius: 12px; padding: 0 12px;
+            background: rgba(241, 245, 249, 0.8); color: var(--text);
+            font-size: 15px; font-weight: 500;
+        }
+        .control-field:focus { box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.10); background: white; }
+        .fetch-btn {
+            min-width: 150px; border: none; border-radius: 20px;
+            cursor: pointer; color: white; font-size: 15px; font-weight: 600;
+            background: linear-gradient(135deg, #007aff, #0062da);
+            box-shadow: 0 12px 28px rgba(0, 122, 255, 0.23); transition: .2s;
+        }
+        .fetch-btn:hover { transform: translateY(-2px); box-shadow: 0 16px 32px rgba(0, 122, 255, 0.28); }
+        .fetch-btn:active { transform: scale(0.98); }
+
+        /* Hero KPI */
+        .hero-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 12px; margin-bottom: 22px;
+        }
+        .kpi {
+            position: relative; overflow: hidden;
+            min-height: 120px; padding: 17px;
+            border: 1px solid rgba(255, 255, 255, 0.85);
+            border-radius: 22px; background: rgba(255, 255, 255, 0.67);
+            backdrop-filter: blur(25px); box-shadow: var(--shadowSmall);
+        }
+        .kpi::after {
+            content: ''; position: absolute; width: 80px; height: 80px;
+            right: -25px; bottom: -25px; border-radius: 50%;
+            background: rgba(0, 122, 255, 0.07);
+        }
+        .kpi-label { color: #7c8593; font-size: 13px; font-weight: 600; }
+        .kpi-value-row { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+        .kpi-actual { font-size: 24px; font-weight: 700; letter-spacing: -0.4px; }
+        .kpi-diff-label { font-size: 13px; font-weight: 600; color: #6b7280; }
+        .kpi-diff { font-size: 15px; font-weight: 600; }
+        .text-green { color: #16a34a !important; font-weight: 600; }
+        .text-red { color: #ef4444 !important; font-weight: 600; }
+
+        /* Cards */
+        .card {
+            margin-bottom: 20px; padding: 22px;
+            border-radius: var(--radius);
+            background: var(--glass);
+            border: 1px solid rgba(255, 255, 255, 0.86);
+            backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+            box-shadow: var(--shadow);
+        }
+        .card-title {
+            display: flex; align-items: center; gap: 10px;
+            margin-bottom: 18px; font-size: 18px; font-weight: 700;
+        }
+        .card-title i {
+            width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+            border-radius: 11px; background: rgba(0, 122, 255, 0.10); color: var(--blue);
+        }
+
+        /* Layout Grid */
+        .two-col { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(350px, 1fr); gap: 20px; }
+
+        /* Tables */
+        .table-wrap { width: 100%; overflow: auto; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0 5px; font-size: 14px; }
+        th {
+            padding: 11px 13px; background: rgba(15, 23, 42, 0.045);
+            color: #667085; font-weight: 600; text-align: left; white-space: nowrap;
+            font-size: 14px;
+        }
+        td { padding: 12px 13px; background: rgba(255, 255, 255, 0.42); white-space: nowrap; color: #30343b; font-size: 14px; }
+        tbody tr td:first-child { border-radius: 11px 0 0 11px; }
+        tbody tr td:last-child { border-radius: 0 11px 11px 0; }
+        tbody tr:hover td { background: rgba(255, 255, 255, 0.75); }
+        .time-badge {
+            display: inline-flex; padding: 4px 8px; border-radius: 8px;
+            background: rgba(100, 116, 139, 0.10); color: #64748b; font-size: 12px;
+        }
+
+        /* Cumulative Cards Grid */
+        .sub-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+        .sub-card {
+            padding: 16px; border-radius: 17px;
+            background: rgba(255, 255, 255, 0.46);
+            border: 1px solid rgba(255, 255, 255, 0.7); transition: .2s;
+        }
+        .sub-card:hover { transform: translateY(-2px); background: rgba(255, 255, 255, 0.72); }
+        .sub-title { display: flex; align-items: center; gap: 8px; margin-bottom: 11px; font-size: 15px; font-weight: 700; }
+        .sub-title i { color: var(--blue); }
+        .sub-line {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 5px 0; border-bottom: 1px dashed rgba(15, 23, 42, 0.06);
+            font-size: 14px;
+        }
+        .sub-line:last-child { border-bottom: 0; }
+
+        /* Pagination */
+        .pagination { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 7px; margin-top: 17px; }
+        .page-btn {
+            min-width: 36px; height: 36px; padding: 0 12px;
+            border: none; border-radius: 10px;
+            background: rgba(255, 255, 255, 0.75); color: #4b5563;
+            cursor: pointer; font-size: 14px; box-shadow: 0 4px 10px rgba(15, 23, 42, 0.04);
+        }
+        .page-btn.active { background: var(--blue); color: white; }
+        .page-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+        /* Loading Overlay */
+        .loading {
+            position: fixed; inset: 0; z-index: 5000; display: none;
+            align-items: center; justify-content: center;
+            background: rgba(240, 245, 250, 0.45); backdrop-filter: blur(24px);
+        }
+        .loading.active { display: flex; }
+        .loading-box {
+            min-width: 230px; padding: 20px 22px; display: flex; align-items: center; justify-content: center; gap: 10px;
+            border-radius: 19px; background: rgba(255, 255, 255, 0.84);
+            box-shadow: 0 25px 60px rgba(15, 23, 42, 0.14); font-size: 14px; font-weight: 600;
+        }
+        .spinner {
+            width: 22px; height: 22px; border: 3px solid rgba(0, 122, 255, 0.16);
+            border-top-color: var(--blue); border-radius: 50%; animation: spin .7s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Floating Sidebar System */
         #floatingMenuBtn {
-            position: fixed;
-            top: 15px;
-            left: 15px;
-            width: 50px;
-            height: 50px;
-            background: #007aff;
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            cursor: move;
-            z-index: 2100;
-            box-shadow: 0 6px 20px rgba(0, 122, 255, 0.35);
-            border: none;
-            touch-action: none;
-            transition: transform 0.2s, opacity 0.2s;
+            position: fixed; top: 10px; left: 15px; width: 45px; height: 45px;
+            background: var(--blue); color: white; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px; cursor: move; z-index: 2100;
+            box-shadow: 0 4px 15px rgba(0, 122, 255, 0.4); border: none;
+            touch-action: none; transition: transform 0.2s, opacity 0.2s;
         }
         #floatingMenuBtn:active { transform: scale(0.9); }
 
         .sidebar-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.15);
+            position: fixed; inset: 0; background: rgba(0,0,0,0.3);
+            z-index: 2000; display: none; opacity: 0; transition: opacity 0.3s;
             backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
-            z-index: 2000;
-            display: none;
-            opacity: 0;
-            transition: opacity 0.3s;
         }
         .sidebar-overlay.active { display: block; opacity: 1; }
 
         .sidebar-float {
-            position: fixed;
-            width: 280px;
-            max-height: 70vh;
-            background: rgba(28, 28, 30, 0.93);
-            backdrop-filter: blur(30px);
-            -webkit-backdrop-filter: blur(30px);
-            border-radius: 24px;
-            overflow-y: auto;
-            z-index: 2001;
-            opacity: 0;
-            visibility: hidden;
-            transform: scale(0.85) translateY(10px);
+            position: fixed; width: 280px; max-height: 70vh;
+            background: var(--sidebar-dark); border-radius: 20px;
+            overflow-y: auto; z-index: 2001; opacity: 0; visibility: hidden;
+            transform: scale(0.8) translateY(10px);
             transition: opacity 0.3s, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
-            border: 1px solid rgba(255,255,255,0.08);
-            scrollbar-width: thin;
-            scrollbar-color: rgba(255,255,255,0.2) transparent;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1);
+            scrollbar-width: none; 
+            -ms-overflow-style: none;
         }
+
+        .sidebar-float::-webkit-scrollbar { display: none; }
         .sidebar-float.active { opacity: 1; visibility: visible; transform: scale(1) translateY(0); }
-        .sidebar-float .sidebar-header { padding: 22px; font-size: 16px; font-weight: 600; color: #fff; border-bottom: 0.5px solid rgba(255,255,255,0.08); letter-spacing: -0.2px; }
+        .sidebar-float .sidebar-header { padding: 20px; font-size: 17px; font-weight: 600; color: #fff; border-bottom: 0.5px solid rgba(255,255,255,0.1); }
         .sidebar-float .menu { padding: 8px 0; }
         .sidebar-float .menu a, .sidebar-float .drop-btn { 
-            width: 100%; padding: 13px 22px; background: none; border: none; 
+            width: 100%; padding: 12px 20px; background: none; border: none; 
             color: #ebebf5; text-align: left; font-size: 14px; cursor: pointer; 
             display: flex; align-items: center; text-decoration: none; transition: 0.2s;
         }
-        .sidebar-float .menu a:hover, .sidebar-float .drop-btn:hover { background: rgba(255,255,255,0.08); color: #fff; }
-        .sidebar-float .sub { display: none; background: rgba(0,0,0,0.15); }
+        .sidebar-float .menu a:hover, .sidebar-float .drop-btn:hover { background: rgba(255,255,255,0.1); }
+        .sidebar-float .sub { display: none; background: rgba(0,0,0,0.2); }
         .sidebar-float .item.open .sub { display: block; }
         .sidebar-float .sub a { padding-left: 45px; font-size: 13px; color: #8e8e93; }
+
+        @media (max-width: 1200px) {
+            .two-col { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 850px) {
+            .control-panel { grid-template-columns: 1fr; }
+            .fetch-btn { min-height: 58px; }
+        }
+        @media (max-width: 700px) {
+            .container { width: calc(100% - 18px); margin-top: 10px; }
+            .topbar { padding: 8px; }
+            .topbar-inner { border-radius: 18px; padding: 12px; }
+            .brand-title { font-size: 15px; }
+            .status { display: none; }
+            .card { padding: 15px; border-radius: 20px; }
+        }
     </style>
 </head>
 <body>
 
-    <!-- ระบบเมนูปุ่มลอยลากได้ นำทางภารกิจ -->
+    <!-- Floating Sidebar Menu -->
     <button id="floatingMenuBtn" title="ลากเพื่อย้าย">เมนู</button>
     <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebarFloat()"></div>
     <aside class="sidebar-float" id="sidebarFloat"></aside>
 
-    <div id="loading"><i class="bi bi-arrow-repeat spinner"></i> กำลังดึงข้อมูล กรุณารอสักครู่...</div>
-
-    <header>รายงานยอดขายรายบุคคล</header>
-
-    <div class="container">
-        <!-- Controls Bar -->
-        <div class="controls-row">
-            <div class="control-group">
-                <label><i class="bi bi-calendar3"></i> เลือกวันที่:</label>
-                <input type="date" id="datePicker">
+    <!-- Header -->
+    <header class="topbar">
+        <div class="topbar-inner">
+            <div class="brand">
+                <div class="brand-icon"><i class="bi bi-person-vcard-fill"></i></div>
+                <div class="brand-text">
+                    <div class="brand-title">รายงานยอดขายรายบุคคล</div>
+                    <div class="brand-subtitle">TrueShop Performance Dashboard</div>
+                </div>
             </div>
-            <div class="control-group">
-                <label><i class="bi bi-person-badge"></i> ชื่อพนักงาน:</label>
-                <select id="employeeSelect">
+            <div class="status">
+                <span class="status-dot"></span> ระบบออนไลน์
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="container">
+        <!-- Control Panel -->
+        <section class="control-panel">
+            <div class="control">
+                <span class="control-label"><i class="bi bi-calendar3"></i> เลือกวันที่</span>
+                <input type="date" id="datePicker" class="control-field">
+            </div>
+            <div class="control">
+                <span class="control-label"><i class="bi bi-person-badge"></i> ชื่อพนักงาน</span>
+                <select id="employeeSelect" class="control-field">
                     <option value="">-- เลือกพนักงาน --</option>
                     <option value="นวพล">นวพล</option>
                     <option value="ปิยะพร">ปิยะพร</option>
                     <option value="กรทักษ์">กรทักษ์</option>
                 </select>
             </div>
-            <button class="btn-fetch" onclick="fetchData()">ดึงข้อมูล</button>
-        </div>
+            <button class="fetch-btn" type="button" onclick="fetchData()"><i class="bi bi-cloud-arrow-down-fill"></i> ดึงข้อมูล</button>
+        </section>
 
         <div id="dashboardWorkspace" style="display: none;">
-            
-            <!-- การ์ดยอดขายรายวัน -->
-            <div class="card card-daily">
+            <!-- Hero Daily KPI Cards -->
+            <section class="card">
                 <div class="card-title"><i class="bi bi-calendar-day"></i> ยอดขายรายวัน : <span class="emp-name-lbl">-</span></div>
-                <div id="dailyMetricsContainer" class="daily-list"></div>
-            </div>
+                <div id="dailyMetricsContainer" class="hero-grid"></div>
+            </section>
 
-            <!-- การ์ดรายละเอียดการขาย -->
-            <div class="card card-details">
-                <div class="card-title"><i class="bi bi-list-columns-reverse"></i> รายละเอียดการขาย : <span class="emp-name-lbl">-</span></div>
-                <div style="overflow-x: auto;">
+            <!-- Detailed Sales Table -->
+            <section class="card">
+                <div class="card-title"><i class="bi bi-receipt"></i> รายละเอียดการขาย : <span class="emp-name-lbl">-</span></div>
+                <div class="table-wrap">
                     <table id="salesDetailsTable">
                         <thead>
                             <tr>
@@ -322,101 +362,111 @@
                     </table>
                 </div>
                 <div class="pagination" id="paginationContainer"></div>
-            </div>
+            </section>
 
-            <!-- Split Grid Section -->
-            <div class="row-flex" style="align-items: flex-start;">
-                
-                <!-- ฝั่งซ้ายมือ -->
-                <div class="flex-left-main">
-                    
-                    <!-- รายละเอียดการขาย Postpay -->
-                    <div class="card card-postpay" style="width: 100%;">
-                        <div class="card-title"><i class="bi bi-telephone-plus"></i> รายละเอียดการขาย Postpay : <span class="emp-name-lbl">-</span></div>
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Typeการขาย</th>
-                                    <th>ยอดขาย (บาท)</th>
-                                    <th>จำนวน</th>
-                                </tr>
-                            </thead>
-                            <tbody id="postpaySalesBody"></tbody>
-                        </table>
+            <!-- Grid Layout Section -->
+            <section class="two-col">
+                <!-- Left Main Column -->
+                <div>
+                    <!-- Postpay Detail Card -->
+                    <div class="card">
+                        <div class="card-title"><i class="bi bi-telephone-plus-fill"></i> รายละเอียดการขาย Postpay : <span class="emp-name-lbl">-</span></div>
+                        <div class="table-wrap">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Typeการขาย</th>
+                                        <th>ยอดขาย (บาท)</th>
+                                        <th>จำนวน</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="postpaySalesBody"></tbody>
+                            </table>
+                        </div>
                     </div>
 
-                    <!-- ยอดขายสะสมทั้งเดือน -->
-                    <div class="card card-cumulative" style="width: 100%;">
+                    <!-- Cumulative Sales Card -->
+                    <div class="card">
                         <div class="card-title"><i class="bi bi-activity"></i> ยอดขายสะสมทั้งเดือน : <span class="emp-name-lbl">-</span></div>
-                        <div id="cumulativeGrid" class="sub-cards-grid"></div>
+                        <div id="cumulativeGrid" class="sub-grid"></div>
                     </div>
-                    
-                    <!-- สรุปยอดขายตามแบรนด์ -->
-                    <div class="card card-brand" style="width: 100%; margin-bottom: 0;">
-                        <div class="card-title"><i class="bi bi-grid-3x3-gap"></i> สรุปยอดขายตามแบรนด์ : <span class="emp-name-lbl">-</span></div>
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>แบรนด์</th>
-                                    <th>ยอดรวม</th>
-                                    <th>จำนวนเครื่อง</th>
-                                </tr>
-                            </thead>
-                            <tbody id="brandSummaryBody"></tbody>
-                        </table>
+
+                    <!-- Brand Summary Card -->
+                    <div class="card">
+                        <div class="card-title"><i class="bi bi-grid-3x3-gap-fill"></i> สรุปยอดขายตามแบรนด์ : <span class="emp-name-lbl">-</span></div>
+                        <div class="table-wrap">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>แบรนด์</th>
+                                        <th>ยอดรวม</th>
+                                        <th>จำนวนเครื่อง</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="brandSummaryBody"></tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
 
-                <!-- ฝั่งขวามือ -->
-                <div class="flex-right-side">
-                    
-                    <!-- การ์ด Focus -->
-                    <div class="card card-focus" style="width: 100%;">
+                <!-- Right Side Column -->
+                <div>
+                    <!-- Focus Card -->
+                    <div class="card">
                         <div class="card-title"><i class="bi bi-bullseye"></i> Focus : <span class="emp-name-lbl">-</span></div>
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Target</th>
-                                    <th>Actual</th>
-                                </tr>
-                            </thead>
-                            <tbody id="focusShopBody"></tbody>
-                        </table>
+                        <div class="table-wrap">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Target</th>
+                                        <th>Actual</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="focusShopBody"></tbody>
+                            </table>
+                        </div>
                     </div>
 
-                    <!-- การ์ด รวม Target ทั้งหมด -->
-                    <div class="card card-target" style="width: 100%;">
-                        <div class="card-title"><i class="bi bi-trophy"></i> รวม Target ทั้งหมด : <span class="emp-name-lbl">-</span></div>
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>รายการ Target</th>
-                                    <th>จำนวน</th>
-                                </tr>
-                            </thead>
-                            <tbody id="targetAllBody"></tbody>
-                        </table>
+                    <!-- Target All Card -->
+                    <div class="card">
+                        <div class="card-title"><i class="bi bi-trophy-fill"></i> รวม Target ทั้งหมด : <span class="emp-name-lbl">-</span></div>
+                        <div class="table-wrap">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>รายการ Target</th>
+                                        <th>จำนวน</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="targetAllBody"></tbody>
+                            </table>
+                        </div>
                     </div>
 
-                    <!-- การ์ด ค่า Commission -->
-                    <div class="card card-target" style="width: 100%; margin-bottom: 0; border-top: 5px solid #ff9500;">
+                    <!-- Commission Card -->
+                    <div class="card">
                         <div class="card-title"><i class="bi bi-currency-dollar"></i> ค่า Commission : <span class="emp-name-lbl">-</span></div>
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>รายการ</th>
-                                    <th>%การขาย</th>
-                                    <th>ค่าคอมที่ได้รับ</th>
-                                </tr>
-                            </thead>
-                            <tbody id="commissionBody"></tbody>
-                        </table>
+                        <div class="table-wrap">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>รายการ</th>
+                                        <th>%การขาย</th>
+                                        <th>ค่าคอมที่ได้รับ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="commissionBody"></tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
-
-            </div>
-
+            </section>
         </div>
+    </main>
+
+    <!-- Loading Screen -->
+    <div id="loading" class="loading">
+        <div class="loading-box"><div class="spinner"></div> กำลังดึงข้อมูล...</div>
     </div>
 
     <script>
@@ -485,7 +535,7 @@
             if(!selectedDate) return alert("กรุณาเลือกวันที่ก่อนครับ");
             if(!employee) return alert("กรุณาเลือกชื่อพนักงานก่อนครับ");
 
-            document.getElementById('loading').style.display = 'flex';
+            document.getElementById('loading').classList.add('active');
 
             fetch(`${WEB_APP_URL}?date=${selectedDate}&employee=${encodeURIComponent(employee)}`)
                 .then(res => res.json())
@@ -503,8 +553,19 @@
                     alert("ไม่สามารถติดต่อเซิร์ฟเวอร์ฐานข้อมูลชีตได้สำเร็จ ตรวจสอบสิทธิ์สคริปต์กลางครับ");
                 })
                 .finally(() => {
-                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('loading').classList.remove('active');
                 });
+        }
+
+        function heroCard(label, actual, icon) {
+            return `
+                <div class="kpi">
+                    <div class="kpi-label"><i class="bi ${icon}"></i> ${label}</div>
+                    <div class="kpi-value-row">
+                        <span class="kpi-actual">${actual || '-'}</span>
+                    </div>
+                </div>
+            `;
         }
 
         function renderDashboard(data) {
@@ -512,15 +573,15 @@
             const metricsContainer = document.getElementById('dailyMetricsContainer');
             if(d) {
                 metricsContainer.innerHTML = `
-                    <div class="daily-box"><span class="daily-box-label">วันที่</span><div class="daily-box-value"><span class="badge-date">${displayFormatDate(document.getElementById('datePicker').value)}</span></div></div>
-                    <div class="daily-box"><span class="daily-box-label">New Post / DIFF</span><div class="daily-box-value">${formatInt(d.newPost)} <span style="font-size:14px; color:#aeaeae; font-weight:400;">|</span> ${formatDiffInt(d.newPostDiff)}</div></div>
-                    <div class="daily-box"><span class="daily-box-label">Exiting / DIFF</span><div class="daily-box-value">${formatInt(d.exiting)} <span style="font-size:14px; color:#aeaeae; font-weight:400;">|</span> ${formatDiffInt(d.exitingDiff)}</div></div>
-                    <div class="daily-box"><span class="daily-box-label">Apple / DIFF</span><div class="daily-box-value">${formatInt(d.apple)} <span style="font-size:14px; color:#aeaeae; font-weight:400;">|</span> ${formatDiffInt(d.appleDiff)}</div></div>
-                    <div class="daily-box"><span class="daily-box-label">SmartPhone / DIFF</span><div class="daily-box-value">${formatInt(d.smartPhone)} <span style="font-size:14px; color:#aeaeae; font-weight:400;">|</span> ${formatDiffInt(d.smartPhoneDiff)}</div></div>
-                    <div class="daily-box"><span class="daily-box-label">รวม Post / รวม Device</span><div class="daily-box-value" style="font-size:16px; color:#007aff;">${formatInt(d.totalPost)} <span style="font-size:13px; color:#8e8e93; font-weight:400;">Post</span> &nbsp;/&nbsp; ${formatInt(d.totalDevice)} <span style="font-size:13px; color:#8e8e93; font-weight:400;">Device</span></div></div>
+                    ${heroCard('วันที่', displayFormatDate(document.getElementById('datePicker').value), 'bi-calendar-event')}
+                    ${heroCard('New Post / DIFF', `${formatInt(d.newPost)} | ${formatDiffInt(d.newPostDiff)}`, 'bi-plus-circle')}
+                    ${heroCard('Existing / DIFF', `${formatInt(d.exiting)} | ${formatDiffInt(d.exitingDiff)}`, 'bi-arrow-return-left')}
+                    ${heroCard('Apple / DIFF', `${formatInt(d.apple)} | ${formatDiffInt(d.appleDiff)}`, 'bi-apple')}
+                    ${heroCard('SmartPhone / DIFF', `${formatInt(d.smartPhone)} | ${formatDiffInt(d.smartPhoneDiff)}`, 'bi-phone')}
+                    ${heroCard('รวม Post / รวม Device', `${formatInt(d.totalPost)} Post / ${formatInt(d.totalDevice)} Device`, 'bi-bar-chart')}
                 `;
             } else {
-                metricsContainer.innerHTML = '<p style="color:#ff3b30; padding:10px; font-weight:500;">ไม่พบข้อมูลยอดขายประจำวันที่ระบุในช่วงพิกัดตารางชีตครับ</p>';
+                metricsContainer.innerHTML = '<p style="color:#ef4444; padding:10px; font-weight:500;">ไม่พบข้อมูลยอดขายประจำวันที่ระบุในช่วงพิกัดตารางชีตครับ</p>';
             }
 
             currentSalesData = data.detailedSales || [];
@@ -540,7 +601,7 @@
             focusBody.innerHTML = data.focusShop.map(item => `
                 <tr>
                     <td style="font-weight:500;">${item.target !== "" ? item.target : '-'}</td>
-                    <td><b style="color:#ff2d55;">${item.actual !== "" ? item.actual : '-'}</b></td>
+                    <td><b style="color:#ec4899;">${item.actual !== "" ? item.actual : '-'}</b></td>
                 </tr>
             `).join('');
 
@@ -571,8 +632,8 @@
                     return `
                         <tr>
                             <td><b>${item.item || ''}</b></td>
-                            <td style="font-weight:500; color:#007aff;">${rateDisplay}</td>
-                            <td style="font-weight:600; color:#146c2e;">${item.amount !== "" ? formatInt(item.amount) : '-'}</td>
+                            <td style="font-weight:600; color:#007aff;">${rateDisplay}</td>
+                            <td style="font-weight:600; color:#16a34a;">${item.amount !== "" ? formatInt(item.amount) : '-'}</td>
                         </tr>
                     `;
                 }).join('');
@@ -593,7 +654,7 @@
             tbody.innerHTML = '';
             
             if(currentSalesData.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:#8e8e93; padding: 30px 0; font-size:15px;">ไม่พบยอดขายประจำวันนี้</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:#9ca3af; padding: 28px !important;">ไม่พบยอดขายประจำวันนี้</td></tr>`;
                 document.getElementById('paginationContainer').innerHTML = '';
                 return;
             }
@@ -612,7 +673,7 @@
                     <td style="font-weight:500;">${formatInt(row.postAmount)}</td>
                     <td>${row.device}</td>
                     <td style="font-weight:500;">${formatInt(row.deviceAmount)}</td>
-                    <td><span class="badge-date" style="background:#8e8e93; font-weight:400; font-size:12px; box-shadow:none;">${row.time}</span></td>
+                    <td><span class="time-badge">${row.time}</span></td>
                     <td>${row.loan}</td>
                 `;
                 tbody.appendChild(tr);
@@ -629,7 +690,7 @@
 
             const prevBtn = document.createElement('button');
             prevBtn.className = 'page-btn';
-            prevBtn.innerText = 'ก่อนหน้า';
+            prevBtn.innerHTML = '<i class="bi bi-chevron-left"></i>';
             prevBtn.disabled = currentPage === 1;
             prevBtn.onclick = () => { currentPage--; renderDetailedSalesTable(); };
             container.appendChild(prevBtn);
@@ -644,7 +705,7 @@
 
             const nextBtn = document.createElement('button');
             nextBtn.className = 'page-btn';
-            nextBtn.innerText = 'ถัดไป';
+            nextBtn.innerHTML = '<i class="bi bi-chevron-right"></i>';
             nextBtn.disabled = currentPage === totalPages;
             nextBtn.onclick = () => { currentPage++; renderDetailedSalesTable(); };
             container.appendChild(nextBtn);
@@ -657,13 +718,13 @@
             const totalDays = ctx.totalDays;
 
             const keys = [
-                { name: "All Post", obj: c.allPost, icon: "bi-collection" },
-                { name: "New Post", obj: c.newPost, icon: "bi-plus-square" },
-                { name: "Exiting", obj: c.exiting, icon: "bi-box-arrow-in-right" },
-                { name: "All Device", obj: c.allDevice, icon: "bi-devices" },
+                { name: "All Post", obj: c.allPost, icon: "bi-collection-fill" },
+                { name: "New Post", obj: c.newPost, icon: "bi-plus-square-fill" },
+                { name: "Exiting", obj: c.exiting, icon: "bi-arrow-return-left" },
+                { name: "All Device", obj: c.allDevice, icon: "bi-phone-vibrate-fill" },
                 { name: "Apple", obj: c.apple, icon: "bi-apple" },
-                { name: "iPhone", obj: c.iphone, icon: "bi-phone" },
-                { name: "iPad", obj: c.ipad, icon: "bi-tablet" },
+                { name: "iPhone", obj: c.iphone, icon: "bi-phone-fill" },
+                { name: "iPad", obj: c.ipad, icon: "bi-tablet-fill" },
                 { name: "SmartPhone", obj: c.smartPhone, icon: "bi-phone-flip" }
             ];
 
@@ -681,13 +742,11 @@
 
                 return `
                     <div class="sub-card">
-                        <div class="sub-card-title"><i class="${k.icon}"></i> ${k.name}</div>
-                        <div class="sub-card-data">
-                            <div><span>Actual:</span> <b>${formatInt(itemObj.actual)}</b></div>
-                            <div><span>DIFF:</span> <b>${formatDiffInt(itemObj.diff)}</b></div>
-                            <div><span>%Achieve:</span> <b style="color:#007aff;">${formatPercent(achieveNum)}</b></div>
-                            <div><span>%Runrate:</span> <b style="color:#146c2e;">${formatPercent(runrateResult)}</b></div>
-                        </div>
+                        <div class="sub-title"><i class="bi ${k.icon}"></i> ${k.name}</div>
+                        <div class="sub-line"><span>Actual</span><b>${formatInt(itemObj.actual)}</b></div>
+                        <div class="sub-line"><span>DIFF</span><b>${formatDiffInt(itemObj.diff)}</b></div>
+                        <div class="sub-line"><span>%Achieve</span><b style="color:#007aff;">${formatPercent(achieveNum)}</b></div>
+                        <div class="sub-line"><span>%Runrate</span><b style="color:#16a34a;">${formatPercent(runrateResult)}</b></div>
                     </div>
                 `;
             }).join('');
@@ -698,27 +757,27 @@
             tbody.innerHTML = '';
             
             const sections = [
-                { label: "Target All Post", items: targets.allPost, bg: "rgba(0, 122, 255, 0.08)", color: "#0056b3" },
-                { label: "Target New Post", items: targets.newPost, bg: "rgba(0, 122, 255, 0.04)", color: "#007aff" },
-                { label: "Target Exiting", items: targets.exiting, bg: "rgba(0, 122, 255, 0.04)", color: "#007aff" },
-                { label: "Target All Device", items: targets.allDevice, bg: "rgba(255, 149, 0, 0.09)", color: "#b55a00" },
-                { label: "Target Apple", items: targets.apple, bg: "rgba(255, 149, 0, 0.09)", color: "#b55a00" },
-                { label: "Target iPhone", items: targets.iphone, bg: "rgba(255, 149, 0, 0.04)", color: "#ff9500" },
-                { label: "Target iPad", items: targets.ipad, bg: "rgba(255, 149, 0, 0.04)", color: "#ff9500" },
-                { label: "Target SmartPhone", items: targets.smartPhone, bg: "rgba(255, 149, 0, 0.04)", color: "#ff9500" }
+                { label: "Target All Post", items: targets.allPost },
+                { label: "Target New Post", items: targets.newPost },
+                { label: "Target Exiting", items: targets.exiting },
+                { label: "Target All Device", items: targets.allDevice },
+                { label: "Target Apple", items: targets.apple },
+                { label: "Target iPhone", items: targets.iphone },
+                { label: "Target iPad", items: targets.ipad },
+                { label: "Target SmartPhone", items: targets.smartPhone }
             ];
 
             sections.forEach(sec => {
                 const titleTr = document.createElement('tr');
-                titleTr.innerHTML = `<td colspan="2" style="background-color: ${sec.bg}; font-weight: 600; color: ${sec.color}; padding: 12px 16px; font-size:14px; border-radius:10px;">${sec.label}</td>`;
+                titleTr.innerHTML = `<td colspan="2" style="background:rgba(0,122,255,.06); color:#0056b3; font-weight:700; border-radius:10px;">${sec.label}</td>`;
                 tbody.appendChild(titleTr);
                 
                 if(sec.items && sec.items.length > 0) {
                     sec.items.forEach(item => {
                         const tr = document.createElement('tr');
                         tr.innerHTML = `
-                            <td style="padding-left: 28px; color:#48484a; font-size:13px;">${item.label || '-'}</td>
-                            <td style="font-weight: 600; font-size:13px; color:#1c1c1e;">${item.value !== "" ? formatInt(item.value) : '-'}</td>
+                            <td style="padding-left: 25px;">${item.label || '-'}</td>
+                            <td>${item.value !== "" ? formatInt(item.value) : '-'}</td>
                         `;
                         tbody.appendChild(tr);
                     });
@@ -726,7 +785,7 @@
             });
         }
 
-        // ===== ระบบ JS ควบคุมชุดเครื่องมือเมนูปุ่มลอยลากได้ =====
+        /* Floating Sidebar Drag & Toggle System */
         const dragBtn = document.getElementById('floatingMenuBtn');
         const sideFloat = document.getElementById('sidebarFloat');
         const sideOverlay = document.getElementById('sidebarOverlay');
@@ -812,6 +871,9 @@
                             if (el) el.classList.add('open');
                         }
                     });
+                })
+                .catch(err => {
+                    sideFloat.innerHTML = `<div class="sidebar-header">เมนูนำทาง</div><div style="padding:20px; color:#8e8e93; font-size:13px; text-align:center;">ไม่สามารถโหลด sidebar.html ได้</div>`;
                 });
         }
 
