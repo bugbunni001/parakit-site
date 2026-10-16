@@ -241,10 +241,27 @@
         .mode-unlocked:hover { transform: scale(1.05); filter: brightness(1.1); }
         .btn-edit-mode:active { transform: scale(0.95); }
 
-        .summary-card { background: white; border-radius: 20px; padding: 12px; border: 1px solid rgba(0,0,0,0.05); transition: var(--transition-bounce); }
-        .summary-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.08); }
+        .summary-card { background: white; border-radius: 20px; padding: 14px; border: 1px solid rgba(0,0,0,0.05); transition: var(--transition-bounce); }
+        .summary-card:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(0,0,0,0.08); }
         .stat-badge { font-size: 11px; padding: 2px 8px; border-radius: 8px; font-weight: 600; transition: 0.2s; }
-        .stat-badge:hover { filter: contrast(1.2); transform: scale(1.1); }
+        .stat-badge:hover { filter: contrast(1.2); transform: scale(1.05); }
+
+        /* สไตล์สำหรับแท็กแสดงรายละเอียดวันหยุดแบบรายวัน */
+        .day-off-item {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+        }
+        .day-off-item.off-H { background: #f3e8ff; color: #7e22ce; }
+        .day-off-item.off-V { background: #ffe4e6; color: #e11d48; }
+        .day-off-item.off-PH { background: #ffedd5; color: #c2410c; }
+        .day-off-item.off-SICK { background: #f3f4f6; color: #4b5563; }
+        .day-off-item.off-EVENT { background: #fef9c3; color: #a16207; }
+        .day-off-item.off-LA { background: #e5e7eb; color: #111827; }
 
         .modal-btn { transition: var(--transition-bounce); cursor: pointer; }
         .modal-btn:hover { transform: scale(1.02); filter: brightness(1.05); }
@@ -252,7 +269,7 @@
 
         @media(min-width: 1024px) { 
             .summary-grid-responsive {
-                grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+                grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
             }
         }
 
@@ -386,9 +403,9 @@
     <div class="mb-10 px-2 sm:px-0">
         <div class="flex items-center gap-2 mb-4">
             <div class="w-1.5 h-6 bg-blue-500 rounded-full"></div>
-            <h2 class="text-lg font-bold text-gray-800">สรุปยอดวันหยุดประจำเดือน</h2>
+            <h2 class="text-lg font-bold text-gray-800">สรุปยอดและรายการวันหยุดประจำเดือน</h2>
         </div>
-        <div id="summaryGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 summary-grid-responsive gap-4"></div>
+        <div id="summaryGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 summary-grid-responsive gap-4"></div>
     </div>
 
     <footer class="text-center pb-8">
@@ -617,8 +634,12 @@
     function renderSummary(data) {
         const summaryGrid = document.getElementById('summaryGrid');
         summaryGrid.innerHTML = "";
+
         employees.forEach(emp => {
-            const empRecords = data.filter(r => r.empId == emp.id);
+            // กรองข้อมูลเฉพาะของพนักงานคนนี้ และเรียงตามวันที่ (น้อยไปมาก)
+            const empRecords = data.filter(r => r.empId == emp.id && r.status !== 'Work')
+                                  .sort((a, b) => new Date(a.date) - new Date(b.date));
+
             const stats = {
                 H: empRecords.filter(r => r.status === 'H').length,
                 V: empRecords.filter(r => r.status === 'V').length,
@@ -627,8 +648,56 @@
                 EVENT: empRecords.filter(r => r.status === 'EVENT').length,
                 LA: empRecords.filter(r => r.status === 'LA').length
             };
-            const totalOff = stats.H + stats.V + stats.SICK + stats.PH + stats.EVENT + stats.LA;
-            summaryGrid.innerHTML += `<div class="summary-card shadow-sm border border-gray-100 p-4"><div class="flex justify-between items-start mb-3"><div><p class="text-xs text-gray-400 font-medium">รหัส ${emp.id}</p><h3 class="font-bold text-gray-800">${emp.name}</h3></div><div class="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-xs font-bold">หยุด ${totalOff} วัน</div></div><div class="flex flex-wrap gap-1.5"><span class="stat-badge bg-purple-50 text-purple-600">H: ${stats.H}</span><span class="stat-badge bg-red-50 text-red-600">V: ${stats.V}</span><span class="stat-badge bg-orange-50 text-orange-600">PH: ${stats.PH}</span><span class="stat-badge bg-gray-100 text-gray-600">SICK: ${stats.SICK}</span><span class="stat-badge bg-yellow-50 text-yellow-700">EV: ${stats.EVENT}</span><span class="stat-badge bg-black text-white">LA: ${stats.LA}</span></div></div>`;
+            
+            const totalOff = empRecords.length;
+
+            // สร้างรายการวันที่ + สถานะ เช่น 1=H, 2=V
+            let dayListHTML = "";
+            if (empRecords.length > 0) {
+                dayListHTML = empRecords.map(r => {
+                    const dayNum = parseInt(r.date.split('-')[2]); // ดึงเฉพาะวันที่
+                    return `<span class="day-off-item off-${r.status}">${dayNum}=${r.status}</span>`;
+                }).join('');
+            } else {
+                dayListHTML = `<span class="text-xs text-gray-400 font-light italic">ไม่มีวันหยุดในเดือนนี้</span>`;
+            }
+
+            summaryGrid.innerHTML += `
+                <div class="summary-card shadow-sm border border-gray-100 p-4 flex flex-col justify-between">
+                    <div>
+                        <!-- ส่วนหัวชื่อและจำนวนวันหยุด -->
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <p class="text-xs text-gray-400 font-medium">รหัส ${emp.id}</p>
+                                <h3 class="font-bold text-gray-800 text-base leading-tight">${emp.name}</h3>
+                            </div>
+                            <div class="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-xs font-bold shrink-0">
+                                หยุด ${totalOff} วัน
+                            </div>
+                        </div>
+
+                        <!-- สรุปประเภทยอดวันหยุด (แบบรวม) -->
+                        <div class="flex flex-wrap gap-1 mb-3">
+                            <span class="stat-badge bg-purple-50 text-purple-600">H: ${stats.H}</span>
+                            <span class="stat-badge bg-red-50 text-red-600">V: ${stats.V}</span>
+                            <span class="stat-badge bg-orange-50 text-orange-600">PH: ${stats.PH}</span>
+                            <span class="stat-badge bg-gray-100 text-gray-600">SICK: ${stats.SICK}</span>
+                            <span class="stat-badge bg-yellow-50 text-yellow-700">EV: ${stats.EVENT}</span>
+                            <span class="stat-badge bg-black text-white">LA: ${stats.LA}</span>
+                        </div>
+                    </div>
+
+                    <!-- รายละเอียดวันหยุดรายวัน เช่น 1=H, 2=V -->
+                    <div class="pt-2.5 border-t border-gray-100/80">
+                        <p class="text-[11px] text-gray-400 font-medium mb-1.5 flex items-center gap-1">
+                            <span>รายการวันหยุด:</span>
+                        </p>
+                        <div class="flex flex-wrap gap-1 max-h-[85px] overflow-y-auto pr-1">
+                            ${dayListHTML}
+                        </div>
+                    </div>
+                </div>
+            `;
         });
     }
 
