@@ -557,7 +557,7 @@
 
 <script>
     // ===== CONFIG =====
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyc9quKfJhL_78rdWxUb8dC3kfM2SsZDmqmIp0v2TN_XmQ1P2tpbYhSp9ykgP3jVVKgYw/exec';
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby3ClppIV-Hb6kcYsYvUQksFaGFqxpKwpwpWUyULW7DCIQdQwbQ8aJ8W2foSpqETgzK/exec';
     const ROWS_PER_PAGE = 8;
     let currentSalesData = [];
     let currentPage = 1;
@@ -600,8 +600,7 @@
     // ===== EVENTS =====
     function initEvents() {
         $('fetchBtn').addEventListener('click', fetchData);
-        $('reportType').addEventListener('change', handleReportTypeChange);
-        $('morningBtn').addEventListener('click', processMorningTarget);
+        $('reportType').addEventListener('change', handleReportTypeChange);$('morningBtn').addEventListener('click', processMorningTarget);
         document.addEventListener('keydown', e => {
             if(e.key === 'Escape') {
                 closeModal();
@@ -613,8 +612,7 @@
     function handleReportTypeChange() {
         const type = $('reportType').value;
         closeModal();
-        $('morningPanel').style.display = 'none';
-        $('shopReport').style.display = 'none';
+        $('morningPanel').style.display = 'none';$('shopReport').style.display = 'none';
         if(type === 'morning') {
             $('morningPanel').style.display = 'block';
             return;
@@ -628,24 +626,15 @@
         const date = $('datePicker').value;
         if(!date) { alert('กรุณาเลือกวันที่'); return; }
         const reportType = $('reportType').value;
-        isFetching = true; 
-        setLoading(true); 
-        setFetchButton(true);
-
-        // ป้องกัน Error "พารามิเตอร์วันที่หรือชื่อพนักงานไม่ครบถ้วน" 
-        // แนบพารามิเตอร์ employee= (ค่าว่างเพื่อดูภาพรวม) และ action=report/getReport เพื่อให้รองรับ Apps Script ทุกเวอร์ชัน
-        const query = `action=report&date=${encodeURIComponent(date)}&employee=&name=`;
-
+        isFetching = true; setLoading(true); setFetchButton(true);
         try {
-            const data = await apiGet(query);
+            const data = await apiGet(`action=report&date=${encodeURIComponent(date)}`);
             if(!data) throw new Error('ระบบไม่ส่งข้อมูลกลับมา');
             if(data.error) throw new Error(data.error);
-            
             lastData = data;
-            currentSalesData = data.detailedSales || data.salesData || [];
+            currentSalesData = data.detailedSales || [];
             currentPage = 1;
             renderDashboard(data);
-
             if(reportType === 'shop') {
                 showShopMode();
             } else if(reportType === 'am') {
@@ -662,17 +651,15 @@
             console.error(err);
             alert('ดึงข้อมูลไม่สำเร็จ\n\n' + (err.message || 'กรุณาลองใหม่อีกครั้ง'));
         } finally {
-            isFetching = false; 
-            setLoading(false); 
-            setFetchButton(false);
+            isFetching = false; setLoading(false); setFetchButton(false);
         }
     }
 
-    // ฟังก์ชัน apiGet ขยายเวลารอเป็น 45 วินาที พร้อมเพิ่มระบบ Retry อัตโนมัติ 2 รอบ
+    // ปรับปรุงฟังก์ชัน apiGet ขยายเวลารอเป็น 45 วินาที พร้อมเพิ่มระบบ Retry อัตโนมัติ 2 รอบ
     async function apiGet(query, retries = 2) {
         for (let i = 0; i <= retries; i++) {
             const controller = new AbortController();
-            const timeout = setTimeout(() => controller.abort(), 45000);
+            const timeout = setTimeout(() => controller.abort(), 45000); // เพิ่ม Timeout เป็น 45 วินาที
             try {
                 const response = await fetch(`${WEB_APP_URL}?${query}&_=${Date.now()}`, { 
                     method: 'GET', 
@@ -691,6 +678,7 @@
                     }
                     throw err;
                 }
+                // รอก่อนลองใหม่ครั้งละ 1.5 วินาที
                 await new Promise(res => setTimeout(res, 1500));
             }
         }
@@ -704,8 +692,7 @@
         btn.innerHTML = loading ? '<i class="bi bi-arrow-repeat" style="animation:spin .7s linear infinite"></i> กำลังดึงข้อมูล' : '<i class="bi bi-cloud-arrow-down-fill"></i> ดึงข้อมูล';
     }
     function showShopMode() {
-        $('shopReport').style.display = 'block';
-        $('morningPanel').style.display = 'none';
+        $('shopReport').style.display = 'block';$('morningPanel').style.display = 'none';
     }
 
     // ===== DASHBOARD =====
@@ -729,7 +716,7 @@
             ${heroCard('Existing', formatInt(d.exiting), formatDiffInt(d.exitingDiff), 'bi-arrow-return-left')}
             ${heroCard('Apple', formatInt(d.apple), formatDiffInt(d.appleDiff), 'bi-apple')}
             ${heroCard('SmartPhone', formatInt(d.smartPhone), formatDiffInt(d.smartPhoneDiff), 'bi-phone')}
-            ${heroCard('Post / Device', `${formatInt(d.totalPost)} / ${formatInt(d.totalDevice)}`, '', 'bi-bar-chart')}
+            ${heroCard('Post / Device', `${formatInt(d.totalPost)} /${formatInt(d.totalDevice)}`, '', 'bi-bar-chart')}
         `;
     }
 
@@ -944,7 +931,7 @@
     // ===== SASI REPORT =====
     function showSasiReportModal(data, selectedDate) {
         const c = data.cumulative || {};
-        const detailed = data.detailedSales || data.salesData || [];
+        const detailed = data.detailedSales || [];
         const ctx = data.dayContext || { currentDay:1, totalDays:30 };
         let remainingDays = ctx.totalDays - ctx.currentDay;
         if(remainingDays <= 0) remainingDays = 1;
@@ -984,7 +971,7 @@
     function processMorningTarget() {
         if(!lastData) { alert('กรุณากด "ดึงข้อมูล" ก่อน'); return; }
         const c = lastData.cumulative || {};
-        const detailed = lastData.detailedSales || lastData.salesData || [];
+        const detailed = lastData.detailedSales || {};
         const ctx = lastData.dayContext || { currentDay:1, totalDays:30 };
         let remainingDays = ctx.totalDays - ctx.currentDay + 1;
         if(remainingDays <= 0) remainingDays = 1;
@@ -998,7 +985,7 @@
         const postPayAll = Math.round((cleanNumber(c.allPost?.target) - cleanNumber(c.allPost?.actual)) / remainingDays);
         const newTarget = Math.round((cleanNumber(c.newPost?.target) - cleanNumber(c.newPost?.actual)) / remainingDays);
         const existingTarget = Math.round((cleanNumber(c.exiting?.target) - cleanNumber(c.exiting?.actual)) / remainingDays);
-        const group = ['new sim only','mg sim only','new rahu','new พลังดาว','new MyPlan','new/mg bundling','mnp'];
+        const group = ['new sim only','mg sim only','new rahu','new พลังดาว','new myplan','new/mg bundling','mnp'];
         let text = `ชื่อสาขา : TS BigC Prachauthit\n\nจำนวน พนง ทั้งหมด : 5\n\nแบ่งเป็น\n\n1. Management : 1/${mgmt}\n2. RR : 3/${rr}\n3. PC : 1/${pc}\n\n=========\n\nเป้าหมายรายวัน\n\nPost pay all = ${postPayAll.toLocaleString()}\n\nNew = ${newTarget.toLocaleString()}\n\nExisting = ${existingTarget.toLocaleString()}\n\n========\n\nแจกเป้า RR ที่มาทำงาน`;
         if(!rr) text += '\n(ไม่มีพนักงาน RR มาปฏิบัติงานในวันนี้)';
         else {
