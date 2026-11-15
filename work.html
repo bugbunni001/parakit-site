@@ -798,7 +798,7 @@
     window.toggleModalStatusBtn = function(btn, hiddenInputId) {
         const isActive = btn.classList.toggle('active');
         const inputEl = document.getElementById(hiddenInputId);
-        if (inputEl) inputEl.value = isActive ? "true" : "";
+        if (inputEl) inputEl.value = isActive ? "true" : "false";
     };
 
     /* ฟังก์ชันแจ้งเตือนงานที่เกินกำหนดทุก 15 นาที */
@@ -806,7 +806,6 @@
         const overdueJobs = fullData.filter(row => row._isOverdue);
         if (overdueJobs.length === 0) return;
 
-        // ป้องกันการเด้งซ้อนทับหากผู้ใช้กำลังเปิด Modal กรอกข้อมูลหรือดูรายละเอียดอยู่
         if (Swal.isVisible() && isIntervalTrigger) return;
 
         let rowsHtml = '';
@@ -1011,19 +1010,62 @@
         currentPage = 1; renderTable();
     }
 
+    async function fetchSheetRows() {
+        const res = await fetch(SCRIPT_URL, { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({action: "read"}) 
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        if (!Array.isArray(data)) throw new Error("Invalid data format");
+        return data;
+    }
+
+    /* ฟังก์ชันตรวจสอบและซิงค์สถานะที่ถูกต้อง 100% ป้องกันหลังบ้านสลับคอลัมน์หรือไม่ได้บันทึก */
+    async function verifyAndSyncRowStates(reportId, targetStates) {
+        try {
+            const rows = await fetchSheetRows();
+            const row = rows.find(r => String(r[11]).trim() === String(reportId).trim());
+            if (!row) return;
+
+            const currentPinned = (row[7] === "true" || row[7] === true);
+            const currentProcessing = (row[9] === "true" || row[9] === true);
+            const currentDaily = (row[12] === "true" || row[12] === true);
+
+            // สั่ง toggle ทีละรายการ (Sequential) เฉพาะรายการที่ค่าในชีตยังไม่ตรงกับที่ผู้ใช้เลือก
+            if (typeof targetStates.isPinned === "boolean" && currentPinned !== targetStates.isPinned) {
+                await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: "togglePin", reportId: reportId })
+                });
+            }
+            if (typeof targetStates.isProcessing === "boolean" && currentProcessing !== targetStates.isProcessing) {
+                await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: "toggleProcessing", reportId: reportId })
+                });
+            }
+            if (typeof targetStates.isDaily === "boolean" && currentDaily !== targetStates.isDaily) {
+                await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: "toggleDaily", reportId: reportId })
+                });
+            }
+        } catch (err) {
+            console.warn("State verification skipped:", err);
+        }
+    }
+
     async function loadData(manual = false) {
         const tableBody = document.getElementById('dataTable');
         const refreshBtn = document.querySelector('.bi-arrow-clockwise');
         if(refreshBtn) refreshBtn.classList.add('bi-spin');
         try {
-            const res = await fetch(SCRIPT_URL, { 
-                method: 'POST', 
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({action: "read"}) 
-            });
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const data = await res.json();
-            if (!Array.isArray(data)) throw new Error("Invalid data format");
+            const data = await fetchSheetRows();
             
             const today = new Date();
             today.setHours(0, 0, 0, 0);
@@ -1055,7 +1097,6 @@
             filterData();
             updateStats(fullData);
 
-            // แจ้งเตือนงานที่เกินกำหนดครั้งแรกเมื่อโหลดหน้าเว็บสำเร็จ
             if (!hasShownInitialOverdueAlert) {
                 hasShownInitialOverdueAlert = true;
                 checkAndAlertOverdueJobs(false);
@@ -1552,9 +1593,9 @@
                                 <i class="bi bi-infinity"></i> แสดงทุกวัน
                             </button>
                         </div>
-                        <input type="hidden" id="add-isPinned" value="">
-                        <input type="hidden" id="add-isProcessing" value="">
-                        <input type="hidden" id="add-isDaily" value="">
+                        <input type="hidden" id="add-isPinned" value="false">
+                        <input type="hidden" id="add-isProcessing" value="false">
+                        <input type="hidden" id="add-isDaily" value="false">
                     </div>
                     <div class="swal-field-full"><label class="swal-label">รายละเอียด</label><textarea id="jobDetail" class="swal-input-styled" style="height:160px;"></textarea></div>
                     <div class="swal-field-full">
@@ -1593,17 +1634,12 @@
                     });
                     const serverResponse = await res.json();
                     if(serverResponse.status === "success") {
-                        // ซิงค์สถานะเพิ่มเติมกรณีหลังบ้าน insert ยังไม่ได้บันทึกสถานะปักหมุด/กำลังดำเนินการให้
-                        const syncPromises = [];
-                        if (result.value.isPinned === "true") {
-                            syncPromises.push(fetch(SCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: "togglePin", reportId: newId }) }));
-                        }
-                        if (result.value.isProcessing === "true") {
-                            syncPromises.push(fetch(SCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: "toggleProcessing", reportId: newId }) }));
-                        }
-                        if (syncPromises.length > 0) {
-                            await Promise.allSettled(syncPromises);
-                        }
+                        // ตรวจสอบค่าจริงใน Google Sheet หลังบันทึก หากช่องใดยังไม่ตรงตามที่เลือกจะซิงค์ให้อัตโนมัติทีละรายการ
+                        await verifyAndSyncRowStates(newId, {
+                            isPinned: result.value.isPinned === "true",
+                            isProcessing: result.value.isProcessing === "true",
+                            isDaily: result.value.isDaily === "true"
+                        });
 
                         Swal.fire({title: 'สำเร็จ', icon: 'success', timer: 1000, showConfirmButton: false}).then(() => {
                             currentPage = 1;
@@ -1689,9 +1725,9 @@
                                 <i class="bi bi-infinity"></i> แสดงทุกวัน
                             </button>
                         </div>
-                        <input type="hidden" id="swal-isPinned" value="${initPinned ? 'true' : ''}">
-                        <input type="hidden" id="swal-isProcessing" value="${initProcessing ? 'true' : ''}">
-                        <input type="hidden" id="swal-isDaily" value="${initDaily ? 'true' : ''}">
+                        <input type="hidden" id="swal-isPinned" value="${initPinned ? 'true' : 'false'}">
+                        <input type="hidden" id="swal-isProcessing" value="${initProcessing ? 'true' : 'false'}">
+                        <input type="hidden" id="swal-isDaily" value="${initDaily ? 'true' : 'false'}">
                     </div>
                     <div class="swal-field-full"><label class="swal-label">รายละเอียด</label><textarea id="swal-jobDetail" class="swal-input-styled" style="height:160px; resize:none;">${String(item[6] || '').replace(/^'/, '')}</textarea></div>
                     <div class="swal-field-full">
@@ -1732,24 +1768,12 @@
                     });
                     const serverResponse = await res.json();
                     if(serverResponse.status === "success") {
-                        // ตรวจสอบและซิงค์สถานะหากมีการเปลี่ยนค่าในหน้าต่างแก้ไข (ป้องกันกรณีหลังบ้าน update ทับค่าเดิม)
-                        const newPinned = result.value.isPinned === "true";
-                        const newProcessing = result.value.isProcessing === "true";
-                        const newDaily = result.value.isDaily === "true";
-
-                        const syncPromises = [];
-                        if (newPinned !== initPinned) {
-                            syncPromises.push(fetch(SCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: "togglePin", reportId: item[11] }) }));
-                        }
-                        if (newProcessing !== initProcessing) {
-                            syncPromises.push(fetch(SCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: "toggleProcessing", reportId: item[11] }) }));
-                        }
-                        if (newDaily !== initDaily) {
-                            syncPromises.push(fetch(SCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: "toggleDaily", reportId: item[11] }) }));
-                        }
-                        if (syncPromises.length > 0) {
-                            await Promise.allSettled(syncPromises);
-                        }
+                        // ตรวจสอบค่าจริงใน Google Sheet หลังอัพเดท หากช่องใดยังไม่ตรงตามที่เลือกจะซิงค์ให้อัตโนมัติทีละรายการ
+                        await verifyAndSyncRowStates(item[11], {
+                            isPinned: result.value.isPinned === "true",
+                            isProcessing: result.value.isProcessing === "true",
+                            isDaily: result.value.isDaily === "true"
+                        });
 
                         Swal.fire({title: 'สำเร็จ', icon: 'success', timer: 1000, showConfirmButton: false}).then(() => {
                             const newType = result.value.jobType;
