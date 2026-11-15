@@ -402,6 +402,48 @@
         
         .btn-pin:hover:not(.active) { background: #ffe6c2; transform: translateY(-2px); }
 
+        /* สไตล์ปุ่มเลือกสถานะภายใน Modal เพิ่ม/แก้ไขข้อมูล */
+        .modal-status-group {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+        .status-toggle-btn {
+            padding: 12px 10px;
+            border-radius: 14px;
+            border: 1.5px solid #e5e5ea;
+            background: #f9f9f9;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-light);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+        .status-toggle-btn:hover { transform: translateY(-1px); }
+        .status-toggle-btn.pin-btn.active {
+            background: #fff8ed;
+            border-color: var(--ios-orange);
+            color: var(--ios-orange);
+            box-shadow: 0 4px 12px rgba(255, 149, 0, 0.15);
+        }
+        .status-toggle-btn.process-btn.active {
+            background: #eef7ff;
+            border-color: var(--ios-blue);
+            color: var(--ios-blue);
+            box-shadow: 0 4px 12px rgba(0, 122, 255, 0.15);
+        }
+        .status-toggle-btn.daily-btn.active {
+            background: #f5eeff;
+            border-color: var(--ios-purple);
+            color: var(--ios-purple);
+            box-shadow: 0 4px 12px rgba(142, 90, 255, 0.15);
+        }
+
         .pagination-container {
             display: flex;
             justify-content: center;
@@ -625,6 +667,7 @@
     
     let selectedFiles = []; 
     let existingFiles = []; 
+    let hasShownInitialOverdueAlert = false;
 
     const dragBtn = document.getElementById('floatingMenuBtn');
     const sideFloat = document.getElementById('sidebarFloat');
@@ -751,6 +794,75 @@
 
     function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
 
+    /* สลับสถานะปุ่มภายในหน้าต่าง Modal เพิ่ม/แก้ไขรายการ */
+    window.toggleModalStatusBtn = function(btn, hiddenInputId) {
+        const isActive = btn.classList.toggle('active');
+        const inputEl = document.getElementById(hiddenInputId);
+        if (inputEl) inputEl.value = isActive ? "true" : "";
+    };
+
+    /* ฟังก์ชันแจ้งเตือนงานที่เกินกำหนดทุก 15 นาที */
+    function checkAndAlertOverdueJobs(isIntervalTrigger = false) {
+        const overdueJobs = fullData.filter(row => row._isOverdue);
+        if (overdueJobs.length === 0) return;
+
+        // ป้องกันการเด้งซ้อนทับหากผู้ใช้กำลังเปิด Modal กรอกข้อมูลหรือดูรายละเอียดอยู่
+        if (Swal.isVisible() && isIntervalTrigger) return;
+
+        let rowsHtml = '';
+        overdueJobs.forEach(row => {
+            const reportId = row[11] || '-';
+            const jobType = row[8] || 'ทั่วไป';
+            const rawPass = row[13] ? String(row[13]).replace(/^'/, '').trim() : "";
+            const customerName = rawPass ? '🔒 [ติดรหัสผ่าน]' : (row[2] || '-');
+            const memberId = rawPass ? '***' : String(row[1] || '').replace(/^'/, '');
+            const staff = row[4] || '-';
+            const deadline = fixDate(row[10]);
+
+            rowsHtml += `
+                <tr>
+                    <td><strong>${reportId}</strong><br><small style="color:var(--text-light);">${jobType}</small></td>
+                    <td>${customerName}<br><small style="color:var(--text-light);">${memberId}</small></td>
+                    <td>${staff}</td>
+                    <td style="color:var(--ios-red); font-weight:700; white-space:nowrap;">${deadline}</td>
+                </tr>
+            `;
+        });
+
+        Swal.fire({
+            title: `<i class="bi bi-exclamation-triangle-fill" style="color:var(--ios-red);"></i> แจ้งเตือนงานเลยกำหนด (${overdueJobs.length} รายการ)`,
+            width: '760px',
+            customClass: { popup: 'swal-modal-custom' },
+            html: `
+                <p style="font-size:14px; color:var(--ios-red); background:#fff0f0; border:1px solid rgba(255,59,48,0.25); padding:10px 14px; border-radius:12px; margin-bottom:12px; text-align:left; font-weight:500;">
+                    <i class="bi bi-alarm-fill"></i> พบงานที่เลยวันครบกำหนดค้างอยู่ในระบบ กรุณาเร่งดำเนินการเคลียร์งานโดยด่วน!
+                </p>
+                <div style="max-height: 360px; overflow-y: auto; border: 1px solid rgba(0,0,0,0.08); border-radius:14px; background:#fff;">
+                    <table class="modal-table">
+                        <thead>
+                            <tr>
+                                <th>ID / ประเภทงาน</th>
+                                <th>ลูกค้า / รหัสสมาชิก</th>
+                                <th>พนักงาน</th>
+                                <th>วันครบกำหนด</th>
+                            </tr>
+                        </thead>
+                        <tbody>${rowsHtml}</tbody>
+                    </table>
+                </div>
+            `,
+            showCancelButton: true,
+            confirmButtonText: '<i class="bi bi-funnel-fill"></i> แสดงเฉพาะงานเลยกำหนดในตาราง',
+            confirmButtonColor: '#FF9500',
+            cancelButtonText: 'รับทราบ / ปิด'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                filterByOverdue();
+                scrollToTop();
+            }
+        });
+    }
+
     function updateStats(data) {
         const statsCon = document.getElementById('statsContainer');
         const counts = {};
@@ -856,14 +968,14 @@
 
     function filterByPinned(el) {
         document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
-        el.classList.add('active');
+        if (el) el.classList.add('active');
         filteredData = fullData.filter(row => row._isPinned);
         currentPage = 1; renderTable();
     }
 
     function filterByProcessing(el) {
         document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
-        el.classList.add('active');
+        if (el) el.classList.add('active');
         filteredData = fullData.filter(row => row._isProcessing);
         currentPage = 1; renderTable();
     }
@@ -905,7 +1017,7 @@
         if(refreshBtn) refreshBtn.classList.add('bi-spin');
         try {
             const res = await fetch(SCRIPT_URL, { 
-                method: 'POST',
+                method: 'POST', 
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                 body: JSON.stringify({action: "read"}) 
             });
@@ -942,6 +1054,12 @@
 
             filterData();
             updateStats(fullData);
+
+            // แจ้งเตือนงานที่เกินกำหนดครั้งแรกเมื่อโหลดหน้าเว็บสำเร็จ
+            if (!hasShownInitialOverdueAlert) {
+                hasShownInitialOverdueAlert = true;
+                checkAndAlertOverdueJobs(false);
+            }
         } catch (e) { 
             console.error("Load failed:", e);
             tableBody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:30px; color:var(--ios-red);">โหลดไม่สำเร็จ: ' + e.message + '<br><small>กรุณารีเฟรชหน้าเว็บหรือตรวจสอบการเชื่อมต่อ</small></td></tr>'; 
@@ -1335,13 +1453,24 @@
             const urls = item[5].split(", ");
             filesDetail = urls.map((u, i) => `<a href="${u}" target="_blank" style="color:var(--ios-blue); text-decoration:none; font-weight:600; margin-right:15px;"><i class="bi bi-file-earmark-text"></i> ไฟล์ที่ ${i+1}</a>`).join('');
         }
+        const isPinned = (item[7] === "true" || item[7] === true || item._isPinned);
+        const isProcessing = (item[9] === "true" || item[9] === true || item._isProcessing);
+        const isDaily = (item[12] === "true" || item[12] === true || item._isDaily);
+
         Swal.fire({
             title: 'รายละเอียดรายการ',
             customClass: { popup: 'swal-modal-custom' }, width: '700px',
             html: `
                 <div class="swal-form-container">
                     <div class="swal-field-full"><label class="swal-label">Report ID</label><div class="detail-view-item"><span class="val">${item[11] || '-'}</span></div></div>
-                    <div class="swal-field-full"><label class="swal-label">ประเภทงาน</label><div class="detail-view-item"><span class="job-type-badge${item[8] === 'Complaint' ? ' complaint-badge' : ''}">${item[8] || 'ทั่วไป'}</span> ${item[12] === 'true' ? '<span class="job-type-badge" style="background:var(--ios-purple); color:white;">แสดงทุกวัน</span>' : ''}</div></div>
+                    <div class="swal-field-full"><label class="swal-label">ประเภทงานและสถานะ</label>
+                        <div class="detail-view-item" style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+                            <span class="job-type-badge${item[8] === 'Complaint' ? ' complaint-badge' : ''}">${item[8] || 'ทั่วไป'}</span>
+                            ${isPinned ? '<span class="job-type-badge" style="background:var(--ios-orange); color:white; border:none;"><i class="bi bi-pin-angle-fill"></i> ปักหมุด</span>' : ''}
+                            ${isProcessing ? '<span class="job-type-badge" style="background:var(--ios-dark-blue); color:white; border:none;"><i class="bi bi-clock-history"></i> กำลังดำเนินการ</span>' : ''}
+                            ${isDaily ? '<span class="job-type-badge" style="background:var(--ios-purple); color:white; border:none;"><i class="bi bi-infinity"></i> แสดงทุกวัน</span>' : ''}
+                        </div>
+                    </div>
                     <div><label class="swal-label">วันที่ดำเนินการ</label><div class="detail-view-item"><span class="val">${fixDate(item[0])}</span></div></div>
                     <div><label class="swal-label">รหัสสมาชิก</label><div class="detail-view-item"><span class="val">${String(item[1]||'').replace(/^'/, '')}</span></div></div>
                     <div class="swal-field-full"><label class="swal-label">ชื่อลูกค้า</label><div class="detail-view-item"><span class="val">${item[2]||''}</span></div></div>
@@ -1410,9 +1539,22 @@
                         <label class="swal-label" style="color:var(--ios-red);"><i class="bi bi-lock-fill"></i> รหัสผ่านล็อคงาน</label>
                         <input type="text" id="jobPassword" class="swal-input-styled" placeholder="กำหนดรหัสผ่าน">
                     </div>
-                    <div class="swal-field-full" style="display:flex; align-items:center; gap:10px; background:#f5eeff; padding:10px; border-radius:14px; border:1px dashed var(--ios-purple);">
-                        <input type="checkbox" id="isDaily" style="width:20px; height:20px; cursor:pointer;">
-                        <label for="isDaily" style="font-size:14px; font-weight:600; color:var(--ios-purple); cursor:pointer;">แสดงงานนี้ทุกวัน (Infinity Mode)</label>
+                    <div class="swal-field-full">
+                        <label class="swal-label">สถานะงาน (คลิกเพื่อเปิด/ปิด)</label>
+                        <div class="modal-status-group">
+                            <button type="button" class="status-toggle-btn pin-btn" onclick="toggleModalStatusBtn(this, 'add-isPinned')">
+                                <i class="bi bi-pin-angle-fill"></i> ปักหมุด
+                            </button>
+                            <button type="button" class="status-toggle-btn process-btn" onclick="toggleModalStatusBtn(this, 'add-isProcessing')">
+                                <i class="bi bi-clock-history"></i> กำลังดำเนินการ
+                            </button>
+                            <button type="button" class="status-toggle-btn daily-btn" onclick="toggleModalStatusBtn(this, 'add-isDaily')">
+                                <i class="bi bi-infinity"></i> แสดงทุกวัน
+                            </button>
+                        </div>
+                        <input type="hidden" id="add-isPinned" value="">
+                        <input type="hidden" id="add-isProcessing" value="">
+                        <input type="hidden" id="add-isDaily" value="">
                     </div>
                     <div class="swal-field-full"><label class="swal-label">รายละเอียด</label><textarea id="jobDetail" class="swal-input-styled" style="height:160px;"></textarea></div>
                     <div class="swal-field-full">
@@ -1432,7 +1574,10 @@
                     jobType: document.getElementById('jobType').value, date: document.getElementById('date').value, 
                     memberId: "'" + memberIdVal, name: document.getElementById('name').value, phone: "'" + phoneVal, 
                     staff: staffVal, jobDetail: "'" + document.getElementById('jobDetail').value, 
-                    deadline: document.getElementById('deadline').value, isDaily: document.getElementById('isDaily').checked ? "true" : "",
+                    deadline: document.getElementById('deadline').value, 
+                    isPinned: document.getElementById('add-isPinned').value,
+                    isProcessing: document.getElementById('add-isProcessing').value,
+                    isDaily: document.getElementById('add-isDaily').value,
                     password: "'" + document.getElementById('jobPassword').value,
                     files: selectedFiles.map(f => ({name: f.name, data: f.data})) 
                 };
@@ -1448,6 +1593,18 @@
                     });
                     const serverResponse = await res.json();
                     if(serverResponse.status === "success") {
+                        // ซิงค์สถานะเพิ่มเติมกรณีหลังบ้าน insert ยังไม่ได้บันทึกสถานะปักหมุด/กำลังดำเนินการให้
+                        const syncPromises = [];
+                        if (result.value.isPinned === "true") {
+                            syncPromises.push(fetch(SCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: "togglePin", reportId: newId }) }));
+                        }
+                        if (result.value.isProcessing === "true") {
+                            syncPromises.push(fetch(SCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: "toggleProcessing", reportId: newId }) }));
+                        }
+                        if (syncPromises.length > 0) {
+                            await Promise.allSettled(syncPromises);
+                        }
+
                         Swal.fire({title: 'สำเร็จ', icon: 'success', timer: 1000, showConfirmButton: false}).then(() => {
                             currentPage = 1;
                             loadData(true);
@@ -1491,6 +1648,10 @@
         selectedFiles = []; 
         existingFiles = (item[5] && item[5] !== "-" && item[5] !== "") ? item[5].split(", ") : []; 
         
+        const initPinned = (item[7] === "true" || item[7] === true || item._isPinned);
+        const initProcessing = (item[9] === "true" || item[9] === true || item._isProcessing);
+        const initDaily = (item[12] === "true" || item[12] === true || item._isDaily);
+
         let typeOptions = `<option value="">-- เลือกประเภทงาน --</option>`;
         jobTypes.forEach(t => { typeOptions += `<option value="${t}" ${item[8] === t ? 'selected' : ''}>${t}</option>`; });
         let staffOptions = `<option value="">-- เลือกพนักงาน --</option>`;
@@ -1515,9 +1676,22 @@
                         <label class="swal-label" style="color:var(--ios-red);"><i class="bi bi-lock-fill"></i> รหัสผ่านล็อคงาน</label>
                         <input type="text" id="swal-jobPassword" class="swal-input-styled" value="${String(item[13]||'').replace(/^'/, '')}" placeholder="กำหนดรหัสผ่าน">
                     </div>
-                    <div class="swal-field-full" style="display:flex; align-items:center; gap:10px; background:#f5eeff; padding:10px; border-radius:14px; border:1px dashed var(--ios-purple);">
-                        <input type="checkbox" id="swal-isDaily" style="width:20px; height:20px; cursor:pointer;" ${item[12] === 'true' ? 'checked' : ''}>
-                        <label for="swal-isDaily" style="font-size:14px; font-weight:600; color:var(--ios-purple); cursor:pointer;">แสดงงานนี้ทุกวัน (Infinity Mode)</label>
+                    <div class="swal-field-full">
+                        <label class="swal-label">สถานะงาน (คลิกเพื่อแก้ไขสถานะ)</label>
+                        <div class="modal-status-group">
+                            <button type="button" class="status-toggle-btn pin-btn ${initPinned ? 'active' : ''}" onclick="toggleModalStatusBtn(this, 'swal-isPinned')">
+                                <i class="bi bi-pin-angle-fill"></i> ปักหมุด
+                            </button>
+                            <button type="button" class="status-toggle-btn process-btn ${initProcessing ? 'active' : ''}" onclick="toggleModalStatusBtn(this, 'swal-isProcessing')">
+                                <i class="bi bi-clock-history"></i> กำลังดำเนินการ
+                            </button>
+                            <button type="button" class="status-toggle-btn daily-btn ${initDaily ? 'active' : ''}" onclick="toggleModalStatusBtn(this, 'swal-isDaily')">
+                                <i class="bi bi-infinity"></i> แสดงทุกวัน
+                            </button>
+                        </div>
+                        <input type="hidden" id="swal-isPinned" value="${initPinned ? 'true' : ''}">
+                        <input type="hidden" id="swal-isProcessing" value="${initProcessing ? 'true' : ''}">
+                        <input type="hidden" id="swal-isDaily" value="${initDaily ? 'true' : ''}">
                     </div>
                     <div class="swal-field-full"><label class="swal-label">รายละเอียด</label><textarea id="swal-jobDetail" class="swal-input-styled" style="height:160px; resize:none;">${String(item[6] || '').replace(/^'/, '')}</textarea></div>
                     <div class="swal-field-full">
@@ -1540,7 +1714,9 @@
                     name: document.getElementById('swal-name').value, phone: "'" + phoneVal, 
                     staff: staffVal, jobDetail: "'" + document.getElementById('swal-jobDetail').value, 
                     jobType: document.getElementById('swal-jobType').value, deadline: document.getElementById('swal-deadline').value,
-                    isDaily: document.getElementById('swal-isDaily').checked ? "true" : "",
+                    isPinned: document.getElementById('swal-isPinned').value,
+                    isProcessing: document.getElementById('swal-isProcessing').value,
+                    isDaily: document.getElementById('swal-isDaily').value,
                     password: "'" + document.getElementById('swal-jobPassword').value,
                     existingFiles: existingFiles, files: selectedFiles.map(f => ({name: f.name, data: f.data})) 
                 };
@@ -1556,6 +1732,25 @@
                     });
                     const serverResponse = await res.json();
                     if(serverResponse.status === "success") {
+                        // ตรวจสอบและซิงค์สถานะหากมีการเปลี่ยนค่าในหน้าต่างแก้ไข (ป้องกันกรณีหลังบ้าน update ทับค่าเดิม)
+                        const newPinned = result.value.isPinned === "true";
+                        const newProcessing = result.value.isProcessing === "true";
+                        const newDaily = result.value.isDaily === "true";
+
+                        const syncPromises = [];
+                        if (newPinned !== initPinned) {
+                            syncPromises.push(fetch(SCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: "togglePin", reportId: item[11] }) }));
+                        }
+                        if (newProcessing !== initProcessing) {
+                            syncPromises.push(fetch(SCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: "toggleProcessing", reportId: item[11] }) }));
+                        }
+                        if (newDaily !== initDaily) {
+                            syncPromises.push(fetch(SCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: "toggleDaily", reportId: item[11] }) }));
+                        }
+                        if (syncPromises.length > 0) {
+                            await Promise.allSettled(syncPromises);
+                        }
+
                         Swal.fire({title: 'สำเร็จ', icon: 'success', timer: 1000, showConfirmButton: false}).then(() => {
                             const newType = result.value.jobType;
                             if(newType) { document.getElementById('searchInput').value = newType; }
@@ -1571,7 +1766,15 @@
         });
     }
 
-    window.onload = () => { loadButtonPosition(); loadData(); };
+    window.onload = () => { 
+        loadButtonPosition(); 
+        loadData(); 
+        
+        // ตั้งเวลาตรวจสอบและแจ้งเตือนงานที่เกินกำหนดทุก 15 นาที (900,000 มิลลิวินาที)
+        setInterval(() => {
+            checkAndAlertOverdueJobs(true);
+        }, 15 * 60 * 1000);
+    };
 </script>
 
 </body>
