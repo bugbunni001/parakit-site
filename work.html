@@ -563,6 +563,8 @@
         .modal-table { width:100% !important; min-width:100% !important; margin-top:10px; border-collapse: collapse; }
         .modal-table th { padding: 12px 10px; font-size:14px; background: rgba(0,0,0,0.05); color: var(--text-main); font-weight: 600; }
         .modal-table td { padding: 12px 10px; font-size:14px; border-bottom: 1px solid rgba(0,0,0,0.05); color: var(--text-main); vertical-align: middle; }
+        .overdue-click-row { cursor: pointer; transition: background-color 0.2s ease; }
+        .overdue-click-row:hover td { background-color: #eef7ff !important; }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
     </style>
@@ -801,7 +803,7 @@
         if (inputEl) inputEl.value = isActive ? "true" : "false";
     };
 
-    /* ฟังก์ชันแจ้งเตือนงานที่เกินกำหนดทุก 15 นาที */
+    /* ฟังก์ชันแจ้งเตือนงานที่เกินกำหนดทุก 15 นาที (คลิกเข้าดูรายละเอียดงานได้ทันที) */
     function checkAndAlertOverdueJobs(isIntervalTrigger = false) {
         const overdueJobs = fullData.filter(row => row._isOverdue);
         if (overdueJobs.length === 0) return;
@@ -817,10 +819,14 @@
             const memberId = rawPass ? '***' : String(row[1] || '').replace(/^'/, '');
             const staff = row[4] || '-';
             const deadline = fixDate(row[10]);
+            const rowJson = encodeURIComponent(JSON.stringify(row));
 
             rowsHtml += `
-                <tr>
-                    <td><strong>${reportId}</strong><br><small style="color:var(--text-light);">${jobType}</small></td>
+                <tr class="overdue-click-row" onclick="checkPasswordAndShow('${rowJson}')" title="คลิกเพื่อเปิดดูรายละเอียดงานนี้">
+                    <td>
+                        <strong style="color:var(--ios-blue); text-decoration:underline;">${reportId}</strong> <i class="bi bi-box-arrow-up-right" style="font-size:11px; color:var(--ios-blue);"></i>
+                        <br><small style="color:var(--text-light);">${jobType}</small>
+                    </td>
                     <td>${customerName}<br><small style="color:var(--text-light);">${memberId}</small></td>
                     <td>${staff}</td>
                     <td style="color:var(--ios-red); font-weight:700; white-space:nowrap;">${deadline}</td>
@@ -834,7 +840,7 @@
             customClass: { popup: 'swal-modal-custom' },
             html: `
                 <p style="font-size:14px; color:var(--ios-red); background:#fff0f0; border:1px solid rgba(255,59,48,0.25); padding:10px 14px; border-radius:12px; margin-bottom:12px; text-align:left; font-weight:500;">
-                    <i class="bi bi-alarm-fill"></i> พบงานที่เลยวันครบกำหนดค้างอยู่ในระบบ กรุณาเร่งดำเนินการเคลียร์งานโดยด่วน!
+                    <i class="bi bi-alarm-fill"></i> พบงานที่เลยวันครบกำหนดค้างอยู่ในระบบ <strong>(คลิกที่รายการเพื่อเปิดดูรายละเอียดงานได้ทันที)</strong>
                 </p>
                 <div style="max-height: 360px; overflow-y: auto; border: 1px solid rgba(0,0,0,0.08); border-radius:14px; background:#fff;">
                     <table class="modal-table">
