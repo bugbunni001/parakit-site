@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>เว็บบอร์ดข้อมูลสำคัญ - Parakit-site</title>
     <link rel="icon" type="image/png" href="favicon.png">
     
@@ -17,252 +17,705 @@
     <style>
         :root {
             --ios-blue: #007aff;
-            --ios-bg: #f2f2f7;
-            --glass-white: rgba(255, 255, 255, 0.75);
-            --glass-border: rgba(255, 255, 255, 0.5);
-            --sidebar-dark: rgba(28, 28, 30, 0.96);
-            --text-main: #1c1c1e;
-            --text-light: #8e8e93;
-            --transition-swift: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            --transition-bounce: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            --ios-indigo: #4f46e5;
+            --ios-bg: #eef2f8;
+            --glass-white: rgba(255, 255, 255, 0.78);
+            --glass-strong: rgba(255, 255, 255, 0.92);
+            --glass-border: rgba(255, 255, 255, 0.9);
+            --sidebar-dark: rgba(24, 25, 28, 0.96);
+            --text-main: #0f172a;
+            --text-sub: #334155;
+            --text-light: #64748b;
+            --pin-gold: #f59e0b;
+            --pin-amber: #d97706;
+            --transition-swift: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-bounce: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
-        * { box-sizing: border-box; font-family: 'Kanit', sans-serif !important; }
+        /* ===== GLOBAL RESET ===== */
+        * {
+            box-sizing: border-box;
+            font-family: 'Kanit', sans-serif !important;
+        }
+
+        html, body {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: hidden;
+        }
         
         body { 
             margin: 0; 
+            min-height: 100vh;
             background-color: var(--ios-bg);
             background-image: 
-                radial-gradient(at 0% 0%, rgba(0, 122, 255, 0.08) 0px, transparent 40%), 
-                radial-gradient(at 100% 100%, rgba(255, 45, 85, 0.06) 0px, transparent 40%);
+                radial-gradient(at 0% 0%, rgba(0, 122, 255, 0.14) 0px, transparent 48%), 
+                radial-gradient(at 100% 0%, rgba(139, 92, 246, 0.11) 0px, transparent 45%),
+                radial-gradient(at 85% 90%, rgba(16, 185, 129, 0.08) 0px, transparent 45%),
+                linear-gradient(180deg, #f8fafc 0%, #e9eff7 100%);
             background-attachment: fixed;
             color: var(--text-main); 
             -webkit-font-smoothing: antialiased;
-            overflow-x: hidden;
+            padding-bottom: calc(40px + env(safe-area-inset-bottom));
         }
 
-        /* Header Style */
-        .top-header {
-            position: fixed;
-            top: 0; left: 0; right: 0;
-            height: 60px;
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+        #postModal, #viewModal { z-index: 4000; }
+        #imageOverlay { z-index: 5000; }
+        .swal2-container { z-index: 10000 !important; }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(15, 23, 42, 0.14); border-radius: 10px; }
+        
+        .bi { vertical-align: -0.125em; }
+
+        /* ===== MODERN FLOATING TOPBAR ===== */
+        .topbar-wrap {
+            position: sticky;
+            top: 0;
             z-index: 1000;
+            padding: 12px max(18px, calc((100vw - 1440px) / 2));
+        }
+        .top-header {
+            position: relative;
             display: flex;
             align-items: center;
-            padding: 0 20px 0 75px; 
-            border-bottom: 0.5px solid rgba(0,0,0,0.1);
+            justify-content: space-between;
+            gap: 12px;
+            padding: 12px 22px 12px 70px;
+            border-radius: 22px;
+            background: rgba(255, 255, 255, 0.84);
+            backdrop-filter: blur(28px);
+            -webkit-backdrop-filter: blur(28px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.06);
+        }
+        .brand-box {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+        }
+        .brand-logo {
+            width: 42px;
+            height: 42px;
+            border-radius: 13px;
+            background: linear-gradient(135deg, #007aff 0%, #4f46e5 100%);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            box-shadow: 0 8px 20px rgba(0, 122, 255, 0.28);
+            flex-shrink: 0;
+        }
+        .brand-info {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.25;
+            min-width: 0;
+        }
+        .brand-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-main);
+            letter-spacing: -0.3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .brand-sub {
+            font-size: 12px;
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 1px;
+        }
+        .brand-badge {
+            background: rgba(0, 122, 255, 0.1);
+            color: #0056d6;
+            font-size: 10.5px;
+            font-weight: 600;
+            padding: 1px 8px;
+            border-radius: 6px;
+        }
+        .header-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 6px 13px;
+            border-radius: 99px;
+            background: rgba(16, 185, 129, 0.12);
+            color: #047857;
+            border: 1px solid rgba(16, 185, 129, 0.22);
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.18);
+            animation: pulseDot 2s infinite;
+        }
+        @keyframes pulseDot {
+            0%, 100% { box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2); }
+            50% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.08); }
         }
 
+        /* ===== MAIN CONTAINER ===== */
         .content { 
-            padding: 80px 20px 40px; 
-            max-width: 1400px; 
-            margin: 0 auto; 
-            animation: fadeIn 0.8s ease-out; 
+            width: min(1440px, calc(100% - 36px));
+            margin: 10px auto 0;
+            animation: fadeIn 0.6s ease-out; 
         }
 
-        /* Sidebar Floating Menu */
+        .main-section-card {
+            background: var(--glass-white);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-radius: 28px;
+            padding: 26px 28px;
+            margin-bottom: 24px;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 20px 45px -12px rgba(15, 23, 42, 0.06);
+        }
+
+        .section-header-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 22px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+        }
+        .section-label {
+            font-size: 19px;
+            font-weight: 700;
+            color: var(--text-main);
+            letter-spacing: -0.3px;
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            margin: 0;
+        }
+        .section-icon-pill {
+            width: 36px;
+            height: 36px;
+            border-radius: 11px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 17px;
+            flex-shrink: 0;
+        }
+
+        /* ===== FLOATING SIDEBAR MENU (ระบบเดียวกับหน้าหลัก) ===== */
         #floatingMenuBtn {
-            position: fixed; top: 10px; left: 15px;
-            width: 45px; height: 45px;
-            background: var(--ios-blue); color: white;
-            border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            font-size: 20px; cursor: move; z-index: 2100;
-            box-shadow: 0 4px 15px rgba(0, 122, 255, 0.4); border: none; touch-action: none;
+            position: fixed; top: 13px; left: 16px; width: 46px; height: 46px;
+            background: linear-gradient(135deg, #007aff 0%, #0056d6 100%);
+            color: white; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 15px; font-weight: 600; cursor: move; z-index: 2100;
+            box-shadow: 0 6px 18px rgba(0, 122, 255, 0.38);
+            border: 1.5px solid rgba(255, 255, 255, 0.4);
+            touch-action: none; transition: transform 0.2s, opacity 0.2s;
         }
+        #floatingMenuBtn:active { transform: scale(0.92); }
 
-        .sidebar-float {
-            position: fixed; width: 280px; max-height: 70vh;
-            background: var(--sidebar-dark); border-radius: 20px;
-            overflow-y: auto; z-index: 2001; opacity: 0; visibility: hidden;
-            transform: scale(0.8) translateY(10px);
-            transition: opacity 0.3s, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-            box-shadow: 0 15px 40px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1);
+        .sidebar-overlay {
+            position: fixed; inset: 0; background: rgba(15, 23, 42, 0.28);
+            backdrop-filter: blur(4px); z-index: 2000; display: none; opacity: 0; transition: opacity 0.3s;
         }
-        .sidebar-float.active { opacity: 1; visibility: visible; transform: scale(1) translateY(0); }
-        .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.2); z-index: 2000; display: none; opacity: 0; transition: opacity 0.3s; }
         .sidebar-overlay.active { display: block; opacity: 1; }
 
-        /* Webboard Grid */
-        .main-section-card {
-            background: rgba(255, 255, 255, 0.5);
-            backdrop-filter: blur(10px);
-            border-radius: 30px;
-            padding: 30px;
-            border: 1px solid var(--glass-border);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.03);
+        .sidebar-float {
+            position: fixed; width: 285px; max-height: 74vh; background: var(--sidebar-dark); border-radius: 22px;
+            overflow-y: auto; z-index: 2001; opacity: 0; visibility: hidden;
+            transform: scale(0.85) translateY(10px); transition: opacity 0.28s, transform 0.38s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.42); border: 1px solid rgba(255,255,255,0.12);
+            scrollbar-width: none;
         }
+        .sidebar-float::-webkit-scrollbar { display: none; }
+        .sidebar-float.active { opacity: 1; visibility: visible; transform: scale(1) translateY(0); }
+        .sidebar-float .sidebar-header { padding: 18px 20px; font-size: 17px; font-weight: 600; color: #fff; border-bottom: 0.5px solid rgba(255,255,255,0.1); }
+        .sidebar-float .menu { padding: 8px; }
+        .sidebar-float .menu a, .sidebar-float .drop-btn { 
+            width: 100%; padding: 11px 14px; background: none; border: none; border-radius: 12px;
+            color: #f1f5f9; text-align: left; font-size: 14px; cursor: pointer; 
+            display: flex; align-items: center; text-decoration: none; transition: 0.2s;
+        }
+        .sidebar-float .menu a:hover, .sidebar-float .drop-btn:hover { background: rgba(255,255,255,0.1); }
+        .sidebar-float .sub { display: none; background: rgba(0,0,0,0.22); border-radius: 12px; margin: 4px 0; }
+        .sidebar-float .item.open .sub { display: block; }
+        .sidebar-float .sub a { padding-left: 40px; font-size: 13px; color: #94a3b8; }
 
+        /* ===== WEBBOARD & HIGH-VISIBILITY PINNED POSTS ===== */
+        .post-slider-container { width: 100%; padding: 6px 2px 16px; margin: 0; }
         #postContainer { 
             display: grid; 
             grid-template-columns: repeat(1, 1fr);
-            gap: 20px;
+            gap: 18px;
+            width: 100%;
         }
-
         @media (min-width: 1024px) {
             #postContainer { grid-template-columns: repeat(4, 1fr); }
         }
-        @media (min-width: 768px) and (max-width: 1023px) {
+        @media (min-width: 680px) and (max-width: 1023px) {
             #postContainer { grid-template-columns: repeat(2, 1fr); }
         }
 
         .post-card { 
-            height: 380px; 
-            display: flex; flex-direction: column; 
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            animation: slideIn 0.5s ease forwards; opacity: 0;
-            background: white; border-radius: 24px; overflow: hidden;
+            position: relative;
+            height: 375px; 
+            max-width: 100%;
+            min-width: 0;
+            display: flex;
+            flex-direction: column; 
+            transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+            animation: slideIn 0.45s ease forwards;
+            opacity: 0;
+            background: #ffffff;
+            border-radius: 24px;
+            overflow: hidden;
+            border: 1.5px solid rgba(255, 255, 255, 0.95);
+            box-shadow: 0 10px 28px -8px rgba(15, 23, 42, 0.07);
         }
-        .post-card:hover { transform: translateY(-8px); box-shadow: 0 20px 40px -12px rgba(0,0,0,0.12); }
+        .post-card:hover {
+            transform: translateY(-7px);
+            box-shadow: 0 20px 40px -12px rgba(15, 23, 42, 0.14);
+        }
 
-        /* Search Bar */
-        .search-wrapper { position: relative; flex: 1; max-width: 400px; }
+        /* กระทู้ปักหมุด */
+        .post-card.is-pinned {
+            background: linear-gradient(180deg, #fffdf5 0%, #ffffff 42%);
+            border: 2px solid #f59e0b;
+            box-shadow:
+                0 12px 30px -6px rgba(245, 158, 11, 0.22),
+                0 0 0 4px rgba(251, 191, 36, 0.14);
+        }
+        .post-card.is-pinned:hover {
+            transform: translateY(-8px);
+            box-shadow:
+                0 22px 44px -8px rgba(245, 158, 11, 0.3),
+                0 0 0 5px rgba(251, 191, 36, 0.2);
+        }
+        .pinned-ribbon-bar {
+            background: linear-gradient(90deg, #f59e0b 0%, #ea580c 100%);
+            color: #ffffff;
+            font-size: 11.5px;
+            font-weight: 700;
+            letter-spacing: 0.2px;
+            padding: 6px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+        .pinned-ribbon-left {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .pinned-pulse-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #ffffff;
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.35);
+            animation: pinBlink 1.6s infinite;
+        }
+        @keyframes pinBlink {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.55; transform: scale(0.82); }
+        }
+        .pinned-star-tag {
+            background: rgba(255, 255, 255, 0.22);
+            padding: 1px 8px;
+            border-radius: 99px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        @keyframes slideIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Search Bar & Action Buttons */
+        .search-wrapper { position: relative; flex: 1; min-width: 0; }
         .search-input {
             width: 100%;
-            background: rgba(255, 255, 255, 0.8);
-            border: 1px solid var(--glass-border);
-            padding: 10px 15px 10px 45px;
-            border-radius: 15px;
+            height: 44px;
+            background: rgba(255, 255, 255, 0.92);
+            border: 1px solid rgba(15, 23, 42, 0.08);
+            padding: 0 16px 0 42px;
+            border-radius: 14px;
             font-size: 14px;
+            color: var(--text-main);
             outline: none;
             transition: var(--transition-swift);
         }
-        .search-input:focus { background: white; border-color: var(--ios-blue); box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1); }
-        .search-icon { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--text-light); }
-
-        /* Content Links */
-        .link-text { color: var(--ios-blue); text-decoration: underline; transition: opacity 0.2s; font-weight: 500; }
-        .link-text:hover { opacity: 0.7; }
-
-        /* Pagination & Loader */
-        .pagination-wrapper { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 40px; flex-wrap: wrap; }
-        .page-btn { width: 38px; height: 38px; border-radius: 10px; background: white; border: 1px solid var(--glass-border); font-weight: 600; cursor: pointer; transition: 0.2s; }
-        .page-btn.active { background: var(--ios-blue); color: white; border-color: var(--ios-blue); box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3); }
-
-        .loader-ring { width: 50px; height: 50px; border: 4px solid #f3f4f6; border-top: 4px solid var(--ios-blue); border-radius: 50%; animation: spin 1s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; } }
-        @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* Modals */
-        #postModal, #viewModal { 
-            display: none; opacity: 0; transition: opacity 0.3s ease; 
-            position: fixed; inset: 0; align-items: center; justify-content: center; 
-            background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 4000;
+        .search-input:focus {
+            background: #ffffff;
+            border-color: var(--ios-blue);
+            box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1);
         }
-        .modal-active { display: flex !important; opacity: 1 !important; }
-        #imageOverlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); align-items: center; justify-content: center; z-index: 5000; cursor: zoom-out; }
-        #imageOverlay.active { display: flex; }
+        .search-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-light);
+            font-size: 15px;
+        }
 
-        .preview-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 8px; margin-top: 15px; }
-        .preview-item { position: relative; aspect-ratio: 1; border-radius: 10px; overflow: hidden; border: 2px solid transparent; cursor: pointer; background: #f8fafc; }
-        .preview-item.is-cover { border-color: var(--ios-blue); }
-        .preview-item img { width: 100%; height: 100%; object-fit: cover; }
+        /* การจัดการข้อความและลิงก์ยาวๆ ไม่ให้ตกขอบ */
+        .link-text { 
+            color: var(--ios-blue); 
+            text-decoration: underline; 
+            transition: opacity 0.2s; 
+            font-weight: 500;
+            word-break: break-all;
+            overflow-wrap: anywhere;
+        }
+        .link-text:hover { opacity: 0.75; }
+
+        .safe-wrap {
+            word-break: break-word;
+            overflow-wrap: anywhere;
+        }
+
+        .pagination-wrapper { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 22px; flex-wrap: wrap; }
+        .page-btn {
+            min-width: 40px; height: 40px; padding: 0 10px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 12px; background: rgba(255, 255, 255, 0.9);
+            color: var(--text-sub); font-weight: 600;
+            border: 1px solid rgba(15, 23, 42, 0.07);
+            box-shadow: 0 4px 10px rgba(15, 23, 42, 0.03);
+            transition: all 0.2s; cursor: pointer;
+        }
+        .page-btn.active { background: var(--ios-blue); color: white; border-color: var(--ios-blue); box-shadow: 0 6px 16px rgba(0, 122, 255, 0.28); }
+        .page-btn:hover:not(.active) { background: #ffffff; color: var(--ios-blue); transform: translateY(-1px); }
+
+        .loader-ring { width: 52px; height: 52px; border: 4px solid #e2e8f0; border-top: 4px solid var(--ios-blue); border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        #imageOverlay { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.92); backdrop-filter: blur(8px); align-items: center; justify-content: center; padding: 20px; cursor: zoom-out; }
+        #imageOverlay.active { display: flex; }
+        .close-image-btn { position: absolute; top: 20px; right: 20px; color: white; cursor: pointer; width: 46px; height: 46px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.14); border-radius: 50%; transition: 0.2s; }
+        .close-image-btn:hover { background: rgba(255,255,255,0.25); }
 
         .fallback-cover {
-            background: linear-gradient(135deg, #6366f1 0%, #3b82f6 100%);
-            width: 100%; height: 100%; display: flex; align-items: center;
-            justify-content: center; padding: 15px; text-align: center;
-            color: white; font-weight: bold; font-size: 14px;
+            background: linear-gradient(135deg, #4f46e5 0%, #007aff 100%);
+            width: 100%; height: 100%;
+            display: flex; align-items: center; justify-content: center;
+            padding: 18px; text-align: center; color: white;
+            font-weight: 700; font-size: 0.98rem; line-height: 1.4;
+            word-break: break-word; overflow-wrap: anywhere;
+        }
+        .post-card.is-pinned .fallback-cover {
+            background: linear-gradient(135deg, #d97706 0%, #f59e0b 55%, #fbbf24 100%);
+            color: #ffffff;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+        }
+
+        /* ===== SYMMETRIC & RESPONSIVE POPUP MODALS ===== */
+        #postModal, #viewModal { 
+            display: none; 
+            opacity: 0; 
+            transition: opacity 0.25s ease; 
+            position: fixed; 
+            inset: 0; 
+            align-items: center; 
+            justify-content: center; 
+            padding: 16px;
+            background: rgba(15, 23, 42, 0.54); 
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+        .modal-active { display: flex !important; opacity: 1 !important; }
+
+        .sym-modal-card {
+            width: 100%;
+            max-width: 680px;
+            max-height: min(88vh, 840px);
+            background: #ffffff;
+            border-radius: 28px;
+            box-shadow: 0 25px 60px -12px rgba(15, 23, 42, 0.32);
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            animation: modalPopIn 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        @keyframes modalPopIn {
+            from { opacity: 0; transform: scale(0.95) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .sym-modal-header {
+            padding: 18px 24px;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-shrink: 0;
+            background: #ffffff;
+        }
+        .sym-modal-body {
+            padding: 22px 24px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+        .sym-modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid #f1f5f9;
+            background: #f8fafc;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .post-content-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-left: 4px solid var(--ios-blue);
+            border-radius: 16px;
+            padding: 16px 18px;
+            color: #1e293b;
+            font-size: 15.5px;
+            line-height: 1.75;
+            white-space: pre-wrap;
+            word-break: break-word;
+            overflow-wrap: anywhere;
+            max-width: 100%;
+        }
+        .post-content-box.is-pinned-box {
+            background: #fffbeb;
+            border-color: #fde68a;
+            border-left: 4px solid #f59e0b;
+        }
+
+        .preview-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 10px; margin-top: 14px; }
+        .preview-item { position: relative; aspect-ratio: 1; border-radius: 14px; overflow: hidden; border: 3px solid transparent; cursor: pointer; transition: all 0.2s; background: #f8fafc; }
+        .preview-item.is-cover { border-color: var(--ios-blue); }
+        .preview-item img { width: 100%; height: 100%; object-fit: cover; }
+        .preview-item .cover-badge { position: absolute; top: 5px; left: 5px; background: var(--ios-blue); color: white; font-size: 10px; padding: 2px 7px; border-radius: 6px; font-weight: 600; opacity: 0; transition: opacity 0.2s; }
+        .preview-item.is-cover .cover-badge { opacity: 1; }
+        .preview-item .remove-img-btn { position: absolute; top: 5px; right: 5px; background: rgba(239,68,68,0.92); color: white; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; border: none; }
+
+        .view-gallery { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(145px, 1fr)); 
+            gap: 12px; 
+        }
+        .gallery-item { 
+            aspect-ratio: 1; 
+            border-radius: 16px; 
+            overflow: hidden; 
+            cursor: zoom-in; 
+            transition: transform 0.2s, box-shadow 0.2s; 
+            border: 1px solid #e2e8f0; 
+            background: #f8fafc;
+        }
+        .gallery-item:hover { transform: scale(1.02); box-shadow: 0 8px 20px rgba(15, 23, 42, 0.1); }
+        .gallery-item img { width: 100%; height: 100%; object-fit: cover; }
+
+        footer { text-align: center; padding: 18px 0 8px; width: 100%; color: var(--text-light); font-size: 13px; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ===== MOBILE RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .topbar-wrap { padding: 8px 10px; }
+            .top-header { padding: 10px 12px 10px 64px; border-radius: 18px; }
+            .brand-logo { width: 36px; height: 36px; font-size: 17px; border-radius: 11px; }
+            .brand-title { font-size: 15.5px; }
+            .brand-sub { font-size: 11px; }
+            .header-status { padding: 5px 9px; font-size: 11px; }
+            .content { width: calc(100% - 20px); margin-top: 6px; }
+            .main-section-card { padding: 18px 14px; border-radius: 22px; margin-bottom: 16px; }
+            .section-header-row { margin-bottom: 16px; padding-bottom: 10px; }
+            .section-label { font-size: 16px; gap: 9px; }
+            .section-icon-pill { width: 32px; height: 32px; font-size: 15px; border-radius: 9px; }
+            .post-card { height: 355px; }
+
+            /* Mobile Modal Symmetry */
+            #postModal, #viewModal { padding: 12px; }
+            .sym-modal-card { border-radius: 22px; max-height: 90vh; }
+            .sym-modal-header { padding: 14px 16px; }
+            .sym-modal-body { padding: 16px; }
+            .sym-modal-footer { padding: 12px 16px; }
+            .post-content-box { padding: 14px; font-size: 14.5px; }
+            .view-gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
         }
     </style>
 </head>
 <body>
 
-<header class="top-header">
-    <div style="font-weight: 700; font-size: 1.25rem; color: var(--text-main); letter-spacing: -0.8px;">เว็บบอร์ด ข้อมูลสำคัญ</div>
-</header>
-
-<button id="floatingMenuBtn">เมนู</button>
+<!-- Floating Sidebar Menu (ใช้งานได้เหมือนหน้าก่อนหน้า) -->
+<button id="floatingMenuBtn" title="ลากเพื่อย้าย">เมนู</button>
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebarFloat()"></div>
 <aside class="sidebar-float" id="sidebarFloat"></aside>
 
+<!-- Modern Topbar -->
+<div class="topbar-wrap">
+    <header class="top-header">
+        <div class="brand-box">
+            <div class="brand-logo"><i class="bi bi-chat-left-text-fill"></i></div>
+            <div class="brand-info">
+                <div class="brand-title">เว็บบอร์ดข้อมูลสำคัญ</div>
+                <div class="brand-sub">TrueShop BigC Prachauthit <span class="brand-badge">Parakit-site</span></div>
+            </div>
+        </div>
+        <div class="header-status">
+            <span class="status-dot"></span> ระบบออนไลน์
+        </div>
+    </header>
+</div>
+
+<!-- Image Fullscreen Overlay -->
 <div id="imageOverlay" onclick="closeImage()">
-    <img id="expandedImg" src="" style="max-width: 90%; max-height: 90%; object-fit: contain;">
+    <span class="close-image-btn"><i class="bi bi-x-lg"></i></span>
+    <img id="expandedImg" src="" alt="ขยายรูปภาพ" style="max-width: 90%; max-height: 90%; object-fit: contain; border-radius: 12px;">
 </div>
 
 <div class="content">
-    <div class="main-section-card">
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-            <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
-                <i class="bi bi-chat-left-text-fill text-blue-600"></i> กระทู้ข่าวสาร
+    <section class="main-section-card" id="webboard-section">
+        <div class="section-header-row">
+            <h2 class="section-label">
+                <span class="section-icon-pill" style="background: rgba(79, 70, 229, 0.12); color: #4f46e5;">
+                    <i class="bi bi-megaphone-fill"></i>
+                </span>
+                <span>กระทู้ข่าวสารและ <span style="color: var(--ios-blue);">ข้อมูลสำคัญ</span></span>
             </h2>
             
-            <div class="flex flex-col sm:flex-row w-full md:w-auto gap-3 items-center">
-                <div class="search-wrapper w-full sm:w-64">
+            <div class="flex flex-col sm:flex-row w-full lg:w-auto gap-2.5 items-stretch sm:items-center">
+                <div class="search-wrapper sm:w-72">
                     <i class="bi bi-search search-icon"></i>
-                    <input type="text" id="searchInput" placeholder="ค้นหาหัวข้อหรือเนื้อหา..." class="search-input" oninput="handleSearch()">
+                    <input type="text" id="searchInput" placeholder="ค้นหาด้วยหัวข้อหรือเนื้อหา..." class="search-input" oninput="handleSearch()">
                 </div>
                 
-                <button onclick="openModal('add')" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-full font-medium shadow-lg transition-all active:scale-95 flex items-center whitespace-nowrap">
-                    <i class="bi bi-plus-circle-fill mr-2"></i>สร้างกระทู้ใหม่
-                </button>
+                <div class="flex gap-2 justify-end">
+                    <a href="index.html" class="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200/80 px-4 py-2.5 rounded-2xl text-sm font-medium transition-all active:scale-95 flex items-center justify-center whitespace-nowrap shadow-sm">
+                        <i class="bi bi-house-door-fill mr-1.5 text-slate-500"></i>หน้าหลัก
+                    </a>
+                    <button onclick="openModal('add')" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-2xl text-sm font-medium shadow-md shadow-blue-500/25 transition-all active:scale-95 flex items-center justify-center whitespace-nowrap">
+                        <i class="bi bi-plus-circle-fill mr-1.5"></i>สร้างกระทู้ใหม่
+                    </button>
+                </div>
             </div>
         </div>
 
-        <div id="postContainer">
-            <div id="loadingUI" class="col-span-full flex flex-col items-center py-32">
-                <div class="loader-ring"></div>
-                <p class="mt-4 text-slate-500 font-medium">กำลังเตรียมข้อมูล...</p>
+        <div class="post-slider-container">
+            <div id="postContainer">
+                <div id="loadingUI" class="col-span-full flex flex-col items-center py-28">
+                    <div class="loader-ring"></div>
+                    <p class="mt-4 text-slate-500 font-medium animate-pulse">กำลังโหลดข้อมูลกระทู้...</p>
+                </div>
             </div>
         </div>
 
         <div id="paginationUI" class="pagination-wrapper"></div>
-    </div>
+    </section>
 
-    <footer class="mt-10 text-center text-slate-400 text-sm">© 2026 Copy Right By Angerina Frog</footer>
+    <footer>© 2026 Copy Right By Angerina Frog</footer>
 </div>
 
-<div id="postModal">
-    <div class="bg-white p-8 rounded-3xl w-full max-w-2xl shadow-2xl overflow-y-auto max-h-[95vh] mx-4">
-        <h2 id="modalTitle" class="text-2xl font-bold mb-6 text-slate-800 border-b pb-4">ตั้งกระทู้</h2>
-        <input type="hidden" id="editPostId">
-        <div class="space-y-5">
+<!-- Add/Edit Post Modal -->
+<div id="postModal" onclick="if(event.target === this) closeModal('postModal')">
+    <div class="sym-modal-card">
+        <div class="sym-modal-header">
+            <div class="flex items-center gap-2.5 min-w-0">
+                <span class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
+                    <i class="bi bi-pencil-square text-base"></i>
+                </span>
+                <h2 id="modalTitle" class="text-lg sm:text-xl font-bold text-slate-800 truncate">ตั้งกระทู้ใหม่</h2>
+            </div>
+            <button onclick="closeModal('postModal')" class="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-colors flex-shrink-0">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <div class="sym-modal-body space-y-4">
+            <input type="hidden" id="editPostId">
+            <input type="hidden" id="existingFileIds">
+            <input type="hidden" id="deletedFileIds" value="[]">
+            
             <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1">หัวข้อกระทู้</label>
-                <input type="text" id="postSubject" placeholder="พิมพ์หัวข้อ..." class="w-full border border-slate-200 p-4 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none">
+                <label class="block text-sm font-semibold text-slate-700 mb-1.5">หัวข้อกระทู้</label>
+                <input type="text" id="postSubject" placeholder="พิมพ์ชื่อเรื่องที่นี่..." class="w-full border border-slate-200 p-3.5 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-slate-800 transition-all">
             </div>
             <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1">รายละเอียด (รองรับการใส่ลิงก์ http://...)</label>
-                <textarea id="postContent" placeholder="เขียนรายละเอียด..." class="w-full border border-slate-200 p-4 rounded-2xl h-48 focus:ring-2 focus:ring-blue-500 outline-none resize-none"></textarea>
+                <label class="block text-sm font-semibold text-slate-700 mb-1.5">รายละเอียด</label>
+                <textarea id="postContent" placeholder="เขียนรายละเอียดเนื้อหาของคุณ... ลิงก์จะถูกเปลี่ยนเป็นคลิกได้โดยอัตโนมัติ" class="w-full border border-slate-200 p-3.5 rounded-2xl h-44 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none text-slate-800 leading-relaxed transition-all"></textarea>
             </div>
-            <div class="p-4 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50">
-                <label class="block text-sm font-bold text-slate-700 mb-3"><i class="bi bi-image"></i> รูปภาพประกอบ (สูงสุด 10 รูป)</label>
-                <input type="file" id="postImage" accept="image/*" multiple onchange="handleImageSelect(event)" class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-blue-600 file:text-white cursor-pointer">
+            <div id="imageSection" class="p-4 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/70">
+                <label class="block text-sm font-bold text-slate-700 mb-2.5 flex items-center gap-2">
+                    <i class="bi bi-image text-blue-500"></i> แถบจัดการรูปภาพประกอบ (สูงสุด 10 รูป)
+                </label>
+                <div id="fileInputWrapper">
+                    <input type="file" id="postImage" accept="image/*" multiple onchange="handleImageSelect(event)" class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-5 file:rounded-full file:border-0 file:bg-blue-600 file:text-white file:font-medium hover:file:bg-blue-700 cursor-pointer">
+                    <p class="text-[11px] text-slate-400 mt-2">* คลิกที่รูปเพื่อตั้งเป็นรูปหน้าปก / กด X เพื่อลบรูป</p>
+                </div>
                 <div id="imagePreviewGrid" class="preview-grid"></div>
             </div>
         </div>
-        <div class="flex justify-end gap-4 mt-8">
-            <button onclick="closeModal('postModal')" class="px-6 py-3 font-medium text-slate-400">ยกเลิก</button>
-            <button id="saveBtn" onclick="submitPost()" class="bg-blue-600 text-white px-10 py-3 rounded-2xl font-medium shadow-lg hover:bg-blue-700 transition-colors">บันทึกข้อมูล</button>
+
+        <div class="sym-modal-footer justify-end">
+            <button onclick="closeModal('postModal')" class="px-5 py-2.5 rounded-xl font-medium text-slate-600 hover:bg-slate-200/70 transition-colors">ยกเลิก</button>
+            <button id="saveBtn" onclick="submitPost()" class="bg-blue-600 text-white px-7 py-2.5 rounded-xl font-semibold shadow-md shadow-blue-500/25 active:scale-95 hover:bg-blue-700 transition-all flex items-center gap-1.5">
+                <i class="bi bi-check2-circle"></i> บันทึกข้อมูล
+            </button>
         </div>
     </div>
 </div>
 
-<div id="viewModal">
-    <div class="bg-white rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl mx-4">
-        <div id="viewContent" class="p-8"></div>
-    </div>
+<!-- View Post Modal -->
+<div id="viewModal" onclick="if(event.target === this) closeModal('viewModal')">
+    <div id="viewContent" class="sym-modal-card"></div>
 </div>
 
 <script>
+    /* ===== WEBBOARD SCRIPTS ===== */
     const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwXkjjB47TJfteV-YvP6BOVY3NcaUm9XTVq2TUXnIqzWvqLKGaTFJmxR-QP9hxrFT0D/exec';
     let allPosts = [], filteredPosts = [], currentPage = 1, postsPerPage = 20;
     let selectedImages = [], deletedFileIds = [], coverIndex = 0;
 
     const toast = {
-        error: (msg) => Swal.fire({ icon: 'error', title: 'แจ้งเตือน', text: msg }),
+        error: (msg) => Swal.fire({ icon: 'error', title: 'แจ้งเตือน', text: msg, confirmButtonColor: '#3b82f6' }),
         success: (msg) => Swal.fire({ icon: 'success', title: 'สำเร็จ', text: msg, timer: 1500, showConfirmButton: false }),
         loading: (msg) => Swal.fire({ title: msg, allowOutsideClick: false, didOpen: () => Swal.showLoading() }),
-        confirm: (msg) => Swal.fire({ title: 'ยืนยัน?', text: msg, icon: 'warning', showCancelButton: true, confirmButtonColor: '#3b82f6' })
+        confirm: (msg, btnText = 'ยืนยัน') => Swal.fire({
+            title: 'ยืนยันการทำรายการ', text: msg, icon: 'warning', showCancelButton: true,
+            confirmButtonColor: '#3b82f6', cancelButtonColor: '#94a3b8', confirmButtonText: btnText, cancelButtonText: 'ยกเลิก', reverseButtons: true
+        })
     };
 
-    // ฟังก์ชันเปลี่ยน URL ในข้อความให้เป็นลิงก์ที่คลิกได้
+    function escapeHtml(str) {
+        return String(str || "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
     function linkify(text) {
+        const escaped = escapeHtml(text);
         const urlPattern = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
-        return text.replace(urlPattern, function(url) {
-            return `<a href="${url}" target="_blank" class="link-text">${url}</a>`;
+        return escaped.replace(urlPattern, function(url) {
+            return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="link-text">${url}</a>`;
         });
     }
 
@@ -272,7 +725,7 @@
             allPosts = await res.json();
             handleSearch();
         } catch (e) {
-            document.getElementById('postContainer').innerHTML = '<p class="col-span-full text-center py-20 text-red-400">ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้</p>';
+            document.getElementById('postContainer').innerHTML = '<div class="col-span-full text-center py-20 text-red-400">ไม่สามารถโหลดข้อมูลได้</div>';
         }
     }
 
@@ -282,12 +735,14 @@
             (post.title || "").toLowerCase().includes(query) || 
             (post.content || "").toLowerCase().includes(query)
         );
+
         filteredPosts.sort((a, b) => {
             const pinA = a.isPinned === true || a.isPinned === 'true';
             const pinB = b.isPinned === true || b.isPinned === 'true';
             if (pinA !== pinB) return pinA ? -1 : 1;
             return new Date(b.Timestamp) - new Date(a.Timestamp);
         });
+
         currentPage = 1;
         renderPosts();
     }
@@ -295,8 +750,9 @@
     function renderPosts() {
         const container = document.getElementById('postContainer');
         const pagination = document.getElementById('paginationUI');
+        
         if (!filteredPosts || filteredPosts.length === 0) {
-            container.innerHTML = '<div class="col-span-full text-center py-32 text-slate-400"><i class="bi bi-search" style="font-size:3rem;"></i><p class="mt-4">ไม่พบข้อมูล</p></div>';
+            container.innerHTML = '<div class="col-span-full text-center py-20 text-slate-400"><i class="bi bi-search" style="font-size:2.5rem;"></i><p class="mt-3">ไม่พบกระทู้ที่ตรงกับการค้นหา</p></div>';
             pagination.innerHTML = '';
             return;
         }
@@ -306,25 +762,40 @@
         const pagePosts = filteredPosts.slice(startIndex, startIndex + postsPerPage);
 
         container.innerHTML = '';
-        pagePosts.forEach((post, idx) => {
+        pagePosts.forEach((post, index) => {
             const isPinned = post.isPinned === true || post.isPinned === 'true';
             const coverUrl = post.imageUrls?.length > 0 ? post.imageUrls[0] : null;
+            const dateStr = post.Timestamp ? new Date(post.Timestamp).toLocaleString('th-TH', { dateStyle: 'medium' }) : 'ไม่ระบุวันที่';
+            const safeTitle = escapeHtml(post.title);
+            const safeContent = escapeHtml(post.content);
             
             const card = document.createElement('div');
-            card.className = `post-card border-2 cursor-pointer ${isPinned ? 'border-yellow-400 ring-4 ring-yellow-50' : 'border-white shadow-sm'}`;
-            card.style.animationDelay = `${idx * 0.05}s`;
+            card.className = `post-card cursor-pointer ${isPinned ? 'is-pinned' : ''}`;
+            card.style.animationDelay = `${index * 0.04}s`;
             card.onclick = () => openViewModal(post.postId);
             card.innerHTML = `
-                <div class="h-40 bg-slate-200 relative">
-                    ${coverUrl ? `<img src="${coverUrl}" class="w-full h-full object-cover">` : `<div class="fallback-cover"><span>${post.title}</span></div>`}
-                    ${isPinned ? '<span class="absolute top-3 left-3 bg-yellow-400 text-white text-[10px] px-2 py-1 rounded font-bold shadow-sm">ปักหมุด</span>' : ''}
+                ${isPinned ? `
+                    <div class="pinned-ribbon-bar">
+                        <span class="pinned-ribbon-left">
+                            <span class="pinned-pulse-dot"></span>
+                            <i class="bi bi-pin-angle-fill"></i> ปักหมุดสำคัญ
+                        </span>
+                        <span class="pinned-star-tag">PINNED</span>
+                    </div>
+                ` : ''}
+                <div class="${isPinned ? 'h-32' : 'h-36'} bg-slate-100 relative overflow-hidden flex-shrink-0">
+                    ${coverUrl ? `<img src="${coverUrl}" class="w-full h-full object-cover">` : `<div class="fallback-cover"><span>${safeTitle}</span></div>`}
                 </div>
-                <div class="p-4 flex-grow flex flex-col">
-                    <h3 class="font-bold text-slate-800 line-clamp-2 text-sm mb-1 leading-snug">${post.title}</h3>
-                    <p class="text-slate-500 text-[11px] line-clamp-3 mb-4 font-light">${post.content}</p>
-                    <div class="mt-auto pt-3 border-t flex justify-between items-center text-[10px] text-slate-400">
-                        <span><i class="bi bi-calendar3"></i> ${new Date(post.Timestamp).toLocaleDateString('th-TH')}</span>
-                        <span class="text-blue-600 font-bold uppercase">View</span>
+                <div class="p-4 flex-grow flex flex-col min-h-0 min-w-0">
+                    <div class="flex items-center justify-between gap-2 mb-1">
+                        <span class="text-[10px] ${isPinned ? 'text-amber-700 font-bold bg-amber-100/80 px-2 py-0.5 rounded-md' : 'text-slate-400 font-medium'} uppercase">#${post.postId}</span>
+                        ${isPinned ? '<span class="text-[10px] font-bold text-amber-600 flex items-center gap-1"><i class="bi bi-bookmark-star-fill"></i> แนะนำ</span>' : ''}
+                    </div>
+                    <h3 class="text-[15.5px] font-bold ${isPinned ? 'text-amber-950' : 'text-slate-800'} mb-1.5 line-clamp-2 leading-snug safe-wrap">${safeTitle}</h3>
+                    <p class="text-slate-500 text-xs line-clamp-2 mb-3 font-normal leading-relaxed safe-wrap">${safeContent}</p>
+                    <div class="mt-auto pt-2.5 border-t ${isPinned ? 'border-amber-200/70' : 'border-slate-100'} flex justify-between items-center text-[11px] text-slate-400">
+                        <span class="flex items-center"><i class="bi bi-calendar3 mr-1"></i> ${dateStr}</span>
+                        <span class="${isPinned ? 'text-amber-600' : 'text-blue-600'} font-bold flex items-center gap-1">อ่านต่อ <i class="bi bi-arrow-right-short text-sm"></i></span>
                     </div>
                 </div>
             `;
@@ -337,7 +808,11 @@
                 const btn = document.createElement('button');
                 btn.className = `page-btn ${i === currentPage ? 'active' : ''}`;
                 btn.innerText = i;
-                btn.onclick = () => { currentPage = i; renderPosts(); window.scrollTo({top: 0, behavior: 'smooth'}); };
+                btn.onclick = () => { 
+                    currentPage = i; 
+                    renderPosts(); 
+                    document.getElementById('webboard-section').scrollIntoView({ behavior: 'smooth' });
+                };
                 pagination.appendChild(btn);
             }
         }
@@ -345,28 +820,70 @@
 
     function openViewModal(id) {
         const post = allPosts.find(p => p.postId == id);
+        if(!post) return;
         const contentDiv = document.getElementById('viewContent');
         const isPinned = post.isPinned === true || post.isPinned === 'true';
+        const date = post.Timestamp ? new Date(post.Timestamp).toLocaleString('th-TH', { dateStyle: 'long', timeStyle: 'short' }) : 'ไม่ระบุวันที่';
         
-        // แปลงลิงก์ในเนื้อหา
+        const safeTitle = escapeHtml(post.title);
         const linkedContent = linkify(post.content || "");
+        const imageCount = post.imageUrls ? post.imageUrls.length : 0;
 
-        let imagesHtml = '<div class="view-gallery">';
-        post.imageUrls?.forEach(url => imagesHtml += `<div class="gallery-item" onclick="expandImage('${url}')"><img src="${url}"></div>`);
-        imagesHtml += '</div>';
+        let imagesHtml = '';
+        if (imageCount > 0) {
+            imagesHtml = `
+                <div class="mt-5">
+                    <div class="flex items-center justify-between mb-2.5">
+                        <span class="text-sm font-bold text-slate-600 flex items-center gap-1.5">
+                            <i class="bi bi-images text-blue-500"></i> รูปภาพประกอบ (${imageCount} รูป)
+                        </span>
+                        <span class="text-[11px] text-slate-400">คลิกที่รูปเพื่อขยายเต็มจอ</span>
+                    </div>
+                    <div class="view-gallery">
+                        ${post.imageUrls.map(url => `<div class="gallery-item" onclick="expandImage('${url}')"><img src="${url}" loading="lazy"></div>`).join('')}
+                    </div>
+                </div>
+            `;
+        }
 
         contentDiv.innerHTML = `
-            <div class="flex justify-between items-center mb-6">
-                <span class="bg-slate-100 px-3 py-1 rounded-full text-[10px] font-bold text-slate-400">POST ID #${post.postId}</span>
-                <button onclick="closeModal('viewModal')" class="text-slate-400"><i class="bi bi-x-lg"></i> ปิด</button>
+            <div class="sym-modal-header">
+                <div class="flex items-center gap-2 flex-wrap min-w-0">
+                    <span class="bg-slate-100 px-3 py-1 rounded-full text-xs font-bold text-slate-600 uppercase">กระทู้ #${post.postId}</span>
+                    ${isPinned ? '<span class="bg-gradient-to-r from-amber-500 to-orange-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-sm flex items-center gap-1"><i class="bi bi-pin-angle-fill"></i> ปักหมุดสำคัญ</span>' : ''}
+                </div>
+                <button onclick="closeModal('viewModal')" class="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-colors flex-shrink-0" title="ปิดหน้าต่าง">
+                    <i class="bi bi-x-lg"></i>
+                </button>
             </div>
-            <h2 class="text-2xl font-bold text-slate-800 mb-4">${post.title}</h2>
-            <div class="text-slate-700 whitespace-pre-wrap mb-8 font-light border-l-4 border-blue-500 pl-4">${linkedContent}</div>
-            ${imagesHtml}
-            <div class="flex gap-3 pt-6 border-t mt-8">
-                <button onclick="togglePin('${post.postId}')" class="flex-1 py-3 bg-yellow-50 text-yellow-700 rounded-xl font-medium">${isPinned ? 'เลิกปักหมุด' : 'ปักหมุด'}</button>
-                <button onclick="openEditModal('${post.postId}')" class="flex-1 py-3 bg-blue-600 text-white rounded-xl font-medium">แก้ไข</button>
-                <button onclick="deletePost('${post.postId}')" class="flex-1 py-3 bg-red-50 text-red-600 rounded-xl font-medium">ลบ</button>
+
+            <div class="sym-modal-body">
+                <h2 class="text-xl sm:text-2xl font-bold text-slate-800 mb-2 leading-snug safe-wrap">${safeTitle}</h2>
+                <div class="text-slate-400 text-xs mb-5 flex items-center gap-1.5">
+                    <i class="bi bi-clock"></i>
+                    <span>โพสต์เมื่อ ${date}</span>
+                </div>
+                
+                <div class="post-content-box ${isPinned ? 'is-pinned-box' : ''}">${linkedContent}</div>
+                
+                ${imagesHtml}
+            </div>
+
+            <div class="sym-modal-footer">
+                <div class="grid grid-cols-3 gap-2.5 w-full">
+                    <button onclick="togglePin('${post.postId}')" class="px-3 py-2.5 ${isPinned ? 'bg-amber-500 text-white shadow-sm shadow-amber-500/25' : 'bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200/70'} rounded-xl text-xs sm:text-sm font-semibold transition-all active:scale-95 flex items-center justify-center gap-1.5">
+                        <i class="bi bi-pin-angle-fill"></i>
+                        <span class="truncate">${isPinned ? 'เลิกปักหมุด' : 'ปักหมุด'}</span>
+                    </button>
+                    <button onclick="openEditModal('${post.postId}')" class="px-3 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs sm:text-sm font-semibold shadow-sm shadow-blue-500/25 transition-all active:scale-95 flex items-center justify-center gap-1.5">
+                        <i class="bi bi-pencil-square"></i>
+                        <span>แก้ไข</span>
+                    </button>
+                    <button onclick="deletePost('${post.postId}')" class="px-3 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200/70 rounded-xl text-xs sm:text-sm font-semibold transition-all active:scale-95 flex items-center justify-center gap-1.5">
+                        <i class="bi bi-trash3"></i>
+                        <span>ลบ</span>
+                    </button>
+                </div>
             </div>
         `;
         document.getElementById('viewModal').classList.add('modal-active');
@@ -374,105 +891,86 @@
 
     async function handleImageSelect(event) {
         const files = Array.from(event.target.files);
-        if (selectedImages.length + files.length > 10) return toast.error("สูงสุด 10 รูป");
+        if (selectedImages.length + files.length > 10) {
+            toast.error("คุณสามารถเลือกรูปภาพได้สูงสุด 10 รูป");
+            event.target.value = '';
+            return;
+        }
         for (let file of files) {
-            const base64 = await new Promise(r => {
+            const base64 = await new Promise(resolve => {
                 const reader = new FileReader();
-                reader.onload = () => r(reader.result);
+                reader.onload = () => resolve(reader.result);
                 reader.readAsDataURL(file);
             });
-            selectedImages.push({ base64, isNew: true });
+            selectedImages.push({ base64, type: file.type, name: file.name, isNew: true });
         }
         renderImagePreviews();
+        event.target.value = '';
     }
 
     function renderImagePreviews() {
         const grid = document.getElementById('imagePreviewGrid');
         grid.innerHTML = '';
-        selectedImages.forEach((img, idx) => {
+        selectedImages.forEach((img, index) => {
             const item = document.createElement('div');
-            item.className = `preview-item ${idx === coverIndex ? 'is-cover' : ''}`;
-            item.onclick = () => { coverIndex = idx; renderImagePreviews(); };
-            item.innerHTML = `<img src="${img.base64}"><div class="cover-badge" style="position:absolute; top:2px; left:2px; background:var(--ios-blue); color:white; font-size:8px; padding:2px 4px; border-radius:4px; opacity:${idx === coverIndex ? 1 : 0};">หน้าปก</div>
-                <button onclick="removeSelectedImg(event, ${idx})" class="absolute top-1 right-1 bg-red-500 text-white w-5 h-5 rounded-full text-xs">×</button>`;
+            item.className = `preview-item ${index === coverIndex ? 'is-cover' : ''}`;
+            item.onclick = () => { coverIndex = index; renderImagePreviews(); };
+            item.innerHTML = `
+                <img src="${img.base64}">
+                <div class="cover-badge">หน้าปก</div>
+                <button type="button" onclick="removeSelectedImg(event, ${index})" class="remove-img-btn"><i class="bi bi-x"></i></button>
+            `;
             grid.appendChild(item);
         });
     }
 
-    function removeSelectedImg(e, idx) {
-        e.stopPropagation();
-        const removed = selectedImages.splice(idx, 1)[0];
-        if (!removed.isNew) deletedFileIds.push(removed.fileId);
-        coverIndex = 0; renderImagePreviews();
-    }
-
-    async function submitPost() {
-        const title = document.getElementById('postSubject').value.trim();
-        const content = document.getElementById('postContent').value.trim();
-        const editId = document.getElementById('editPostId').value;
-        if (!title || !content) return toast.error("กรุณากรอกข้อมูลให้ครบ");
-
-        toast.loading("กำลังบันทึก...");
-        const payload = {
-            action: editId ? 'update' : 'add',
-            postId: editId || 'PK' + Math.random().toString().substring(2, 8),
-            title, content, coverIndex, deletedFileIds,
-            images: selectedImages.map(img => img.base64),
-            currentFileIds: selectedImages.map(img => img.fileId || "")
-        };
-
-        try {
-            await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
-            closeModal('postModal');
-            toast.success("สำเร็จ");
-            fetchPosts();
-        } catch (e) { toast.error("ล้มเหลว"); }
-    }
-
-    async function deletePost(id) {
-        const res = await toast.confirm("ลบกระทู้นี้?");
-        if (res.isConfirmed) {
-            closeModal('viewModal');
-            toast.loading("กำลังลบ...");
-            await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'delete', id }) });
-            toast.success("ลบแล้ว");
-            fetchPosts();
-        }
-    }
-
-    async function togglePin(id) {
-        toast.loading("รอดำเนินการ...");
-        await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'togglePin', id }) });
-        closeModal('viewModal');
-        fetchPosts();
-        Swal.close();
+    function removeSelectedImg(event, index) {
+        event.stopPropagation();
+        const removed = selectedImages.splice(index, 1)[0];
+        if (!removed.isNew && removed.fileId) deletedFileIds.push(removed.fileId);
+        
+        if (coverIndex === index) coverIndex = 0;
+        else if (coverIndex > index) coverIndex--;
+        
+        renderImagePreviews();
     }
 
     function openModal(mode) {
         document.getElementById('postModal').classList.add('modal-active');
-        resetModal();
+        resetModalFields();
         if(mode === 'add') {
             document.getElementById('modalTitle').innerText = 'สร้างกระทู้ใหม่';
             document.getElementById('editPostId').value = '';
         }
+        setTimeout(() => document.getElementById('postSubject').focus(), 100);
     }
 
     function openEditModal(id) {
         const post = allPosts.find(p => p.postId == id);
+        if(!post) return;
         closeModal('viewModal');
-        resetModal();
+        resetModalFields();
         openModal('edit');
         document.getElementById('modalTitle').innerText = 'แก้ไขกระทู้';
         document.getElementById('editPostId').value = post.postId;
         document.getElementById('postSubject').value = post.title;
         document.getElementById('postContent').value = post.content;
-        post.imageUrls?.forEach((url, i) => selectedImages.push({ base64: url, fileId: post.fileIds[i], isNew: false }));
-        renderImagePreviews();
+        
+        if (post.imageUrls && post.imageUrls.length > 0) {
+            post.imageUrls.forEach((url, idx) => {
+                selectedImages.push({ base64: url, fileId: post.fileIds[idx], isNew: false });
+            });
+            coverIndex = 0;
+            renderImagePreviews();
+        }
     }
 
-    function resetModal() {
+    function resetModalFields() {
         document.getElementById('postSubject').value = '';
         document.getElementById('postContent').value = '';
+        document.getElementById('postImage').value = '';
+        document.getElementById('existingFileIds').value = '';
+        document.getElementById('deletedFileIds').value = '[]';
         document.getElementById('imagePreviewGrid').innerHTML = '';
         selectedImages = []; deletedFileIds = []; coverIndex = 0;
     }
@@ -481,21 +979,146 @@
     function expandImage(src) { document.getElementById('expandedImg').src = src; document.getElementById('imageOverlay').classList.add('active'); }
     function closeImage() { document.getElementById('imageOverlay').classList.remove('active'); }
 
-    // Sidebar Logic
+    async function submitPost() {
+        const btn = document.getElementById('saveBtn');
+        const editId = document.getElementById('editPostId').value;
+        const title = document.getElementById('postSubject').value.trim();
+        const content = document.getElementById('postContent').value.trim();
+        
+        if (!title || !content) return toast.error("กรุณาใส่หัวข้อและรายละเอียด");
+        
+        btn.disabled = true; 
+        toast.loading("กำลังบันทึก...");
+
+        const payload = {
+            action: editId ? 'update' : 'add',
+            postId: editId || 'PK' + Math.random().toString().substring(2, 8),
+            title, content, 
+            images: selectedImages.map(img => img.base64),
+            currentFileIds: selectedImages.map(img => img.fileId || ""),
+            deletedFileIds: deletedFileIds,
+            coverIndex: coverIndex
+        };
+
+        try {
+            const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
+            const result = await res.json();
+            if(result.status === "Success" || result.status === "Updated") {
+                closeModal('postModal');
+                toast.success("บันทึกข้อมูลสำเร็จ");
+                fetchPosts();
+            } else throw new Error();
+        } catch (e) { 
+            toast.error("เกิดข้อผิดพลาดในการบันทึก"); 
+        } finally { 
+            btn.disabled = false; 
+        }
+    }
+
+    async function deletePost(id) {
+        const res = await toast.confirm("ต้องการลบกระทู้นี้และรูปภาพทั้งหมดใช่หรือไม่?", "ลบกระทู้");
+        if (res.isConfirmed) {
+            closeModal('viewModal');
+            toast.loading("กำลังลบ...");
+            await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'delete', id: id }) });
+            toast.success("ลบสำเร็จ");
+            fetchPosts();
+        }
+    }
+
+    async function togglePin(id) {
+        toast.loading("กำลังดำเนินการ...");
+        try {
+            await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'togglePin', id: id }) });
+            closeModal('viewModal');
+            await fetchPosts();
+            Swal.close();
+        } catch (e) { toast.error("ไม่สามารถดำเนินการได้"); }
+    }
+
+    /* ===== SIDEBAR & MENU LOGIC (เหมือนหน้าหลักทุกประการ) ===== */
     const dragBtn = document.getElementById('floatingMenuBtn');
     const sideFloat = document.getElementById('sidebarFloat');
     const sideOverlay = document.getElementById('sidebarOverlay');
-    
-    dragBtn.onclick = () => {
+    let isDragging = false;
+    let startX, startY, shiftX, shiftY;
+
+    function loadButtonPosition() {
+        const savedLeft = localStorage.getItem('floatBtnLeft');
+        const savedTop = localStorage.getItem('floatBtnTop');
+        if (savedLeft && savedTop) {
+            dragBtn.style.left = savedLeft + 'px';
+            dragBtn.style.top = savedTop + 'px';
+        }
+    }
+
+    dragBtn.onpointerdown = function(e) {
+        isDragging = false; startX = e.clientX; startY = e.clientY;
+        const rect = dragBtn.getBoundingClientRect();
+        shiftX = e.clientX - rect.left; shiftY = e.clientY - rect.top;
+        dragBtn.setPointerCapture(e.pointerId);
+        document.addEventListener('pointermove', onPointerMove);
+        document.addEventListener('pointerup', onPointerUp);
+    };
+
+    function onPointerMove(e) {
+        if (!isDragging && (Math.abs(e.clientX - startX) > 5 || Math.abs(e.clientY - startY) > 5)) isDragging = true;
+        if (isDragging) {
+            let newX = e.clientX - shiftX, newY = e.clientY - shiftY;
+            newX = Math.max(0, Math.min(newX, window.innerWidth - dragBtn.offsetWidth));
+            newY = Math.max(0, Math.min(newY, window.innerHeight - dragBtn.offsetHeight));
+            dragBtn.style.left = newX + 'px'; dragBtn.style.top = newY + 'px';
+        }
+    }
+
+    function onPointerUp(e) {
+        document.removeEventListener('pointermove', onPointerMove);
+        document.removeEventListener('pointerup', onPointerUp);
+        dragBtn.releasePointerCapture(e.pointerId);
+        if (isDragging) {
+            localStorage.setItem('floatBtnLeft', dragBtn.offsetLeft);
+            localStorage.setItem('floatBtnTop', dragBtn.offsetTop);
+        } else toggleSidebarFloat();
+        isDragging = false;
+    }
+
+    function toggleSidebarFloat() {
+        const btnRect = dragBtn.getBoundingClientRect();
+        const sidebarWidth = 280;
+        let top = btnRect.bottom + 10, left = btnRect.left;
+        if (left + sidebarWidth > window.innerWidth) left = window.innerWidth - sidebarWidth - 15;
+        if (top + 400 > window.innerHeight) {
+            top = btnRect.top - 410;
+            if (top < 10) top = 10;
+        }
+        sideFloat.style.top = top + 'px'; sideFloat.style.left = left + 'px';
+        sideFloat.style.transformOrigin = `${btnRect.left - left + 20}px ${btnRect.top > top ? 'bottom' : 'top'}`;
         const isActive = sideFloat.classList.toggle('active');
         sideOverlay.classList.toggle('active', isActive);
-        if (isActive && !sideFloat.innerHTML) {
-            fetch('sidebar.html').then(r => r.text()).then(data => sideFloat.innerHTML = `<div class="p-5 font-bold text-white border-b border-white/10">เมนูนำทาง</div>` + data);
-        }
-    };
+        if (isActive && !sideFloat.innerHTML) loadSidebarContent();
+    }
+
     function closeSidebarFloat() { sideFloat.classList.remove('active'); sideOverlay.classList.remove('active'); }
 
-    window.onload = () => { fetchPosts(); };
+    function loadSidebarContent() {
+        fetch('sidebar.html')
+            .then(res => res.text())
+            .then(data => {
+                sideFloat.innerHTML = `<div class="sidebar-header">เมนูนำทาง</div>` + data;
+            });
+    }
+
+    window.toggleDrop = function(btn, id) {
+        const item = btn.parentElement;
+        const isOpen = item.classList.toggle("open");
+        if (id) localStorage.setItem('menu-' + id, isOpen);
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') { closeImage(); closeModal('postModal'); closeModal('viewModal'); }
+    });
+
+    window.onload = () => { fetchPosts(); loadButtonPosition(); };
 </script>
 
 </body>
