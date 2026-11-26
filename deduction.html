@@ -603,16 +603,17 @@
         .modal-close {
             background: #f2f2f7;
             border: none;
-            width: 32px;
-            height: 32px;
+            width: 34px;
+            height: 34px;
             border-radius: 50%;
             cursor: pointer;
-            font-size: 18px;
+            font-size: 20px;
             color: var(--text-light);
             display: flex;
             align-items: center;
             justify-content: center;
             transition: 0.2s;
+            flex-shrink: 0;
         }
         .modal-close:hover { background: #e5e5ea; color: var(--text-main); }
 
@@ -704,6 +705,7 @@
             backdrop-filter: blur(8px);
         }
         .otp-card {
+            position: relative;
             background: #fff;
             padding: 28px 24px;
             border-radius: 26px;
@@ -712,6 +714,11 @@
             width: 100%;
             box-shadow: 0 24px 60px rgba(0, 0, 0, 0.22);
             animation: modalPop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .otp-close-btn {
+            position: absolute;
+            top: 16px;
+            right: 16px;
         }
         .otp-icon-wrap {
             width: 56px;
@@ -881,15 +888,15 @@
     </div>
 </div>
 
-<!-- Modal ลงข้อมูลการหักเงิน -->
-<div class="modal" id="formModal" onclick="if(event.target==this) closeForm()">
+<!-- Modal ลงข้อมูลการหักเงิน (ปิดได้ด้วยปุ่มกากบาทเท่านั้น) -->
+<div class="modal" id="formModal">
     <div class="form-container">
         <div class="modal-header">
             <div>
                 <h3 style="margin: 0; font-size: 20px; font-weight: 700;">ลงข้อมูลการหักเงิน</h3>
                 <p style="color: var(--text-light); font-size: 13px; margin: 4px 0 0;">กรอกรายละเอียดให้ครบถ้วน ระบบจะส่ง OTP ยืนยัน</p>
             </div>
-            <button class="modal-close" onclick="closeForm()"><i class="bi bi-x"></i></button>
+            <button type="button" class="modal-close" onclick="closeForm()" title="ปิดหน้าต่าง"><i class="bi bi-x"></i></button>
         </div>
 
         <form id="deductionForm" onsubmit="event.preventDefault(); validateAndOpenAuth();">
@@ -935,24 +942,26 @@
             <div class="form-group" style="margin-bottom: 24px;">
                 <label class="form-label"><i class="bi bi-cash-coin"></i> จำนวนเงินที่หัก (THB)</label>
                 <div class="amount-chips" id="amountChips">
-                    <div class="amount-chip" onclick="selectAmountChip(this, '10')">10 ฿</div>
-                    <div class="amount-chip" onclick="selectAmountChip(this, '20')">20 ฿</div>
-                    <div class="amount-chip" onclick="selectAmountChip(this, '30')">30 ฿</div>
-                    <div class="amount-chip" onclick="selectAmountChip(this, '50')">50 ฿</div>
+                    <div class="amount-chip" tabindex="0" onclick="selectAmountChip(this, '10')">10 ฿</div>
+                    <div class="amount-chip" tabindex="0" onclick="selectAmountChip(this, '20')">20 ฿</div>
+                    <div class="amount-chip" tabindex="0" onclick="selectAmountChip(this, '30')">30 ฿</div>
+                    <div class="amount-chip" tabindex="0" onclick="selectAmountChip(this, '50')">50 ฿</div>
                 </div>
                 <input type="hidden" id="amount" required>
             </div>
 
-            <button type="submit" class="btn-submit">
+            <button type="submit" id="btnSubmitForm" class="btn-submit">
                 <i class="bi bi-shield-check"></i> ยืนยันและส่งรหัส OTP
             </button>
         </form>
     </div>
 </div>
 
-<!-- Popup ยืนยันตัวตน OTP -->
+<!-- Popup ยืนยันตัวตน OTP (ปิดได้ด้วยปุ่มกากบาทเท่านั้น) -->
 <div class="popup" id="authPopup">
     <div class="otp-card">
+        <button type="button" class="modal-close otp-close-btn" onclick="closeAuthPopup()" title="ปิดหน้าต่าง"><i class="bi bi-x"></i></button>
+
         <div id="otpSelectAdmin">
             <div class="otp-icon-wrap"><i class="bi bi-envelope-check-fill"></i></div>
             <h3 style="margin:0 0 6px; font-size: 19px; font-weight: 700;">ยืนยันตัวตน Admin</h3>
@@ -962,10 +971,7 @@
                 <option value="book016boat@gmail.com">ศุภกฤต (Admin)</option>
                 <option value="malikastory2542@gmail.com">ปิยะพร (Admin)</option>
             </select>
-            <div style="display: flex; gap: 10px;">
-                <button type="button" class="btn-submit btn-secondary" style="margin:0;" onclick="closeAuthPopup()">ยกเลิก</button>
-                <button type="button" class="btn-submit" style="margin:0;" onclick="sendOTPRequest()">ส่งรหัส OTP</button>
-            </div>
+            <button type="button" id="btnSendOTP" class="btn-submit" style="margin:0;" onclick="sendOTPRequest()">ส่งรหัส OTP</button>
         </div>
 
         <div id="otpInputForm" style="display:none;">
@@ -975,7 +981,7 @@
             <input type="text" id="otpInput" class="form-control" maxlength="6" inputmode="numeric" placeholder="••••••" style="text-align:center; font-size:24px; font-weight:700; letter-spacing:10px; margin-bottom:18px;">
             <div style="display: flex; gap: 10px;">
                 <button type="button" class="btn-submit btn-secondary" style="margin:0;" onclick="resetAuthPopup()">ย้อนกลับ</button>
-                <button type="button" class="btn-submit" style="margin:0;" onclick="verifyOTP()">ยืนยัน</button>
+                <button type="button" id="btnVerifyOTP" class="btn-submit" style="margin:0;" onclick="verifyOTP()">ยืนยัน</button>
             </div>
         </div>
     </div>
@@ -1208,7 +1214,6 @@
             activeFilterBadge.style.display = "none";
         }
 
-        // เก็บ realIndex (1-based index ของแถวข้อมูลในชีตต่อจาก header) ไว้สำหรับการลบที่แม่นยำแม้ตอนกรอง
         const mappedWithIndex = allData.map((row, idx) => ({
             row: row,
             realIdx: idx + 1
@@ -1221,7 +1226,7 @@
             const searchHaystack = `${formatDisplayDate(r[0])} ${r[1] || ''} ${r[2] || ''} ${r[3] || ''} ${r[4] || ''}`.toLowerCase();
             const matchesQuery = !query || searchHaystack.includes(query);
             return matchesEmp && matchesQuery;
-        }).reverse(); // แสดงรายการล่าสุดขึ้นก่อน
+        }).reverse();
 
         document.getElementById("recordCountLabel").innerText = filteredData.length;
         selectedRows = [];
@@ -1348,6 +1353,7 @@
         document.querySelectorAll('.amount-chip').forEach(c => c.classList.remove('active'));
         document.getElementById("date").valueAsDate = new Date();
         document.getElementById("formModal").classList.add("show");
+        setTimeout(() => document.getElementById("employee").focus(), 100);
     }
 
     function closeForm() {
@@ -1371,6 +1377,8 @@
         document.querySelectorAll('.amount-chip').forEach(c => c.classList.remove('active'));
         el.classList.add('active');
         document.getElementById("amount").value = val;
+        // ย้ายโฟกัสไปที่ปุ่มยืนยันเพื่อให้กด Enter ต่อได้ทันที
+        document.getElementById("btnSubmitForm").focus();
     }
 
     function validateAndOpenAuth() {
@@ -1404,6 +1412,7 @@
         document.getElementById("otpSelectAdmin").style.display = "block";
         document.getElementById("otpInputForm").style.display = "none";
         document.getElementById("otpInput").value = "";
+        setTimeout(() => document.getElementById("adminEmailSelect").focus(), 100);
     }
 
     async function sendOTPRequest() {
@@ -1449,7 +1458,6 @@
         const selectedReason = form.reason.value;
         const otherText = form.otherReason.value.trim();
 
-        // หากเลือก "อื่นๆ" ให้เหตุผลหลักเป็น "อื่นๆ" และส่งข้อความที่กรอกไปแสดงผลในช่องหมายเหตุ (note)
         const payload = {
             action: "append",
             date: form.date.value,
@@ -1532,6 +1540,45 @@
         document.getElementById("loadingText").innerText = text;
         document.getElementById("loading").style.display = val ? "flex" : "none";
     }
+
+    // --- KEYBOARD ENTER SUPPORT ---
+    document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Enter') return;
+
+        // หากมี SweetAlert แสดงอยู่ ให้กด Enter ปิดได้ตามปกติ ไม่ทับซ้อน
+        if (document.querySelector('.swal2-container')) return;
+        // หากกำลังโหลดอยู่ ให้ข้ามไป
+        if (document.getElementById('loading').style.display === 'flex') return;
+
+        const authPopup = document.getElementById('authPopup');
+        const formModal = document.getElementById('formModal');
+
+        // 1. กรณีหน้าต่าง OTP เปิดอยู่
+        if (authPopup && authPopup.style.display === 'flex') {
+            e.preventDefault();
+            if (document.getElementById('otpInputForm').style.display === 'block') {
+                verifyOTP();
+            } else {
+                sendOTPRequest();
+            }
+            return;
+        }
+
+        // 2. กรณีหน้าต่างลงข้อมูลหักเงินเปิดอยู่
+        if (formModal && formModal.classList.contains('show')) {
+            // หากโฟกัสอยู่ที่ปุ่มเลือกจำนวนเงิน (chip) ให้เลือกยอดเงินนั้นด้วย Enter
+            if (document.activeElement && document.activeElement.classList.contains('amount-chip')) {
+                e.preventDefault();
+                document.activeElement.click();
+                return;
+            }
+            // กด Enter ในช่อง input อื่นๆ เพื่อส่งฟอร์ม
+            if (document.activeElement && document.activeElement.tagName !== 'BUTTON') {
+                e.preventDefault();
+                validateAndOpenAuth();
+            }
+        }
+    });
 
     document.addEventListener('DOMContentLoaded', () => {
         loadButtonPosition();
