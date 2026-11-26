@@ -583,7 +583,7 @@
             padding: 26px;
             border-radius: 26px;
             width: 100%;
-            max-width: 450px;
+            max-width: 460px;
             box-shadow: 0 24px 60px rgba(0, 0, 0, 0.2);
             animation: modalPop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
             max-height: 90vh;
@@ -618,6 +618,12 @@
         .modal-close:hover { background: #e5e5ea; color: var(--text-main); }
 
         .form-group { margin-bottom: 16px; }
+        .form-label-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
         .form-label {
             display: block;
             font-size: 13px;
@@ -625,6 +631,75 @@
             color: var(--text-main);
             margin-bottom: 6px;
         }
+        .form-label-row .form-label { margin-bottom: 0; }
+
+        .btn-add-emp-row {
+            background: #eef7ff;
+            color: var(--ios-blue);
+            border: 1px solid rgba(0, 122, 255, 0.22);
+            padding: 5px 11px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: var(--transition);
+        }
+        .btn-add-emp-row:hover {
+            background: var(--ios-blue);
+            color: #fff;
+        }
+        .btn-add-emp-row:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+
+        .employee-list-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .employee-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            animation: fadeUp 0.2s ease-out;
+        }
+        .emp-index-tag {
+            min-width: 56px;
+            height: 44px;
+            border-radius: 12px;
+            background: #f2f2f7;
+            color: var(--text-light);
+            font-size: 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .btn-remove-emp-row {
+            width: 40px;
+            height: 44px;
+            border-radius: 12px;
+            border: none;
+            background: #fff1f0;
+            color: var(--ios-red);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+            transition: var(--transition);
+        }
+        .btn-remove-emp-row:hover {
+            background: var(--ios-red);
+            color: #fff;
+        }
+
         .form-control {
             width: 100%;
             padding: 12px 14px;
@@ -888,13 +963,13 @@
     </div>
 </div>
 
-<!-- Modal ลงข้อมูลการหักเงิน (ปิดได้ด้วยปุ่มกากบาทเท่านั้น) -->
+<!-- Modal ลงข้อมูลการหักเงิน (ปิดได้ด้วยปุ่มกากบาทเท่านั้น + เพิ่มพนักงานหลายคนพร้อมกันได้) -->
 <div class="modal" id="formModal">
     <div class="form-container">
         <div class="modal-header">
             <div>
                 <h3 style="margin: 0; font-size: 20px; font-weight: 700;">ลงข้อมูลการหักเงิน</h3>
-                <p style="color: var(--text-light); font-size: 13px; margin: 4px 0 0;">กรอกรายละเอียดให้ครบถ้วน ระบบจะส่ง OTP ยืนยัน</p>
+                <p style="color: var(--text-light); font-size: 13px; margin: 4px 0 0;">เพิ่มพนักงานหลายคนในครั้งเดียวได้ ระบบจะส่ง OTP ยืนยัน</p>
             </div>
             <button type="button" class="modal-close" onclick="closeForm()" title="ปิดหน้าต่าง"><i class="bi bi-x"></i></button>
         </div>
@@ -906,16 +981,15 @@
             </div>
 
             <div class="form-group">
-                <label class="form-label"><i class="bi bi-person-fill"></i> พนักงาน</label>
-                <select id="employee" class="form-control" required>
-                    <option value="" disabled selected>-- เลือกรายชื่อพนักงาน --</option>
-                    <option value="ศุภกฤต">ศุภกฤต</option>
-                    <option value="ปิยะพร">ปิยะพร</option>
-                    <option value="กรทักษ์">กรทักษ์</option>
-                    <option value="ธนภัทร">ธนภัทร</option>
-                    <option value="สริตา">สริตา</option>
-                    <option value="จิดาภา">จิดาภา</option>
-                </select>
+                <div class="form-label-row">
+                    <label class="form-label"><i class="bi bi-people-fill"></i> พนักงานที่จะหักเงิน</label>
+                    <button type="button" id="btnAddEmployeeRow" class="btn-add-emp-row" onclick="addEmployeeRow()">
+                        <i class="bi bi-plus-lg"></i> เพิ่มพนักงาน
+                    </button>
+                </div>
+                <div class="employee-list-container" id="employeeListContainer">
+                    <!-- แถวรายชื่อพนักงานจะถูกสร้างผ่าน JS -->
+                </div>
             </div>
 
             <div class="form-group">
@@ -940,7 +1014,7 @@
             </div>
 
             <div class="form-group" style="margin-bottom: 24px;">
-                <label class="form-label"><i class="bi bi-cash-coin"></i> จำนวนเงินที่หัก (THB)</label>
+                <label class="form-label"><i class="bi bi-cash-coin"></i> จำนวนเงินที่หัก (THB / คน)</label>
                 <div class="amount-chips" id="amountChips">
                     <div class="amount-chip" tabindex="0" onclick="selectAmountChip(this, '10')">10 ฿</div>
                     <div class="amount-chip" tabindex="0" onclick="selectAmountChip(this, '20')">20 ฿</div>
@@ -1344,16 +1418,73 @@
         document.getElementById("selectedCount").innerText = selectedRows.length;
     }
 
+    // ===== จัดการแถวพนักงานหลายคนในฟอร์ม =====
+    function buildEmployeeOptionsHtml() {
+        return `<option value="" disabled selected>-- เลือกรายชื่อพนักงาน --</option>` +
+            EMPLOYEES.map(emp => `<option value="${emp.name}">${emp.name}</option>`).join('');
+    }
+
+    function updateEmployeeRowLabels() {
+        const rows = document.querySelectorAll('#employeeListContainer .employee-row');
+        rows.forEach((row, index) => {
+            const tag = row.querySelector('.emp-index-tag');
+            if (tag) tag.innerText = `คนที่ ${index + 1}`;
+        });
+        const addBtn = document.getElementById('btnAddEmployeeRow');
+        if (addBtn) addBtn.disabled = rows.length >= EMPLOYEES.length;
+    }
+
+    function addEmployeeRow() {
+        const container = document.getElementById('employeeListContainer');
+        const currentCount = container.querySelectorAll('.employee-row').length;
+        if (currentCount >= EMPLOYEES.length) return;
+
+        const rowDiv = document.createElement('div');
+        rowDiv.className = 'employee-row';
+        const isFirst = currentCount === 0;
+
+        rowDiv.innerHTML = `
+            <span class="emp-index-tag">คนที่ ${currentCount + 1}</span>
+            <select class="form-control employee-select" required>
+                ${buildEmployeeOptionsHtml()}
+            </select>
+            ${isFirst ? '' : `<button type="button" class="btn-remove-emp-row" onclick="removeEmployeeRow(this)" title="ลบรายชื่อนี้"><i class="bi bi-trash3"></i></button>`}
+        `;
+
+        container.appendChild(rowDiv);
+        updateEmployeeRowLabels();
+
+        if (!isFirst) {
+            const sel = rowDiv.querySelector('select');
+            if (sel) sel.focus();
+        }
+    }
+
+    function removeEmployeeRow(btn) {
+        const row = btn.closest('.employee-row');
+        if (row) {
+            row.remove();
+            updateEmployeeRowLabels();
+        }
+    }
+
     // Form Controls
     function openForm() {
         document.getElementById("deductionForm").reset();
+        const empContainer = document.getElementById("employeeListContainer");
+        empContainer.innerHTML = "";
+        addEmployeeRow(); // สร้างคนที่ 1 เริ่มต้น
+
         document.getElementById("otherReasonContainer").style.display = "none";
         document.getElementById("otherReason").required = false;
         document.getElementById("amount").value = "";
         document.querySelectorAll('.amount-chip').forEach(c => c.classList.remove('active'));
         document.getElementById("date").valueAsDate = new Date();
         document.getElementById("formModal").classList.add("show");
-        setTimeout(() => document.getElementById("employee").focus(), 100);
+        setTimeout(() => {
+            const firstSelect = empContainer.querySelector('select');
+            if (firstSelect) firstSelect.focus();
+        }, 100);
     }
 
     function closeForm() {
@@ -1377,11 +1508,25 @@
         document.querySelectorAll('.amount-chip').forEach(c => c.classList.remove('active'));
         el.classList.add('active');
         document.getElementById("amount").value = val;
-        // ย้ายโฟกัสไปที่ปุ่มยืนยันเพื่อให้กด Enter ต่อได้ทันที
         document.getElementById("btnSubmitForm").focus();
     }
 
+    function getSelectedEmployeesList() {
+        const selects = document.querySelectorAll('#employeeListContainer .employee-select');
+        return Array.from(selects).map(s => s.value.trim());
+    }
+
     function validateAndOpenAuth() {
+        const empValues = getSelectedEmployeesList();
+        if (empValues.length === 0 || empValues.some(v => !v)) {
+            Swal.fire({ icon: 'warning', title: 'กรุณาเลือกพนักงานให้ครบ', text: 'เลือกรายชื่อพนักงานทุกช่องที่เพิ่มไว้ก่อนดำเนินการต่อ', confirmButtonColor: '#007aff' });
+            return;
+        }
+        const uniqueEmps = new Set(empValues);
+        if (uniqueEmps.size !== empValues.length) {
+            Swal.fire({ icon: 'warning', title: 'พบรายชื่อพนักงานซ้ำกัน', text: 'กรุณาตรวจสอบไม่ให้เลือกชื่อพนักงานซ้ำกันในรายการเดียว', confirmButtonColor: '#007aff' });
+            return;
+        }
         const amount = document.getElementById("amount").value;
         if (!amount) {
             Swal.fire({ icon: 'warning', title: 'กรุณาเลือกจำนวนเงิน', text: 'เลือกยอดเงินที่ต้องการหัก (10, 20, 30 หรือ 50 บาท)', confirmButtonColor: '#007aff' });
@@ -1453,30 +1598,36 @@
     }
 
     async function submitData() {
-        setProcessing(true, "กำลังบันทึกข้อมูล...");
         const form = document.getElementById("deductionForm");
         const selectedReason = form.reason.value;
         const otherText = form.otherReason.value.trim();
+        const empList = getSelectedEmployeesList();
 
-        const payload = {
-            action: "append",
-            date: form.date.value,
-            employee: form.employee.value,
-            reason: selectedReason,
-            note: selectedReason === "อื่นๆ" ? otherText : "-",
-            amount: form.amount.value
-        };
+        setProcessing(true, empList.length > 1 ? `กำลังบันทึกข้อมูล (${empList.length} คน)...` : "กำลังบันทึกข้อมูล...");
 
         try {
-            await fetch(APPS_SCRIPT_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                body: JSON.stringify(payload)
-            });
+            for (let i = 0; i < empList.length; i++) {
+                if (empList.length > 1) {
+                    setProcessing(true, `กำลังบันทึกคนที่ ${i + 1}/${empList.length} (${empList[i]})...`);
+                }
+                const payload = {
+                    action: "append",
+                    date: form.date.value,
+                    employee: empList[i],
+                    reason: selectedReason,
+                    note: selectedReason === "อื่นๆ" ? otherText : "-",
+                    amount: form.amount.value
+                };
+                await fetch(APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    body: JSON.stringify(payload)
+                });
+            }
             closeForm();
             await Swal.fire({
                 icon: 'success',
-                title: 'บันทึกข้อมูลสำเร็จ',
+                title: empList.length > 1 ? `บันทึกข้อมูล ${empList.length} คนสำเร็จ` : 'บันทึกข้อมูลสำเร็จ',
                 timer: 1400,
                 showConfirmButton: false
             });
@@ -1545,15 +1696,12 @@
     document.addEventListener('keydown', (e) => {
         if (e.key !== 'Enter') return;
 
-        // หากมี SweetAlert แสดงอยู่ ให้กด Enter ปิดได้ตามปกติ ไม่ทับซ้อน
         if (document.querySelector('.swal2-container')) return;
-        // หากกำลังโหลดอยู่ ให้ข้ามไป
         if (document.getElementById('loading').style.display === 'flex') return;
 
         const authPopup = document.getElementById('authPopup');
         const formModal = document.getElementById('formModal');
 
-        // 1. กรณีหน้าต่าง OTP เปิดอยู่
         if (authPopup && authPopup.style.display === 'flex') {
             e.preventDefault();
             if (document.getElementById('otpInputForm').style.display === 'block') {
@@ -1564,15 +1712,12 @@
             return;
         }
 
-        // 2. กรณีหน้าต่างลงข้อมูลหักเงินเปิดอยู่
         if (formModal && formModal.classList.contains('show')) {
-            // หากโฟกัสอยู่ที่ปุ่มเลือกจำนวนเงิน (chip) ให้เลือกยอดเงินนั้นด้วย Enter
             if (document.activeElement && document.activeElement.classList.contains('amount-chip')) {
                 e.preventDefault();
                 document.activeElement.click();
                 return;
             }
-            // กด Enter ในช่อง input อื่นๆ เพื่อส่งฟอร์ม
             if (document.activeElement && document.activeElement.tagName !== 'BUTTON') {
                 e.preventDefault();
                 validateAndOpenAuth();
