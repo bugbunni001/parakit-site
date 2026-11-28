@@ -56,6 +56,31 @@
             padding: 0 20px 0 75px; 
             border-bottom: 0.5px solid rgba(0,0,0,0.1);
         }
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+        }
+        .brand-icon {
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .brand-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+        @media (max-width: 600px) {
+            .top-header { padding: 0 14px 0 68px; }
+            .header-brand { gap: 10px; }
+            .brand-icon { width: 38px; height: 38px; }
+        }
 
         /* ===== Floating Draggable Button ===== */
         #floatingMenuBtn {
@@ -289,7 +314,12 @@
 <body>
 
 <header class="top-header">
-    <div style="font-weight: 700; font-size: 1.15rem; color: var(--text-main); letter-spacing: -0.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">ตารางวันหยุดบิ๊กซีประชาอุทิศ</div>
+    <div class="header-brand">
+        <div class="brand-icon">
+            <img src="favicon.png" alt="Logo">
+        </div>
+        <div style="font-weight: 700; font-size: 1.15rem; color: var(--text-main); letter-spacing: -0.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">ตารางวันหยุดบิ๊กซีประชาอุทิศ</div>
+    </div>
 </header>
 
 <button id="floatingMenuBtn" title="ลากเพื่อย้าย">เมนู</button>
@@ -421,11 +451,9 @@
             <div class="bg-gray-50 p-4 rounded-2xl space-y-3 border border-gray-100">
                 <select id="empId" class="w-full p-3 bg-white rounded-xl border border-gray-200 outline-none font-medium text-sm">
                     <option value="1100">ศุภกฤต (1100)</option>
-                    <option value="4399">สุวพัชร (4399)</option>
                     <option value="3400">ปิยะพร (3400)</option>
                     <option value="3723">กรทักษ์ (3723)</option>
                     <option value="3838">จิดาภา (3838)</option>
-                    <option value="3900">วรรณิษา (3900)</option>
                     <option value="4552">สริตา (4552)</option>
                     <option value="4559">ธนภัทร (4559)</option>
                 </select>
@@ -482,11 +510,9 @@
     const months = ["มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน","กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"];
     const employees = [
         { id: "1100", name: "ศุภกฤต" },
-        { id: "4399", name: "สุวพัชร" },
         { id: "3400", name: "ปิยะพร" },
         { id: "3723", name: "กรทักษ์" },
         { id: "3838", name: "จิดาภา" },
-        { id: "3900", name: "วรรณิษา" },
         { id: "4552", name: "สริตา" },
         { id: "4559", name: "ธนภัทร" }
     ];
@@ -640,7 +666,6 @@
         summaryGrid.innerHTML = "";
 
         employees.forEach(emp => {
-            // กรองข้อมูลเฉพาะของพนักงานคนนี้ (รองรับเทียบ String และ Number) และไม่นำสถานะ Work มาคิดเป็นวันหยุด
             const empRecords = data.filter(r => String(r.empId) === String(emp.id) && r.status !== 'Work')
                                    .sort((a, b) => new Date(a.date) - new Date(b.date));
 
@@ -655,11 +680,10 @@
             
             const totalOff = empRecords.length;
 
-            // สร้างรายการวันที่ + สถานะ เช่น 1=H, 2=V
             let dayListHTML = "";
             if (empRecords.length > 0) {
                 dayListHTML = empRecords.map(r => {
-                    const dayNum = parseInt(r.date.split('-')[2]); // ดึงเฉพาะวันที่
+                    const dayNum = parseInt(r.date.split('-')[2]);
                     return `<span class="day-off-item off-${r.status}">${dayNum}=${r.status}</span>`;
                 }).join('');
             } else {
@@ -669,7 +693,6 @@
             summaryGrid.innerHTML += `
                 <div class="summary-card shadow-sm border border-gray-100 p-4 flex flex-col justify-between">
                     <div>
-                        <!-- ส่วนหัวชื่อและจำนวนวันหยุด -->
                         <div class="flex justify-between items-start mb-2">
                             <div>
                                 <p class="text-xs text-gray-400 font-medium">รหัส ${emp.id}</p>
@@ -680,7 +703,6 @@
                             </div>
                         </div>
 
-                        <!-- สรุปประเภทยอดวันหยุด (แบบรวม) -->
                         <div class="flex flex-wrap gap-1 mb-3">
                             <span class="stat-badge bg-purple-50 text-purple-600">H: ${stats.H}</span>
                             <span class="stat-badge bg-red-50 text-red-600">V: ${stats.V}</span>
@@ -691,7 +713,6 @@
                         </div>
                     </div>
 
-                    <!-- รายละเอียดวันหยุดรายวัน เช่น 1=H, 2=V -->
                     <div class="pt-2.5 border-t border-gray-100/80">
                         <p class="text-[11px] text-gray-400 font-medium mb-1.5 flex items-center gap-1">
                             <span>รายการวันหยุด:</span>
@@ -776,7 +797,6 @@
     async function captureCalendar() {
         showLoad(true);
         
-        // เลื่อนหน้าจอไปบนสุดก่อนแคป เพื่อป้องกัน html2canvas ตัดภาพแหว่ง (สำคัญมาก)
         window.scrollTo(0, 0);
 
         const element = document.getElementById('captureArea');
@@ -785,12 +805,11 @@
         
         try {
             const canvas = await html2canvas(element, {
-                scale: 3, // ความละเอียดสูง
+                scale: 3,
                 useCORS: true,
                 backgroundColor: "#f2f2f7",
-                scrollY: 0, // บังคับตำแหน่งการเรนเดอร์แกน Y เพื่อป้องกันภาพตัดแหว่ง
+                scrollY: 0,
                 onclone: (clonedDoc) => {
-                    // 1. แปลง Dropdown (select) เป็นข้อความ (span) เพื่อให้เห็นเดือน/ปี ในรูป ไม่เป็นช่องว่าง
                     const selects = clonedDoc.querySelectorAll('select');
                     selects.forEach(sel => {
                         const val = sel.options[sel.selectedIndex].text;
@@ -802,26 +821,23 @@
                         sel.parentNode.replaceChild(span, sel);
                     });
 
-                    // 2. ซ่อนปุ่มต่างๆ ไม่ให้รกในรูปภาพ
                     const btnCapture = clonedDoc.querySelector('.btn-capture');
                     if(btnCapture) btnCapture.style.display = 'none';
                     const btnEdit = clonedDoc.querySelector('.btn-edit-mode');
                     if(btnEdit) btnEdit.style.display = 'none';
 
-                    // 3. ปิดเอฟเฟกต์ Glass Blur ป้องกันหน้าขาว/ดำ ในมือถือบางรุ่น
                     const glassArea = clonedDoc.getElementById('captureArea');
                     if (glassArea) {
-                        glassArea.style.overflow = 'visible'; // ป้องกันการตัดแหว่ง
+                        glassArea.style.overflow = 'visible';
                         glassArea.style.backdropFilter = 'none';
                         glassArea.style.webkitBackdropFilter = 'none';
                         glassArea.style.background = 'rgba(255, 255, 255, 0.95)';
                     }
 
-                    // 4. แก้ปัญหาตัวหนังสือขาดครึ่ง โดยบังคับแสดงผลเฉพาะตอนอยู่ในรูปภาพ
                     const labels = clonedDoc.querySelectorAll('.emp-name-label');
                     labels.forEach(l => {
                         l.style.display = 'inline-block'; 
-                        l.style.overflow = 'visible'; // ทับการซ่อน (hidden) เฉพาะตอนถ่ายภาพ เพื่อให้เห็นเต็มบรรทัด
+                        l.style.overflow = 'visible';
                         l.style.lineHeight = 'normal';
                         l.style.paddingBottom = '2px';
                     });
