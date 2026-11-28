@@ -505,8 +505,8 @@
         .two-col-equal { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
         .two-col-equal > div { min-width: 0; }
 
-        /* Cumulative Cards with Inline Progress Bars under %Achieve & %Runrate */
-        .sub-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; }
+        /* Cumulative Cards with Inline Progress Bars & Milestone Remaining */
+        .sub-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
         .sub-card {
             padding: 18px; border-radius: 20px;
             background: rgba(255, 255, 255, 0.82);
@@ -549,6 +549,39 @@
             align-items: center;
             justify-content: space-between;
             margin-bottom: 5px;
+        }
+        .milestone-note {
+            margin-top: 6px;
+            padding: 5px 8px;
+            border-radius: 8px;
+            background: rgba(0, 122, 255, 0.06);
+            border: 1px solid rgba(0, 122, 255, 0.12);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+            font-size: 11.5px;
+            color: #334155;
+            line-height: 1.3;
+        }
+        .milestone-note.done {
+            background: rgba(16, 185, 129, 0.1);
+            border-color: rgba(16, 185, 129, 0.22);
+            color: #047857;
+            justify-content: center;
+            font-weight: 600;
+        }
+        .milestone-note-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-weight: 500;
+            color: #475569;
+        }
+        .milestone-note-val {
+            font-weight: 700;
+            color: var(--blue2);
+            white-space: nowrap;
         }
         .progress-track {
             width: 100%; height: 6px; border-radius: 99px;
@@ -896,6 +929,7 @@
             .sub-title { font-size: 13.5px; margin-bottom: 8px; padding-bottom: 7px; }
             .sub-title i { width: 24px; height: 24px; font-size: 12.5px; }
             .sub-line, .sub-line-metric { font-size: 12.5px; }
+            .milestone-note { font-size: 10.5px; padding: 4px 6px; flex-wrap: wrap; }
             .staff-row { flex-direction: column; align-items: flex-start; gap: 10px; padding: 13px; }
             .staff-role { width: auto; }
             .check-group { width: 100%; gap: 8px; }
@@ -1562,7 +1596,53 @@
         `).join('') : emptyRow(2);
     }
 
-    // ===== CUMULATIVE WITH INLINE PROGRESS BARS UNDER %ACHIEVE & %RUNRATE =====
+    // ===== CUMULATIVE WITH INLINE PROGRESS BARS & MILESTONE REMAINING (75% / 90% / 98% / 105%) =====
+    function getMilestoneRemainingHtml(obj, achievePct) {
+        const actual = cleanNumber(obj.actual);
+        const diff = cleanNumber(obj.diff);
+        let fullTarget = obj.target !== undefined && obj.target !== '' ? cleanNumber(obj.target) : (actual + diff);
+        if (fullTarget <= 0 && achievePct > 0) {
+            fullTarget = actual / (achievePct / 100);
+        }
+
+        if (fullTarget <= 0) {
+            return `
+                <div class="milestone-note">
+                    <span class="milestone-note-label"><i class="bi bi-flag-fill" style="color:var(--blue);"></i> เป้า 75%</span>
+                    <span class="milestone-note-val">-</span>
+                </div>
+            `;
+        }
+
+        const milestones = [75, 90, 98, 105];
+        let nextPct = null;
+        let remainingAmount = 0;
+
+        for (const pct of milestones) {
+            const thresholdAmount = fullTarget * (pct / 100);
+            if (achievePct < pct - 0.0001 && actual < thresholdAmount) {
+                nextPct = pct;
+                remainingAmount = Math.ceil(thresholdAmount - actual);
+                break;
+            }
+        }
+
+        if (nextPct === null) {
+            return `
+                <div class="milestone-note done">
+                    <i class="bi bi-check-circle-fill"></i> ทะลุเป้าหมาย 105% แล้ว
+                </div>
+            `;
+        }
+
+        return `
+            <div class="milestone-note">
+                <span class="milestone-note-label"><i class="bi bi-flag-fill" style="color:var(--blue);"></i> อีกเท่าไหร่ถึง ${nextPct}%</span>
+                <span class="milestone-note-val">+${remainingAmount.toLocaleString()}</span>
+            </div>
+        `;
+    }
+
     function renderCumulative(data) {
         const c = data.cumulative || {};
         const ctx = data.dayContext || { currentDay: 1, totalDays: 30 };
@@ -1590,6 +1670,8 @@
             const safeRunrate = isNaN(runrate) ? 0 : Math.max(0, runrate);
             const runrateBarWidth = Math.min(100, safeRunrate);
 
+            const milestoneHtml = getMilestoneRemainingHtml(obj, safeAchieve);
+
             return `
                 <div class="sub-card">
                     <div class="sub-title">
@@ -1605,6 +1687,7 @@
                         <div class="progress-track">
                             <div class="progress-fill" style="width:${achieveBarWidth}%"></div>
                         </div>
+                        ${milestoneHtml}
                     </div>
                     <div class="sub-line-metric">
                         <div class="sub-metric-top">
